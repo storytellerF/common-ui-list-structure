@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 rootProject.name = "common_ui_list_structure"
 include ':app'
 include ':annotation_compiler'
+include ':common_vm_ktx'
