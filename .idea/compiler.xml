@@ -3,8 +3,9 @@
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel target="1.7">
       <module name="common_ui_list_structure.app" target="11" />
-      <module name="common_ui_list_structure.common_vm_ktx" target="11" />
-      <module name="common_ui_list_structure.ui_list" target="11" />
+      <module name="common_ui_list_structure.common-vm-ktx" target="11" />
+      <module name="common_ui_list_structure.ui-list" target="11" />
+      <module name="common_ui_list_structure.view_holder_compose" target="11" />
     </bytecodeTargetLevel>
   </component>
 </project>

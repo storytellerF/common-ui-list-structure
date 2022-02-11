@@ -9,10 +9,11 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/annotation_compiler" />
+            <option value="$PROJECT_DIR$/annotation-compiler" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/common_vm_ktx" />
-            <option value="$PROJECT_DIR$/ui_list" />
+            <option value="$PROJECT_DIR$/common-vm-ktx" />
+            <option value="$PROJECT_DIR$/ui-list" />
+            <option value="$PROJECT_DIR$/view_holder_compose" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
