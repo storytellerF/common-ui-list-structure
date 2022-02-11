@@ -13,7 +13,7 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/common-vm-ktx" />
             <option value="$PROJECT_DIR$/ui-list" />
-            <option value="$PROJECT_DIR$/view_holder_compose" />
+            <option value="$PROJECT_DIR$/view-holder-compose" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
