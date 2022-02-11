@@ -22,6 +22,4 @@
     <color name="titleColor">#1F75FE</color>
     <color name="titleColorAlpha">#551F75FE</color>
     <color name="greyAlpha">#55999999</color>
-    <color name="separatorBackground">#AAAAAA</color>
-    <color name="separatorText">#FFFFFF</color>
 </resources>
