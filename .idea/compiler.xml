@@ -4,6 +4,7 @@
     <bytecodeTargetLevel target="1.7">
       <module name="common_ui_list_structure.app" target="11" />
       <module name="common_ui_list_structure.common_vm_ktx" target="11" />
+      <module name="common_ui_list_structure.ui_list" target="11" />
     </bytecodeTargetLevel>
   </component>
 </project>
