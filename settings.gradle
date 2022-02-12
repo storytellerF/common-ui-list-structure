@@ -3,6 +3,7 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
+        maven { url 'https://jitpack.io' }
     }
 }
 dependencyResolutionManagement {
@@ -18,3 +19,4 @@ include ':annotation-compiler'
 include ':common-vm-ktx'
 include ':ui-list'
 include ':view-holder-compose'
+include ':annotation-defination'

@@ -44,14 +44,14 @@ android {
 
     composeOptions {
         kotlinCompilerExtensionVersion compose_version
-        kotlinCompilerVersion '1.4.32'
     }
 }
 
 dependencies {
 
     implementation(project(":ui-list"))
-    //implementation(project(':annotation_compiler'))
+    implementation project(path: ':annotation-defination')
+    kapt(project(':annotation-compiler'))
     implementation(project(":view-holder-compose"))
 
     testImplementation 'junit:junit:4.13.2'

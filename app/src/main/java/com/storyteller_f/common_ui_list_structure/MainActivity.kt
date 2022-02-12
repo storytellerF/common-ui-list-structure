@@ -22,6 +22,8 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
+import com.storyteller_f.annotation_defination.BindClickEvent
+import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ui_list_structure.api.requireReposService
 import com.storyteller_f.common_ui_list_structure.databinding.ActivityMainBinding
 import com.storyteller_f.common_ui_list_structure.databinding.RepoViewItemBinding
@@ -101,7 +103,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
+    @BindClickEvent(RepoItemHolder::class)
     fun clickRepo(view: View, itemHolder: RepoItemHolder) {
         println("click ${itemHolder.repo.fullName}")
     }
@@ -153,6 +155,7 @@ class RepoItemHolder(val repo: Repo) : DataItemHolder() {
     }
 }
 
+@BindItemHolder(RepoItemHolder::class)
 class Repo2ViewHolder(private val binding: RepoViewItemBinding) :
     AdapterViewHolder<RepoItemHolder>(binding) {
     override fun bindData(itemHolder: RepoItemHolder) {
@@ -189,8 +192,27 @@ class SeparatorItemHolder(val info: String) : DataItemHolder() {
     override fun areItemsTheSame(other: DataItemHolder): Boolean {
         return (other as SeparatorItemHolder).info == info
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as SeparatorItemHolder
+
+        if (info != other.info) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return info.hashCode()
+    }
+
+
 }
 
+
+@BindItemHolder(SeparatorItemHolder::class)
 class SeparatorViewHolder(composeView: ComposeView) :
     ComposeViewHolder<SeparatorItemHolder>(composeView) {
     override fun bindData(itemHolder: SeparatorItemHolder) {

@@ -2,6 +2,7 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel target="1.7">
+      <module name="common_ui_list_structure.annotation-compiler" target="11" />
       <module name="common_ui_list_structure.app" target="11" />
       <module name="common_ui_list_structure.common-vm-ktx" target="11" />
       <module name="common_ui_list_structure.ui-list" target="11" />
