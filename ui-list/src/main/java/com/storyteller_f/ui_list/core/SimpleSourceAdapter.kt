@@ -7,9 +7,9 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 
-public val list = mutableListOf<(ViewGroup) -> AbstractAdapterViewHolder<*>>()
+val list = mutableListOf<(ViewGroup) -> AbstractAdapterViewHolder<*>>()
 
-public val registerCenter = mutableMapOf<Class<out DataItemHolder>, Int>()
+val registerCenter = mutableMapOf<Class<out DataItemHolder>, Int>()
 
 abstract class DataItemHolder {
     /**
