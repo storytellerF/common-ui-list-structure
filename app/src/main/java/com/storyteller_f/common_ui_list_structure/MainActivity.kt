@@ -15,6 +15,7 @@ import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -109,7 +110,7 @@ class MainActivity : AppCompatActivity() {
         println("click ${itemHolder.repo.fullName}")
     }
 
-    fun printInsets(insets: WindowInsets) {
+    private fun printInsets(insets: WindowInsets) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             Log.i(TAG, "printInsets: >R")
             val navigation = insets.getInsets(WindowInsets.Type.navigationBars())
@@ -123,7 +124,37 @@ class MainActivity : AppCompatActivity() {
             val systemWindowInsets = insets.systemWindowInsets
             Log.i(TAG, "printInsets: $systemWindowInsets")
         }
+        val systemWindowInsetTop = insets.systemWindowInsetTop
+        Log.i(TAG, "printInsets: $systemWindowInsetTop")
+        Log.i(
+            TAG,
+            "printInsets: ${window.decorView.windowSystemUiVisibility} ${window.decorView.systemUiVisibility}"
+        )
+        val i = window.decorView.windowSystemUiVisibility and View.SYSTEM_UI_FLAG_FULLSCREEN
+        Log.i(TAG, "printInsets: $i")
+    }
 
+    private fun hideSystemUI() {
+        // Enables regular immersive mode.
+        // For "lean back" mode, remove SYSTEM_UI_FLAG_IMMERSIVE.
+        // Or for "sticky immersive," replace it with SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+        window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE
+                // Set the content to appear under the system bars so that the
+                // content doesn't resize when the system bars hide and show.
+                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                // Hide the nav bar and status bar
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_FULLSCREEN)
+    }
+
+    // Shows the system bars by removing all the flags
+    // except for the ones that make the content appear under the system bars.
+    private fun showSystemUI() {
+        window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
     }
 
     companion object {
@@ -132,16 +163,14 @@ class MainActivity : AppCompatActivity() {
 
     @Composable
     fun ButtonGroup() {
-        Row() {
+        Row(modifier = Modifier.background(Brush.linearGradient(listOf(Color.Black, Color.White)), RoundedCornerShape(3))) {
             Button(
-                onClick = { /*TODO*/ },
-                modifier = Modifier.background(Color.Cyan, RoundedCornerShape(3)),
+                onClick = { hideSystemUI() },
             ) {
                 Text(text = "full")
             }
             Button(
-                onClick = { /*TODO*/ },
-                modifier = Modifier.background(Color.Cyan, RoundedCornerShape(3))
+                onClick = { showSystemUI() },
             ) {
                 Text(text = "recovery")
             }
