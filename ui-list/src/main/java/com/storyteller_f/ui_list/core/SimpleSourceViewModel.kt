@@ -30,17 +30,22 @@ import kotlinx.coroutines.flow.map
 
 class SimpleSourceViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey, DT : RoomDatabase>(
     repository: SimpleRepository<D, RK, DT>,
-    processFactory: (D) -> Holder,
+    processFactory: (D, D?) -> Holder,
     interceptorFactory: ((Holder?, Holder?) -> DataItemHolder?)? = null
 ) : ViewModel() {
 
     var content: Flow<PagingData<DataItemHolder>>? = null
     var content2: Flow<PagingData<Holder>>? = null
+    var last: D? = null
 
     init {
         val map = repository.resultStream()
             .map {
-                it.map { repo -> processFactory(repo) }
+                it.map { repo ->
+                    val processFactory1 = processFactory(repo, last)
+                    last = repo
+                    processFactory1
+                }
             }
         if (interceptorFactory != null) {
             content = map.map {

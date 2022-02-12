@@ -30,10 +30,7 @@ import com.storyteller_f.common_ui_list_structure.databinding.RepoViewItemBindin
 import com.storyteller_f.common_ui_list_structure.db.RepoComposite
 import com.storyteller_f.common_ui_list_structure.db.requireRepoDatabase
 import com.storyteller_f.common_ui_list_structure.model.Repo
-import com.storyteller_f.ui_list.core.AbstractAdapterViewHolder
-import com.storyteller_f.ui_list.core.AdapterViewHolder
-import com.storyteller_f.ui_list.core.DataItemHolder
-import com.storyteller_f.ui_list.core.source
+import com.storyteller_f.ui_list.core.*
 import com.storyteller_f.ui_list.event.viewBinding
 import com.storyteller_f.view_holder_compose.ComposeSourceAdapter
 import com.storyteller_f.view_holder_compose.ComposeViewHolder
@@ -41,34 +38,37 @@ import kotlinx.coroutines.flow.collectLatest
 
 class MainActivity : AppCompatActivity() {
     private val binding by viewBinding(ActivityMainBinding::inflate)
-    private val viewModel by source(
-        { RepoComposite(requireRepoDatabase()) },
-        { p, c ->
-            requireReposService.searchRepos(p, c)
-        },
-        {
-            requireRepoDatabase().reposDao().selectAll()
-        },
-        { RepoItemHolder(it) },
-        { before, after ->
-            if (after == null) {
-                // we're at the end of the list
-                null
-            } else if (before == null) {
-                // we're at the beginning of the list
-                SeparatorItemHolder("${after.roundedStarCount}0.000+ stars")
-            } else if (before.roundedStarCount > after.roundedStarCount) {
-                if (after.roundedStarCount >= 1) {
+    private val viewModel by source({ 1 }, { 2 }, { one, two ->
+        SourceProducer(
+            { RepoComposite(requireRepoDatabase()) },
+            { p, c ->
+                requireReposService.searchRepos(p, c)
+            },
+            {
+                Log.i(TAG, "view model: $one $two")
+                requireRepoDatabase().reposDao().selectAll()
+            },
+            { it, _ -> RepoItemHolder(it) },
+            { before, after ->
+                if (after == null) {
+                    // we're at the end of the list
+                    null
+                } else if (before == null) {
+                    // we're at the beginning of the list
                     SeparatorItemHolder("${after.roundedStarCount}0.000+ stars")
+                } else if (before.roundedStarCount > after.roundedStarCount) {
+                    if (after.roundedStarCount >= 1) {
+                        SeparatorItemHolder("${after.roundedStarCount}0.000+ stars")
+                    } else {
+                        SeparatorItemHolder("< 10.000+ stars")
+                    }
                 } else {
-                    SeparatorItemHolder("< 10.000+ stars")
+                    // no separator
+                    null
                 }
-            } else {
-                // no separator
-                null
             }
-        }
-    )
+        )
+    })
 
     private val adapter =
         ComposeSourceAdapter<DataItemHolder, AbstractAdapterViewHolder<DataItemHolder>>()
@@ -103,6 +103,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
     @BindClickEvent(RepoItemHolder::class)
     fun clickRepo(view: View, itemHolder: RepoItemHolder) {
         println("click ${itemHolder.repo.fullName}")
