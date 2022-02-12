@@ -42,6 +42,8 @@ data class Repo(
     override fun commonDatumId() = id.toString()
     override fun produceRemoteKey(prevKey: Int?, nextKey: Int?) =
         RepoRemoteKey(commonDatumId(), prevKey, nextKey)
+
+    override fun remoteKeyId(): String = commonDatumId()
 }
 
 @Entity(tableName = "repo_remote_keys")

@@ -19,6 +19,12 @@ interface RepoDao {
 
     @Query("DELETE FROM repos")
     suspend fun clearRepos()
+
+    @Delete
+    suspend fun delete(repo: Repo)
+
+    @Query("Delete From repos where id = :repoId")
+    suspend fun delete(repoId: Long)
 }
 
 @Dao
@@ -32,6 +38,9 @@ interface RemoteKeysDao {
 
     @Query("DELETE FROM repo_remote_keys")
     suspend fun clearRemoteKeys()
+
+    @Query("Delete From repo_remote_keys where itemId = :repoId")
+    suspend fun delete(repoId: String)
 }
 
 @Database(
@@ -81,6 +90,15 @@ class RepoComposite(private val repoDatabase: RepoDatabase) :
 
 
     override suspend fun insertAllData(repos: List<Repo>) = repoDatabase.reposDao().insertAll(repos)
+    override suspend fun deleteItemById(commonDatumId: String) {
+        repoDatabase.reposDao().delete(commonDatumId.toLong())
+        repoDatabase.remoteKeyDao().delete(commonDatumId)
+    }
+
+    override suspend fun deleteItemBy(d: Repo) {
+        repoDatabase.reposDao().delete(d)
+        repoDatabase.remoteKeyDao().delete(d.remoteKeyId())
+    }
 }
 
 fun Fragment.requireRepoDatabase() = RepoDatabase.getInstance(requireContext())
