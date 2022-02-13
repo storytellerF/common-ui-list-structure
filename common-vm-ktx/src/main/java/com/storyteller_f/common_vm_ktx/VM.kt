@@ -56,7 +56,7 @@ fun <VM : ViewModel> Fragment.keyedViewModels(
 }
 
 @MainThread
-inline fun <reified VM : ViewModel> Fragment.viewModels(
+inline fun <reified VM : ViewModel> Fragment.viewModelsKeyed(
     keyPrefix: String,
     noinline ownerProducer: () -> ViewModelStoreOwner = { this },
     noinline factoryProducer: (() -> ViewModelProvider.Factory)? = null

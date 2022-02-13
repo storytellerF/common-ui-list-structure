@@ -1,5 +1,6 @@
 package com.storyteller_f.common_ui_list_structure
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -35,7 +36,9 @@ import com.storyteller_f.ui_list.core.*
 import com.storyteller_f.ui_list.event.viewBinding
 import com.storyteller_f.view_holder_compose.ComposeSourceAdapter
 import com.storyteller_f.view_holder_compose.ComposeViewHolder
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private val binding by viewBinding(ActivityMainBinding::inflate)
@@ -102,6 +105,10 @@ class MainActivity : AppCompatActivity() {
             setContent {
                 ButtonGroup()
             }
+        }
+        lifecycleScope.launch {
+            delay(3000)
+            startActivity(Intent(this@MainActivity, MainActivity2::class.java))
         }
     }
 

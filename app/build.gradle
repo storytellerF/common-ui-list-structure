@@ -51,6 +51,7 @@ dependencies {
 
     implementation(project(":ui-list"))
     implementation project(path: ':annotation-defination')
+    implementation(project(":common-ui"))
     kapt(project(':annotation-compiler'))
     implementation(project(":view-holder-compose"))
 
