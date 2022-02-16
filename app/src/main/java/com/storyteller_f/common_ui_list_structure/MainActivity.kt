@@ -115,12 +115,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     @BindClickEvent(RepoItemHolder::class)
-    fun clickRepo(view: View, itemHolder: RepoItemHolder) {
+    fun clickRepo(itemHolder: RepoItemHolder) {
         println("click ${itemHolder.repo.fullName}")
     }
 
     @BindClickEvent(SeparatorItemHolder::class, "card")
-    fun clickLine(view: View, itemHolder: SeparatorItemHolder) {
+    fun clickLine(itemHolder: SeparatorItemHolder) {
         println("click ${itemHolder.info}")
     }
 

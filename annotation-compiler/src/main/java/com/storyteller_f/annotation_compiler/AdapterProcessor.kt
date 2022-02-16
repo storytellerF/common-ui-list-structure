@@ -2,6 +2,7 @@ package com.storyteller_f.annotation_compiler
 
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindLongClickEvent
+import java.rmi.activation.UnknownObjectException
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
@@ -25,10 +26,10 @@ class Event(
     val receiver: String,
     val receiverFullName: String,
     val functionName: String,
-    val parameterCount: Int
+    val parameterList: String
 ) {
     override fun toString(): String {
-        return "Event(receiver='$receiver', functionName='$functionName', parameterCount=$parameterCount)"
+        return "Event(receiver='$receiver', functionName='$functionName', parameterCount=$parameterList)"
     }
 }
 
@@ -49,14 +50,14 @@ class AdapterProcessor : AbstractProcessor() {
         val eventMap = getEvent(roundEnvironment, BindClickEvent::class.java)
         val longClickEventMap = getEvent(roundEnvironment, BindLongClickEvent::class.java)
         set?.forEach { typeElement ->
-            val packageOf = processingEnv.elementUtils.getPackageOf(
+            val packageElement = processingEnv.elementUtils.getPackageOf(
                 roundEnvironment?.getElementsAnnotatedWithAny(typeElement)?.firstOrNull()
             )
             val holderEntry = getHolder(roundEnvironment, typeElement)
             val content =
-                createClassFileContent(packageOf, holderEntry, eventMap, longClickEventMap)
+                createClassFileContent(packageElement, holderEntry, eventMap, longClickEventMap)
             val classFile =
-                processingEnv.filer.createSourceFile("${packageOf}.adapter_produce.$className")
+                processingEnv.filer.createSourceFile("${packageElement}.adapter_produce.$className")
             println(content)
             classFile.openWriter().use {
                 it.write(content)
@@ -135,7 +136,19 @@ class AdapterProcessor : AbstractProcessor() {
                 val end = s.lastIndexOf(")")
                 s.substring(start, end).split(",")
                     .filter { it.isNotBlank() && it.isNotEmpty() }
-            }.size
+            }.joinToString(", ") {
+                when {
+                    it.contains("android.view.View") -> {
+                        "v"
+                    }
+                    it.contains("Holder") -> {
+                        "viewHolder.getItemHolder()"
+                    }
+                    else -> {
+                        throw UnknownObjectException(it)
+                    }
+                }
+            }
             Event(
                 element.enclosingElement.simpleName.toString(),
                 element.enclosingElement.toString(),
@@ -231,12 +244,12 @@ class AdapterProcessor : AbstractProcessor() {
         eventList2: Map<String, List<Event>>
     ): String {
         return "    public static ${entry.viewHolderName} build${entry.viewHolderName}(ViewGroup view) {\n" +
-                "       Context context = view.getContext();\n" +
-                "       ${entry.bindingName} inflate = ${entry.bindingName}.inflate(LayoutInflater.from(context), view, false);\n" +
+                "        Context context = view.getContext();\n" +
+                "        ${entry.bindingName} inflate = ${entry.bindingName}.inflate(LayoutInflater.from(context), view, false);\n" +
                 "\n" +
-                "       ${entry.viewHolderName} viewHolder = new ${entry.viewHolderName}(inflate);\n" +
+                "        ${entry.viewHolderName} viewHolder = new ${entry.viewHolderName}(inflate);\n" +
                 buildClickListener(event, eventList2) +
-                "       return viewHolder;\n" +
+                "        return viewHolder;\n" +
                 "   }"
     }
 
@@ -245,15 +258,15 @@ class AdapterProcessor : AbstractProcessor() {
             "                if (s == \"${it.key}\") {\n" +
                     it.value.joinToString("\n") { e ->
                         if (e.receiver.contains("Activity"))
-                            ("             ViewJava.doWhenIs(context, ${e.receiver}.class, (activity) -> {\n" +
-                                    "                 activity.${e.functionName}(${parameterList(e.parameterCount)});\n" +
-                                    "                 return null;//activity return\n" +
-                                    "            });//activity end\n")
+                            ("                    ViewJava.doWhenIs(context, ${e.receiver}.class, (activity) -> {\n" +
+                                    "                         activity.${e.functionName}(${parameterList(e.parameterList)});\n" +
+                                    "                         return null;//activity return\n" +
+                                    "                     });//activity end\n")
                         else
-                            ("             ViewJava.findActionReceiverOrNull(composeView.getComposeView(), ${e.receiver}.class, (fragment) -> {\n" +
-                                    "                 fragment.${e.functionName}(${parameterList(e.parameterCount)})\n" +
-                                    "                 return null;//fragment return\n" +
-                                    "             });//fragment end\n")
+                            ("                    ViewJava.findActionReceiverOrNull(composeView.getComposeView(), ${e.receiver}.class, (fragment) -> {\n" +
+                                    "                         fragment.${e.functionName}(${parameterList(e.parameterList)})\n" +
+                                    "                         return null;//fragment return\n" +
+                                    "                     });//fragment end\n")
                     } +
 
                     "                }//if end\n"
@@ -266,38 +279,35 @@ class AdapterProcessor : AbstractProcessor() {
         event2: Map<String, List<Event>>
     ): String {
         return event.map {
-            "       inflate.${it.key}.setOnClickListener((v) -> {\n" +
+            "        inflate.${it.key}.setOnClickListener((v) -> {\n" +
                     buildClickListener(it.value) +
-                    "\n       });\n"
+                    "\n        });\n"
         }.joinToString("\n") +
                 event2.map {
-                    "       inflate.${it.key}.setOnLongClickListener((v) -> {\n" +
+                    "        inflate.${it.key}.setOnLongClickListener((v) -> {\n" +
                             buildClickListener(it.value) +
-                            "\n       });\n"
+                            "\n        });\n"
                 }.joinToString("\n")
     }
 
     private fun buildClickListener(events: List<Event>): String {
         return events.joinToString("\n") { event ->
             if (event.receiver.contains("Activity")) {
-                "           ViewJava.doWhenIs(context, ${event.receiver}.class, (activity)->{\n" +
-                        "               activity.${event.functionName}(${parameterList(event.parameterCount)});\n" +
-                        "               return null;\n" +
-                        "           });"
+                "            ViewJava.doWhenIs(context, ${event.receiver}.class, (activity)->{\n" +
+                        "                activity.${event.functionName}(${parameterList(event.parameterList)});\n" +
+                        "                return null;\n" +
+                        "            });"
             } else {
-                "           ViewJava.findActionReceiverOrNull(v, ${event.receiver}.class, (fragment) -> {\n" +
-                        "               fragment.${event.functionName}(${parameterList(event.parameterCount)});\n" +
-                        "               return null;\n" +
-                        "           });"
+                "            ViewJava.findActionReceiverOrNull(v, ${event.receiver}.class, (fragment) -> {\n" +
+                        "                fragment.${event.functionName}(${parameterList(event.parameterList)});\n" +
+                        "                return null;\n" +
+                        "            });"
             }
         }
     }
 
-    private fun parameterList(parameterCount: Int): String {
-        return "v" +
-                if (parameterCount == 2)
-                    ", viewHolder.getItemHolder()"
-                else ""
+    private fun parameterList(parameterCount: String): String {
+        return parameterCount
     }
 
     private fun importBindingClass(entry: List<Entry>): String {
