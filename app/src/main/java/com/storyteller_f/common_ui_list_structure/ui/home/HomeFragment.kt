@@ -6,24 +6,14 @@ import android.widget.TextView
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.MutableLiveData
 import com.storyteller_f.common_ui.CommonFragment
-import com.storyteller_f.common_ui_list_structure.R
 import com.storyteller_f.common_ui_list_structure.databinding.FragmentHomeBinding
 import com.storyteller_f.common_ui_list_structure.model.Repo
 import com.storyteller_f.common_vm_ktx.gor
 import com.storyteller_f.common_vm_ktx.plus
-import com.storyteller_f.ui_list.event.viewBinding
 
-class HomeFragment : CommonFragment(R.layout.fragment_home) {
+class HomeFragment : CommonFragment<FragmentHomeBinding>(FragmentHomeBinding::inflate) {
 
-    private val binding by viewBinding(FragmentHomeBinding::bind)
     private val homeViewModel by viewModels<HomeViewModel>()
-
-    override fun onBindViewEvent(inflate: View) {
-        val textView: TextView = binding.textHome
-        homeViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
-        }
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -40,6 +30,13 @@ class HomeFragment : CommonFragment(R.layout.fragment_home) {
         l1.value = 2
         l2.value = false
         l3.value = Repo(0, "", "", "", "", 12, 15, "")
+    }
+
+    override fun onBindViewEvent(binding: FragmentHomeBinding) {
+        val textView: TextView = binding.textHome
+        homeViewModel.text.observe(viewLifecycleOwner) {
+            textView.text = it
+        }
     }
 
 }

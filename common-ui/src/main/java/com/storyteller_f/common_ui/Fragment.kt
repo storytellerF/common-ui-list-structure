@@ -6,21 +6,25 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
 import androidx.fragment.app.Fragment
+import androidx.viewbinding.ViewBinding
 
 /**
  * @author storyteller_f
  */
 
-abstract class CommonFragment(@LayoutRes private val layoutId: Int) : Fragment() {
+abstract class CommonFragment<T : ViewBinding>(
+    val viewBindingFactory: (LayoutInflater) -> T
+) : Fragment() {
+    lateinit var binding: T
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val inflate = inflater.inflate(layoutId, container)!!
-        onBindViewEvent(inflate)
-        return inflate
+        binding = viewBindingFactory(layoutInflater)
+        onBindViewEvent(binding)
+        return binding.root
     }
 
-    abstract fun onBindViewEvent(inflate: View)
+    abstract fun onBindViewEvent(binding: T)
 }

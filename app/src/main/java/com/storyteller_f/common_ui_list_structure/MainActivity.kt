@@ -7,7 +7,9 @@ import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
@@ -36,6 +37,7 @@ import com.storyteller_f.ui_list.core.*
 import com.storyteller_f.ui_list.event.viewBinding
 import com.storyteller_f.view_holder_compose.ComposeSourceAdapter
 import com.storyteller_f.view_holder_compose.ComposeViewHolder
+import com.storyteller_f.view_holder_compose.EDComposeView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -117,6 +119,11 @@ class MainActivity : AppCompatActivity() {
         println("click ${itemHolder.repo.fullName}")
     }
 
+    @BindClickEvent(SeparatorItemHolder::class, "card")
+    fun clickLine(view: View, itemHolder: SeparatorItemHolder) {
+        println("click ${itemHolder.info}")
+    }
+
     private fun printInsets(insets: WindowInsets) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             Log.i(TAG, "printInsets: >R")
@@ -170,7 +177,12 @@ class MainActivity : AppCompatActivity() {
 
     @Composable
     fun ButtonGroup() {
-        Row(modifier = Modifier.background(Brush.linearGradient(listOf(Color.Black, Color.White)), RoundedCornerShape(3))) {
+        Row(
+            modifier = Modifier.background(
+                Brush.linearGradient(listOf(Color.Black, Color.White)),
+                RoundedCornerShape(3)
+            )
+        ) {
             Button(
                 onClick = { hideSystemUI() },
             ) {
@@ -250,11 +262,16 @@ class SeparatorItemHolder(val info: String) : DataItemHolder() {
 
 
 @BindItemHolder(SeparatorItemHolder::class)
-class SeparatorViewHolder(composeView: ComposeView) :
-    ComposeViewHolder<SeparatorItemHolder>(composeView) {
+class SeparatorViewHolder(edComposeView: EDComposeView) :
+    ComposeViewHolder<SeparatorItemHolder>(edComposeView) {
+    @OptIn(ExperimentalFoundationApi::class)
     override fun bindData(itemHolder: SeparatorItemHolder) {
-        composeView.setContent {
-            Card(backgroundColor = colorResource(id = R.color.separatorBackground)) {
+        edComposeView.composeView.setContent {
+            Card(backgroundColor = colorResource(id = R.color.separatorBackground),
+                modifier = Modifier.combinedClickable(
+                    onClick = { edComposeView.notifyClickEvent("card") },
+                    onLongClick = { edComposeView.notifyLongClickEvent("card") }
+                )) {
                 Text(
                     text = itemHolder.info, modifier = Modifier.padding(12.dp),
                     color = colorResource(

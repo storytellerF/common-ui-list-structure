@@ -9,7 +9,7 @@ class ComposeSourceAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<I
     override fun onViewRecycled(holder: VH) {
         super.onViewRecycled(holder)
         if (holder is ComposeViewHolder<*>) {
-            holder.composeView.disposeComposition()
+            holder.edComposeView.disposeComposition()
         }
     }
 }

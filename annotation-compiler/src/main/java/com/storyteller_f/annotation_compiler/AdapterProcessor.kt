@@ -35,6 +35,10 @@ class Event(
 class AdapterProcessor : AbstractProcessor() {
     private var count = 0
 
+    companion object {
+        const val className = "Temp"
+    }
+
     @Suppress("NewApi")
     override fun process(
         set: MutableSet<out TypeElement>?,
@@ -51,9 +55,10 @@ class AdapterProcessor : AbstractProcessor() {
             val holderEntry = getHolder(roundEnvironment, typeElement)
             val content =
                 createClassFileContent(packageOf, holderEntry, eventMap, longClickEventMap)
-            val createClassFile =
-                processingEnv.filer.createSourceFile("${packageOf}.adapter_produce.Temp")
-            createClassFile.openWriter().use {
+            val classFile =
+                processingEnv.filer.createSourceFile("${packageOf}.adapter_produce.$className")
+            println(content)
+            classFile.openWriter().use {
                 it.write(content)
                 it.flush()
             }
@@ -70,13 +75,16 @@ class AdapterProcessor : AbstractProcessor() {
         val importBindingClass = importBindingClass(holderEntry ?: listOf())
         val importReceiverClass = importReceiverClass(eventMap?.plus(longClickEventMap ?: mapOf()))
         val buildAddFunction = buildAddFunction(holderEntry ?: listOf())
+        var hasComposeView = false
         val buildViewHolder = holderEntry?.joinToString("\n") {
             val eventList = eventMap?.get(it.itemHolderName) ?: mapOf()
             val eventList2 = longClickEventMap?.get(it.itemHolderName) ?: mapOf()
             if (it.bindingName.endsWith("Binding"))
                 buildViewHolder(it, eventList, eventList2)
-            else
-                buildComposeViewHolder(it)
+            else {
+                if (!hasComposeView) hasComposeView = true
+                buildComposeViewHolder(it, eventList, eventList2)
+            }
         }
 
         return "package $packageOf.adapter_produce;\n" +
@@ -85,16 +93,23 @@ class AdapterProcessor : AbstractProcessor() {
                 "import android.content.Context;\n" +
                 "import android.view.LayoutInflater;\n" +
                 "import android.view.ViewGroup;\n\n" +
-                "import androidx.compose.ui.platform.ComposeView;\n" +
+                (if (hasComposeView)
+                    "import androidx.compose.ui.platform.ComposeView;\n"
+                else "") +
                 "\n" +
                 importBindingClass + "\n" +
                 importReceiverClass + "\n" +
                 "import com.storyteller_f.ui_list.event.ViewJava;\n" +
+                (if (hasComposeView)
+                    "import com.storyteller_f.view_holder_compose.EDComposeView;\n\n" +
+                            "import kotlin.Unit;\n" +
+                            "import kotlin.jvm.functions.Function1;"
+                else "") +
                 "\n" +
                 "/**\n" +
                 " * @author storyteller_f\n" +
                 " */\n" +
-                "public class Temp {\n" +
+                "public class $className {\n" +
                 buildViewHolder + "\n" +
                 buildAddFunction + "\n" +
                 "}\n"
@@ -164,19 +179,40 @@ class AdapterProcessor : AbstractProcessor() {
 
     private fun importReceiverClass(eventMap: Map<String?, Map<String, List<Event>>>?): String {
         val flatMap =
-            eventMap?.flatMap { it.value.flatMap { entry -> entry.value } }?.map { it.receiverFullName }
+            eventMap?.flatMap { it.value.flatMap { entry -> entry.value } }
+                ?.map { it.receiverFullName }
                 ?.distinct()
         return flatMap?.joinToString("\n") {
             "import $it;\n"
         } ?: ""
     }
 
-    private fun buildComposeViewHolder(it: Entry): String {
+    private fun buildComposeViewHolder(
+        it: Entry,
+        eventList: Map<String, List<Event>>,
+        eventList2: Map<String, List<Event>>
+    ): String {
         return "    public static ${it.viewHolderName} build${it.viewHolderName}(ViewGroup view) {\n" +
                 "        Context context = view.getContext();\n" +
-                "        ${it.viewHolderName} viewHolder = new ${it.viewHolderName}(new ComposeView(context));\n" +
+                "        EDComposeView composeView = new EDComposeView(context);\n" +
+                "        ComposeView v = composeView.getComposeView();\n" +
+                "        ${it.viewHolderName} viewHolder = new ${it.viewHolderName}(composeView);\n" +
+                "        composeView.setClickListener(new Function1<String, Unit>() {\n" +
+                "            @Override\n" +
+                "            public Unit invoke(String s) {\n" +
+                buildComposeClickListener(eventList) +
+                "                return null;\n" +
+                "            }\n" +
+                "        });\n" +
+                "        composeView.setLongClickListener(new Function1<String, Unit>() {\n" +
+                "            @Override\n" +
+                "            public Unit invoke(String s) {\n" +
+                buildComposeClickListener(eventList2) +
+                "                return null;\n" +
+                "            }\n" +
+                "        });\n" +
                 "        return viewHolder;\n" +
-                "    }"
+                "    }\n"
     }
 
     override fun getSupportedAnnotationTypes(): MutableSet<String> {
@@ -204,6 +240,27 @@ class AdapterProcessor : AbstractProcessor() {
                 "   }"
     }
 
+    private fun buildComposeClickListener(event: Map<String, List<Event>>): String {
+        return event.map {
+            "                if (s == \"${it.key}\") {\n" +
+                    it.value.joinToString("\n") { e ->
+                        if (e.receiver.contains("Activity"))
+                            ("             ViewJava.doWhenIs(context, ${e.receiver}.class, (activity) -> {\n" +
+                                    "                 activity.${e.functionName}(${parameterList(e.parameterCount)});\n" +
+                                    "                 return null;//activity return\n" +
+                                    "            });//activity end\n")
+                        else
+                            ("             ViewJava.findActionReceiverOrNull(composeView.getComposeView(), ${e.receiver}.class, (fragment) -> {\n" +
+                                    "                 fragment.${e.functionName}(${parameterList(e.parameterCount)})\n" +
+                                    "                 return null;//fragment return\n" +
+                                    "             });//fragment end\n")
+                    } +
+
+                    "                }//if end\n"
+        }.joinToString("\n")
+
+    }
+
     private fun buildClickListener(
         event: Map<String, List<Event>>,
         event2: Map<String, List<Event>>
@@ -212,11 +269,12 @@ class AdapterProcessor : AbstractProcessor() {
             "       inflate.${it.key}.setOnClickListener((v) -> {\n" +
                     buildClickListener(it.value) +
                     "\n       });\n"
-        }.joinToString("\n") + event2.map {
-            "       inflate.${it.key}.setOnLongClickListener((v) -> {\n" +
-                    buildClickListener(it.value) +
-                    "\n       });\n"
-        }.joinToString("\n")
+        }.joinToString("\n") +
+                event2.map {
+                    "       inflate.${it.key}.setOnLongClickListener((v) -> {\n" +
+                            buildClickListener(it.value) +
+                            "\n       });\n"
+                }.joinToString("\n")
     }
 
     private fun buildClickListener(events: List<Event>): String {
@@ -255,7 +313,7 @@ class AdapterProcessor : AbstractProcessor() {
         return "    public static void add() {\n" +
                 entry.joinToString("\n") {
                     "       getRegisterCenter().put(${it.itemHolderName}.class, ${index++});\n" +
-                            "       getList().add(Temp::build${it.viewHolderName});\n"
+                            "       getList().add($className::build${it.viewHolderName});\n"
                 } +
                 "   }\n"
     }
