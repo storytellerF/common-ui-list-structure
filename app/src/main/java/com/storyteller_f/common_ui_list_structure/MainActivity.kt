@@ -1,11 +1,10 @@
 package com.storyteller_f.common_ui_list_structure
 
-import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.WindowInsets
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -24,13 +23,14 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ui_list_structure.api.requireReposService
 import com.storyteller_f.common_ui_list_structure.databinding.ActivityMainBinding
 import com.storyteller_f.common_ui_list_structure.databinding.RepoViewItemBinding
-import com.storyteller_f.common_ui_list_structure.db.RepoComposite
+import com.storyteller_f.common_ui_list_structure.db.composite.RepoComposite
 import com.storyteller_f.common_ui_list_structure.db.requireRepoDatabase
 import com.storyteller_f.common_ui_list_structure.model.Repo
 import com.storyteller_f.ui_list.core.*
@@ -38,12 +38,13 @@ import com.storyteller_f.ui_list.event.viewBinding
 import com.storyteller_f.view_holder_compose.ComposeSourceAdapter
 import com.storyteller_f.view_holder_compose.ComposeViewHolder
 import com.storyteller_f.view_holder_compose.EDComposeView
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private val binding by viewBinding(ActivityMainBinding::inflate)
+    private val toast by lazy {
+        Toast.makeText(this,"", Toast.LENGTH_SHORT)
+    }
     private val viewModel by source({ 1 }, { 2 }, { one, two ->
         SourceProducer(
             { RepoComposite(requireRepoDatabase()) },
@@ -87,19 +88,8 @@ class MainActivity : AppCompatActivity() {
                 adapter.submitData(it)
             }
         }
-        window.decorView.setOnApplyWindowInsetsListener { v, insets ->
+        window.decorView.setOnApplyWindowInsetsListener { _, insets ->
             printInsets(insets)
-            val insets1 =
-                when {
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> insets.getInsets(WindowInsets.Type.statusBars()).top
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
-                        insets.systemWindowInsets.top
-                    }
-                    else -> {
-                        0
-                    }
-                }
-            Log.i(TAG, "onCreate: $insets1")
             insets
         }
         binding.buttonGroup.run {
@@ -107,10 +97,6 @@ class MainActivity : AppCompatActivity() {
             setContent {
                 ButtonGroup()
             }
-        }
-        lifecycleScope.launch {
-            delay(3000)
-            startActivity(Intent(this@MainActivity, MainActivity2::class.java))
         }
     }
 
@@ -125,50 +111,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun printInsets(insets: WindowInsets) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            Log.i(TAG, "printInsets: >R")
-            val navigation = insets.getInsets(WindowInsets.Type.navigationBars())
-            Log.i(TAG, "printInsets: navigator $navigation")
-            val navigatorVisible = insets.isVisible(WindowInsets.Type.navigationBars())
-            val statusVisible = insets.isVisible(WindowInsets.Type.statusBars())
-            Log.i(TAG, "printInsets: n visible $navigatorVisible s visible $statusVisible")
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            Log.i(TAG, "printInsets: >Q")
-            val systemWindowInsets = insets.systemWindowInsets
-            Log.i(TAG, "printInsets: $systemWindowInsets")
-        }
-        val systemWindowInsetTop = insets.systemWindowInsetTop
-        Log.i(TAG, "printInsets: $systemWindowInsetTop")
-        Log.i(
-            TAG,
-            "printInsets: ${window.decorView.windowSystemUiVisibility} ${window.decorView.systemUiVisibility}"
-        )
-        val i = window.decorView.windowSystemUiVisibility and View.SYSTEM_UI_FLAG_FULLSCREEN
-        Log.i(TAG, "printInsets: $i")
-    }
-
-    private fun hideSystemUI() {
-        // Enables regular immersive mode.
-        // For "lean back" mode, remove SYSTEM_UI_FLAG_IMMERSIVE.
-        // Or for "sticky immersive," replace it with SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-        window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE
-                // Set the content to appear under the system bars so that the
-                // content doesn't resize when the system bars hide and show.
-                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                // Hide the nav bar and status bar
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_FULLSCREEN)
-    }
-
-    // Shows the system bars by removing all the flags
-    // except for the ones that make the content appear under the system bars.
-    private fun showSystemUI() {
-        window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
+        val insets1 = WindowInsetsCompat.toWindowInsetsCompat(insets)
+            .getInsets(WindowInsetsCompat.Type.navigationBars())
+        println("navigator ${insets1.bottom} status ${insets1.top}")
     }
 
     companion object {
@@ -184,12 +129,18 @@ class MainActivity : AppCompatActivity() {
             )
         ) {
             Button(
-                onClick = { hideSystemUI() },
+                onClick = { toast.apply {
+                    setText("full")
+                    show()
+                } },
             ) {
                 Text(text = "full")
             }
             Button(
-                onClick = { showSystemUI() },
+                onClick = { toast.apply {
+                    setText("recovery")
+                    show()
+                } },
             ) {
                 Text(text = "recovery")
             }

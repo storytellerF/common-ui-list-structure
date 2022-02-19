@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.storyteller_f.common_vm_ktx
 
 /**
@@ -31,7 +33,7 @@ class KeyedViewModelLazy<VM : ViewModel>(
                     ?: throw IllegalArgumentException("Local and anonymous classes can not be ViewModels")
 
                 val key = "${keyPrefixProvider()} : $canonicalName"
-                ViewModelProvider(store, factory).get(key, viewModelClass.java).also {
+                ViewModelProvider(store, factory)[key, viewModelClass.java].also {
                     cached = it
                 }
             } else {
@@ -56,7 +58,7 @@ fun <VM : ViewModel> Fragment.keyedViewModels(
 }
 
 @MainThread
-inline fun <reified VM : ViewModel> Fragment.viewModelsKeyed(
+inline fun <reified VM : ViewModel> Fragment.kvm(
     keyPrefix: String,
     noinline ownerProducer: () -> ViewModelStoreOwner = { this },
     noinline factoryProducer: (() -> ViewModelProvider.Factory)? = null
@@ -65,7 +67,7 @@ inline fun <reified VM : ViewModel> Fragment.viewModelsKeyed(
 
 @MainThread
 inline fun <reified VM : ViewModel> ComponentActivity.cVM(
-    noinline factoryProducer: (() -> VM)
+    crossinline factoryProducer: () -> VM
 ): Lazy<VM> {
     return ViewModelLazy(VM::class, { viewModelStore },
         {
@@ -74,8 +76,24 @@ inline fun <reified VM : ViewModel> ComponentActivity.cVM(
                     key: String,
                     modelClass: Class<T>,
                     handle: SavedStateHandle
-                ): T = factoryProducer() as T
+                ): T = modelClass.cast(factoryProducer())!!
+            }
+        })
+}
 
+@MainThread
+inline fun <reified VM : ViewModel> ComponentActivity.ckVM(
+    noinline keyPrefixProvider: () -> String,
+    crossinline factoryProducer: () -> VM
+): Lazy<VM> {
+    return KeyedViewModelLazy(keyPrefixProvider, VM::class, { viewModelStore },
+        {
+            object : AbstractSavedStateViewModelFactory(this, null) {
+                override fun <T : ViewModel?> create(
+                    key: String,
+                    modelClass: Class<T>,
+                    handle: SavedStateHandle
+                ): T = modelClass.cast(factoryProducer())!!
             }
         })
 }

@@ -51,10 +51,12 @@ dependencies {
 
     implementation(project(":ui-list"))
     implementation project(path: ':annotation-defination')
+    implementation(project(":composite-defination"))
     implementation(project(":common-ui"))
     implementation 'androidx.navigation:navigation-fragment-ktx:2.4.1'
     implementation 'androidx.navigation:navigation-ui-ktx:2.4.1'
     kapt(project(':annotation-compiler'))
+    kapt(project(":composite-compiler"))
     implementation(project(":view-holder-compose"))
 
     testImplementation 'junit:junit:4.13.2'

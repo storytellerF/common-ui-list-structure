@@ -1,6 +1,7 @@
 package com.storyteller_f.annotation_compiler
 
 import com.storyteller_f.annotation_defination.BindClickEvent
+import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.annotation_defination.BindLongClickEvent
 import java.rmi.activation.UnknownObjectException
 import javax.annotation.processing.AbstractProcessor
@@ -46,10 +47,11 @@ class AdapterProcessor : AbstractProcessor() {
         roundEnvironment: RoundEnvironment?
     ): Boolean {
         count++
-        println("set:$set is over ${roundEnvironment?.processingOver()} count:$count")
+        println("binding set:$set is over ${roundEnvironment?.processingOver()} count:$count")
+        if (set == null || set.isEmpty()) return false
         val eventMap = getEvent(roundEnvironment, BindClickEvent::class.java)
         val longClickEventMap = getEvent(roundEnvironment, BindLongClickEvent::class.java)
-        set?.forEach { typeElement ->
+        set.forEach { typeElement ->
             val packageElement = processingEnv.elementUtils.getPackageOf(
                 roundEnvironment?.getElementsAnnotatedWithAny(typeElement)?.firstOrNull()
             )
@@ -58,13 +60,12 @@ class AdapterProcessor : AbstractProcessor() {
                 createClassFileContent(packageElement, holderEntry, eventMap, longClickEventMap)
             val classFile =
                 processingEnv.filer.createSourceFile("${packageElement}.adapter_produce.$className")
-            println(content)
             classFile.openWriter().use {
                 it.write(content)
                 it.flush()
             }
         }
-        return false
+        return true
     }
 
     private fun createClassFileContent(
@@ -229,9 +230,7 @@ class AdapterProcessor : AbstractProcessor() {
     }
 
     override fun getSupportedAnnotationTypes(): MutableSet<String> {
-        return mutableSetOf(
-            "com.storyteller_f.annotation_defination.BindItemHolder",
-        )
+        return mutableSetOf(BindItemHolder::class.java.canonicalName)
     }
 
     override fun getSupportedSourceVersion(): SourceVersion {
@@ -259,12 +258,20 @@ class AdapterProcessor : AbstractProcessor() {
                     it.value.joinToString("\n") { e ->
                         if (e.receiver.contains("Activity"))
                             ("                    ViewJava.doWhenIs(context, ${e.receiver}.class, (activity) -> {\n" +
-                                    "                         activity.${e.functionName}(${parameterList(e.parameterList)});\n" +
+                                    "                         activity.${e.functionName}(${
+                                        parameterList(
+                                            e.parameterList
+                                        )
+                                    });\n" +
                                     "                         return null;//activity return\n" +
                                     "                     });//activity end\n")
                         else
                             ("                    ViewJava.findActionReceiverOrNull(composeView.getComposeView(), ${e.receiver}.class, (fragment) -> {\n" +
-                                    "                         fragment.${e.functionName}(${parameterList(e.parameterList)})\n" +
+                                    "                         fragment.${e.functionName}(${
+                                        parameterList(
+                                            e.parameterList
+                                        )
+                                    })\n" +
                                     "                         return null;//fragment return\n" +
                                     "                     });//fragment end\n")
                     } +

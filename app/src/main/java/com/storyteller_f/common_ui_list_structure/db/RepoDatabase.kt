@@ -7,12 +7,13 @@ import androidx.paging.PagingSource
 import androidx.room.*
 import com.storyteller_f.common_ui_list_structure.model.Repo
 import com.storyteller_f.common_ui_list_structure.model.RepoRemoteKey
+import com.storyteller_f.composite_defination.Composite
 import com.storyteller_f.ui_list.database.CommonRoomDatabase
 
 @Dao
 interface RepoDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertAll(all: List<Repo>)
+    suspend fun insertAll(all: List<Repo>)
 
     @Query("SELECT * FROM repos ORDER BY stars DESC, name ASC")
     fun selectAll(): PagingSource<Int, Repo>
@@ -48,6 +49,7 @@ interface RemoteKeysDao {
     version = 2,
     exportSchema = false
 )
+@Composite("Repo")
 abstract class RepoDatabase : RoomDatabase() {
 
     abstract fun reposDao(): RepoDao
@@ -71,33 +73,6 @@ abstract class RepoDatabase : RoomDatabase() {
             )
                 .fallbackToDestructiveMigration()
                 .build()
-    }
-}
-
-class RepoComposite(private val repoDatabase: RepoDatabase) :
-    CommonRoomDatabase<Repo, RepoRemoteKey, RepoDatabase>(repoDatabase) {
-    override suspend fun clearOld() {
-        repoDatabase.reposDao().clearRepos()
-        repoDatabase.remoteKeyDao().clearRemoteKeys()
-    }
-
-    override suspend fun insertRemoteKey(remoteKeys: List<RepoRemoteKey>) =
-        repoDatabase.remoteKeyDao().insertAll(remoteKeys)
-
-
-    override suspend fun getRemoteKey(id: String): RepoRemoteKey? =
-        repoDatabase.remoteKeyDao().remoteKeysRepoId(id)
-
-
-    override suspend fun insertAllData(repos: List<Repo>) = repoDatabase.reposDao().insertAll(repos)
-    override suspend fun deleteItemById(commonDatumId: String) {
-        repoDatabase.reposDao().delete(commonDatumId.toLong())
-        repoDatabase.remoteKeyDao().delete(commonDatumId)
-    }
-
-    override suspend fun deleteItemBy(d: Repo) {
-        repoDatabase.reposDao().delete(d)
-        repoDatabase.remoteKeyDao().delete(d.remoteKeyId())
     }
 }
 

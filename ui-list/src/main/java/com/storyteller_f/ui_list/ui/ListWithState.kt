@@ -23,8 +23,7 @@ class ListWithState @JvmOverloads constructor(
     attributeSet: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attributeSet) {
-    fun flash(loadState: CombinedLoadStates, itemCount: Int) {
-        println("remote mediator loading ${loadState.mediator?.refresh} $itemCount")
+    private fun flash(loadState: CombinedLoadStates, itemCount: Int) {
         // Only show the list if refresh succeeds.
         binding.list.isVisible =
             loadState.mediator?.refresh is LoadState.NotLoading && itemCount > 0
@@ -85,10 +84,10 @@ class ListWithState @JvmOverloads constructor(
         adapter: SimpleSourceAdapter<*, *>
     ) {
         setAdapter(concatAdapter)
-        setupRefersh(adapter)
+        setupRefresh(adapter)
     }
 
-    private fun setupRefersh(adapter: SimpleSourceAdapter<*, *>) {
+    private fun setupRefresh(adapter: SimpleSourceAdapter<*, *>) {
         binding.refreshLayout.setOnRefreshListener {
             adapter.refresh()
         }

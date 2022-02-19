@@ -6,13 +6,11 @@ import android.view.View;
 
 import androidx.fragment.app.Fragment;
 
-import com.storyteller_f.ui_list.R;
-
 import kotlin.jvm.functions.Function1;
 
+@SuppressWarnings("unused")
 public class ViewJava {
     public static <T> T findActionReceiverOrNull(View view, Class<T> actionReceive) {
-
         Fragment fragment;
         try {
             fragment = findFragment(view);
@@ -22,7 +20,7 @@ public class ViewJava {
 
         while (fragment != null) {
             if (actionReceive.isInstance(fragment)) {
-                return ((T) fragment);
+                return actionReceive.cast(fragment);
             }
             fragment = fragment.getParentFragment();
         }
@@ -30,7 +28,6 @@ public class ViewJava {
     }
 
     public static <T, R> void findActionReceiverOrNull(View view, Class<T> actionReceive, Function1<T, R> function1) {
-
         Fragment fragment;
         try {
             fragment = findFragment(view);
@@ -40,7 +37,7 @@ public class ViewJava {
 
         while (fragment != null) {
             if (actionReceive.isInstance(fragment)) {
-                function1.invoke((T) fragment);
+                function1.invoke(actionReceive.cast(fragment));
                 return;
             }
             fragment = fragment.getParentFragment();
@@ -53,9 +50,9 @@ public class ViewJava {
         }
     }
 
-    public static<T, R> void doWhenIs(Object o, Class<T> tClass, Function1<T, R> function) {
+    public static <T, R> void doWhenIs(Object o, Class<T> tClass, Function1<T, R> function) {
         if (tClass.isInstance(o)) {
-            function.invoke((T) o);
+            function.invoke(tClass.cast(o));
         }
     }
 }
