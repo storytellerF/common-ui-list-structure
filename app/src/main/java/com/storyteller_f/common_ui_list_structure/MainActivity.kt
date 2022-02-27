@@ -24,6 +24,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
@@ -33,6 +34,8 @@ import com.storyteller_f.common_ui_list_structure.databinding.RepoViewItemBindin
 import com.storyteller_f.common_ui_list_structure.db.composite.RepoComposite
 import com.storyteller_f.common_ui_list_structure.db.requireRepoDatabase
 import com.storyteller_f.common_ui_list_structure.model.Repo
+import com.storyteller_f.common_vm_ktx.KeyedLiveData
+import com.storyteller_f.common_vm_ktx.plus
 import com.storyteller_f.ui_list.core.*
 import com.storyteller_f.ui_list.event.viewBinding
 import com.storyteller_f.view_holder_compose.ComposeSourceAdapter
@@ -98,6 +101,23 @@ class MainActivity : AppCompatActivity() {
                 ButtonGroup()
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val age = KeyedLiveData(0, "age")
+        val gender = MutableLiveData(true)
+        val r = MutableLiveData<Repo>(null)
+        age.plus(gender, "gender").plus(r, "repo").observe(this) {
+            val data = it as Map<*, *>
+            val lAge = data["age"]
+            val lGender = data["gender"]
+            val lRepo = data["repo"]
+            println("hello $lAge $lGender $lRepo")
+        }
+        age.value = 2
+        gender.value = false
+        r.value = Repo(0, "", "", "", "", 12, 15, "")
     }
 
     @BindClickEvent(RepoItemHolder::class)
