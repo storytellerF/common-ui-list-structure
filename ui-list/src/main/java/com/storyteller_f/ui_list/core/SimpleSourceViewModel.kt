@@ -26,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SimpleSourceViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey, DT : RoomDatabase>(
     sourceRepository: SimpleSourceRepository<D, RK, DT>,
@@ -73,7 +74,7 @@ class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey
     var last: D? = null
 
     val content: LiveData<List<Holder>> = liveData {
-        val asLiveData = sourceRepository.requestSound().asLiveData(Dispatchers.Main)
+        val asLiveData = sourceRepository.request().asLiveData(Dispatchers.Main)
         emitSource(asLiveData.map {
             it.map { repo ->
                 val holder = processFactory(repo, last)
@@ -101,8 +102,40 @@ class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey
 
     fun refresh() {
         viewModelScope.launch {
-            sourceRepository.requestSound()
+            sourceRepository.request()
         }
+    }
+}
+
+class SimpleDetailViewModel<D : Any>(
+    private val producer: suspend () -> D,
+    private val local: (suspend () -> D)? = null
+) : ViewModel() {
+    val content = MutableLiveData<D>()
+    val loadState = MutableLiveData<LoadState>()
+
+    init {
+        refresh(local, producer)
+    }
+
+    private fun refresh(local: (suspend () -> D)?, producer: suspend () -> D) {
+        viewModelScope.launch {
+            try {
+                loadState.value = LoadState.Loading
+                content.value = if (local!= null) {
+                    withContext(Dispatchers.IO) {
+                        local()
+                    }
+                } else producer()
+                loadState.value = LoadState.NotLoading(true)
+            } catch (e: Exception) {
+                loadState.value = LoadState.Error(e)
+            }
+        }
+    }
+
+    fun refresh() {
+        refresh(null, producer)
     }
 }
 

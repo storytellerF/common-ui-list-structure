@@ -24,6 +24,11 @@ class DataProducer<RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder>(
     val processFactory: (Data, Data?) -> Holder,
 )
 
+class DetailProducer<D : Any>(
+    val producer: suspend () -> D,
+    val local: (suspend () -> D)? = null
+)
+
 fun <RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder, Database : RoomDatabase, Composite : CommonRoomDatabase<Data, RK, Database>, ARG1> ComponentActivity.source(
     arg1: () -> ARG1,
     sourceProducer: (ARG1) -> SourceProducer<RK, Data, Holder, Database, Composite>,
@@ -76,6 +81,17 @@ fun <RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder> Fragment.data(
             SimpleDataRepository(
                 dataContent.service,
             ), dataContent.processFactory
+        )
+    }
+}
+
+fun <Data : Any> Fragment.detail(
+    detailContent: DetailProducer<Data>,
+): Lazy<SimpleDetailViewModel<Data>> {
+    return sVM {
+        SimpleDetailViewModel(
+            detailContent.producer,
+            detailContent.local
         )
     }
 }

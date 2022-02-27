@@ -69,7 +69,7 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
     // 避免同一时刻进行多个请求
     private var isRequestInProgress = false
 
-    suspend fun requestSound(): Flow<List<D>> {
+    suspend fun request(): Flow<List<D>> {
         lastRequestedPage = 1
         inMemoryCache.clear()
         requestAndSaveData(lastRequestedPage)

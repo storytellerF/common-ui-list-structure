@@ -8,7 +8,6 @@ import androidx.room.*
 import com.storyteller_f.common_ui_list_structure.model.Repo
 import com.storyteller_f.common_ui_list_structure.model.RepoRemoteKey
 import com.storyteller_f.composite_defination.Composite
-import com.storyteller_f.ui_list.database.CommonRoomDatabase
 
 @Dao
 interface RepoDao {
@@ -17,6 +16,9 @@ interface RepoDao {
 
     @Query("SELECT * FROM repos ORDER BY stars DESC, name ASC")
     fun selectAll(): PagingSource<Int, Repo>
+
+    @Query("select * from repos")
+    fun select(): Repo
 
     @Query("DELETE FROM repos")
     suspend fun clearRepos()

@@ -48,11 +48,10 @@ class AdapterProcessor : AbstractProcessor() {
     ): Boolean {
         count++
         println("binding set:$set is over ${roundEnvironment?.processingOver()} count:$count")
-        if (set == null || set.isEmpty()) return false
         val eventMap = getEvent(roundEnvironment, BindClickEvent::class.java)
         val longClickEventMap = getEvent(roundEnvironment, BindLongClickEvent::class.java)
         println("binding event map ${eventMap?.size} ${longClickEventMap?.size}")
-        set.forEach { typeElement ->
+        set?.forEach { typeElement ->
             val packageElement = processingEnv.elementUtils.getPackageOf(
                 roundEnvironment?.getElementsAnnotatedWithAny(typeElement)?.firstOrNull()
             )
