@@ -6,7 +6,7 @@ import androidx.room.RoomDatabase
 import androidx.room.withTransaction
 import com.storyteller_f.ui_list.core.Datum
 import com.storyteller_f.ui_list.data.CommonResponse
-import com.storyteller_f.ui_list.data.GITHUB_STARTING_PAGE_INDEX
+import com.storyteller_f.ui_list.data.STARTING_PAGE_INDEX
 import retrofit2.HttpException
 import java.io.IOException
 
@@ -24,7 +24,7 @@ class SimpleRemoteMediator<D : Datum<RK>, RK : RemoteKey, DT : RoomDatabase>(
         val page = when (loadType) {
             LoadType.REFRESH -> {
                 val remoteKeys = getRemoteKeyClosestToCurrentPosition(state)
-                remoteKeys?.nextKey?.minus(1) ?: GITHUB_STARTING_PAGE_INDEX
+                remoteKeys?.nextKey?.minus(1) ?: STARTING_PAGE_INDEX
             }
             LoadType.PREPEND -> {
                 val remoteKeys = getRemoteKeyForFirstItem(state)
@@ -58,7 +58,7 @@ class SimpleRemoteMediator<D : Datum<RK>, RK : RemoteKey, DT : RoomDatabase>(
                 if (loadType == LoadType.REFRESH) {
                     commonRoomDatabase.clearOld()
                 }
-                val prevKey = if (page == GITHUB_STARTING_PAGE_INDEX) null else page - 1
+                val prevKey = if (page == STARTING_PAGE_INDEX) null else page - 1
                 val nextKey = if (endOfPaginationReached) null else page + 1
                 val keys = items.map {
                     it.produceRemoteKey(prevKey, nextKey)

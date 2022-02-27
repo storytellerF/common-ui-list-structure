@@ -1,11 +1,13 @@
 package com.storyteller_f.ui_list.core
 
 import androidx.activity.ComponentActivity
+import androidx.fragment.app.Fragment
 import androidx.paging.PagingSource
 import androidx.room.RoomDatabase
-import com.storyteller_f.common_vm_ktx.cVM
+import com.storyteller_f.common_vm_ktx.sVM
 import com.storyteller_f.ui_list.data.CommonResponse
-import com.storyteller_f.ui_list.data.SimpleRepository
+import com.storyteller_f.ui_list.data.SimpleDataRepository
+import com.storyteller_f.ui_list.data.SimpleSourceRepository
 import com.storyteller_f.ui_list.database.CommonRoomDatabase
 import com.storyteller_f.ui_list.database.RemoteKey
 
@@ -15,6 +17,11 @@ class SourceProducer<RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder, 
     val pagingSourceFactory: () -> PagingSource<Int, Data>,
     val processFactory: (Data, Data?) -> Holder,
     val interceptorFactory: (Holder?, Holder?) -> DataItemHolder? = { _, _ -> null }
+)
+
+class DataProducer<RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder>(
+    val service: suspend (Int, Int) -> CommonResponse<Data, RK>,
+    val processFactory: (Data, Data?) -> Holder,
 )
 
 fun <RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder, Database : RoomDatabase, Composite : CommonRoomDatabase<Data, RK, Database>, ARG1> ComponentActivity.source(
@@ -38,13 +45,37 @@ fun <RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder, Database : RoomD
 fun <RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder, Database : RoomDatabase, Composite : CommonRoomDatabase<Data, RK, Database>> ComponentActivity.source(
     sourceContent: SourceProducer<RK, Data, Holder, Database, Composite>,
 ): Lazy<SimpleSourceViewModel<Data, Holder, RK, Database>> {
-    return cVM {
+    return sVM {
         SimpleSourceViewModel(
-            SimpleRepository(
+            SimpleSourceRepository(
                 sourceContent.service,
                 sourceContent.composite(),
                 sourceContent.pagingSourceFactory,
             ), sourceContent.processFactory, sourceContent.interceptorFactory
+        )
+    }
+}
+
+fun <RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder> ComponentActivity.data(
+    dataContent: DataProducer<RK, Data, Holder>,
+): Lazy<SimpleDataViewModel<Data, Holder, RK>> {
+    return sVM {
+        SimpleDataViewModel(
+            SimpleDataRepository(
+                dataContent.service,
+            ), dataContent.processFactory
+        )
+    }
+}
+
+fun <RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder> Fragment.data(
+    dataContent: DataProducer<RK, Data, Holder>,
+): Lazy<SimpleDataViewModel<Data, Holder, RK>> {
+    return sVM {
+        SimpleDataViewModel(
+            SimpleDataRepository(
+                dataContent.service,
+            ), dataContent.processFactory
         )
     }
 }

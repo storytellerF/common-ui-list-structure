@@ -17,6 +17,7 @@
 package com.storyteller_f.common_ui_list_structure.api
 
 import android.app.Activity
+import androidx.fragment.app.Fragment
 import com.storyteller_f.common_ui_list_structure.model.Repo
 import com.storyteller_f.common_ui_list_structure.model.RepoRemoteKey
 import com.storyteller_f.ui_list.data.CommonResponse
@@ -64,3 +65,5 @@ interface ReposService {
 val Activity.requireReposService by lazy(mode = LazyThreadSafetyMode.SYNCHRONIZED) {
     ReposService.create()
 }
+
+fun Fragment.requireReposService() = requireActivity().requireReposService

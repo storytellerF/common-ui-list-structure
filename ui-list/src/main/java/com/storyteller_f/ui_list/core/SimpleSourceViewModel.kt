@@ -16,35 +16,38 @@
 
 package com.storyteller_f.ui_list.core
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import androidx.paging.PagingData
-import androidx.paging.cachedIn
-import androidx.paging.insertSeparators
-import androidx.paging.map
+import androidx.lifecycle.*
+import androidx.paging.*
 import androidx.room.RoomDatabase
-import com.storyteller_f.ui_list.data.SimpleRepository
+import com.storyteller_f.ui_list.data.SimpleDataRepository
+import com.storyteller_f.ui_list.data.SimpleSourceRepository
 import com.storyteller_f.ui_list.database.RemoteKey
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 class SimpleSourceViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey, DT : RoomDatabase>(
-    repository: SimpleRepository<D, RK, DT>,
+    sourceRepository: SimpleSourceRepository<D, RK, DT>,
     processFactory: (D, D?) -> Holder,
     interceptorFactory: ((Holder?, Holder?) -> DataItemHolder?)? = null
 ) : ViewModel() {
 
     var content: Flow<PagingData<DataItemHolder>>? = null
+
+    /**
+     * 如果你想要使用 interceptor factory ，那应observe content2
+     */
     var content2: Flow<PagingData<Holder>>? = null
     var last: D? = null
 
     init {
-        val map = repository.resultStream()
+        val map = sourceRepository.resultStream()
             .map {
                 it.map { repo ->
-                    val processFactory1 = processFactory(repo, last)
+                    val holder = processFactory(repo, last)
                     last = repo
-                    processFactory1
+                    holder
                 }
             }
         if (interceptorFactory != null) {
@@ -60,6 +63,46 @@ class SimpleSourceViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteK
 
     override fun onCleared() {
         super.onCleared()
+    }
+}
+
+class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey>(
+    private val sourceRepository: SimpleDataRepository<D, RK>,
+    processFactory: (D, D?) -> Holder,
+) : ViewModel() {
+    var last: D? = null
+
+    val content: LiveData<List<Holder>> = liveData {
+        val asLiveData = sourceRepository.requestSound().asLiveData(Dispatchers.Main)
+        emitSource(asLiveData.map {
+            it.map { repo ->
+                val holder = processFactory(repo, last)
+                last = repo
+                holder
+            }
+        })
+    }
+
+    val loadState: LiveData<LoadState> = liveData {
+        emitSource(sourceRepository.loadState.asLiveData())
+    }
+
+    fun requestMore() {
+        viewModelScope.launch {
+            sourceRepository.requestMore()
+        }
+    }
+
+    fun retry() {
+        viewModelScope.launch {
+            sourceRepository.retry()
+        }
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            sourceRepository.requestSound()
+        }
     }
 }
 

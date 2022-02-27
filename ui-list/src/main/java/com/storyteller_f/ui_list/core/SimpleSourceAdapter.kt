@@ -1,13 +1,17 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package com.storyteller_f.ui_list.core
 
 import android.view.View
 import android.view.ViewGroup
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
+import java.util.*
 
-val list = mutableListOf<(ViewGroup) -> AbstractAdapterViewHolder<*>>()
+val list = mutableListOf<(ViewGroup) -> AbstractAdapterViewHolder<out DataItemHolder>>()
 
 val registerCenter = mutableMapOf<Class<out DataItemHolder>, Int>()
 
@@ -38,10 +42,8 @@ open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHold
     PagingDataAdapter<IH, VH>(
         common_diff_util as DiffUtil.ItemCallback<IH>
     ) {
-    override fun onBindViewHolder(holder: VH, position: Int) {
-        val itemHolder = getItem(position) as IH
-        holder.onBind(itemHolder)
-    }
+    override fun onBindViewHolder(holder: VH, position: Int) =
+        holder.onBind(getItem(position) as IH)
 
     override fun getItemViewType(position: Int): Int {
         val item = getItem(position) ?: return super.getItemViewType(position)
@@ -49,12 +51,11 @@ open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHold
         return registerCenter[c]!!
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        return list[viewType].invoke(parent) as VH
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
+        list[viewType].invoke(parent) as VH
 
     companion object {
-        private val common_diff_util = object : DiffUtil.ItemCallback<DataItemHolder>() {
+        val common_diff_util = object : DiffUtil.ItemCallback<DataItemHolder>() {
             override fun areItemsTheSame(
                 oldItem: DataItemHolder,
                 newItem: DataItemHolder
@@ -71,4 +72,35 @@ open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHold
                 oldItem.areContentsTheSame(newItem)
         }
     }
+}
+
+class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<IH>> :
+    ListAdapter<IH, VH>(SimpleSourceAdapter.common_diff_util as DiffUtil.ItemCallback<IH>) {
+    var last = mutableListOf<IH>()
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int
+    ): VH = list[viewType].invoke(parent) as VH
+
+    override fun getItemViewType(position: Int): Int {
+        val item = getItem(position) ?: return super.getItemViewType(position)
+        return registerCenter[item::class.java]!!
+    }
+
+
+    override fun onBindViewHolder(holder: VH, position: Int) =
+        holder.onBind(getItem(position) as IH)
+
+    override fun submitList(list: MutableList<IH>?) {
+        super.submitList(list)
+        if (list != null) {
+            last = list
+        }
+    }
+
+    fun swap(from: Int, to: Int) {
+        Collections.swap(last, from, to)
+        notifyItemMoved(from, to)
+    }
+
 }

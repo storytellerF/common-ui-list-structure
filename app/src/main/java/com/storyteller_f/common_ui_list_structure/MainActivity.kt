@@ -1,5 +1,6 @@
 package com.storyteller_f.common_ui_list_structure
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -127,7 +128,7 @@ class MainActivity : AppCompatActivity() {
 
     @BindClickEvent(SeparatorItemHolder::class, "card")
     fun clickLine(itemHolder: SeparatorItemHolder) {
-        println("click ${itemHolder.info}")
+        startActivity(Intent(this, MainActivity2::class.java))
     }
 
     private fun printInsets(insets: WindowInsets) {

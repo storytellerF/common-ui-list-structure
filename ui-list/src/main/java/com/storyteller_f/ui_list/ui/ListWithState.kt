@@ -7,10 +7,15 @@ import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.LifecycleOwner
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.ConcatAdapter
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.storyteller_f.ui_list.core.SimpleDataAdapter
+import com.storyteller_f.ui_list.core.SimpleDataViewModel
 import com.storyteller_f.ui_list.core.SimpleSourceAdapter
 import com.storyteller_f.ui_list.databinding.ListWithStateBinding
 import kotlinx.coroutines.channels.awaitClose
@@ -34,7 +39,8 @@ class ListWithState @JvmOverloads constructor(
         // Show the retry state if initial load or refresh fails.
         binding.retryButton.isVisible = loadState.mediator?.refresh is LoadState.Error
 
-        if (loadState.mediator?.refresh !is LoadState.Loading) binding.refreshLayout.isRefreshing = false
+        if (loadState.mediator?.refresh !is LoadState.Loading) binding.refreshLayout.isRefreshing =
+            false
 
         // Toast on any error, regardless of whether it came from RemoteMediator or PagingSource
         val errorState = loadState.source.append as? LoadState.Error
@@ -67,19 +73,17 @@ class ListWithState @JvmOverloads constructor(
     }
 
 
-    fun setAdapter(concatAdapter: ConcatAdapter) {
-        binding.list.layoutManager =
-            LinearLayoutManager(binding.list.context, LinearLayoutManager.VERTICAL, false)
+    private fun setAdapter(concatAdapter: ConcatAdapter) {
+        setupLinearLayoutManager()
         binding.list.adapter = concatAdapter
     }
 
     fun setAdapter(adapter: SimpleSourceAdapter<*, *>) {
-        binding.list.layoutManager =
-            LinearLayoutManager(binding.list.context, LinearLayoutManager.VERTICAL, false)
+        setupLinearLayoutManager()
         binding.list.adapter = adapter
     }
 
-    fun setAdapter(
+    private fun setAdapter(
         concatAdapter: ConcatAdapter,
         adapter: SimpleSourceAdapter<*, *>
     ) {
@@ -94,6 +98,77 @@ class ListWithState @JvmOverloads constructor(
         binding.retryButton.setOnClickListener {
             adapter.refresh()
         }
+    }
+
+    private fun setupSwapSupport(adapter: SimpleDataAdapter<*, *>) {
+        setupLinearLayoutManager()
+        binding.list.adapter = adapter
+        ItemTouchHelper(object :
+            ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                val from = viewHolder.absoluteAdapterPosition
+                val to = target.absoluteAdapterPosition
+                adapter.swap(from, to)
+                return true
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                TODO("Not yet implemented")
+            }
+
+            override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
+                super.onSelectedChanged(viewHolder, actionState)
+                binding.refreshLayout.isEnabled = viewHolder == null
+            }
+
+        }).attachToRecyclerView(binding.list)
+    }
+
+    private fun setupLinearLayoutManager() {
+        binding.list.layoutManager =
+            LinearLayoutManager(binding.list.context, LinearLayoutManager.VERTICAL, false)
+    }
+
+    fun up(
+        adapter: SimpleDataAdapter<*, *>,
+        lifecycleOwner: LifecycleOwner,
+        vm: SimpleDataViewModel<*, *, *>
+    ) {
+        setupLinearLayoutManager()
+        val layoutManager = binding.list.layoutManager as LinearLayoutManager
+        binding.list.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                val totalItemCount = layoutManager.itemCount
+                val visibleItemCount = layoutManager.childCount
+                val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
+                if (visibleItemCount + lastVisibleItem + visibleItemCount >= totalItemCount) {
+                    vm.requestMore()
+                }
+            }
+        })
+        binding.list.adapter = adapter
+        binding.refreshLayout.setOnRefreshListener {
+            vm.refresh()
+        }
+        binding.retryButton.setOnClickListener {
+            vm.retry()
+        }
+        vm.loadState.observe(lifecycleOwner) {
+            binding.retryButton.isVisible = it is LoadState.Error
+            binding.progressBar.isVisible = it is LoadState.Loading
+            binding.list.isVisible = it is LoadState.NotLoading && adapter.itemCount != 0
+            binding.emptyList.isVisible = it is LoadState.NotLoading && adapter.itemCount == 0
+            println("load state $it ${adapter.itemCount} ${adapter.last.size}")
+            if (it !is LoadState.Loading) {
+                binding.refreshLayout.isRefreshing = false
+            }
+        }
+        setupSwapSupport(adapter)
     }
 
     private val binding = ListWithStateBinding.inflate(LayoutInflater.from(context), this)

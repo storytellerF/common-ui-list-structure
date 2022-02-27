@@ -57,6 +57,9 @@ fun <VM : ViewModel> Fragment.keyedViewModels(
     return KeyedViewModelLazy(keyPrefixProvider, viewModelClass, storeProducer, factoryPromise)
 }
 
+/**
+ * 实际使用 Fragment.keyedViewModels 构建，仅方便使用
+ */
 @MainThread
 inline fun <reified VM : ViewModel> Fragment.kvm(
     keyPrefix: String,
@@ -66,7 +69,7 @@ inline fun <reified VM : ViewModel> Fragment.kvm(
 
 
 @MainThread
-inline fun <reified VM : ViewModel> ComponentActivity.cVM(
+inline fun <reified VM : ViewModel> ComponentActivity.sVM(
     crossinline factoryProducer: () -> VM
 ): Lazy<VM> {
     return ViewModelLazy(VM::class, { viewModelStore },
@@ -80,6 +83,42 @@ inline fun <reified VM : ViewModel> ComponentActivity.cVM(
             }
         })
 }
+
+@MainThread
+inline fun <reified VM : ViewModel> Fragment.sVM(
+    crossinline factoryProducer: () -> VM
+): Lazy<VM> {
+    return ViewModelLazy(VM::class, { viewModelStore },
+        {
+            object : AbstractSavedStateViewModelFactory(this, null) {
+                override fun <T : ViewModel?> create(
+                    key: String,
+                    modelClass: Class<T>,
+                    handle: SavedStateHandle
+                ): T = modelClass.cast(factoryProducer())!!
+            }
+        })
+}
+
+/**
+ * 虽然是Fragment 的扩展函数，但是调用的activity的
+ */
+@MainThread
+inline fun <reified VM : ViewModel> Fragment.aSVM(
+    crossinline factoryProducer: () -> VM
+): Lazy<VM> {
+    return ViewModelLazy(VM::class, { requireActivity().viewModelStore },
+        {
+            object : AbstractSavedStateViewModelFactory(requireActivity(), null) {
+                override fun <T : ViewModel?> create(
+                    key: String,
+                    modelClass: Class<T>,
+                    handle: SavedStateHandle
+                ): T = modelClass.cast(factoryProducer())!!
+            }
+        })
+}
+
 
 @MainThread
 inline fun <reified VM : ViewModel> ComponentActivity.ckVM(
