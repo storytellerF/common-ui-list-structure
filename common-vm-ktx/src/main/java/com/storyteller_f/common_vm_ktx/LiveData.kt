@@ -2,10 +2,11 @@
 
 package com.storyteller_f.common_vm_ktx
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
+import android.util.Log
+import androidx.annotation.MainThread
+import androidx.annotation.Nullable
+import androidx.lifecycle.*
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.collections.set
 
 /**
@@ -107,4 +108,81 @@ fun copyMap(map: Map<String, Any?>?): MutableMap<String, Any?> {
         newly[it.key] = it.value
     }
     return newly
+}
+
+class MuteLiveEvent<T> : MutableLiveData<T?>() {
+    private val mPending: AtomicBoolean = AtomicBoolean(false)
+
+    @MainThread
+    override fun observe(owner: LifecycleOwner, observer: Observer<in T?>) {
+        if (hasActiveObservers()) {
+            Log.w(TAG, "Multiple observers registered but only one will be notified of changes.")
+        }
+
+        // Observe the internal MutableLiveData
+        super.observe(owner) {
+            if (mPending.get()) {
+                observer.onChanged(it)
+            }
+        }
+    }
+
+    @MainThread
+    override fun setValue(@Nullable t: T?) {
+        mPending.set(true)
+        super.setValue(t)
+    }
+
+    /**
+     * Used for cases where T is Void, to make calls cleaner.
+     */
+    @MainThread
+    fun call() {
+        value = null
+    }
+
+    fun reset(@Nullable t: T?) {
+        mPending.set(false)
+        super.setValue(t)
+    }
+
+    companion object {
+        private const val TAG = "SingleLiveEvent"
+    }
+}
+
+class SingleLiveEvent<T> : MutableLiveData<T?>() {
+    private val mPending: AtomicBoolean = AtomicBoolean(false)
+
+    @MainThread
+    override fun observe(owner: LifecycleOwner, observer: Observer<in T?>) {
+        if (hasActiveObservers()) {
+            Log.w(TAG, "Multiple observers registered but only one will be notified of changes.")
+        }
+
+        // Observe the internal MutableLiveData
+        super.observe(owner) {
+            if (mPending.compareAndSet(true, false)) {
+                observer.onChanged(it)
+            }
+        }
+    }
+
+    @MainThread
+    override fun setValue(@Nullable t: T?) {
+        mPending.set(true)
+        super.setValue(t)
+    }
+
+    /**
+     * Used for cases where T is Void, to make calls cleaner.
+     */
+    @MainThread
+    fun call() {
+        value = null
+    }
+
+    companion object {
+        private const val TAG = "SingleLiveEvent"
+    }
 }

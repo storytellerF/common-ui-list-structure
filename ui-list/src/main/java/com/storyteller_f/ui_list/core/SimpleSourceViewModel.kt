@@ -73,16 +73,17 @@ class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey
 ) : ViewModel() {
     var last: D? = null
 
-    val content: LiveData<List<Holder>> = liveData {
+    val content: MediatorLiveData<DataHook<D, Holder, RK>> = liveData {
         val asLiveData = sourceRepository.request().asLiveData(Dispatchers.Main)
-        emitSource(asLiveData.map {
-            it.map { repo ->
+        val source = asLiveData.map {
+            DataHook<D, Holder, RK>(this@SimpleDataViewModel, it.map { repo ->
                 val holder = processFactory(repo, last)
                 last = repo
                 holder
-            }
-        })
-    }
+            })
+        }
+        emitSource(source)
+    } as MediatorLiveData<DataHook<D, Holder, RK>>
 
     val loadState: LiveData<LoadState> = liveData {
         emitSource(sourceRepository.loadState.asLiveData())
@@ -105,6 +106,19 @@ class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey
             sourceRepository.request()
         }
     }
+
+    fun <IH> reset(last: MutableList<IH>) {
+        content.value = DataHook(this, last as List<Holder>)
+    }
+
+    class DataHook<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey>(
+        val viewModel: SimpleDataViewModel<*, *, *>,
+        val list: List<Holder>
+    ) {
+        fun swap(from: Int, to: Int) {
+            viewModel.sourceRepository.swap(from, to)
+        }
+    }
 }
 
 class SimpleDetailViewModel<D : Any>(
@@ -122,7 +136,7 @@ class SimpleDetailViewModel<D : Any>(
         viewModelScope.launch {
             try {
                 loadState.value = LoadState.Loading
-                content.value = if (local!= null) {
+                content.value = if (local != null) {
                     withContext(Dispatchers.IO) {
                         local()
                     }

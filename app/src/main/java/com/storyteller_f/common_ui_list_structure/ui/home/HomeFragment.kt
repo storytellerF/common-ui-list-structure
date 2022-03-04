@@ -26,7 +26,7 @@ class HomeFragment : CommonFragment<FragmentHomeBinding>(FragmentHomeBinding::in
         binding.listWithState.up(adapter, viewLifecycleOwner, data)
         viewLifecycleOwner.lifecycleScope.launchWhenResumed {
             data.content.observe(viewLifecycleOwner) {
-                adapter.submitList(it.toMutableList())
+                adapter.submitData(it)
             }
         }
     }

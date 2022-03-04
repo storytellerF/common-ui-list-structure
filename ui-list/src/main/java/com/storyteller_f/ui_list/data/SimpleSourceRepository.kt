@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import retrofit2.HttpException
 import java.io.IOException
+import java.util.*
 
 const val STARTING_PAGE_INDEX = 1
 
@@ -107,5 +108,9 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
         }
         isRequestInProgress = false
         return successful
+    }
+
+    fun swap(from: Int, to: Int) {
+        Collections.swap(inMemoryCache, from, to)
     }
 }

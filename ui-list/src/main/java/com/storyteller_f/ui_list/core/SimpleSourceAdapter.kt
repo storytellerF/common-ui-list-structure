@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 
 val list = mutableListOf<(ViewGroup) -> AbstractAdapterViewHolder<out DataItemHolder>>()
 
@@ -77,6 +78,10 @@ open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHold
 class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<IH>> :
     ListAdapter<IH, VH>(SimpleSourceAdapter.common_diff_util as DiffUtil.ItemCallback<IH>) {
     var last = mutableListOf<IH>()
+
+    private val mPending: AtomicBoolean = AtomicBoolean(true)
+
+    var dataHook: SimpleDataViewModel.DataHook<*, IH, *>? = null
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
@@ -98,8 +103,19 @@ class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<IH>>
         }
     }
 
+    fun submitData(dataHook: SimpleDataViewModel.DataHook<*, IH, *>) {
+        if (mPending.get()) {
+            this.dataHook = dataHook
+            submitList(dataHook.list.toMutableList())
+        }
+        mPending.compareAndSet(false, true)
+    }
+
     fun swap(from: Int, to: Int) {
         Collections.swap(last, from, to)
+        dataHook?.swap(from, to)
+        mPending.set(false)
+        dataHook?.viewModel?.reset(last)
         notifyItemMoved(from, to)
     }
 
