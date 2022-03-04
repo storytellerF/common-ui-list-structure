@@ -65,7 +65,7 @@ fun combine(vararg arrayOfPairs: Pair<String, LiveData<out Any?>>): LiveData<Map
     arrayOfPairs.forEach {
         val index = it.first
         mediatorLiveData.addSource(it.second) {
-            mediatorLiveData.value = copyMap(mediatorLiveData.value as Map<String, Any?>).apply {
+            mediatorLiveData.value = copyMap(mediatorLiveData.value).apply {
                 set(index, it)
             }
         }

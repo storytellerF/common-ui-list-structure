@@ -1,13 +1,15 @@
 package com.storyteller_f.ui_list.ui
 
 import android.content.Context
+import android.text.Spannable
+import android.text.SpannableString
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
-import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.map
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.ConcatAdapter
@@ -21,6 +23,7 @@ import com.storyteller_f.ui_list.databinding.ListWithStateBinding
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 
 class ListWithState @JvmOverloads constructor(
@@ -28,31 +31,20 @@ class ListWithState @JvmOverloads constructor(
     attributeSet: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attributeSet) {
-    private fun flash(loadState: CombinedLoadStates, itemCount: Int) {
+    private fun flash(uiState: UIState) {
         // Only show the list if refresh succeeds.
-        binding.list.isVisible =
-            loadState.mediator?.refresh is LoadState.NotLoading && itemCount > 0
-        binding.emptyList.isVisible =
-            loadState.mediator?.refresh is LoadState.NotLoading && itemCount == 0
+        binding.list.isVisible = uiState.data
+        binding.emptyList.isVisible = uiState.empty
         // Show loading spinner during initial load or refresh.
-        binding.progressBar.isVisible = loadState.mediator?.refresh is LoadState.Loading
+        binding.progressBar.isVisible = uiState.progress
         // Show the retry state if initial load or refresh fails.
-        binding.retryButton.isVisible = loadState.mediator?.refresh is LoadState.Error
-
-        if (loadState.mediator?.refresh !is LoadState.Loading) binding.refreshLayout.isRefreshing =
-            false
-
-        // Toast on any error, regardless of whether it came from RemoteMediator or PagingSource
-        val errorState = loadState.source.append as? LoadState.Error
-            ?: loadState.source.prepend as? LoadState.Error
-            ?: loadState.append as? LoadState.Error
-            ?: loadState.prepend as? LoadState.Error
-        errorState?.let {
-            Toast.makeText(
-                context,
-                "\uD83D\uDE28 Wooops ${it.error}",
-                Toast.LENGTH_LONG
-            ).show()
+        binding.retryButton.isVisible = uiState.retry
+        uiState.refresh?.let {
+            binding.refreshLayout.isRefreshing = it
+        }
+        binding.errorMsg.isVisible = uiState.error != null
+        uiState.error?.let {
+            binding.errorMsg.text = it
         }
     }
 
@@ -67,8 +59,10 @@ class ListWithState @JvmOverloads constructor(
             }
             adapter.addLoadStateListener(listener)
             awaitClose { adapter.removeLoadStateListener(listener) }
+        }.map {
+            simple(it, adapter.itemCount)
         }.onEach {
-            flash(it, adapter.itemCount)
+            flash(it)
         }.launchIn(lifecycleCoroutineScope)
     }
 
@@ -158,15 +152,8 @@ class ListWithState @JvmOverloads constructor(
         binding.retryButton.setOnClickListener {
             vm.retry()
         }
-        vm.loadState.observe(lifecycleOwner) {
-            binding.retryButton.isVisible = it is LoadState.Error
-            binding.progressBar.isVisible = it is LoadState.Loading
-            binding.list.isVisible = it is LoadState.NotLoading && adapter.itemCount != 0
-            binding.emptyList.isVisible = it is LoadState.NotLoading && adapter.itemCount == 0
-            println("load state $it ${adapter.itemCount} ${adapter.last.size}")
-            if (it !is LoadState.Loading) {
-                binding.refreshLayout.isRefreshing = false
-            }
+        vm.loadState.map { simple(it, adapter.itemCount) }.observe(lifecycleOwner) {
+            flash(it)
         }
         setupSwapSupport(adapter)
     }
@@ -175,5 +162,54 @@ class ListWithState @JvmOverloads constructor(
 
     init {
         binding.list.setHasFixedSize(true)
+    }
+
+    class UIState(
+        val retry: Boolean,
+        val data: Boolean,
+        val empty: Boolean,
+        val progress: Boolean,
+        val error: Spannable?,
+        val refresh: Boolean?
+    )
+
+    companion object {
+        /**
+         * 远程加载出错时，不会显示数据
+         */
+        fun simple(loadState: CombinedLoadStates, itemCount: Int): UIState {
+            val refresh = if (loadState.mediator?.refresh !is LoadState.Loading) false else null
+            val error = loadState.source.append as? LoadState.Error
+                ?: loadState.source.prepend as? LoadState.Error
+                ?: loadState.append as? LoadState.Error
+                ?: loadState.prepend as? LoadState.Error
+                ?: loadState.mediator?.append as? LoadState.Error
+                ?: loadState.mediator?.prepend as? LoadState.Error
+                ?: loadState.mediator?.refresh as? LoadState.Error
+            val errorSpannable = error?.error?.localizedMessage?.let {
+                SpannableString(it)
+            }
+            return UIState(
+                loadState.mediator?.refresh is LoadState.Error,
+                loadState.mediator?.refresh is LoadState.NotLoading && itemCount > 0,
+                loadState.mediator?.refresh is LoadState.NotLoading && itemCount == 0,
+                loadState.mediator?.refresh is LoadState.Loading,
+                errorSpannable, refresh
+            )
+        }
+
+        fun simple(loadState: LoadState, itemCount: Int): UIState {
+            val refresh = if (loadState !is LoadState.Loading) false else null
+            val uiState = UIState(
+                loadState is LoadState.Error,
+                loadState is LoadState.NotLoading && itemCount != 0,
+                loadState is LoadState.NotLoading && itemCount == 0,
+                loadState is LoadState.Loading,
+                null,
+                refresh
+            )
+            return uiState
+        }
+
     }
 }

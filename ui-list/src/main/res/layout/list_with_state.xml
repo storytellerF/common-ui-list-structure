@@ -3,10 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/refresh_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/refresh_layout">
+        android:layout_height="match_parent">
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/list"
             android:layout_width="match_parent"
@@ -22,21 +24,41 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center" />
 
-    <Button
-        android:id="@+id/retry_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="@string/retry" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/error_msg"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/no_results"
+            android:textSize="@dimen/repo_name_size"
+            android:visibility="gone"
+            tools:text="SocketTimeoutException"
+            tools:visibility="visible" />
+
+        <Button
+            android:id="@+id/retry_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/retry" />
+    </LinearLayout>
 
     <TextView
-        tools:visibility="visible"
-        tools:text="empty list"
         android:id="@+id/emptyList"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
         android:text="@string/no_results"
         android:textSize="@dimen/repo_name_size"
-        android:visibility="gone" />
+        android:visibility="gone"
+        tools:text="empty list"
+        tools:visibility="visible" />
+
+
 </merge>
