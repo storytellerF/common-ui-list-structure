@@ -29,23 +29,10 @@ class DetailProducer<D : Any>(
     val local: (suspend () -> D)? = null
 )
 
-fun <RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder, Database : RoomDatabase, Composite : CommonRoomDatabase<Data, RK, Database>, ARG1> ComponentActivity.source(
-    arg1: () -> ARG1,
-    sourceProducer: (ARG1) -> SourceProducer<RK, Data, Holder, Database, Composite>,
-) = source(sourceProducer(arg1()))
-
-fun <RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder, Database : RoomDatabase, Composite : CommonRoomDatabase<Data, RK, Database>, ARG1, ARG2> ComponentActivity.source(
-    arg1: () -> ARG1,
-    arg2: () -> ARG2,
-    sourceProducer: (ARG1, ARG2) -> SourceProducer<RK, Data, Holder, Database, Composite>,
-) = source(sourceProducer(arg1(), arg2()))
-
-fun <RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder, Database : RoomDatabase, Composite : CommonRoomDatabase<Data, RK, Database>, ARG1, ARG2, ARG3> ComponentActivity.source(
-    arg1: () -> ARG1,
-    arg2: () -> ARG2,
-    arg3: () -> ARG3,
-    sourceProducer: (ARG1, ARG2, ARG3) -> SourceProducer<RK, Data, Holder, Database, Composite>,
-) = source(sourceProducer(arg1(), arg2(), arg3()))
+fun <RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder, Database : RoomDatabase, Composite : CommonRoomDatabase<Data, RK, Database>, ARG> ComponentActivity.source(
+    arg: () -> ARG,
+    sourceProducer: (ARG) -> SourceProducer<RK, Data, Holder, Database, Composite>,
+) = source(sourceProducer(arg()))
 
 fun <RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder, Database : RoomDatabase, Composite : CommonRoomDatabase<Data, RK, Database>> ComponentActivity.source(
     sourceContent: SourceProducer<RK, Data, Holder, Database, Composite>,
@@ -73,6 +60,11 @@ fun <RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder> ComponentActivit
     }
 }
 
+fun <RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder, ARG> ComponentActivity.data(
+    arg: () -> ARG,
+    dataContentProducer: (ARG) -> DataProducer<RK, Data, Holder>,
+) = data(dataContentProducer(arg()))
+
 fun <RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder> Fragment.data(
     dataContent: DataProducer<RK, Data, Holder>,
 ): Lazy<SimpleDataViewModel<Data, Holder, RK>> {
@@ -85,6 +77,11 @@ fun <RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder> Fragment.data(
     }
 }
 
+fun <RK : RemoteKey, Data : Datum<RK>, Holder : DataItemHolder, ARG> Fragment.data(
+    arg: () -> ARG,
+    dataContentProducer: (ARG) -> DataProducer<RK, Data, Holder>,
+) = data(dataContentProducer(arg()))
+
 fun <Data : Any> Fragment.detail(
     detailContent: DetailProducer<Data>,
 ): Lazy<SimpleDetailViewModel<Data>> {
@@ -95,3 +92,8 @@ fun <Data : Any> Fragment.detail(
         )
     }
 }
+
+fun <Data : Any, ARG> Fragment.detail(
+    arg: () -> ARG,
+    detailContentProducer: (ARG) -> DetailProducer<Data>,
+) = detail(detailContentProducer(arg()))

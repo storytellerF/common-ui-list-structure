@@ -5,6 +5,8 @@ package com.storyteller_f.common_vm_ktx
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Transformations
+import kotlin.collections.set
 
 /**
  * @author storyteller_f
@@ -58,6 +60,22 @@ fun LiveData<out Any>.plus(source: LiveData<out Any>, key: String = ""): LiveDat
     }
 }
 
+fun combine(vararg arrayOfPairs: Pair<String, LiveData<out Any?>>): LiveData<Map<String, Any?>> {
+    val mediatorLiveData = MediatorLiveData<Map<String, Any?>>()
+    arrayOfPairs.forEach {
+        val index = it.first
+        mediatorLiveData.addSource(it.second) {
+            mediatorLiveData.value = copyMap(mediatorLiveData.value as Map<String, Any?>).apply {
+                set(index, it)
+            }
+        }
+    }
+    return mediatorLiveData.combine()
+}
+
+fun <X> LiveData<X>.combine(): LiveData<Map<String, Any?>> =
+    Transformations.map(this) { it as Map<String, Any?> }
+
 private fun <E> MutableList<E?>.addOrSet(e: Int, it: E) {
     synchronized(this) {
         if (size <= e) {
@@ -70,13 +88,9 @@ private fun <E> MutableList<E?>.addOrSet(e: Int, it: E) {
     set(e, it)
 }
 
-fun List<Any?>.gor(index: Int): Any? {
-    return when {
-        index < size -> {
-            get(index)
-        }
-        else -> null
-    }
+
+fun List<Any?>.gon(index: Int): Any? {
+    return getOrNull(index)
 }
 
 fun copyList(list: List<Any?>?): MutableList<Any?> {

@@ -2,7 +2,6 @@ package com.storyteller_f.common_ui_list_structure
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.widget.Toast
@@ -35,8 +34,7 @@ import com.storyteller_f.common_ui_list_structure.databinding.RepoViewItemBindin
 import com.storyteller_f.common_ui_list_structure.db.composite.RepoComposite
 import com.storyteller_f.common_ui_list_structure.db.requireRepoDatabase
 import com.storyteller_f.common_ui_list_structure.model.Repo
-import com.storyteller_f.common_vm_ktx.KeyedLiveData
-import com.storyteller_f.common_vm_ktx.plus
+import com.storyteller_f.common_vm_ktx.combine
 import com.storyteller_f.ui_list.core.*
 import com.storyteller_f.ui_list.event.viewBinding
 import com.storyteller_f.view_holder_compose.ComposeSourceAdapter
@@ -47,19 +45,18 @@ import kotlinx.coroutines.flow.collectLatest
 class MainActivity : AppCompatActivity() {
     private val binding by viewBinding(ActivityMainBinding::inflate)
     private val toast by lazy {
-        Toast.makeText(this,"", Toast.LENGTH_SHORT)
+        Toast.makeText(this, "", Toast.LENGTH_SHORT)
     }
-    private val viewModel by source({ 1 }, { 2 }, { one, two ->
+    private val viewModel by source({ }, {
         SourceProducer(
             { RepoComposite(requireRepoDatabase()) },
             { p, c ->
                 requireReposService.searchRepos(p, c)
             },
             {
-                Log.i(TAG, "view model: $one $two")
                 requireRepoDatabase().reposDao().selectAll()
             },
-            { it, _ -> RepoItemHolder(it) },
+            { repo, _ -> RepoItemHolder(repo) },
             { before, after ->
                 if (after == null) {
                     // we're at the end of the list
@@ -106,14 +103,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        val age = KeyedLiveData(0, "age")
+        val age = MutableLiveData(0)
         val gender = MutableLiveData(true)
         val r = MutableLiveData<Repo>(null)
-        age.plus(gender, "gender").plus(r, "repo").observe(this) {
-            val data = it as Map<*, *>
-            val lAge = data["age"]
-            val lGender = data["gender"]
-            val lRepo = data["repo"]
+        combine("age" to age, "gender" to gender, "repo" to r).observe(this) {
+            val lAge = it["age"] as Int
+            val lGender = it["gender"]
+            val lRepo = it["repo"]
             println("hello $lAge $lGender $lRepo")
         }
         age.value = 2
@@ -150,18 +146,22 @@ class MainActivity : AppCompatActivity() {
             )
         ) {
             Button(
-                onClick = { toast.apply {
-                    setText("full")
-                    show()
-                } },
+                onClick = {
+                    toast.apply {
+                        setText("full")
+                        show()
+                    }
+                },
             ) {
                 Text(text = "full")
             }
             Button(
-                onClick = { toast.apply {
-                    setText("recovery")
-                    show()
-                } },
+                onClick = {
+                    toast.apply {
+                        setText("recovery")
+                        show()
+                    }
+                },
             ) {
                 Text(text = "recovery")
             }
