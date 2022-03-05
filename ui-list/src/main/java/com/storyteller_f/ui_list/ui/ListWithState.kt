@@ -152,7 +152,7 @@ class ListWithState @JvmOverloads constructor(
         binding.retryButton.setOnClickListener {
             vm.retry()
         }
-        vm.loadState.map { simple(it, adapter.itemCount) }.observe(lifecycleOwner) {
+        vm.loadState.map { simple(it.loadState, it.itemCount) }.observe(lifecycleOwner) {
             flash(it)
         }
         setupSwapSupport(adapter)

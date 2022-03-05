@@ -19,6 +19,7 @@ package com.storyteller_f.ui_list.core
 import androidx.lifecycle.*
 import androidx.paging.*
 import androidx.room.RoomDatabase
+import com.storyteller_f.ui_list.data.MoreInfoLoadState
 import com.storyteller_f.ui_list.data.SimpleDataRepository
 import com.storyteller_f.ui_list.data.SimpleSourceRepository
 import com.storyteller_f.ui_list.database.RemoteKey
@@ -85,7 +86,7 @@ class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey
         emitSource(source)
     } as MediatorLiveData<DataHook<D, Holder, RK>>
 
-    val loadState: LiveData<LoadState> = liveData {
+    val loadState: LiveData<MoreInfoLoadState> = liveData {
         emitSource(sourceRepository.loadState.asLiveData())
     }
 

@@ -53,6 +53,13 @@ class SimpleSourceRepository<D : Datum<RK>, RK : RemoteKey, DT : RoomDatabase>(
     }
 }
 
+sealed class ReloadCause{
+    object CacheExpired
+    object PullToRefresh
+}
+
+class MoreInfoLoadState(val loadState: LoadState, val itemCount: Int, val cause: ReloadCause?)
+
 class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
     private val service: suspend (Int, Int) -> CommonResponse<D, RK>,
 ) {
@@ -62,11 +69,11 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
     // shared flow of results, which allows us to broadcast updates so
     // the subscriber will have the latest data
     private val results = MutableSharedFlow<List<D>>(replay = 1)
-    val loadState = MutableSharedFlow<LoadState>(replay = 1)
+    val loadState = MutableSharedFlow<MoreInfoLoadState>(replay = 1)
 
     // 保存上一次请求的页数，如果成功，自增
     private var lastRequestedPage = STARTING_PAGE_INDEX
-
+    private var causeTempSaved: ReloadCause? = null
     // 避免同一时刻进行多个请求
     private var isRequestInProgress = false
 
@@ -90,21 +97,30 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
         requestAndSaveData(lastRequestedPage + 1)
     }
 
+    suspend fun refresh(cause: ReloadCause?) {
+        causeTempSaved = cause
+        lastRequestedPage = 1
+        inMemoryCache.clear()
+        requestAndSaveData(lastRequestedPage)
+    }
+
     private suspend fun requestAndSaveData(pages: Int): Boolean {
         isRequestInProgress = true
-        loadState.emit(LoadState.Loading)
+        loadState.emit(MoreInfoLoadState(LoadState.Loading, 0, null))
         var successful = false
         try {
             val response = service.invoke(pages, 30)
             val elements = response.items
             inMemoryCache.addAll(elements)
             results.emit(inMemoryCache)
-            loadState.emit(LoadState.NotLoading(elements.isEmpty()))
+            loadState.emit(MoreInfoLoadState(LoadState.NotLoading(elements.isEmpty()), inMemoryCache.size, null))
             successful = true
         } catch (exception: IOException) {
-            loadState.emit(LoadState.Error(exception))
+            loadState.emit(MoreInfoLoadState(LoadState.Error(exception), inMemoryCache.size, null))
         } catch (exception: HttpException) {
-            loadState.emit(LoadState.Error(exception))
+            loadState.emit(MoreInfoLoadState(LoadState.Error(exception), inMemoryCache.size, null))
+        } finally {
+            causeTempSaved = null
         }
         isRequestInProgress = false
         return successful
