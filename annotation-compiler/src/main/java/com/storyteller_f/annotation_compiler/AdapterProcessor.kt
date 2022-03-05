@@ -41,28 +41,63 @@ class AdapterProcessor : AbstractProcessor() {
         const val className = "Temp"
     }
 
+    val set = mutableMapOf<TypeElement, PackageElement>()
+    private val clickEventMap = mutableMapOf<String?, Map<String, List<Event>>>()
+    private val longClickEventMap = mutableMapOf<String?, Map<String, List<Event>>>()
+    private val holderEntry = mutableListOf<Entry>()
+
     @Suppress("NewApi")
     override fun process(
         set: MutableSet<out TypeElement>?,
         roundEnvironment: RoundEnvironment?
     ): Boolean {
         count++
+        if (count == 1) {
+            this.set.clear()
+            clickEventMap.clear()
+            longClickEventMap.clear()
+        }
         println("binding set:$set is over ${roundEnvironment?.processingOver()} count:$count")
-        val eventMap = getEvent(roundEnvironment, BindClickEvent::class.java)
+        val clickEventMap = getEvent(roundEnvironment, BindClickEvent::class.java)
         val longClickEventMap = getEvent(roundEnvironment, BindLongClickEvent::class.java)
-        println("binding event map ${eventMap?.size} ${longClickEventMap?.size}")
-        set?.forEach { typeElement ->
-            val packageElement = processingEnv.elementUtils.getPackageOf(
-                roundEnvironment?.getElementsAnnotatedWithAny(typeElement)?.firstOrNull()
-            )
-            val holderEntry = getHolder(roundEnvironment, typeElement)
-            val content =
-                createClassFileContent(packageElement, holderEntry, eventMap, longClickEventMap)
-            val classFile =
-                processingEnv.filer.createSourceFile("${packageElement}.adapter_produce.$className")
-            classFile.openWriter().use {
-                it.write(content)
-                it.flush()
+        println("binding event map ${clickEventMap?.size} ${longClickEventMap?.size}")
+        if (set != null) {
+            this.set.putAll(set.map {
+                it to processingEnv.elementUtils.getPackageOf(
+                    roundEnvironment?.getElementsAnnotatedWithAny(
+                        it
+                    )?.firstOrNull()
+                )
+            })
+            set.forEach {
+                getHolder(roundEnvironment, it)?.let { list -> holderEntry.addAll(list) }
+            }
+        }
+        clickEventMap?.let {
+            this.clickEventMap.putAll(it)
+        }
+        longClickEventMap?.let {
+            this.longClickEventMap.putAll(it)
+        }
+        println("binding event map ${this.clickEventMap.size} ${this.longClickEventMap.size}")
+
+        roundEnvironment?.let { environment ->
+            if (environment.processingOver()) {
+                this.set.forEach { (_, packageElement) ->
+                    val content =
+                        createClassFileContent(
+                            packageElement,
+                            this.holderEntry,
+                            this.clickEventMap,
+                            this.longClickEventMap
+                        )
+                    val classFile =
+                        processingEnv.filer.createSourceFile("${packageElement}.adapter_produce.$className")
+                    classFile.openWriter().use {
+                        it.write(content)
+                        it.flush()
+                    }
+                }
             }
         }
         return true
