@@ -123,7 +123,7 @@ class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey
 
 class SimpleDetailViewModel<D : Any>(
     private val producer: suspend () -> D,
-    private val local: (suspend () -> D)? = null
+    local: (suspend () -> D?)? = null
 ) : ViewModel() {
     val content = MutableLiveData<D>()
     val loadState = MutableLiveData<LoadState>()
@@ -132,15 +132,16 @@ class SimpleDetailViewModel<D : Any>(
         refresh(local, producer)
     }
 
-    private fun refresh(local: (suspend () -> D)?, producer: suspend () -> D) {
+    private fun refresh(local: (suspend () -> D?)?, producer: suspend () -> D) {
         viewModelScope.launch {
             try {
                 loadState.value = LoadState.Loading
-                content.value = if (local != null) {
-                    withContext(Dispatchers.IO) {
-                        local()
-                    }
-                } else producer()
+                val value = withContext(Dispatchers.IO) {
+                    if (local != null) {
+                        local() ?: producer()
+                    } else producer()
+                }
+                content.value = value
                 loadState.value = LoadState.NotLoading(true)
             } catch (e: Exception) {
                 loadState.value = LoadState.Error(e)

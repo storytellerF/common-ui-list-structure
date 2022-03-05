@@ -200,7 +200,7 @@ class ListWithState @JvmOverloads constructor(
 
         fun simple(loadState: LoadState, itemCount: Int): UIState {
             val refresh = if (loadState !is LoadState.Loading) false else null
-            val uiState = UIState(
+            return UIState(
                 loadState is LoadState.Error,
                 loadState is LoadState.NotLoading && itemCount != 0,
                 loadState is LoadState.NotLoading && itemCount == 0,
@@ -208,7 +208,6 @@ class ListWithState @JvmOverloads constructor(
                 null,
                 refresh
             )
-            return uiState
         }
 
     }
