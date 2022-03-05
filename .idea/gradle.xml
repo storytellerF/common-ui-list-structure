@@ -14,6 +14,7 @@
             <option value="$PROJECT_DIR$/annotation-compiler" />
             <option value="$PROJECT_DIR$/annotation-defination" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/app/b3" />
             <option value="$PROJECT_DIR$/common-ui" />
             <option value="$PROJECT_DIR$/common-vm-ktx" />
             <option value="$PROJECT_DIR$/composite-compiler" />

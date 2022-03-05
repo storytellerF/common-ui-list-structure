@@ -3,6 +3,10 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/b3/src/main/res/layout/activity_main.xml" value="0.1140625" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/b3/src/main/res/layout/fragment_notifications.xml" value="0.1" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/b3/src/main/res/layout/mine_not_login.xml" value="0.1" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/b3/src/main/res/menu/bottom_nav_menu.xml" value="0.20416666666666666" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/src/main/res/layout/activity_main.xml" value="0.16302083333333334" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/src/main/res/layout/activity_main2.xml" value="0.13802083333333334" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/src/main/res/layout/fragment_dashboard.xml" value="0.1" />
