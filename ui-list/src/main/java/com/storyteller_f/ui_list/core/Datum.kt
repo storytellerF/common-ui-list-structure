@@ -9,4 +9,5 @@ interface Datum<RK : RemoteKey> : Model {
 
 interface Model {
     fun commonDatumId(): String
+    fun uniqueIdInOP() = commonDatumId()
 }

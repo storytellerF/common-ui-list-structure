@@ -15,18 +15,20 @@ object ObjectPool {
             map[key] = mutableMapOf()
         }
         val objMap = map[key]?.toMutableMap()
-        if (!objMap!!.containsKey(model.commonDatumId())) {
-            objMap[model.commonDatumId()] =
+        if (!objMap!!.containsKey(produceKey(model))) {
+            objMap[produceKey(model)] =
                 Record<T>(isFullVersion, MutableLiveData(model), System.currentTimeMillis())
         } else {
-            objMap[model.commonDatumId()]?.let {
+            objMap[produceKey(model)]?.let {
                 it.isFullVersion = isFullVersion
                 it.obj.value = model
                 it.updatedTime = System.currentTimeMillis()
             }
         }
-        return objMap[model.commonDatumId()]!!.obj
+        return objMap[produceKey(model)]!!.obj
     }
+
+    private fun <T : Model> produceKey(model: T) = model.uniqueIdInOP()
 
     /**
      * 更新对象，然后返回一个统一的数据
