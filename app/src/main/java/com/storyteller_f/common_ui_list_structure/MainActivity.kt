@@ -24,10 +24,16 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.marginTop
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
+import com.storyteller_f.common_ui.navigator
+import com.storyteller_f.common_ui.status
+import com.storyteller_f.common_ui.updateMargins
 import com.storyteller_f.common_ui_list_structure.api.requireReposService
 import com.storyteller_f.common_ui_list_structure.databinding.ActivityMainBinding
 import com.storyteller_f.common_ui_list_structure.databinding.RepoViewItemBinding
@@ -89,8 +95,12 @@ class MainActivity : AppCompatActivity() {
                 adapter.submitData(it)
             }
         }
-        window.decorView.setOnApplyWindowInsetsListener { _, insets ->
+        binding.root.setOnApplyWindowInsetsListener { v, insets ->
             printInsets(insets)
+            binding.buttonGroup.updateMargins {
+                topMargin = insets.status().top
+            }
+            binding.content.recyclerView.updatePadding(bottom = insets.navigator().bottom)
             insets
         }
         binding.buttonGroup.run {

@@ -158,6 +158,8 @@ class ListWithState @JvmOverloads constructor(
         setupSwapSupport(adapter)
     }
 
+    val recyclerView get() = binding.list
+
     private val binding = ListWithStateBinding.inflate(LayoutInflater.from(context), this)
 
     init {

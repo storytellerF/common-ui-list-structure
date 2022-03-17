@@ -8,17 +8,14 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.storyteller_f.common_ui_list_structure.databinding.ActivityMain2Binding
+import com.storyteller_f.ui_list.event.viewBinding
 
 class MainActivity2 : AppCompatActivity() {
 
-    private lateinit var binding: ActivityMain2Binding
+    private val binding: ActivityMain2Binding by viewBinding(ActivityMain2Binding::inflate)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        binding = ActivityMain2Binding.inflate(layoutInflater)
-        setContentView(binding.root)
-
         val navView: BottomNavigationView = binding.navView
 
         val navController = findNavController(R.id.nav_host_fragment_activity_main2)
