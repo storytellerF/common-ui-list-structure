@@ -136,3 +136,11 @@ inline fun <reified VM : ViewModel> ComponentActivity.ckVM(
             }
         })
 }
+
+class GenericValueModel<T> : ViewModel() {
+    val data = MutableLiveData<T>()
+}
+
+class GenericListValueModel<T>:ViewModel() {
+    val data = MutableLiveData<List<T>>()
+}
