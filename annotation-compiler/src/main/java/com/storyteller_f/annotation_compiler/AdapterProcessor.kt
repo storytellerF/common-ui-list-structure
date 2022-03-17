@@ -55,7 +55,7 @@ class AdapterProcessor : AbstractProcessor() {
     ): Boolean {
         val clickEventMap = getEvent(roundEnvironment, BindClickEvent::class.java)
         val longClickEventMap = getEvent(roundEnvironment, BindLongClickEvent::class.java)
-        println("binding event map ${clickEventMap?.size} ${longClickEventMap?.size}")
+        println("binding event map ${clickEventMap?.size} ${longClickEventMap?.size} ${set?.size}")
         if (set != null) {
             this.setSaved.putAll(set.map {
                 it to processingEnv.elementUtils.getPackageOf(
@@ -74,10 +74,11 @@ class AdapterProcessor : AbstractProcessor() {
         longClickEventMap?.let {
             this.longClickEventMapSaved.putAll(it)
         }
-        println("binding event map ${this.clickEventMapSaved.size} ${this.longClickEventMapSaved.size}")
 
         roundEnvironment?.let { environment ->
             if (environment.processingOver()) {
+                println("binding event map saved: ${this.clickEventMapSaved.size} ${this.longClickEventMapSaved.size} ${setSaved.size}")
+
                 this.setSaved.forEach { (_, packageElement) ->
                     val content =
                         createClassFileContent(
@@ -86,15 +87,15 @@ class AdapterProcessor : AbstractProcessor() {
                             this.clickEventMapSaved,
                             this.longClickEventMapSaved
                         )
-                    val flatMap = clickEventMapSaved.flatMap {
-                        it.value.flatMap { it.value }.map { it.origin }
-                    }.plus(longClickEventMapSaved.flatMap {
-                        it.value.flatMap { it.value }.map { it.origin }
+                    val flatMap = clickEventMapSaved.flatMap { entry ->
+                        entry.value.flatMap { it.value }.map { it.origin }
+                    }.plus(longClickEventMapSaved.flatMap { entry ->
+                        entry.value.flatMap { it.value }.map { it.origin }
                     }).plus(holderEntrySaved.map { it.origin })
                     val classFile =
                         processingEnv.filer.createSourceFile(
                             "${packageElement}.adapter_produce.$className",
-                             *flatMap.toTypedArray()
+                            *flatMap.toTypedArray()
                         )
                     classFile.openWriter().use {
                         it.write(content)
@@ -170,13 +171,14 @@ class AdapterProcessor : AbstractProcessor() {
                 } to if (list.size == 2) list[1]?.value.toString() else "getRoot()"
             }
         }) { element ->
-            val parameterCount = element.asType().toString().let { s ->
-                val start = s.indexOf("(")
+            val parameterList = element.asType().toString().let { s ->
+                val start = s.indexOf("(") + 1
                 val end = s.lastIndexOf(")")
                 s.substring(start, end).split(",")
                     .filter { it.isNotBlank() && it.isNotEmpty() }
             }.joinToString(", ") {
                 when {
+                    it.isEmpty() -> ""
                     it.contains("android.view.View") -> {
                         "v"
                     }
@@ -192,7 +194,7 @@ class AdapterProcessor : AbstractProcessor() {
                 element.enclosingElement.simpleName.toString(),
                 element.enclosingElement.toString(),
                 element.simpleName.toString(),
-                parameterCount,
+                parameterList,
                 element
             )
         }

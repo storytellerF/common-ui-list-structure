@@ -123,7 +123,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     @BindClickEvent(SeparatorItemHolder::class, "card")
-    fun clickLine(itemHolder: SeparatorItemHolder) {
+    fun clickLine() {
         startActivity(Intent(this, MainActivity2::class.java))
     }
 
