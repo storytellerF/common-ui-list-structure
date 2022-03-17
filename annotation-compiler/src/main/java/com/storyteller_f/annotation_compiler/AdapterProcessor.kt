@@ -7,6 +7,7 @@ import java.rmi.activation.UnknownObjectException
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
+import javax.lang.model.element.Element
 import javax.lang.model.element.PackageElement
 import javax.lang.model.element.TypeElement
 
@@ -16,7 +17,8 @@ class Entry(
     val bindingFullName: String,
     val itemHolderName: String,
     val viewHolderFullName: String,
-    val itemHolderFullName: String
+    val itemHolderFullName: String,
+    val origin: Element
 ) {
     override fun toString(): String {
         return "Entry(viewHolderName='$viewHolderName', bindingName='$bindingName', bindingFullName='$bindingFullName', itemHolderName=$itemHolderName)"
@@ -27,7 +29,8 @@ class Event(
     val receiver: String,
     val receiverFullName: String,
     val functionName: String,
-    val parameterList: String
+    val parameterList: String,
+    val origin: Element
 ) {
     override fun toString(): String {
         return "Event(receiver='$receiver', functionName='$functionName', parameterCount=$parameterList)"
@@ -35,34 +38,26 @@ class Event(
 }
 
 class AdapterProcessor : AbstractProcessor() {
-    private var count = 0
 
     companion object {
         const val className = "Temp"
     }
 
-    val set = mutableMapOf<TypeElement, PackageElement>()
-    private val clickEventMap = mutableMapOf<String?, Map<String, List<Event>>>()
-    private val longClickEventMap = mutableMapOf<String?, Map<String, List<Event>>>()
-    private val holderEntry = mutableListOf<Entry>()
+    private val setSaved = mutableMapOf<TypeElement, PackageElement>()
+    private val clickEventMapSaved = mutableMapOf<String?, Map<String, List<Event>>>()
+    private val longClickEventMapSaved = mutableMapOf<String?, Map<String, List<Event>>>()
+    private val holderEntrySaved = mutableListOf<Entry>()
 
     @Suppress("NewApi")
     override fun process(
         set: MutableSet<out TypeElement>?,
         roundEnvironment: RoundEnvironment?
     ): Boolean {
-        count++
-        if (count == 1) {
-            this.set.clear()
-            clickEventMap.clear()
-            longClickEventMap.clear()
-        }
-        println("binding set:$set is over ${roundEnvironment?.processingOver()} count:$count")
         val clickEventMap = getEvent(roundEnvironment, BindClickEvent::class.java)
         val longClickEventMap = getEvent(roundEnvironment, BindLongClickEvent::class.java)
         println("binding event map ${clickEventMap?.size} ${longClickEventMap?.size}")
         if (set != null) {
-            this.set.putAll(set.map {
+            this.setSaved.putAll(set.map {
                 it to processingEnv.elementUtils.getPackageOf(
                     roundEnvironment?.getElementsAnnotatedWithAny(
                         it
@@ -70,29 +65,37 @@ class AdapterProcessor : AbstractProcessor() {
                 )
             })
             set.forEach {
-                getHolder(roundEnvironment, it)?.let { list -> holderEntry.addAll(list) }
+                getHolder(roundEnvironment, it)?.let { list -> holderEntrySaved.addAll(list) }
             }
         }
         clickEventMap?.let {
-            this.clickEventMap.putAll(it)
+            this.clickEventMapSaved.putAll(it)
         }
         longClickEventMap?.let {
-            this.longClickEventMap.putAll(it)
+            this.longClickEventMapSaved.putAll(it)
         }
-        println("binding event map ${this.clickEventMap.size} ${this.longClickEventMap.size}")
+        println("binding event map ${this.clickEventMapSaved.size} ${this.longClickEventMapSaved.size}")
 
         roundEnvironment?.let { environment ->
             if (environment.processingOver()) {
-                this.set.forEach { (_, packageElement) ->
+                this.setSaved.forEach { (_, packageElement) ->
                     val content =
                         createClassFileContent(
                             packageElement,
-                            this.holderEntry,
-                            this.clickEventMap,
-                            this.longClickEventMap
+                            this.holderEntrySaved,
+                            this.clickEventMapSaved,
+                            this.longClickEventMapSaved
                         )
+                    val flatMap = clickEventMapSaved.flatMap {
+                        it.value.flatMap { it.value }.map { it.origin }
+                    }.plus(longClickEventMapSaved.flatMap {
+                        it.value.flatMap { it.value }.map { it.origin }
+                    }).plus(holderEntrySaved.map { it.origin })
                     val classFile =
-                        processingEnv.filer.createSourceFile("${packageElement}.adapter_produce.$className")
+                        processingEnv.filer.createSourceFile(
+                            "${packageElement}.adapter_produce.$className",
+                             *flatMap.toTypedArray()
+                        )
                     classFile.openWriter().use {
                         it.write(content)
                         it.flush()
@@ -189,7 +192,8 @@ class AdapterProcessor : AbstractProcessor() {
                 element.enclosingElement.simpleName.toString(),
                 element.enclosingElement.toString(),
                 element.simpleName.toString(),
-                parameterCount
+                parameterCount,
+                element
             )
         }
         return eventMap
@@ -219,7 +223,8 @@ class AdapterProcessor : AbstractProcessor() {
                         bindingFullName,
                         itemHolderName.second,
                         element.asType().toString(),
-                        itemHolderName.first
+                        itemHolderName.first,
+                        element
                     )
                 }
         }
