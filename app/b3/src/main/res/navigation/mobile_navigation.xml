@@ -14,12 +14,12 @@
     <fragment
         android:id="@+id/navigation_dashboard"
         android:name="com.storyteller_f.b3.ui.dashboard.DashboardFragment"
-        android:label="@string/title_dashboard"
+        android:label="@string/title_mine"
         tools:layout="@layout/fragment_dashboard" />
 
     <fragment
         android:id="@+id/navigation_notifications"
         android:name="com.storyteller_f.b3.ui.notifications.NotificationsFragment"
-        android:label="@string/title_mine"
+        android:label="@string/title_notification"
         tools:layout="@layout/fragment_notifications" />
 </navigation>

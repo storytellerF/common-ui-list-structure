@@ -1,8 +1,9 @@
-package com.storyteller_f.b3
+package com.storyteller_f.b3.ui.login
+
 import com.google.gson.annotations.SerializedName
 
 
-data class GeeResponse(
+data class GeetestB3Response(
     @SerializedName("code")
     val code: Int? = null,
     @SerializedName("data")
@@ -35,3 +36,14 @@ data class Tencent(
     @SerializedName("appid")
     val appid: String? = null
 )
+
+data class GeetestResult(
+    @SerializedName("geetest_challenge")
+    val geetestChallenge: String? = null,
+    @SerializedName("geetest_seccode")
+    val geetestSeccode: String? = null,
+    @SerializedName("geetest_validate")
+    val geetestValidate: String? = null
+)
+
+const val geetest_url = "https://www.geetest.com/demo/gt/"
