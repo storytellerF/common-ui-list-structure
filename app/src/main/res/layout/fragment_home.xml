@@ -1,12 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".ui.home.HomeFragment">
-    <com.storyteller_f.ui_list.ui.ListWithState
-        android:id="@+id/list_with_state"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="com.storyteller_f.common_ui.InsetBlockDirection" />
+    </data>
+
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-</FrameLayout>
+        android:layout_height="match_parent"
+        tools:context=".ui.home.HomeFragment">
+
+        <com.storyteller_f.ui_list.ui.ListWithState
+            android:id="@+id/list_with_state"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:status_padding="@{InsetBlockDirection.start}" />
+    </FrameLayout>
+</layout>

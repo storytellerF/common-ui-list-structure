@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
 import androidx.viewbinding.ViewBinding
 
@@ -42,6 +43,11 @@ abstract class CommonFragment<T : ViewBinding>(
     }
 
     abstract fun onBindViewEvent(binding: T)
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
+    }
 }
 
 /**
