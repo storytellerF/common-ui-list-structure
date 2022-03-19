@@ -60,7 +60,7 @@ class AdapterProcessor : AbstractProcessor() {
         count++
         val clickEventMap = getEvent(roundEnvironment, BindClickEvent::class.java)
         val longClickEventMap = getEvent(roundEnvironment, BindLongClickEvent::class.java)
-        println("binding event map ${clickEventMap?.size} ${longClickEventMap?.size} ${set?.size} ${roundEnvironment?.errorRaised()} ${roundEnvironment?.processingOver()}")
+        println("binding event map ${clickEventMap?.size} ${longClickEventMap?.size} ${set?.size} ${holderEntryTemp.size} ${roundEnvironment?.errorRaised()} ${roundEnvironment?.processingOver()} count $count")
         if (set != null) {
             this.setTemp.putAll(set.map {
                 it to processingEnv.elementUtils.getPackageOf(
@@ -82,7 +82,7 @@ class AdapterProcessor : AbstractProcessor() {
 
         roundEnvironment?.let { environment ->
             if (environment.processingOver()) {
-                println("binding event map saved: ${this.clickEventMapTemp.size} ${this.longClickEventMapTemp.size} ${setTemp.size}")
+                println("binding event map process: ${this.clickEventMapTemp.size} ${this.longClickEventMapTemp.size} ${holderEntrySaved.size} ${setTemp.size}")
                 if (count != 3) {
                     this.longClickEventMapTemp.putAll(longClickEventMapSaved)
                     this.clickEventMapTemp.putAll(clickEventMapSaved)
