@@ -27,6 +27,11 @@ class DashboardFragment : RegularFragment<FragmentDashboardBinding>(FragmentDash
         dashboardViewModel.text.observe(viewLifecycleOwner) {
             textView.text = it
         }
+
+    }
+
+    override fun onStart() {
+        super.onStart()
         toolbarCompose().setContent {
             ToolBar()
         }

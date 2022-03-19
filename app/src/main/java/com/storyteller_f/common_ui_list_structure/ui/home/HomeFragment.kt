@@ -2,6 +2,7 @@ package com.storyteller_f.common_ui_list_structure.ui.home
 
 import androidx.lifecycle.lifecycleScope
 import com.storyteller_f.common_ui.CommonFragment
+import com.storyteller_f.common_ui.RegularFragment
 import com.storyteller_f.common_ui_list_structure.Repo2ViewHolder
 import com.storyteller_f.common_ui_list_structure.RepoItemHolder
 import com.storyteller_f.common_ui_list_structure.api.requireReposService
@@ -10,7 +11,7 @@ import com.storyteller_f.ui_list.core.DataProducer
 import com.storyteller_f.ui_list.core.SimpleDataAdapter
 import com.storyteller_f.ui_list.core.data
 
-class HomeFragment : CommonFragment<FragmentHomeBinding>(FragmentHomeBinding::inflate) {
+class HomeFragment : RegularFragment<FragmentHomeBinding>(FragmentHomeBinding::inflate) {
 
     private val data by data(
         DataProducer(

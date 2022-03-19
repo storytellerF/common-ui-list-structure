@@ -60,11 +60,11 @@ abstract class RegularFragment<T : ViewBinding>(
     viewBindingFactory: (LayoutInflater) -> T
 
 ) : CommonFragment<T>(viewBindingFactory) {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onStart() {
+        super.onStart()
         toolbar().setDisplayHomeAsUpEnabled(up())
+        toolbarCompose().setContent {  }
     }
-
     open fun up() = true
 }
 
