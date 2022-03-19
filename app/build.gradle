@@ -73,8 +73,8 @@ dependencies {
 
     // architecture components
     implementation "androidx.core:core-ktx:$coreVersion"
-    kapt 'androidx.room:room-compiler:2.4.1'
-    kapt 'androidx.databinding:databinding-compiler-common:7.1.1'
+    kapt 'androidx.room:room-compiler:2.4.2'
+    kapt 'androidx.databinding:databinding-compiler-common:7.1.2'
 
 
     // retrofit
