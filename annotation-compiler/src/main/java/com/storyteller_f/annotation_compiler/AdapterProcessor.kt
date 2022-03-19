@@ -41,10 +41,6 @@ class AdapterProcessor : AbstractProcessor() {
 
     companion object {
         const val className = "Temp"
-        private val setSaved = mutableMapOf<TypeElement, PackageElement>()
-        private val holderEntrySaved = mutableListOf<Entry>()
-        private val clickEventMapSaved = mutableMapOf<String?, Map<String, List<Event>>>()
-        private val longClickEventMapSaved = mutableMapOf<String?, Map<String, List<Event>>>()
     }
 
     private val setTemp = mutableMapOf<TypeElement, PackageElement>()
@@ -52,49 +48,53 @@ class AdapterProcessor : AbstractProcessor() {
     private val clickEventMapTemp = mutableMapOf<String?, Map<String, List<Event>>>()
     private val longClickEventMapTemp = mutableMapOf<String?, Map<String, List<Event>>>()
     private var count = 0
+
     @Suppress("NewApi")
     override fun process(
         set: MutableSet<out TypeElement>?,
         roundEnvironment: RoundEnvironment?
     ): Boolean {
         count++
-        val clickEventMap = getEvent(roundEnvironment, BindClickEvent::class.java)
-        val longClickEventMap = getEvent(roundEnvironment, BindLongClickEvent::class.java)
-        println("binding event map ${clickEventMap?.size} ${longClickEventMap?.size} ${set?.size} ${holderEntryTemp.size} ${roundEnvironment?.errorRaised()} ${roundEnvironment?.processingOver()} count $count")
-        if (set != null) {
-            this.setTemp.putAll(set.map {
-                it to processingEnv.elementUtils.getPackageOf(
+        println("binding event map ${clickEventMapTemp.size} ${longClickEventMapTemp.size} ${set?.size} ${holderEntryTemp.size} ${roundEnvironment?.errorRaised()} ${roundEnvironment?.processingOver()} count $count")
+
+        set?.forEach { typeElement ->
+            val name = typeElement.simpleName.toString()
+            println(name)
+            when (name) {
+                "BindItemHolder" -> {
+                    getHolder(roundEnvironment, typeElement)?.let { list ->
+                        holderEntryTemp.addAll(
+                            list
+                        )
+                    }
                     roundEnvironment?.getElementsAnnotatedWithAny(
-                        it
-                    )?.firstOrNull()
-                )
-            })
-            set.forEach {
-                getHolder(roundEnvironment, it)?.let { list -> holderEntryTemp.addAll(list) }
+                        typeElement
+                    )?.let { element ->
+                        element.map { processingEnv.elementUtils.getPackageOf(it) }.minByOrNull {
+                            it.toString()
+                        }?.let {
+                            typeElement to it
+                        }
+                    }?.let { it1 -> setTemp.put(it1.first, it1.second) }
+                }
+                "BindClickEvent" -> {
+                    getEvent(
+                        roundEnvironment,
+                        BindClickEvent::class.java
+                    )?.let { map -> clickEventMapTemp.putAll(map) }
+                }
+                "BindLongClickEvent" -> {
+                    getEvent(
+                        roundEnvironment,
+                        BindLongClickEvent::class.java
+                    )?.let { map -> longClickEventMapTemp.putAll(map) }
+                }
             }
-        }
-        clickEventMap?.let {
-            this.clickEventMapTemp.putAll(it)
-        }
-        longClickEventMap?.let {
-            this.longClickEventMapTemp.putAll(it)
         }
 
         roundEnvironment?.let { environment ->
             if (environment.processingOver()) {
-                println("binding event map process: ${this.clickEventMapTemp.size} ${this.longClickEventMapTemp.size} ${holderEntrySaved.size} ${setTemp.size}")
-                if (count != 3) {
-                    this.longClickEventMapTemp.putAll(longClickEventMapSaved)
-                    this.clickEventMapTemp.putAll(clickEventMapSaved)
-                    this.holderEntryTemp.addAll(holderEntrySaved)
-                } else {
-                    longClickEventMapSaved.clear()
-                    clickEventMapSaved.clear()
-                    holderEntrySaved.clear()
-                    clickEventMapSaved.putAll(clickEventMapTemp)
-                    longClickEventMapSaved.putAll(longClickEventMapTemp)
-                    holderEntrySaved.addAll(holderEntrySaved)
-                }
+                println("binding event map process: ${this.clickEventMapTemp.size} ${this.longClickEventMapTemp.size} ${holderEntryTemp.size} ${setTemp.size}")
                 this.setTemp.forEach { (_, packageElement) ->
                     val content =
                         createClassFileContent(
@@ -288,7 +288,11 @@ class AdapterProcessor : AbstractProcessor() {
     }
 
     override fun getSupportedAnnotationTypes(): MutableSet<String> {
-        return mutableSetOf(BindItemHolder::class.java.canonicalName)
+        return mutableSetOf(
+            BindItemHolder::class.java.canonicalName,
+            BindClickEvent::class.java.canonicalName,
+            BindLongClickEvent::class.java.canonicalName
+        )
     }
 
     override fun getSupportedSourceVersion(): SourceVersion {

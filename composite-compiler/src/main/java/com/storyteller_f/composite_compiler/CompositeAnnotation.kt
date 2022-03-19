@@ -20,7 +20,7 @@ class CompositeAnnotation : AbstractProcessor() {
         p0: MutableSet<out TypeElement>?,
         roundEnvironment: RoundEnvironment?
     ): Boolean {
-        println("composite set:$p0 is over ${roundEnvironment?.processingOver()}")
+//        println("composite set:$p0 is over ${roundEnvironment?.processingOver()}")
         if (p0 == null || p0.isEmpty()) return false
         roundEnvironment?.getElementsAnnotatedWith(Composite::class.java)
             ?.forEach ElementRound@{ ele ->
