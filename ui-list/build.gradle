@@ -66,14 +66,14 @@ dependencies {
     api "androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycleVersion"
 
     // room
-    api 'androidx.room:room-runtime:2.4.1'
-    api 'androidx.room:room-ktx:2.4.1'
-    api 'androidx.room:room-paging:2.4.1'
+    api 'androidx.room:room-runtime:2.4.2'
+    api 'androidx.room:room-ktx:2.4.2'
+    api 'androidx.room:room-paging:2.4.2'
     api "androidx.paging:paging-runtime-ktx:$pagingVersion"
-    kapt 'androidx.room:room-compiler:2.4.1'
+    kapt 'androidx.room:room-compiler:2.4.2'
 
 
-    kapt 'androidx.databinding:databinding-compiler-common:7.1.1'
+    kapt 'androidx.databinding:databinding-compiler-common:7.1.2'
 
 
     // retrofit & okhttp

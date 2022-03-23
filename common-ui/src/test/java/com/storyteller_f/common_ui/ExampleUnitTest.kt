@@ -1,5 +1,7 @@
 package com.storyteller_f.common_ui
 
+import android.graphics.Rect
+import androidx.core.graphics.plus
 import org.junit.Test
 
 import org.junit.Assert.*
@@ -12,6 +14,7 @@ import org.junit.Assert.*
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
+        val plus = Rect(1, 1, 1, 1).plus(Rect(2, 0, 2, 0))
+        assertEquals(plus.left, 3)
     }
 }
