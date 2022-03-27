@@ -8,6 +8,8 @@
       <module name="common_ui_list_structure.app.giant-explorer" target="11" />
       <module name="common_ui_list_structure.common-ui" target="11" />
       <module name="common_ui_list_structure.common-vm-ktx" target="11" />
+      <module name="common_ui_list_structure.file-system" target="11" />
+      <module name="common_ui_list_structure.file-system-ktx" target="11" />
       <module name="common_ui_list_structure.ui-list" target="11" />
       <module name="common_ui_list_structure.view-holder-compose" target="11" />
     </bytecodeTargetLevel>

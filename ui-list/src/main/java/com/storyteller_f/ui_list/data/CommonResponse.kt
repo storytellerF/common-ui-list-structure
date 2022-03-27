@@ -18,9 +18,16 @@ package com.storyteller_f.ui_list.data
 
 import com.google.gson.annotations.SerializedName
 import com.storyteller_f.ui_list.core.Datum
+import com.storyteller_f.ui_list.core.Model
 import com.storyteller_f.ui_list.database.RemoteKey
 
 data class CommonResponse<D : Datum<RK>, RK : RemoteKey>(
+    @SerializedName("total_count") val total: Int = 0,
+    @SerializedName("items") val items: List<D> = emptyList(),
+    val nextPage: Int? = null
+)
+
+data class SimpleResponse<D: Model>(
     @SerializedName("total_count") val total: Int = 0,
     @SerializedName("items") val items: List<D> = emptyList(),
     val nextPage: Int? = null

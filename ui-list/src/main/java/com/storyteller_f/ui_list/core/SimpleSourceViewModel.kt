@@ -16,15 +16,17 @@
 
 package com.storyteller_f.ui_list.core
 
+import androidx.activity.ComponentActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import androidx.paging.*
 import androidx.room.RoomDatabase
-import com.storyteller_f.ui_list.data.MoreInfoLoadState
-import com.storyteller_f.ui_list.data.SimpleDataRepository
-import com.storyteller_f.ui_list.data.SimpleSourceRepository
+import com.storyteller_f.ui_list.data.*
 import com.storyteller_f.ui_list.database.RemoteKey
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -41,7 +43,7 @@ class SimpleSourceViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteK
      * 如果你想要使用 interceptor factory ，那应observe content2
      */
     var content2: Flow<PagingData<Holder>>? = null
-    var last: D? = null
+    private var last: D? = null
 
     init {
         val map = sourceRepository.resultStream()
@@ -152,6 +154,48 @@ class SimpleDetailViewModel<D : Any>(
 
     fun refresh() {
         refresh(null, producer)
+    }
+}
+
+class SimpleSearchViewModel<D : Model, SQ : Any, Holder : DataItemHolder>(
+    private val repository: SimpleSearchRepository<D, SQ>,
+    val processFactory: (D, D?) -> Holder,
+) : ViewModel() {
+    private var currentQueryValue: SQ? = null
+    private var last: D? = null
+    var lastJob: Job? = null
+
+    private var currentSearchResult: Flow<PagingData<Holder>>? = null
+    fun search(sq: SQ): Flow<PagingData<Holder>> {
+        val lastResult = currentSearchResult
+        if (sq == currentQueryValue && lastResult != null) {
+            return lastResult
+        }
+        currentQueryValue = sq
+        val newResult: Flow<PagingData<Holder>> = repository.search(sq)
+            .map {
+                it.map {
+                    processFactory(it, last).apply {
+                        last = it
+                    }
+                }
+            }
+            .cachedIn(viewModelScope)
+        currentSearchResult = newResult
+        return newResult
+    }
+}
+
+fun <SQ : Any, Holder : DataItemHolder> SimpleSearchViewModel<*, SQ, Holder>.observer(
+    activity: ComponentActivity,
+    search: SQ,
+    block: suspend (PagingData<Holder>) -> Unit
+) {
+    lastJob?.cancel()
+    lastJob = activity.lifecycleScope.launch {
+        search(search).collectLatest {
+            block(it)
+        }
     }
 }
 

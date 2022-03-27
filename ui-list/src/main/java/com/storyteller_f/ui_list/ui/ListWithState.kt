@@ -19,6 +19,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.storyteller_f.ui_list.core.SimpleDataAdapter
 import com.storyteller_f.ui_list.core.SimpleDataViewModel
 import com.storyteller_f.ui_list.core.SimpleSourceAdapter
+import com.storyteller_f.ui_list.data.isError
+import com.storyteller_f.ui_list.data.isLoading
+import com.storyteller_f.ui_list.data.isNotLoading
 import com.storyteller_f.ui_list.databinding.ListWithStateBinding
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
@@ -48,7 +51,11 @@ class ListWithState @JvmOverloads constructor(
         }
     }
 
-    fun up(adapter: SimpleSourceAdapter<*, *>, lifecycleCoroutineScope: LifecycleCoroutineScope) {
+    fun up(
+        adapter: SimpleSourceAdapter<*, *>,
+        lifecycleCoroutineScope: LifecycleCoroutineScope,
+        flash: ((CombinedLoadStates, Int) -> UIState) = Companion::simple
+    ) {
         setAdapter(
             adapter.withLoadStateHeaderAndFooter(header = SimpleLoadStateAdapter { adapter.retry() },
                 footer = SimpleLoadStateAdapter { adapter.retry() }), adapter
@@ -60,7 +67,7 @@ class ListWithState @JvmOverloads constructor(
             adapter.addLoadStateListener(listener)
             awaitClose { adapter.removeLoadStateListener(listener) }
         }.map {
-            simple(it, adapter.itemCount)
+            flash(it, adapter.itemCount)
         }.onEach {
             flash(it)
         }.launchIn(lifecycleCoroutineScope)
@@ -130,7 +137,7 @@ class ListWithState @JvmOverloads constructor(
     fun up(
         adapter: SimpleDataAdapter<*, *>,
         lifecycleOwner: LifecycleOwner,
-        vm: SimpleDataViewModel<*, *, *>
+        vm: SimpleDataViewModel<*, *, *>,
     ) {
         setupLinearLayoutManager()
         val layoutManager = binding.list.layoutManager as LinearLayoutManager
@@ -192,21 +199,46 @@ class ListWithState @JvmOverloads constructor(
                 SpannableString(it)
             }
             return UIState(
-                loadState.mediator?.refresh is LoadState.Error,
-                loadState.mediator?.refresh is LoadState.NotLoading && itemCount > 0,
-                loadState.mediator?.refresh is LoadState.NotLoading && itemCount == 0,
-                loadState.mediator?.refresh is LoadState.Loading,
+                loadState.mediator?.refresh.isError,
+                loadState.mediator?.refresh.isNotLoading && itemCount > 0,
+                loadState.mediator?.refresh.isNotLoading && itemCount == 0,
+                loadState.mediator?.refresh.isLoading,
+                errorSpannable, refresh
+            )
+        }
+
+        /**
+         * 远程加载出错时，不会显示数据
+         */
+        fun remote(loadState: CombinedLoadStates, itemCount: Int): UIState {
+            val refresh = if (loadState.mediator?.refresh !is LoadState.Loading) false else null
+            val error = loadState.source.append as? LoadState.Error
+                ?: loadState.source.refresh as? LoadState.Error
+                ?: loadState.source.prepend as? LoadState.Error
+                ?: loadState.append as? LoadState.Error
+                ?: loadState.prepend as? LoadState.Error
+                ?: loadState.mediator?.append as? LoadState.Error
+                ?: loadState.mediator?.prepend as? LoadState.Error
+                ?: loadState.mediator?.refresh as? LoadState.Error
+            val errorSpannable = error?.error?.localizedMessage?.let {
+                SpannableString(it)
+            }
+            return UIState(
+                loadState.source.refresh.isError,
+                loadState.source.refresh.isNotLoading && itemCount > 0,
+                loadState.source.refresh.isNotLoading && itemCount == 0,
+                loadState.source.refresh.isLoading,
                 errorSpannable, refresh
             )
         }
 
         fun simple(loadState: LoadState, itemCount: Int): UIState {
-            val refresh = if (loadState !is LoadState.Loading) false else null
+            val refresh = if (!loadState.isLoading) false else null
             return UIState(
-                loadState is LoadState.Error,
-                loadState is LoadState.NotLoading && itemCount != 0,
-                loadState is LoadState.NotLoading && itemCount == 0,
-                loadState is LoadState.Loading,
+                loadState.isError,
+                loadState.isNotLoading && itemCount != 0,
+                loadState.isNotLoading && itemCount == 0,
+                loadState.isLoading,
                 null,
                 refresh
             )
