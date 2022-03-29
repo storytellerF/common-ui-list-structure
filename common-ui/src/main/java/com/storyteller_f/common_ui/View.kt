@@ -4,10 +4,7 @@ import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
-import androidx.core.view.MarginLayoutParamsCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.marginTop
-import androidx.core.view.updateLayoutParams
+import androidx.core.view.*
 
 fun <T : View> T.setOnClick(block: (T) -> Unit) {
     setOnClickListener {
@@ -34,4 +31,10 @@ fun View.updateMargin(rect: Direction) {
         topMargin = rect.top
         bottomMargin = rect.bottom
     }
+}
+
+fun <T : View> T.setVisible(visible: Boolean, block: (T) -> Unit) {
+    isVisible = visible
+    if (visible)
+        block(this)
 }

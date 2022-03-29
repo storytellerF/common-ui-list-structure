@@ -106,7 +106,7 @@ class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey
 
     fun refresh() {
         viewModelScope.launch {
-            sourceRepository.request()
+            sourceRepository.refresh()
         }
     }
 

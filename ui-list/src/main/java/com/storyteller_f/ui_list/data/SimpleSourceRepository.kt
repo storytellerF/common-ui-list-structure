@@ -79,7 +79,8 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
 
     // 保存上一次请求的页数，如果成功，自增
     private var lastRequestedPage = STARTING_PAGE_INDEX
-    private var causeTempSaved: ReloadCause? = null
+    private var causeTempSaved = LinkedList<ReloadCause?>()
+    private var tryToIntercept = false
 
     // 避免同一时刻进行多个请求
     private var isRequestInProgress = false
@@ -87,12 +88,14 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
     suspend fun request(): Flow<List<D>> {
         lastRequestedPage = 1
         inMemoryCache.clear()
+        causeTempSaved.offer(null)
         requestAndSaveData(lastRequestedPage)
         return results
     }
 
     suspend fun requestMore() {
         if (isRequestInProgress) return
+        causeTempSaved.offer(null)
         val successful = requestAndSaveData(lastRequestedPage + 1)
         if (successful) {
             lastRequestedPage++
@@ -101,11 +104,13 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
 
     suspend fun retry() {
         if (isRequestInProgress) return
+        causeTempSaved.offer(null)
         requestAndSaveData(lastRequestedPage + 1)
     }
 
-    suspend fun refresh(cause: ReloadCause?) {
-        causeTempSaved = cause
+    suspend fun refresh(cause: ReloadCause = ReloadCause.PullToRefresh) {
+        tryToIntercept = true
+        causeTempSaved.offer(cause)
         lastRequestedPage = 1
         inMemoryCache.clear()
         requestAndSaveData(lastRequestedPage)
@@ -113,10 +118,12 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
 
     private suspend fun requestAndSaveData(pages: Int): Boolean {
         isRequestInProgress = true
+        tryToIntercept = false
         loadState.emit(MoreInfoLoadState(LoadState.Loading, 0, null))
         var successful = false
         try {
-            val response = service.invoke(pages, 30)
+            val response = service(pages, 30)
+            if (tryToIntercept) return false
             val elements = response.items
             inMemoryCache.addAll(elements)
             results.emit(inMemoryCache)
@@ -133,9 +140,9 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
         } catch (exception: HttpException) {
             loadState.emit(MoreInfoLoadState(LoadState.Error(exception), inMemoryCache.size, null))
         } finally {
-            causeTempSaved = null
+            causeTempSaved.pop()
+            isRequestInProgress = false
         }
-        isRequestInProgress = false
         return successful
     }
 

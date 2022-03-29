@@ -45,6 +45,7 @@ class ListWithState @JvmOverloads constructor(
         uiState.refresh?.let {
             binding.refreshLayout.isRefreshing = it
         }
+        binding.errorPage.isVisible = uiState.showErrorPage
         binding.errorMsg.isVisible = uiState.error != null
         uiState.error?.let {
             binding.errorMsg.text = it
@@ -180,7 +181,9 @@ class ListWithState @JvmOverloads constructor(
         val progress: Boolean,
         val error: Spannable?,
         val refresh: Boolean?
-    )
+    ) {
+        val showErrorPage get() = retry || error != null
+    }
 
     companion object {
         /**
