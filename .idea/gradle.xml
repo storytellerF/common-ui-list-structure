@@ -22,6 +22,7 @@
             <option value="$PROJECT_DIR$/composite-defination" />
             <option value="$PROJECT_DIR$/file-system" />
             <option value="$PROJECT_DIR$/file-system-ktx" />
+            <option value="$PROJECT_DIR$/multi-core" />
             <option value="$PROJECT_DIR$/ui-list" />
             <option value="$PROJECT_DIR$/view-holder-compose" />
           </set>

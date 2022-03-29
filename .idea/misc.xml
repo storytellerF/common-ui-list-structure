@@ -9,14 +9,21 @@
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/b3/src/main/res/layout/fragment_notifications.xml" value="0.1" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/b3/src/main/res/layout/mine_not_login.xml" value="0.1" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/b3/src/main/res/menu/bottom_nav_menu.xml" value="0.20416666666666666" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/activity_main.xml" value="0.24564102564102563" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/view_holder_directory.xml" value="0.3153153153153153" />
-        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/view_holder_file.xml" value="0.2490740740740741" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/view_holder_file.xml" value="0.264" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/src/main/res/layout/activity_main.xml" value="0.16302083333333334" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/src/main/res/layout/activity_main2.xml" value="0.13802083333333334" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/src/main/res/layout/fragment_dashboard.xml" value="0.1" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/src/main/res/layout/fragment_home.xml" value="0.15648148148148147" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/src/main/res/layout/repo_view_item.xml" value="0.16302083333333334" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/src/main/res/layout/repo_view_item_bind.xml" value="0.16302083333333334" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/file-system/src/main/res/drawable-v21/file_background.xml" value="0.1555" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/file-system/src/main/res/drawable-v21/folder_background.xml" value="0.1555" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/file-system/src/main/res/drawable/file_background.xml" value="0.1555" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/file-system/src/main/res/drawable/folder_background.xml" value="0.1555" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/file-system/src/main/res/drawable/ic_folder_explorer.xml" value="0.111" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/file-system/src/main/res/drawable/ic_folder_open_black_24dp.xml" value="0.111" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/ui-list/src/main/res/layout/list_with_state.xml" value="0.22083333333333333" />
       </map>
     </option>

@@ -1,11 +1,15 @@
 package com.storyteller_f.file_system.instance;
 
 
+import androidx.annotation.Nullable;
+
 import com.storyteller_f.file_system.Filter;
 import com.storyteller_f.file_system.model.DirectoryItemModel;
 import com.storyteller_f.file_system.model.FileItemModel;
-import com.storyteller_f.file_system.model.FileSystemItemModelLite;
+import com.storyteller_f.file_system.model.FileSystemItemModel;
 import com.storyteller_f.file_system.model.FilesAndDirectories;
+import com.storyteller_f.file_system.model.TorrentFileModel;
+import com.storyteller_f.multi_core.StoppableTask;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -16,7 +20,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
-import java.util.List;
+import java.util.ArrayList;
 
 public abstract class FileInstance {
     public final static int file_operate_type_move_delete = 1;
@@ -26,6 +30,7 @@ public abstract class FileInstance {
     protected String path;
     protected String name;
     protected Filter filter;
+    protected StoppableTask task;
 
     /**
      * @param filter 遍历文件夹用的
@@ -38,6 +43,7 @@ public abstract class FileInstance {
     }
 
     public FileInstance(String path) {
+        this.filter = null;
         this.path = path;
         initName(path);
     }
@@ -46,6 +52,7 @@ public abstract class FileInstance {
 
     }
 
+    @Nullable
     public static String getExtension(String name) {
         String extension;
         int index = name.lastIndexOf('.');
@@ -120,7 +127,9 @@ public abstract class FileInstance {
     public abstract boolean isFile() throws Exception;
 
     protected boolean needStop() {
-        return Thread.currentThread().isInterrupted();
+        if (task != null)
+            return task.needStop();
+        else return false;
     }
 
     /**
@@ -130,7 +139,6 @@ public abstract class FileInstance {
      */
     public abstract boolean exists();
 
-    //TODO 如果目录末尾是一个/，那他只能是目录
     public abstract boolean isDirectory() throws Exception;
 
     /**
@@ -210,5 +218,106 @@ public abstract class FileInstance {
         name = null;
         path = null;
         filter = null;
+    }
+
+    /**
+     * 添加普通目录，判断过滤监听事件
+     *
+     * @param directories 填充目的地
+     * @param parent      父文件夹
+     * @param directory   当前目录下的子文件夹
+     */
+    protected FileSystemItemModel addDirectoryByFileObject(ArrayList<DirectoryItemModel> directories, String parent, File directory) {
+        return addDirectory(directories, parent, directory.isHidden(), directory.getName(), directory.getAbsolutePath(), directory.lastModified());
+    }
+
+    /**
+     * 添加普通文件，判断过滤监听事件
+     *
+     * @param files        填充目的地
+     * @param parent       父文件夹
+     * @param hidden       是否是隐藏文件
+     * @param name         文件名
+     * @param absolutePath 绝对路径
+     * @param time         上次访问时间
+     * @param extension    文件扩展
+     * @return 返回添加的文件
+     */
+    protected FileItemModel addFile(ArrayList<FileItemModel> files, String parent, boolean hidden, String name, String absolutePath, long time, String extension) {
+        if (checkWhenAdd(parent, absolutePath, true)) {
+            if ("torrent".equals(extension)) {
+                TorrentFileModel torrentFileModel = new TorrentFileModel(name, absolutePath, hidden, time);
+                files.add(torrentFileModel);
+                return torrentFileModel;
+            }
+            FileItemModel e = new FileItemModel(name, absolutePath, hidden, time, extension);
+            files.add(e);
+            return e;
+        }
+        return null;
+    }
+
+    private boolean checkWhenAdd(String parent, String absolutePath, boolean isFile) {
+        return filter == null || filter.onPath(parent, absolutePath, isFile);
+    }
+
+    /**
+     * 添加detail 类型的file
+     *
+     * @param files     填充目的地
+     * @param parent    父文件夹
+     * @param chileFile 当前文件夹下的子文件
+     * @param detail    详情
+     * @param hidden    是否是隐藏文件
+     */
+    protected void addDetailFileByCmd(ArrayList<FileItemModel> files, String parent, File chileFile, String detail, boolean hidden) {
+        if (checkWhenAdd(parent, chileFile.getAbsolutePath(), true)) {
+            String extension = getExtension(chileFile.getName());
+            long time = chileFile.lastModified();
+            if ("torrent".equals(extension)) {
+                files.add(new TorrentFileModel(chileFile.getName(), chileFile.getAbsolutePath(), hidden, time));
+                return;
+            }
+            FileItemModel fileItemModel = new FileItemModel(chileFile, hidden, time, extension);
+            fileItemModel.setDetail(detail);
+            files.add(fileItemModel);
+        }
+    }
+
+    /**
+     * 添加普通目录，判断过滤监听事件
+     *
+     * @param directories  填充目的地
+     * @param parent       父文件夹
+     * @param hidden       是否是隐藏文件
+     * @param name         文件夹名
+     * @param absolutePath 绝对路径
+     * @param time         上次访问时间
+     * @return 如果客户端不允许添加，返回null
+     */
+    protected FileSystemItemModel addDirectory(ArrayList<DirectoryItemModel> directories, String parent, boolean hidden, String name, String absolutePath, long time) {
+        if (checkWhenAdd(parent, absolutePath, false)) {
+            DirectoryItemModel e = new DirectoryItemModel(name, absolutePath, hidden, time);
+            directories.add(e);
+            return e;
+        }
+        return null;
+    }
+
+    /**
+     * 添加detail 类型的文件夹
+     *
+     * @param directories 填充位置
+     * @param parent      父文件夹
+     * @param sub         当前文件夹下的文件
+     * @param detail      详情
+     * @param hidden      是否是隐藏文件
+     */
+    protected void addDetailDirectoryByCmd(ArrayList<DirectoryItemModel> directories, String parent, File sub, String detail, boolean hidden) {
+        if (checkWhenAdd(parent, sub.getAbsolutePath(), false)) {
+            DirectoryItemModel fileItemModel = new DirectoryItemModel(sub.getName(), sub.getAbsolutePath(), hidden, sub.lastModified());
+            fileItemModel.setDetail(detail);
+            directories.add(fileItemModel);
+        }
     }
 }

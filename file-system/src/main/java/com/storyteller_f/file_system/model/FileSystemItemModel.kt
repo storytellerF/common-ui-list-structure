@@ -13,7 +13,6 @@ open class FileSystemItemModel(
     val formattedLastModifiedTime: String
     var lastAccessTime: Long = 0
     var createdTime: Long = 0
-    var isNowHide = false
     var size: Long = 0
     var formattedSize: String? = null
     var detail: String? = null
@@ -24,9 +23,8 @@ open class FileSystemItemModel(
     override fun toString(): String {
         return "FileSystemItemModel{" +
                 "name='" + name + '\'' +
-                ", absPath='" + absolutePath + '\'' +
+                ", absPath='" + fullPath + '\'' +
                 ", isHidden=" + isHidden +
-                ", nowHide=" + isNowHide +
                 ", size=" + size +
                 ", lastAccessTime='" + lastModifiedTime + '\'' +
                 ", detail='" + detail + '\'' +

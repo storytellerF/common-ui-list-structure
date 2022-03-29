@@ -9,7 +9,7 @@ import com.storyteller_f.file_system.Filter;
 @SuppressWarnings({"unused", "RedundantSuppression"})
 public class MountedLocalFileInstance extends DocumentLocalFileInstance {
     public static final String Name = "mountedFileInstance";
-    public static final String ROOT_URI = "root-uri";
+    public static final String ROOT_URI = "external-extend-uri";
 
     public MountedLocalFileInstance(Filter filter, Context context, String path) {
         super(filter, context, path, Name, ROOT_URI);

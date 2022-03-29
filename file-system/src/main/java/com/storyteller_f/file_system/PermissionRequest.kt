@@ -1,19 +1,14 @@
 package com.storyteller_f.file_system
 
-import android.app.Activity
+import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Build
-import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
-import androidx.lifecycle.MutableLiveData
-import kotlinx.coroutines.*
-import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.CompletableDeferred
 
 suspend fun ComponentActivity.requestPermissionForSpecialPath(path: String) {
     val task = CompletableDeferred<Boolean>()
@@ -33,7 +28,7 @@ suspend fun ComponentActivity.requestPermissionForSpecialPath(path: String) {
         path == FileInstanceFactory.storagePath -> {
             Log.w(
                 "requestPermission",
-                "checkPermission: 当前还不会的对整体的/storage/请求权限"
+                "checkPermission: 当前还不会的对整体的/storage请求权限"
             )
         }
         path.startsWith(FileInstanceFactory.storagePath) -> {
@@ -53,62 +48,61 @@ suspend fun ComponentActivity.requestPermissionForSpecialPath(path: String) {
     task.await()
 }
 
-private fun ComponentActivity.requestWriteExternalStorage(task: CompletableDeferred<Boolean>) {
-    AlertDialog.Builder(this)
-        .setTitle("权限不足")
-        .setMessage("查看文件夹系统必须授予权限")
-        .setNegativeButton(
-            "授予"
-        ) { _, _ ->
-            MainActivity.task = task
-            startActivity(Intent(this, MainActivity::class.java).apply {
-                MainActivity.getBundle(MainActivity.REQUEST_EMULATED, "", this)
-            })
-        }
-        .setPositiveButton("取消") { _, _ ->
-            task.complete(false)
-        }.show()
+private suspend fun ComponentActivity.requestWriteExternalStorage(task: CompletableDeferred<Boolean>) {
+    if (yesOrNo("权限不足", "查看文件夹系统必须授予权限", "授予", "取消")) {
+        MainActivity.task = task
+        startActivity(Intent(this, MainActivity::class.java).apply {
+            MainActivity.getBundle(MainActivity.REQUEST_EMULATED, "", this)
+        })
+    } else {
+        task.complete(false)
+
+    }
 }
 
-private fun ComponentActivity.requestSAF(
+private suspend fun ComponentActivity.requestSAF(
     path: String,
     requestCodeSAF: String,
     task: CompletableDeferred<Boolean>
 ) {
-    AlertDialog.Builder(this).setTitle("需要授予权限")
-        .setMessage("在Android 10 或者访问存储卡，需要获取SAF权限")
-        .setPositiveButton(
-            "去授予"
-        ) { _, _ ->
-            MainActivity.task = task
-            startActivity(Intent(this, MainActivity::class.java).apply {
-                MainActivity.getBundle(requestCodeSAF, path, this)
-            })
-        }
-        .setNegativeButton(
-            "取消"
-        ) { dialog: DialogInterface, _: Int ->
-            dialog.dismiss()
-            task.complete(false)
-        }.show()
+    if (yesOrNo("需要授予权限", "在Android 10 或者访问存储卡，需要获取SAF权限", "去授予", "取消")) {
+        MainActivity.task = task
+        startActivity(Intent(this, MainActivity::class.java).apply {
+            MainActivity.getBundle(requestCodeSAF, path, this)
+        })
+    } else {
+        task.complete(false)
+    }
 }
 
 @RequiresApi(api = Build.VERSION_CODES.R)
-private fun ComponentActivity.requestManageExternalPermission(task: CompletableDeferred<Boolean>) {
-    AlertDialog.Builder(this).setTitle("需要授予权限")
-        .setMessage("在Android 11上，需要获取Manage External Storage权限")
-        .setPositiveButton(
-            "去授予"
-        ) { _: DialogInterface?, _: Int ->
-            MainActivity.task = task
-            startActivity(Intent(this, MainActivity::class.java).apply {
-                MainActivity.getBundle(MainActivity.REQUEST_MANAGE, "", this)
-            })
+private suspend fun ComponentActivity.requestManageExternalPermission(task: CompletableDeferred<Boolean>) {
+    if (yesOrNo("需要授予权限", "在Android 11上，需要获取Manage External Storage权限", "去授予", "取消")) {
+        MainActivity.task = task
+        startActivity(Intent(this, MainActivity::class.java).apply {
+            MainActivity.getBundle(MainActivity.REQUEST_MANAGE, "", this)
+        })
+    } else {
+        task.complete(false)
+
+    }
+}
+
+private suspend fun Context.yesOrNo(
+    title: String,
+    message: String,
+    yesString: String,
+    noString: String
+): Boolean {
+    val t = CompletableDeferred<Boolean>()
+    AlertDialog.Builder(this).setTitle(title)
+        .setMessage(message)
+        .setPositiveButton(yesString) { _: DialogInterface?, _: Int ->
+            t.complete(true)
         }
-        .setNegativeButton(
-            "取消"
-        ) { dialog: DialogInterface, _: Int ->
+        .setNegativeButton(noString) { dialog: DialogInterface, _: Int ->
             dialog.dismiss()
-            task.complete(false)
+            t.complete(false)
         }.show()
+    return t.await()
 }

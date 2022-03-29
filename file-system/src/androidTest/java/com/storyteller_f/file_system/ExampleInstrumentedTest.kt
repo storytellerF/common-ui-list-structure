@@ -2,11 +2,13 @@ package com.storyteller_f.file_system
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.storyteller_f.file_system.util.FileUtility
 
 import org.junit.Test
 import org.junit.runner.RunWith
 
 import org.junit.Assert.*
+import java.io.File
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -19,6 +21,8 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.storyteller_f.file_system.test", appContext.packageName)
+        //assertEquals("com.storyteller_f.file_system.test", appContext.packageName)
+        val listFiles = File("/data").listFiles()
+        listFiles
     }
 }

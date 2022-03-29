@@ -3,26 +3,24 @@ package com.storyteller_f.file_system
 import android.Manifest
 import android.app.Activity
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.provider.Settings
-import android.util.Log
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.lifecycle.MutableLiveData
 import com.storyteller_f.file_system.instance.local.document.ExternalDocumentLocalFileInstance
 import com.storyteller_f.file_system.instance.local.document.MountedLocalFileInstance
+import com.storyteller_f.file_system.model.FileItemModel
+import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.util.FileUtility
 import kotlinx.coroutines.CompletableDeferred
-import java.util.concurrent.CompletableFuture
 
 class MainActivity : AppCompatActivity() {
 
@@ -85,7 +83,7 @@ class MainActivity : AppCompatActivity() {
                     failure()
                 }.launch(
                     FileUtility.produceRequestSaf(
-                        FileInstanceFactory.getPrefix(fromBundle.second),
+                        FileInstanceFactory.getPrefix(fromBundle.second!!, this),
                         this
                     )
                 )
@@ -112,7 +110,7 @@ class MainActivity : AppCompatActivity() {
                     failure()
                 }.launch(
                     FileUtility.produceRequestSaf(
-                        FileInstanceFactory.getPrefix(fromBundle.second),
+                        FileInstanceFactory.getPrefix(fromBundle.second!!, this),
                         this
                     )
                 )
@@ -156,6 +154,112 @@ class MainActivity : AppCompatActivity() {
         }
         failure()
     }
+}
 
+fun ImageView.fillIcon(fileSystemItemModel: FileSystemItemModel) {
+    if (fileSystemItemModel is FileItemModel) {
+        val extension = fileSystemItemModel.extension
+        if (extension != null) {
+            setImageResource(
+                when (extension) {
+                    "mp3", "wav", "flac" -> R.drawable.ic_music
+                    "zip", "7z", "rar" -> R.drawable.ic_archive
+                    "jpg", "jpeg", "png", "gif" -> R.drawable.ic_image
+                    "mp4", "rmvb", "ts", "avi", "mkv", "3gp", "mov", "flv", "m4s" -> R.drawable.ic_video
+                    "url" -> R.drawable.ic_url
+                    "txt", "c" -> R.drawable.ic_text
+                    "js" -> R.drawable.ic_js
+                    "pdf" -> R.drawable.ic_pdf
+                    "doc", "docx" -> R.drawable.ic_word
+                    "xls", "xlsx" -> R.drawable.ic_excel
+                    "ppt", "pptx" -> R.drawable.ic_ppt
+                    "iso" -> R.drawable.ic_disk
+                    "exe", "msi" -> R.drawable.ic_exe
+                    "psd" -> R.drawable.ic_psd
+                    "torrent" -> R.drawable.ic_torrent
+                    else -> R.drawable.ic_unknow
+                }
+            )
+        } else {
+            val absolutePath: String = fileSystemItemModel.fullPath
+            if (absolutePath.indexOf("/data/app/") == 0) {
+                try {
+                    val packageName = absolutePath.substring(10, absolutePath.indexOf("-"))
+                    setImageDrawable(context.packageManager.getApplicationIcon(packageName))
+                } catch (e: Exception) {
+                    setImageResource(R.drawable.ic_baseline_android_24)
+                    e.printStackTrace()
+                }
+            } else {
+                setImageResource(R.drawable.ic_binary)
+            }
+        }
+    } else setImageResource(R.drawable.ic_folder_explorer)
+}
 
+fun Context.checkPathPermission(dest: String): Boolean {
+    return when {
+        dest.startsWith(FileInstanceFactory.rootUserEmulatedPath) -> {
+            when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
+                    Environment.isExternalStorageManager()
+                }
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
+                    val externalFileInstance = getSharedPreferences(
+                        ExternalDocumentLocalFileInstance.Name,
+                        Context.MODE_PRIVATE
+                    )
+                    val string = externalFileInstance.getString(
+                        ExternalDocumentLocalFileInstance.STORAGE_URI,
+                        null
+                    )
+                    string != null
+                }
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> {
+                    checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                }
+                else -> {
+                    ActivityCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    ) == PackageManager.PERMISSION_GRANTED
+                }
+            }
+        }
+        dest == FileInstanceFactory.emulatedRootPath -> {
+            true
+        }
+        dest == "/storage" -> {
+            true
+        }
+        dest.startsWith("/storage") -> {
+            when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
+                    Environment.isExternalStorageManager()
+                }
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> {
+                    val externalFileInstance =
+                        getSharedPreferences(
+                            MountedLocalFileInstance.Name,
+                            Context.MODE_PRIVATE
+                        )
+                    val string =
+                        externalFileInstance.getString(MountedLocalFileInstance.ROOT_URI, null)
+                    string != null
+                }
+                else -> {
+                    ActivityCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    ) == PackageManager.PERMISSION_GRANTED
+                }
+            }
+        }
+        else -> {
+            ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+    }
 }

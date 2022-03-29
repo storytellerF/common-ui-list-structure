@@ -24,7 +24,7 @@ public class FileUtility {
     private static final String TAG = "FileUtility";
 
     public static String getDetailStringByFile(FileSystemItemModel fileItemModel) {
-        File file = new File(fileItemModel.getAbsolutePath());
+        File file = new File(fileItemModel.getFullPath());
         boolean w = file.canWrite();
         boolean e = file.canExecute();
         boolean r = file.canRead();
@@ -33,7 +33,7 @@ public class FileUtility {
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public static String getDetailString(FileSystemItemModel fileItemModel) {
-        Path path = new File(fileItemModel.getAbsolutePath()).toPath();
+        Path path = new File(fileItemModel.getFullPath()).toPath();
         boolean w = Files.isWritable(path);
         boolean e = Files.isExecutable(path);
         boolean r = Files.isReadable(path);
@@ -128,20 +128,6 @@ public class FileUtility {
             names[i] = storageVolume.get(i).getUuid();
         }
         return names;
-    }
-    /**
-     * 请求SAF 权限，如果是/storage/emulated/0/目录，只在API 29有效，如果是SD 目录，直到API N
-     * @param prefix
-     * @param activity
-     * @param requestCode
-     * @return 如果本来就有权限，返回true
-     */
-    public static boolean requestSAF(String prefix, Activity activity, int requestCode) {
-        Log.d(TAG, "requestSAF() called with: prefix = [" + prefix + "], activity = [" + activity + "], requestCode = [" + requestCode + "]");
-        Intent intent = produceRequestSaf(prefix, activity);
-        if (intent == null) return true;
-        activity.startActivityForResult(intent, requestCode);
-        return false;
     }
 
     @Nullable

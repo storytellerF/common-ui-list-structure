@@ -120,11 +120,11 @@ public class LocalFileCopyOperate extends LocalFileOperate {
             boolean f = copyFileTo(originFile, to);
             if (fileOperateListener != null) {
                 if (f) {
-                    fileOperateListener.onOneFile(file.getAbsolutePath(), file.getName(), originFile.getFileLength(), FileInstance.file_operate_type_copy,
-                            new Message("成功复制一个文件"+file.getName()).add(file.getAbsolutePath()));
+                    fileOperateListener.onOneFile(file.getFullPath(), file.getName(), originFile.getFileLength(), FileInstance.file_operate_type_copy,
+                            new Message("成功复制一个文件"+file.getName()).add(file.getFullPath()));
                 } else {
                     fileOperateListener.onError(
-                            new Message("复制文件失败" + file.getName()).add(file.getAbsolutePath()), FileInstance.file_operate_type_copy);
+                            new Message("复制文件失败" + file.getName()).add(file.getFullPath()), FileInstance.file_operate_type_copy);
                 }
             }
             if (!f) {
@@ -141,11 +141,11 @@ public class LocalFileCopyOperate extends LocalFileOperate {
             boolean d = copyDirectoryTo(currentSub, toSub);
             if (fileOperateListener != null) {
                 if (d) {
-                    fileOperateListener.onOneDirectory(directory.getAbsolutePath(), directory.getName(), FileInstance.file_operate_type_copy,
-                            new Message("成功复制一个文件夹"+directory.getName()).add(directory.getAbsolutePath()));
+                    fileOperateListener.onOneDirectory(directory.getFullPath(), directory.getName(), FileInstance.file_operate_type_copy,
+                            new Message("成功复制一个文件夹"+directory.getName()).add(directory.getFullPath()));
                 } else {
                     fileOperateListener.onError(
-                            new Message("复制文件失败" + directory.getName()).add(directory.getAbsolutePath()), FileInstance.file_operate_type_copy);
+                            new Message("复制文件失败" + directory.getName()).add(directory.getFullPath()), FileInstance.file_operate_type_copy);
                 }
             }
             if (!d) {

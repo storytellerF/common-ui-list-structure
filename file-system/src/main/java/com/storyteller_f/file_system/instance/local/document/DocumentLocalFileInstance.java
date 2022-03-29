@@ -44,14 +44,14 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
         super(context, filter, path);
         DocumentLocalFileInstance.sharedPreferenceName = sharedPreferenceName;
         DocumentLocalFileInstance.sharedPreferenceKey = sharedPreferenceKey;
-        this.prefix = FileInstanceFactory.getPrefix(path);
+        this.prefix = FileInstanceFactory.getPrefix(path, context);
     }
 
     public DocumentLocalFileInstance(Context context, String path, String sharedPreferenceName, String sharedPreferenceKey) {
         super(context, path);
         DocumentLocalFileInstance.sharedPreferenceName = sharedPreferenceName;
         DocumentLocalFileInstance.sharedPreferenceKey = sharedPreferenceKey;
-        this.prefix = FileInstanceFactory.getPrefix(path);
+        this.prefix = FileInstanceFactory.getPrefix(path, context);
     }
 
     public DocumentLocalFileInstance(Context context, String sharedPreferenceName, String sharedPreferenceKey) {

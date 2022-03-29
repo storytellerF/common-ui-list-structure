@@ -1,9 +1,10 @@
-package com.storyteller_f.file_system.instance.local;
+package com.storyteller_f.file_system.instance.local.fake;
 
 import android.content.Context;
 import android.util.Log;
 
 import com.storyteller_f.file_system.Filter;
+import com.storyteller_f.file_system.instance.local.LocalFileInstance;
 import com.storyteller_f.file_system.model.DirectoryItemModel;
 import com.storyteller_f.file_system.model.FileItemModel;
 import com.storyteller_f.file_system.model.FilesAndDirectories;
@@ -19,11 +20,11 @@ public class EmulatedLocalFileInstance extends LocalFileInstance {
     private static final String TAG = "EmulatedLocalFileInstan";
 
     public EmulatedLocalFileInstance(Context context, Filter filter) {
-        super(context, filter, "/storage/emulated/");
+        super(context, filter, "/storage/emulated");
     }
 
     public EmulatedLocalFileInstance(Context context) {
-        super(context, "/storage/emulated/");
+        super(context, "/storage/emulated");
     }
 
     @Override
@@ -70,7 +71,7 @@ public class EmulatedLocalFileInstance extends LocalFileInstance {
     public FilesAndDirectories list() {
         Log.d(TAG, "list() called");
         List<DirectoryItemModel> directoryItemModels = new ArrayList<>();
-        directoryItemModels.add(new DirectoryItemModel("0", path + "0/", false, 0));
+        directoryItemModels.add(new DirectoryItemModel("0", path + "/0", false, 0));
         return new FilesAndDirectories(new ArrayList<>(), directoryItemModels);
     }
 

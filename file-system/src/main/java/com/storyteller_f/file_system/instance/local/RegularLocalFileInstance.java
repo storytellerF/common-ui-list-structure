@@ -32,16 +32,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings({"unused", "RedundantSuppression"})
-public class ExternalLocalFileInstance extends LocalFileInstance {
+public class RegularLocalFileInstance extends LocalFileInstance {
     private static final String TAG = "ExternalFileInstance";
     private File file;
 
-    public ExternalLocalFileInstance(Context context, Filter filter, String path) {
+    public RegularLocalFileInstance(Context context, Filter filter, String path) {
         super(context, filter, path);
         file = new File(path);
     }
 
-    public ExternalLocalFileInstance(Context context, String path) {
+    public RegularLocalFileInstance(Context context, String path) {
         super(context, path);
         file = new File(path);
     }
@@ -54,7 +54,6 @@ public class ExternalLocalFileInstance extends LocalFileInstance {
 
     @Override
     public FileItemModel getFile() {
-
         return new FileItemModel(name, path, file.isHidden(), file.lastModified(), getExtension(name));
     }
 
@@ -86,13 +85,11 @@ public class ExternalLocalFileInstance extends LocalFileInstance {
     @Override
     public LocalFileInstance toChild(String name, boolean isFile, boolean reCreate) throws Exception {
         File file = new File(path, name);
-        ExternalLocalFileInstance internalFileInstance = new ExternalLocalFileInstance(context, filter, file.getAbsolutePath());
+        RegularLocalFileInstance internalFileInstance = new RegularLocalFileInstance(context, filter, file.getAbsolutePath());
         if (exists()) {
             if (isFile()) {
                 throw new Exception("当前是一个文件，无法向下操作");
             } else {
-                if (!isFile)
-                    internalFileInstance.path += "/";
                 //检查目标文件是否存在
                 if (file.exists()) {
                     if (file.isFile() == isFile) {
@@ -322,7 +319,7 @@ public class ExternalLocalFileInstance extends LocalFileInstance {
                 // 判断是否为文件夹
                 if (childFile.isDirectory()) {
                     fileSystemItemModel = addDirectoryByFileObject(directories, file, childFile);
-                    if (!fileSystemItemModel.getAbsolutePath().endsWith("/")) {
+                    if (!fileSystemItemModel.getFullPath().endsWith("/")) {
                         Log.e(TAG, "list: 最后一个不是slash");
                     }
                 } else if (childFile.isFile()) {

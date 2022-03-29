@@ -67,14 +67,14 @@ public class LocalFileDeleteOperate extends LocalFileOperate {
             boolean b = deleteDirectory((LocalFileInstance) current.toChild(directory.getName(), false, false));
             if (fileOperateListener != null) {
                 if (b) {
-                    fileOperateListener.onOneDirectory(directory.getAbsolutePath(), directory.getName(),
+                    fileOperateListener.onOneDirectory(directory.getFullPath(), directory.getName(),
                             LocalFileInstance.file_operate_type_move_delete,
                             new Message("删除一个文件夹成功" + directory.getName())
-                                    .add(directory.getAbsolutePath()));
+                                    .add(directory.getFullPath()));
                 } else {
                     fileOperateListener.onError(
                             new Message("删除文件夹失败" + directory.getName())
-                                    .add(directory.getAbsolutePath()),
+                                    .add(directory.getFullPath()),
                             LocalFileInstance.file_operate_type_move_delete);
                 }
             }
