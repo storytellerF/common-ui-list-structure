@@ -5,12 +5,12 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.os.Build
 import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.Fragment
 import kotlinx.coroutines.CompletableDeferred
 
-suspend fun ComponentActivity.requestPermissionForSpecialPath(path: String) {
+suspend fun Context.requestPermissionForSpecialPath(path: String) {
     val task = CompletableDeferred<Boolean>()
     when {
         path.startsWith(FileInstanceFactory.rootUserEmulatedPath) -> {
@@ -48,7 +48,10 @@ suspend fun ComponentActivity.requestPermissionForSpecialPath(path: String) {
     task.await()
 }
 
-private suspend fun ComponentActivity.requestWriteExternalStorage(task: CompletableDeferred<Boolean>) {
+suspend fun Fragment.requestPermissionForSpecialPath(path: String) = requireContext().requestPermissionForSpecialPath(path)
+
+
+private suspend fun Context.requestWriteExternalStorage(task: CompletableDeferred<Boolean>) {
     if (yesOrNo("权限不足", "查看文件夹系统必须授予权限", "授予", "取消")) {
         MainActivity.task = task
         startActivity(Intent(this, MainActivity::class.java).apply {
@@ -60,7 +63,7 @@ private suspend fun ComponentActivity.requestWriteExternalStorage(task: Completa
     }
 }
 
-private suspend fun ComponentActivity.requestSAF(
+private suspend fun Context.requestSAF(
     path: String,
     requestCodeSAF: String,
     task: CompletableDeferred<Boolean>
@@ -76,7 +79,7 @@ private suspend fun ComponentActivity.requestSAF(
 }
 
 @RequiresApi(api = Build.VERSION_CODES.R)
-private suspend fun ComponentActivity.requestManageExternalPermission(task: CompletableDeferred<Boolean>) {
+private suspend fun Context.requestManageExternalPermission(task: CompletableDeferred<Boolean>) {
     if (yesOrNo("需要授予权限", "在Android 11上，需要获取Manage External Storage权限", "去授予", "取消")) {
         MainActivity.task = task
         startActivity(Intent(this, MainActivity::class.java).apply {

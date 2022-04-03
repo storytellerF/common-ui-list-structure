@@ -35,7 +35,6 @@ import java.util.Locale;
 public abstract class LocalFileInstance extends BaseContextFileInstance {
 
     private static final String TAG = "FileInstance";
-    protected Context context;
 
     /**
      * @param filter 遍历文件夹用的

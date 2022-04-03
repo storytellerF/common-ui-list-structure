@@ -4,7 +4,7 @@ import androidx.activity.ComponentActivity
 import androidx.fragment.app.Fragment
 import androidx.paging.PagingSource
 import androidx.room.RoomDatabase
-import com.storyteller_f.common_vm_ktx.sVM
+import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.ui_list.data.*
 import com.storyteller_f.ui_list.database.CommonRoomDatabase
 import com.storyteller_f.ui_list.database.RemoteKey
@@ -40,7 +40,7 @@ fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, Database : RoomData
 fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, Database : RoomDatabase, Composite : CommonRoomDatabase<D, RK, Database>> ComponentActivity.source(
     sourceContent: SourceProducer<RK, D, Holder, Database, Composite>,
 ): Lazy<SimpleSourceViewModel<D, Holder, RK, Database>> {
-    return sVM {
+    return vm {
         SimpleSourceViewModel(
             SimpleSourceRepository(
                 sourceContent.service,
@@ -54,7 +54,7 @@ fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, Database : RoomData
 fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder> ComponentActivity.data(
     dataContent: DataProducer<RK, D, Holder>,
 ): Lazy<SimpleDataViewModel<D, Holder, RK>> {
-    return sVM {
+    return vm {
         SimpleDataViewModel(
             SimpleDataRepository(
                 dataContent.service,
@@ -71,7 +71,7 @@ fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, ARG> ComponentActiv
 fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder> Fragment.data(
     dataContent: DataProducer<RK, D, Holder>,
 ): Lazy<SimpleDataViewModel<D, Holder, RK>> {
-    return sVM {
+    return vm {
         SimpleDataViewModel(
             SimpleDataRepository(
                 dataContent.service,
@@ -88,7 +88,7 @@ fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, ARG> Fragment.data(
 fun <D : Any> Fragment.detail(
     detailContent: DetailProducer<D>,
 ): Lazy<SimpleDetailViewModel<D>> {
-    return sVM {
+    return vm {
         SimpleDetailViewModel(
             detailContent.producer,
             detailContent.local
@@ -104,7 +104,18 @@ fun <D : Any, ARG> Fragment.detail(
 fun <D : Model, SQ : Any, Holder : DataItemHolder> ComponentActivity.search(
     searchProducer: SearchProducer<D, SQ, Holder>
 ): Lazy<SimpleSearchViewModel<D, SQ, Holder>> {
-    return sVM {
+    return vm {
+        SimpleSearchViewModel(
+            SimpleSearchRepository(searchProducer.service),
+            searchProducer.processFactory,
+        )
+    }
+}
+
+fun <D : Model, SQ : Any, Holder : DataItemHolder> Fragment.search(
+    searchProducer: SearchProducer<D, SQ, Holder>
+): Lazy<SimpleSearchViewModel<D, SQ, Holder>> {
+    return vm {
         SimpleSearchViewModel(
             SimpleSearchRepository(searchProducer.service),
             searchProducer.processFactory,

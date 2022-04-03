@@ -10,6 +10,7 @@ import androidx.activity.ComponentActivity
 import androidx.annotation.MainThread
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
+import androidx.savedstate.SavedStateRegistryOwner
 import kotlin.reflect.KClass
 
 /**
@@ -45,12 +46,12 @@ class KeyedViewModelLazy<VM : ViewModel>(
 }
 
 @MainThread
-fun <VM : ViewModel> Fragment.keyedViewModels(
+fun <VM : ViewModel, T> T.keyedViewModels(
     keyPrefixProvider: () -> String,
     viewModelClass: KClass<VM>,
     storeProducer: () -> ViewModelStore,
     factoryProducer: (() -> ViewModelProvider.Factory)? = null
-): Lazy<VM> {
+): Lazy<VM> where T : SavedStateRegistryOwner, T : ViewModelStoreOwner, T : HasDefaultViewModelProviderFactory {
     val factoryPromise = factoryProducer ?: {
         defaultViewModelProviderFactory
     }
@@ -61,18 +62,19 @@ fun <VM : ViewModel> Fragment.keyedViewModels(
  * 实际使用 Fragment.keyedViewModels 构建，仅方便使用
  */
 @MainThread
-inline fun <reified VM : ViewModel> Fragment.kvm(
+inline fun <reified VM : ViewModel, T> T.kvm(
     keyPrefix: String,
     noinline ownerProducer: () -> ViewModelStoreOwner = { this },
     noinline factoryProducer: (() -> ViewModelProvider.Factory)? = null
-) = keyedViewModels({ keyPrefix }, VM::class, { ownerProducer().viewModelStore }, factoryProducer)
-
+) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner, T : HasDefaultViewModelProviderFactory =
+    keyedViewModels({ keyPrefix }, VM::class, { ownerProducer().viewModelStore }, factoryProducer)
 
 @MainThread
-inline fun <reified VM : ViewModel> ComponentActivity.sVM(
+inline fun <reified VM : ViewModel, T> T.kvm(
+    noinline keyPrefixProvider: () -> String,
     crossinline factoryProducer: () -> VM
-): Lazy<VM> {
-    return ViewModelLazy(VM::class, { viewModelStore },
+): Lazy<VM> where T : SavedStateRegistryOwner, T : ViewModelStoreOwner {
+    return KeyedViewModelLazy(keyPrefixProvider, VM::class, { viewModelStore },
         {
             object : AbstractSavedStateViewModelFactory(this, null) {
                 override fun <T : ViewModel?> create(
@@ -85,9 +87,9 @@ inline fun <reified VM : ViewModel> ComponentActivity.sVM(
 }
 
 @MainThread
-inline fun <reified VM : ViewModel> Fragment.sVM(
+inline fun <reified VM : ViewModel, T> T.vm(
     crossinline factoryProducer: () -> VM
-): Lazy<VM> {
+): Lazy<VM> where T : ViewModelStoreOwner, T : SavedStateRegistryOwner {
     return ViewModelLazy(VM::class, { viewModelStore },
         {
             object : AbstractSavedStateViewModelFactory(this, null) {
@@ -104,7 +106,7 @@ inline fun <reified VM : ViewModel> Fragment.sVM(
  * 虽然是Fragment 的扩展函数，但是调用的activity的
  */
 @MainThread
-inline fun <reified VM : ViewModel> Fragment.aSVM(
+inline fun <reified VM : ViewModel> Fragment.avm(
     crossinline factoryProducer: () -> VM
 ): Lazy<VM> {
     return ViewModelLazy(VM::class, { requireActivity().viewModelStore },
@@ -119,28 +121,10 @@ inline fun <reified VM : ViewModel> Fragment.aSVM(
         })
 }
 
-
-@MainThread
-inline fun <reified VM : ViewModel> ComponentActivity.ckVM(
-    noinline keyPrefixProvider: () -> String,
-    crossinline factoryProducer: () -> VM
-): Lazy<VM> {
-    return KeyedViewModelLazy(keyPrefixProvider, VM::class, { viewModelStore },
-        {
-            object : AbstractSavedStateViewModelFactory(this, null) {
-                override fun <T : ViewModel?> create(
-                    key: String,
-                    modelClass: Class<T>,
-                    handle: SavedStateHandle
-                ): T = modelClass.cast(factoryProducer())!!
-            }
-        })
-}
-
 class GenericValueModel<T> : ViewModel() {
     val data = MutableLiveData<T>()
 }
 
-class GenericListValueModel<T>:ViewModel() {
+class GenericListValueModel<T> : ViewModel() {
     val data = MutableLiveData<List<T>>()
 }

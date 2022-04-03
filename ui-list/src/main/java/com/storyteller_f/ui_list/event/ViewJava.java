@@ -44,15 +44,17 @@ public class ViewJava {
         }
     }
 
-    public static <T, R> void let(T o, Function1<T, R> function) {
+    public static <T, R> R let(T o, Function1<T, R> function) {
         if (o != null) {
-            function.invoke(o);
+            return function.invoke(o);
         }
+        return null;
     }
 
-    public static <T, R> void doWhenIs(Object o, Class<T> tClass, Function1<T, R> function) {
-        if (tClass.isInstance(o)) {
-            function.invoke(tClass.cast(o));
+    public static <T, R> R doWhenIs(Object o, Class<T> clazz, Function1<T, R> function) {
+        if (clazz.isInstance(o)) {
+            return function.invoke(clazz.cast(o));
         }
+        return null;
     }
 }

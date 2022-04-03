@@ -67,7 +67,7 @@ abstract class BigTimeWorker(
             )
         return withContext(Dispatchers.IO) {
             val results = stringArray.asList().map {
-                if (!context.checkPathPermission(it)) WorkerResult.Failure(java.lang.Exception("don't have permission")) else if (isStopped) Result.success()
+                if (!context.checkPathPermission(it)) WorkerResult.Failure(java.lang.Exception("don't have permission")) else if (isStopped) WorkerResult.Stopped
                 else work(context, it)
             }
             if (results.none { it is WorkerResult.Failure || it is WorkerResult.Stopped }) Result.success()

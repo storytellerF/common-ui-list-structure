@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="@color/colorFolder">
-    <item
-        android:drawable="@android:color/white">
-    </item>
-</ripple>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/colorFolder"
+    android:shape="rectangle">
+    <solid android:color="@android:color/white" />
+</shape>

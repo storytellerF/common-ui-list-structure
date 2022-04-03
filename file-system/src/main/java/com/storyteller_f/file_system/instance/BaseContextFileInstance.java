@@ -12,14 +12,13 @@ public abstract class BaseContextFileInstance extends FileInstance {
      * @param path   路径
      */
     public BaseContextFileInstance(Context context, Filter filter, String path) {
+        super(filter, path);
         this.context = context;
-        this.filter = filter;
-        this.path = path;
     }
 
     public BaseContextFileInstance(Context context, String path) {
+        super(path);
         this.context = context;
-        this.path = path;
     }
 
     public BaseContextFileInstance(Context context) {

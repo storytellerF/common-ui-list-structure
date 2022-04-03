@@ -16,6 +16,9 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -30,6 +33,10 @@ public abstract class FileInstance {
     protected String path;
     protected String name;
     protected Filter filter;
+    /**
+     * 仅用来标识对象，有些情况下是不能够操作的
+     */
+    protected File file;
     protected StoppableTask task;
 
     /**
@@ -70,7 +77,8 @@ public abstract class FileInstance {
     public abstract DirectoryItemModel getDirectory();
 
     private void initName(String path) {
-        name = new File(path).getName();
+        file = new File(path);
+        name = file.getName();
     }
 
     public String getName() {
@@ -216,6 +224,7 @@ public abstract class FileInstance {
 
     public void destroy() {
         name = null;
+        file = null;
         path = null;
         filter = null;
     }

@@ -34,22 +34,13 @@ import java.util.regex.Pattern;
 @SuppressWarnings({"unused", "RedundantSuppression"})
 public class RegularLocalFileInstance extends LocalFileInstance {
     private static final String TAG = "ExternalFileInstance";
-    private File file;
 
     public RegularLocalFileInstance(Context context, Filter filter, String path) {
         super(context, filter, path);
-        file = new File(path);
     }
 
     public RegularLocalFileInstance(Context context, String path) {
         super(context, path);
-        file = new File(path);
-    }
-
-    @Override
-    public void destroy() {
-        super.destroy();
-        file = null;
     }
 
     @Override
@@ -194,7 +185,7 @@ public class RegularLocalFileInstance extends LocalFileInstance {
 
     @Override
     public BufferedOutputStream getBufferedOutputStream() throws FileNotFoundException {
-        return new BufferedOutputStream(new FileOutputStream(path));
+        return new BufferedOutputStream(getFileOutputStream());
     }
 
     @Override
@@ -210,6 +201,14 @@ public class RegularLocalFileInstance extends LocalFileInstance {
     @Override
     public BufferedWriter getBufferedWriter() throws IOException {
         return new BufferedWriter(new FileWriter(path));
+    }
+
+    public FileInputStream getFileInputStream() throws FileNotFoundException {
+        return new FileInputStream(file);
+    }
+
+    public FileOutputStream getFileOutputStream() throws FileNotFoundException {
+        return new FileOutputStream(file);
     }
 
     private FilesAndDirectories getFilesAndDirectoriesByListFiles() {

@@ -1,5 +1,6 @@
 package com.storyteller_f.common_ui
 
+import android.app.Dialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,7 +10,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.compose.ui.platform.ComposeView
 import androidx.databinding.ViewDataBinding
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.viewbinding.ViewBinding
 
 /**
@@ -61,3 +64,27 @@ fun Fragment.toolbar(): ActionBar = (activity as AppCompatActivity).supportActio
 fun Fragment.toolbarCompose() =
     (activity!!.findViewById<Toolbar>(R.id.toolbar)).getChildAt(0) as
             ComposeView
+
+abstract class CommonDialogFragment<T : ViewBinding>(
+    val viewBindingFactory: (LayoutInflater) -> T
+) : DialogFragment() {
+    lateinit var binding: T
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        binding = viewBindingFactory(layoutInflater)
+        onBindViewEvent(binding)
+        return binding.root
+    }
+
+    abstract fun onBindViewEvent(binding: T)
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
+    }
+}
+
+val Fragment.scope get() = viewLifecycleOwner.lifecycleScope

@@ -355,7 +355,7 @@ class AdapterProcessor : AbstractProcessor() {
                 event2.map {
                     "        inflate.${it.key}.setOnLongClickListener((v) -> {\n" +
                             buildClickListener(it.value) +
-                            "\n        });\n"
+                            "\n             return true;\n        });\n"
                 }.joinToString("\n")
     }
 

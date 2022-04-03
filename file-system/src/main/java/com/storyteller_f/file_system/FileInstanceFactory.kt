@@ -114,13 +114,14 @@ object FileInstanceFactory {
         fileInstance: FileInstance,
         name: String,
         isFile: Boolean,
-        context: Context
+        context: Context,
+        b: Boolean
     ): FileInstance {
         val parentPrefix = getPrefix(fileInstance.path, context)
         val path = fileInstance.path + "/" + name
         val childPrefix = getPrefix(path, context)
         return if (parentPrefix == childPrefix) {
-            fileInstance.toChild(name, isFile, false)
+            fileInstance.toChild(name, isFile, b)
         } else {
             getFileInstance(path, context)
         }

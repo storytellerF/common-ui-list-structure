@@ -1,10 +1,13 @@
 package com.storyteller_f.common_ui
 
-import android.graphics.Rect
+import android.content.Context
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
-import androidx.core.view.*
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 
 fun <T : View> T.setOnClick(block: (T) -> Unit) {
     setOnClickListener {
@@ -38,3 +41,5 @@ fun <T : View> T.setVisible(visible: Boolean, block: (T) -> Unit) {
     if (visible)
         block(this)
 }
+
+val Context.lf: LayoutInflater get() = LayoutInflater.from(this)

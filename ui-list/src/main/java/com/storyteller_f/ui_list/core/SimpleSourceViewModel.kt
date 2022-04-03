@@ -187,12 +187,12 @@ class SimpleSearchViewModel<D : Model, SQ : Any, Holder : DataItemHolder>(
 }
 
 fun <SQ : Any, Holder : DataItemHolder> SimpleSearchViewModel<*, SQ, Holder>.observer(
-    activity: ComponentActivity,
+    lifecycleCoroutineScope: LifecycleCoroutineScope,
     search: SQ,
     block: suspend (PagingData<Holder>) -> Unit
 ) {
     lastJob?.cancel()
-    lastJob = activity.lifecycleScope.launch {
+    lastJob = lifecycleCoroutineScope.launch {
         search(search).collectLatest {
             block(it)
         }

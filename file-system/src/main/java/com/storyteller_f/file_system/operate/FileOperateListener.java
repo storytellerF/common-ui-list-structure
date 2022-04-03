@@ -1,19 +1,25 @@
 package com.storyteller_f.file_system.operate;
 
 
+import com.storyteller_f.file_system.instance.FileInstance;
 import com.storyteller_f.file_system.message.Message;
 
 public interface FileOperateListener {
-
-    void onOneFile(String path, String name, long size, int type, Message message);
-
-    void onOneDirectory(String path, String name, int type, Message message);
-
-    void onError(Message message, int type);
+    /**
+     * 当一个文件处理完成
+     *
+     * @param type
+     * @param message
+     */
+    void onOneFile(FileInstance fileInstance, int type, Message message);
 
     /**
+     * 当一个文件夹处理完成
      *
-     * @return 如果不能继续进行任务，返回true
+     * @param type
+     * @param message
      */
-    boolean onThreadState();
+    void onOneDirectory(FileInstance fileInstance, int type, Message message);
+
+    void onError(Message message, int type);
 }

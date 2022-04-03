@@ -15,6 +15,9 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.LifecycleOwner
+import com.storyteller_f.common_ktx.context
 import com.storyteller_f.file_system.instance.local.document.ExternalDocumentLocalFileInstance
 import com.storyteller_f.file_system.instance.local.document.MountedLocalFileInstance
 import com.storyteller_f.file_system.model.FileItemModel
@@ -195,6 +198,10 @@ fun ImageView.fillIcon(fileSystemItemModel: FileSystemItemModel) {
             }
         }
     } else setImageResource(R.drawable.ic_folder_explorer)
+}
+
+fun Fragment.checkPathPermission(dest: String) = context {
+    checkPathPermission(dest)
 }
 
 fun Context.checkPathPermission(dest: String): Boolean {

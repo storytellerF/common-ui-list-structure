@@ -11,7 +11,7 @@ import com.storyteller_f.b3.api.GeetestAPI
 import com.storyteller_f.b3.databinding.ActivityLoginBinding
 import com.storyteller_f.common_ui.setOnClick
 import com.storyteller_f.common_vm_ktx.GenericValueModel
-import com.storyteller_f.common_vm_ktx.sVM
+import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.requireGson
 import com.storyteller_f.ui_list.event.viewBinding
 import kotlinx.coroutines.Job
@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 class LoginActivity : AppCompatActivity() {
-    val geetestResult by sVM {
+    val geetestResult by vm {
         GenericValueModel<GeetestResult>()
     }
     var requestTask: Job? = null
