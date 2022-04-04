@@ -4,6 +4,8 @@ package com.storyteller_f.ui_list.core
 
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.ColorRes
+import androidx.core.content.ContextCompat
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -24,7 +26,7 @@ abstract class DataItemHolder {
     fun areContentsTheSame(other: DataItemHolder): Boolean = this == other
 }
 
-abstract class AbstractAdapterViewHolder<IH : DataItemHolder>(view: View) :
+abstract class AbstractAdapterViewHolder<IH : DataItemHolder>(val view: View) :
     RecyclerView.ViewHolder(view) {
     private var _itemHolder: IH? = null
     val itemHolder get() = _itemHolder as IH
@@ -34,6 +36,8 @@ abstract class AbstractAdapterViewHolder<IH : DataItemHolder>(view: View) :
     }
 
     abstract fun bindData(itemHolder: IH)
+
+    fun getColor(@ColorRes id: Int) = ContextCompat.getColor(view.context, id)
 }
 
 abstract class AdapterViewHolder<IH : DataItemHolder>(binding: ViewBinding) :
@@ -61,9 +65,13 @@ open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHold
                 oldItem: DataItemHolder,
                 newItem: DataItemHolder
             ): Boolean {
-                return if (oldItem.javaClass == newItem.javaClass) {
-                    oldItem.areItemsTheSame(newItem)
-                } else false
+                return when {
+                    oldItem === newItem -> true
+                    oldItem.javaClass == newItem.javaClass -> {
+                        oldItem.areItemsTheSame(newItem)
+                    }
+                    else -> false
+                }
             }
 
             override fun areContentsTheSame(

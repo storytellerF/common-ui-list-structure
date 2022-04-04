@@ -94,10 +94,19 @@ fun List<Any?>.gon(index: Int): Any? {
     return getOrNull(index)
 }
 
-fun copyList(list: List<Any?>?): MutableList<Any?> {
-    val newly = mutableListOf<Any?>()
+fun <T> copyList(list: List<T?>?): MutableList<T?> {
+    val newly = mutableListOf<T?>()
     list?.forEach {
         newly.add(it)
+    }
+    return newly
+}
+
+
+fun <T> copyListNotNull(list: List<T?>?): MutableList<T> {
+    val newly = mutableListOf<T>()
+    list?.forEach {
+        it?.let { it1 -> newly.add(it1) }
     }
     return newly
 }
@@ -185,4 +194,18 @@ class SingleLiveEvent<T> : MutableLiveData<T?>() {
     companion object {
         private const val TAG = "SingleLiveEvent"
     }
+}
+
+
+fun <T> LiveData<T>.toDiff(compare: ((T, T) -> Boolean)? = null): MediatorLiveData<Pair<T?, T?>> {
+    val mediatorLiveData = MediatorLiveData<Pair<T?, T?>>()
+    var oo: T? = value
+    mediatorLiveData.addSource(this) {
+        val l = oo
+        if (l == null || it == null || compare?.invoke(l, it) != true) {
+            mediatorLiveData.value = Pair(l, it)
+        }
+        oo = it
+    }
+    return mediatorLiveData
 }

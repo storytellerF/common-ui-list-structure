@@ -1,14 +1,12 @@
 package com.storyteller_f.giant_explorer.dialog
 
+import androidx.lifecycle.MutableLiveData
 import com.storyteller_f.common_ui.CommonDialogFragment
-import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui.setOnClick
 import com.storyteller_f.common_vm_ktx.GenericValueModel
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.file_system.FileInstanceFactory
-import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
-import com.storyteller_f.file_system.requestPermissionForSpecialPath
 import com.storyteller_f.giant_explorer.FileItemHolder
 import com.storyteller_f.giant_explorer.FileViewHolder
 import com.storyteller_f.giant_explorer.databinding.DialogRequestPathBinding
@@ -16,14 +14,7 @@ import com.storyteller_f.giant_explorer.service
 import com.storyteller_f.giant_explorer.supportDirectoryContent
 import com.storyteller_f.ui_list.core.SearchProducer
 import com.storyteller_f.ui_list.core.SimpleSourceAdapter
-import com.storyteller_f.ui_list.core.observer
 import com.storyteller_f.ui_list.core.search
-import com.storyteller_f.ui_list.ui.ListWithState
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 
 class RequestPathDialog :
     CommonDialogFragment<DialogRequestPathBinding>(DialogRequestPathBinding::inflate) {
@@ -36,7 +27,7 @@ class RequestPathDialog :
 
     private val data by search(
         SearchProducer(::service) { it, _ ->
-            FileItemHolder(it)
+            FileItemHolder(it, MutableLiveData(mutableListOf()))
         }
     )
     private val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
@@ -53,7 +44,14 @@ class RequestPathDialog :
             callback?.onCancel()
             dismiss()
         }
-        supportDirectoryContent(binding.content, binding.pathMan, adapter, fileInstance, data)
+        supportDirectoryContent(
+            binding.content,
+            binding.pathMan,
+            adapter,
+            fileInstance,
+            data,
+            null
+        )
     }
 
     var callback: Callback? = null

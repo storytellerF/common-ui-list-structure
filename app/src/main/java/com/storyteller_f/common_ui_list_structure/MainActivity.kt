@@ -25,8 +25,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.marginTop
-import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
@@ -47,7 +45,6 @@ import com.storyteller_f.ui_list.event.viewBinding
 import com.storyteller_f.view_holder_compose.ComposeSourceAdapter
 import com.storyteller_f.view_holder_compose.ComposeViewHolder
 import com.storyteller_f.view_holder_compose.EDComposeView
-import kotlinx.coroutines.flow.collectLatest
 
 class MainActivity : AppCompatActivity() {
     private val binding by viewBinding(ActivityMainBinding::inflate)
@@ -90,7 +87,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding.content.up(adapter, lifecycleScope)
+        binding.content.sourceUp(adapter, lifecycleScope)
         lifecycleScope.launchWhenResumed {
             viewModel.content?.collectLatest {
                 adapter.submitData(it)

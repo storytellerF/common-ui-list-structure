@@ -2,10 +2,12 @@ package com.storyteller_f.giant_explorer
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ComponentActivity
+import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.ConcatAdapter
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.annotation_defination.BindLongClickEvent
@@ -13,6 +15,7 @@ import com.storyteller_f.common_ktx.context
 import com.storyteller_f.common_ktx.contextSuspend
 import com.storyteller_f.common_ui.setVisible
 import com.storyteller_f.common_vm_ktx.GenericValueModel
+import com.storyteller_f.common_vm_ktx.toDiff
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
@@ -32,6 +35,7 @@ import com.storyteller_f.ui_list.core.*
 import com.storyteller_f.ui_list.data.SimpleResponse
 import com.storyteller_f.ui_list.event.viewBinding
 import com.storyteller_f.ui_list.ui.ListWithState
+import com.storyteller_f.ui_list.ui.valueContains
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -49,15 +53,28 @@ class MainActivity : AppCompatActivity() {
 
     private val data by search(
         SearchProducer(::service) { it, _ ->
-            FileItemHolder(it)
+            FileItemHolder(it, selected)
         }
     )
     private val binding by viewBinding(ActivityMainBinding::inflate)
     private val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
+    private val selected = MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val pathMan = binding.pathMan
-        supportDirectoryContent(binding.content, binding.pathMan, adapter, fileInstance, data)
+        supportDirectoryContent(
+            binding.content,
+            binding.pathMan,
+            adapter,
+            fileInstance,
+            data,
+            selected
+        )
+        selected.toDiff().observe(this) {
+            val l = (it.first ?: mutableListOf()) + (it.second ?: mutableListOf())
+            l.forEach {
+                val adapter1 = (binding.content.recyclerView.adapter as ConcatAdapter).adapters[1]
+            }
+        }
     }
 
 
@@ -97,10 +114,16 @@ fun LifecycleOwner.supportDirectoryContent(
     adapter: SimpleSourceAdapter<FileItemHolder, FileViewHolder>,
     fileInstance: GenericValueModel<FileInstance>,
     data: SimpleSearchViewModel<FileModel, FileInstance, FileItemHolder>,
+    selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>?,
 ) {
     val owner = if (this is Fragment) viewLifecycleOwner else this
     context {
-        listWithState.up(adapter, lifecycleScope, ListWithState.Companion::remote)
+        listWithState.sourceUp(
+            adapter,
+            lifecycleScope,
+            selected,
+            flash = ListWithState.Companion::remote
+        )
         fileInstance.data.observe(owner) {
             //检查权限
             lifecycleScope.launch {
@@ -126,7 +149,10 @@ fun LifecycleOwner.supportDirectoryContent(
     }
 }
 
-class FileItemHolder(val file: FileModel) : DataItemHolder() {
+class FileItemHolder(
+    val file: FileModel,
+    val selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>
+) : DataItemHolder() {
     override fun areItemsTheSame(other: DataItemHolder) =
         (other as FileItemHolder).file.fullPath == file.fullPath
 
@@ -139,7 +165,15 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
         binding.fileName.text = itemHolder.file.name
         binding.fileIcon.fillIcon(itemHolder.file.item)
         val item = itemHolder.file.item
-        binding.root.setBackgroundResource(if (itemHolder.file.item is FileItemModel) com.storyteller_f.file_system.R.drawable.file_background else com.storyteller_f.file_system.R.drawable.folder_background)
+        if (itemHolder.selected.value?.valueContains(
+                Pair(
+                    itemHolder,
+                    0
+                )
+            ) == true
+        ) binding.root.setBackgroundColor(getColor(com.storyteller_f.ui_list.R.color.greyAlpha))
+        else
+            binding.root.setBackgroundResource(if (itemHolder.file.item is FileItemModel) com.storyteller_f.file_system.R.drawable.file_background else com.storyteller_f.file_system.R.drawable.folder_background)
 
         binding.fileSize.setVisible(item.size != -1L) {
             it.text = item.formattedSize

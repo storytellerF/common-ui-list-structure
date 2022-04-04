@@ -1,7 +1,6 @@
 package com.storyteller_f.common_ui_list_structure.ui.home
 
 import androidx.lifecycle.lifecycleScope
-import com.storyteller_f.common_ui.CommonFragment
 import com.storyteller_f.common_ui.RegularFragment
 import com.storyteller_f.common_ui_list_structure.Repo2ViewHolder
 import com.storyteller_f.common_ui_list_structure.RepoItemHolder
@@ -24,7 +23,7 @@ class HomeFragment : RegularFragment<FragmentHomeBinding>(FragmentHomeBinding::i
     private val adapter = SimpleDataAdapter<RepoItemHolder, Repo2ViewHolder>()
 
     override fun onBindViewEvent(binding: FragmentHomeBinding) {
-        binding.listWithState.up(adapter, viewLifecycleOwner, data)
+        binding.listWithState.dataUp(adapter, viewLifecycleOwner, data)
         viewLifecycleOwner.lifecycleScope.launchWhenResumed {
             data.content.observe(viewLifecycleOwner) {
                 adapter.submitData(it)

@@ -9,12 +9,27 @@
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/b3/src/main/res/layout/fragment_notifications.xml" value="0.1" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/b3/src/main/res/layout/mine_not_login.xml" value="0.1" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/b3/src/main/res/menu/bottom_nav_menu.xml" value="0.20416666666666666" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/drawable/button_toolbar_focused.xml" value="0.2035" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/drawable/ic_library_add_black_24dp.xml" value="0.2035" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/drawable/ic_refresh_black_24dp.xml" value="0.2035" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/activity_hex.xml" value="0.25364583333333335" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/activity_main.xml" value="0.24564102564102563" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/dialog_open_with.xml" value="0.25364583333333335" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/dialog_request_path.xml" value="0.19166666666666668" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/general_dialog_bottom.xml" value="0.25364583333333335" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/layout_dialog_file_type.xml" value="0.25364583333333335" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/layout_dialog_progress_message.xml" value="0.1" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/layout_file_property.xml" value="0.25364583333333335" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/layout_item_disk_info.xml" value="0.18072916666666666" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/layout_item_hex_line.xml" value="0.1703125" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/layout_window.xml" value="0.1703125" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/layout_window_content.xml" value="0.4" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/view_directory_content.xml" value="0.25364583333333335" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/view_holder_directory.xml" value="0.3153153153153153" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/view_holder_file.xml" value="0.264" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/layout/view_holder_file_type.xml" value="0.25364583333333335" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/menu/menu_in_build_editor.xml" value="0.25364583333333335" />
+        <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/giant-explorer/src/main/res/menu/popup_window_content.xml" value="0.1703125" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/src/main/res/layout/activity_main.xml" value="0.16302083333333334" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/src/main/res/layout/activity_main2.xml" value="0.13802083333333334" />
         <entry key="..\:/Projects/AndroidStudioProject/common_ui_list_structure/app/src/main/res/layout/fragment_dashboard.xml" value="0.1" />
