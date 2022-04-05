@@ -8,15 +8,19 @@ import com.storyteller_f.file_system.message.Message
 import com.storyteller_f.multi_core.StoppableTask
 import java.lang.Exception
 import java.nio.ByteBuffer
+import java.util.concurrent.Callable
 
+abstract class FileOperator(val task: StoppableTask, val fileInstance: FileInstance, val context: Context) : Callable<Boolean?> {
+    var fileOperateListener: FileOperateListener? = null
+}
 /**
  * target 必须是一个目录
  */
 abstract class FileOperatorAim(
     task: StoppableTask,
-    val fileInstance: FileInstance,
+    fileInstance: FileInstance,
     val target: FileInstance,
-    val context: Context
+    context: Context
 ) : FileOperator(task, fileInstance, context) {
     init {
         assert(target.isDirectory) {
@@ -27,8 +31,8 @@ abstract class FileOperatorAim(
 
 abstract class FileOperatorSelf(
     task: StoppableTask,
-    val fileInstance: FileInstance,
-    val context: Context
+    fileInstance: FileInstance,
+    context: Context
 ) : FileOperator(task, fileInstance, context)
 
 class FileCopy(
@@ -36,14 +40,13 @@ class FileCopy(
     fileInstance: FileInstance,
     target: FileInstance,
     context: Context
-) :
-    FileOperatorAim(task, fileInstance, target, context) {
-    override fun doWork(): Boolean {
+) : FileOperatorAim(task, fileInstance, target, context) {
+    override fun call(): Boolean {
         return if (fileInstance.isFile) {
             //新建一个文件
             copyFileFaster(fileInstance, target)
         } else {
-            copyDirectoryFaster(fileInstance, target)
+            copyDirectoryFaster(fileInstance, FileInstanceFactory.toChild(target, fileInstance.name, false, context, true))
         }
     }
 
@@ -73,11 +76,10 @@ class FileCopy(
             (f as RegularLocalFileInstance).fileInputStream.channel.use { int ->
                 (toChild as RegularLocalFileInstance).fileOutputStream.channel.use { out ->
                     val byteArray = ByteBuffer.allocateDirect(1024)
-                    var length: Int
-                    while (int.read(byteArray).also { length = it } != -1) {
+                    while (int.read(byteArray) != -1) {
                         if (needStop()) return false
                         byteArray.flip()
-                        out.write(byteArray, length.toLong())
+                        out.write(byteArray)
                         byteArray.clear()
                     }
                     fileOperateListener?.onOneFile(f, 0, Message(""))
@@ -86,6 +88,7 @@ class FileCopy(
 
             }
         } catch (e: Exception) {
+            e.printStackTrace()
             fileOperateListener?.onError(Message(e.message ?: "error"), 0)
         }
         return false
@@ -106,10 +109,10 @@ class FileMove(
     target: FileInstance,
     context: Context
 ) : FileOperatorAim(task, fileInstance, target, context), FileOperateListener {
-    override fun doWork(): Boolean {
+    override fun call(): Boolean {
         return FileCopy(task, fileInstance, target, context).also {
             it.fileOperateListener = this
-        }.doWork()
+        }.call()
     }
 
     override fun onOneFile(fileInstance: FileInstance?, type: Int, message: Message?) {
@@ -141,7 +144,7 @@ class FileMoveCmd(
     target: FileInstance,
     context: Context
 ) : FileOperatorAim(task, fileInstance, target, context) {
-    override fun doWork(): Boolean {
+    override fun call(): Boolean {
         val exec = Runtime.getRuntime().exec("mv ${fileInstance.path} ${target.path}")
         val waitFor = exec.waitFor()
         val b = waitFor != 0
@@ -163,7 +166,7 @@ class FileDelete(
         assert(fileInstance.isDirectory)
     }
 
-    override fun doWork(): Boolean {
+    override fun call(): Boolean {
         return deleteDirectory(fileInstance)
     }
 

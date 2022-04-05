@@ -1,6 +1,5 @@
 package com.storyteller_f.common_ui
 
-import android.app.Dialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,6 +13,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.viewbinding.ViewBinding
+import kotlin.reflect.KFunction
 
 /**
  * @author storyteller_f
@@ -54,8 +54,9 @@ abstract class RegularFragment<T : ViewBinding>(
     override fun onStart() {
         super.onStart()
         toolbar().setDisplayHomeAsUpEnabled(up())
-        toolbarCompose().setContent {  }
+        toolbarCompose().setContent { }
     }
+
     open fun up() = true
 }
 
@@ -88,3 +89,5 @@ abstract class CommonDialogFragment<T : ViewBinding>(
 }
 
 val Fragment.scope get() = viewLifecycleOwner.lifecycleScope
+
+val waiting = mutableMapOf<String, (Bundle) -> Unit>()

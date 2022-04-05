@@ -1,12 +1,17 @@
 package com.storyteller_f.giant_explorer.dialog
 
+import android.os.Bundle
+import androidx.documentfile.provider.DocumentFile
+import androidx.fragment.app.setFragmentResult
 import androidx.lifecycle.MutableLiveData
+import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ui.CommonDialogFragment
 import com.storyteller_f.common_ui.setOnClick
 import com.storyteller_f.common_vm_ktx.GenericValueModel
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.FileItemHolder
 import com.storyteller_f.giant_explorer.FileViewHolder
 import com.storyteller_f.giant_explorer.databinding.DialogRequestPathBinding
@@ -37,11 +42,12 @@ class RequestPathDialog :
             it.keepScreenOn = it.isChecked
         }
         binding.bottom.positive.setOnClick {
-            callback?.onOk(fileInstance.data.value!!)
+            setFragmentResult("request-path", Bundle().apply {
+                putString("path", fileInstance.data.value?.path)
+            })
             dismiss()
         }
         binding.bottom.negative.setOnClick {
-            callback?.onCancel()
             dismiss()
         }
         supportDirectoryContent(
@@ -54,11 +60,17 @@ class RequestPathDialog :
         )
     }
 
-    var callback: Callback? = null
-
-    interface Callback {
-        fun onOk(fileInstance: FileInstance)
-
-        fun onCancel()
+    @BindClickEvent(FileItemHolder::class)
+    fun toChild(itemHolder: FileItemHolder) {
+        if (itemHolder.file.item.isDirectory) {
+            val fileInstance1 = fileInstance.data.value ?: return
+            fileInstance.data.value = FileInstanceFactory.toChild(
+                fileInstance1,
+                itemHolder.file.name,
+                false,
+                requireContext(),
+                false
+            )
+        }
     }
 }

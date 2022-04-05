@@ -5,3 +5,7 @@ fun <T> MutableList<T>.toggle(t: T) {
         remove(t)
     } else add(t)
 }
+
+fun <T, R> T?.mm(block: (T) -> R): R? {
+    return this?.let { block(it) }
+}

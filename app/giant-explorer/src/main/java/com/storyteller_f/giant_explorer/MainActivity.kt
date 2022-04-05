@@ -1,9 +1,15 @@
 package com.storyteller_f.giant_explorer
 
+import android.content.ComponentName
+import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.IBinder
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentResultListener
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
@@ -13,7 +19,9 @@ import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.annotation_defination.BindLongClickEvent
 import com.storyteller_f.common_ktx.context
 import com.storyteller_f.common_ktx.contextSuspend
+import com.storyteller_f.common_ktx.mm
 import com.storyteller_f.common_ui.setVisible
+import com.storyteller_f.common_ui.waiting
 import com.storyteller_f.common_vm_ktx.GenericValueModel
 import com.storyteller_f.common_vm_ktx.toDiff
 import com.storyteller_f.common_vm_ktx.vm
@@ -30,6 +38,8 @@ import com.storyteller_f.giant_explorer.databinding.ActivityMainBinding
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileBinding
 import com.storyteller_f.giant_explorer.dialog.RequestPathDialog
 import com.storyteller_f.giant_explorer.model.FileModel
+import com.storyteller_f.giant_explorer.service.FileOperateBinder
+import com.storyteller_f.giant_explorer.service.FileOperateService
 import com.storyteller_f.giant_explorer.view.EditablePathMan
 import com.storyteller_f.ui_list.core.*
 import com.storyteller_f.ui_list.data.SimpleResponse
@@ -42,7 +52,7 @@ import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.math.min
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), FileOperateService.FileOperateResult {
     private val fileInstance by vm {
         GenericValueModel<FileInstance>().apply {
             data.value =
@@ -75,6 +85,29 @@ class MainActivity : AppCompatActivity() {
                 val adapter1 = (binding.content.recyclerView.adapter as ConcatAdapter).adapters[1]
             }
         }
+        context {
+            //连接服务
+            try {
+                bindService(
+                    Intent(this, FileOperateService::class.java),
+                    connection,
+                    BIND_AUTO_CREATE
+                )
+            } catch (e: Exception) {
+                bindService(
+                    Intent(this, FileOperateService::class.java),
+                    connection,
+                    0
+                )
+            }
+        }
+
+        supportFragmentManager.setFragmentResultListener("request-path", this) { requestKey, result ->
+            if (waiting.containsKey(requestKey)) {
+                waiting[requestKey]?.invoke(result)
+                waiting.remove(requestKey)
+            }
+        }
     }
 
 
@@ -94,17 +127,44 @@ class MainActivity : AppCompatActivity() {
 
     @BindLongClickEvent(FileItemHolder::class)
     fun test(itemHolder: FileItemHolder) {
-        RequestPathDialog().apply {
-            callback = object : RequestPathDialog.Callback {
-                override fun onOk(fileInstance: FileInstance) {
-                    println("request-path ${fileInstance.path}")
-                }
-
-                override fun onCancel() {
-                }
-
+        RequestPathDialog().show(supportFragmentManager, "request-path")
+        waiting["request-path"] = { bundle ->
+            bundle.getString("path")?.mm {
+                FileInstanceFactory.getFileInstance(it, this)
+            }.mm {
+                selected.value?.map { pair -> (pair.first as FileItemHolder).file.item } ?: listOf(itemHolder.file.item)
+            }.let {
+                println(it)
             }
-        }.show(supportFragmentManager, "request-path")
+        }
+    }
+
+    private var fileOperateBinder: FileOperateBinder? = null
+    private val connection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            Toast.makeText(this@MainActivity, "服务已连接", Toast.LENGTH_SHORT).show()
+            fileOperateBinder = service as FileOperateBinder
+            fileOperateBinder?.setFileOperateResult(this@MainActivity)
+            fileOperateBinder?.state?.observe(this@MainActivity) {
+                Toast.makeText(this@MainActivity, it.toString(), Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            Toast.makeText(this@MainActivity, "服务已关闭", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onSuccess(dest: String?, origin: String?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onError(string: String?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onCancel() {
+        TODO("Not yet implemented")
     }
 }
 

@@ -3,8 +3,8 @@ package com.storyteller_f.file_system.message
 import java.lang.StringBuilder
 
 class Message(val name: String) {
-    val time: Long
-    private val content: StringBuilder
+    val time = System.currentTimeMillis()
+    val content = StringBuilder()
     fun add(m: Boolean): Message {
         content.append(m)
         return this
@@ -29,8 +29,4 @@ class Message(val name: String) {
         return content.toString()
     }
 
-    init {
-        time = System.currentTimeMillis()
-        content = StringBuilder()
-    }
 }

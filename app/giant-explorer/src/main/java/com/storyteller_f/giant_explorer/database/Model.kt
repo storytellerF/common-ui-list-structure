@@ -34,6 +34,9 @@ interface FileSizeRecordDao {
     @Query("select * from `file-size-record` where absolutePath = :absolutePath")
     suspend fun search(absolutePath: String): FileSizeRecord?
 
+    @Query("select * from `file-size-record` where absolutePath = :absolutePath")
+    fun searchInThread(absolutePath: String): FileSizeRecord?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun save(record: FileSizeRecord)
 }

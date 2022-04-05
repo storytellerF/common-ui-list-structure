@@ -36,7 +36,7 @@ class App : Application() {
             "big-time-md",
             ExistingWorkPolicy.KEEP,
             OneTimeWorkRequestBuilder<MDWorker>().setInputData(
-                Data.Builder().putStringArray("folders", arrayOf("/storage/emulated/0/Download"))
+                Data.Builder().putStringArray("folders", arrayOf("/storage/emulated/0/Download", "/storage/emulated/0/Alarms"))
                     .build()
             ).build()
         )

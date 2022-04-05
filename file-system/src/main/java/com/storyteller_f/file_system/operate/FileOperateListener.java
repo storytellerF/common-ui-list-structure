@@ -8,16 +8,14 @@ public interface FileOperateListener {
     /**
      * 当一个文件处理完成
      *
-     * @param type
-     * @param message
+     * @param type 暂时没有用到
      */
     void onOneFile(FileInstance fileInstance, int type, Message message);
 
     /**
      * 当一个文件夹处理完成
      *
-     * @param type
-     * @param message
+     * @param type 暂时没有用到
      */
     void onOneDirectory(FileInstance fileInstance, int type, Message message);
 

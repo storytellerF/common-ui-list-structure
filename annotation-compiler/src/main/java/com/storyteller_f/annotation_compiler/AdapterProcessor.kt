@@ -130,7 +130,7 @@ class AdapterProcessor : AbstractProcessor() {
         longClickEventMap: Map<String?, Map<String, List<Event>>>?
     ): String {
         val importBindingClass = importBindingClass(holderEntry ?: listOf())
-        val importReceiverClass = importReceiverClass(eventMap?.plus(longClickEventMap ?: mapOf()))
+        val importReceiverClass = importReceiverClass(eventMap, longClickEventMap)
         val buildAddFunction = buildAddFunction(holderEntry ?: listOf())
         var hasComposeView = false
         val buildViewHolder = holderEntry?.joinToString("\n") {
@@ -249,15 +249,21 @@ class AdapterProcessor : AbstractProcessor() {
         return holderEntry
     }
 
-    private fun importReceiverClass(eventMap: Map<String?, Map<String, List<Event>>>?): String {
-        val flatMap =
-            eventMap?.flatMap { it.value.flatMap { entry -> entry.value } }
-                ?.map { it.receiverFullName }
-                ?.distinct()
-        return flatMap?.joinToString("\n") {
+    private fun importReceiverClass(
+        eventMap: Map<String?, Map<String, List<Event>>>?,
+        longClickEvent: Map<String?, Map<String, List<Event>>>?
+    ): String {
+        val flatMap = receiverList(eventMap)
+        val flatMap2 = receiverList(longClickEvent)
+        return flatMap.plus(flatMap2).joinToString("\n") {
             "import $it;\n"
-        } ?: ""
+        }
     }
+
+    private fun receiverList(longClickEvent: Map<String?, Map<String, List<Event>>>?) =
+        longClickEvent?.flatMap { it.value.flatMap { entry -> entry.value } }
+            ?.map { it.receiverFullName }
+            ?.distinct() ?: listOf()
 
     private fun buildComposeViewHolder(
         it: Entry,
