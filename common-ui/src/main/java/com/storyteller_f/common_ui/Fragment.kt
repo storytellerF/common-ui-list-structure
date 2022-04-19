@@ -13,7 +13,6 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.viewbinding.ViewBinding
-import kotlin.reflect.KFunction
 
 /**
  * @author storyteller_f
@@ -38,6 +37,14 @@ abstract class CommonFragment<T : ViewBinding>(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
+    }
+
+    override fun onStart() {
+        super.onStart()
+    }
+
+    operator fun set(requestKey: String, action: (Bundle) -> Unit) {
+        waiting[requestKey] = action
     }
 }
 

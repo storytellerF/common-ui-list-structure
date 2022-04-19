@@ -5,21 +5,22 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentResultListener
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.ConcatAdapter
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.annotation_defination.BindLongClickEvent
 import com.storyteller_f.common_ktx.context
 import com.storyteller_f.common_ktx.contextSuspend
 import com.storyteller_f.common_ktx.mm
+import com.storyteller_f.common_ui.SimpleActivity
 import com.storyteller_f.common_ui.setVisible
 import com.storyteller_f.common_ui.waiting
 import com.storyteller_f.common_vm_ktx.GenericValueModel
@@ -36,6 +37,7 @@ import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.ActivityMainBinding
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileBinding
+import com.storyteller_f.giant_explorer.dialog.NewNameDialog
 import com.storyteller_f.giant_explorer.dialog.RequestPathDialog
 import com.storyteller_f.giant_explorer.model.FileModel
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
@@ -52,7 +54,7 @@ import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.math.min
 
-class MainActivity : AppCompatActivity(), FileOperateService.FileOperateResult {
+class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
     private val fileInstance by vm {
         GenericValueModel<FileInstance>().apply {
             data.value =
@@ -80,10 +82,6 @@ class MainActivity : AppCompatActivity(), FileOperateService.FileOperateResult {
             selected
         )
         selected.toDiff().observe(this) {
-            val l = (it.first ?: mutableListOf()) + (it.second ?: mutableListOf())
-            l.forEach {
-                val adapter1 = (binding.content.recyclerView.adapter as ConcatAdapter).adapters[1]
-            }
         }
         context {
             //连接服务
@@ -101,13 +99,23 @@ class MainActivity : AppCompatActivity(), FileOperateService.FileOperateResult {
                 )
             }
         }
+    }
 
-        supportFragmentManager.setFragmentResultListener("request-path", this) { requestKey, result ->
-            if (waiting.containsKey(requestKey)) {
-                waiting[requestKey]?.invoke(result)
-                waiting.remove(requestKey)
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        MenuInflater(this).inflate(R.menu.main_menu, menu);
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.add_file -> {
+                NewNameDialog().show(supportFragmentManager, "new-name")
+                listener("add-file") { bundle ->
+                    fileInstance.data.value?.toChild(bundle.getString("name"), true, true)
+                }
             }
         }
+        return super.onOptionsItemSelected(item)
     }
 
 
@@ -128,7 +136,7 @@ class MainActivity : AppCompatActivity(), FileOperateService.FileOperateResult {
     @BindLongClickEvent(FileItemHolder::class)
     fun test(itemHolder: FileItemHolder) {
         RequestPathDialog().show(supportFragmentManager, "request-path")
-        waiting["request-path"] = { bundle ->
+        this["request-path"] = { bundle ->
             bundle.getString("path")?.mm {
                 FileInstanceFactory.getFileInstance(it, this)
             }.mm {

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:title="@string/string_add">
+        <menu >
+            <item android:title="@string/string_add_file" android:id="@+id/add_file" />
+            <item android:title="@string/string_add_directory" android:id="@+id/add_directory"/>
+        </menu>
+    </item>
+</menu>

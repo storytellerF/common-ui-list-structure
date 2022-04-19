@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">giant-explorer</string>
+
+    <string name="string_add_file">add file</string>
+    <string name="string_add">Add</string>
+    <string name="string_add_directory">add directory</string>
 </resources>

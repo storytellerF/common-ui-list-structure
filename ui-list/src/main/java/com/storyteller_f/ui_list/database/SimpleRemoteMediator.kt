@@ -17,10 +17,7 @@ class SimpleRemoteMediator<D : Datum<RK>, RK : RemoteKey, DT : RoomDatabase>(
 ) : RemoteMediator<Int, D>() {
 
     override suspend fun load(loadType: LoadType, state: PagingState<Int, D>): MediatorResult {
-        Log.d(
-            TAG,
-            "load() called with: loadType = $loadType, state = ${state.anchorPosition} ${state.config.selfPrint()}"
-        )
+        Log.d(TAG, "load() called with: loadType = $loadType, state = ${state.anchorPosition} ${state.config.selfPrint()}")
         val page = when (loadType) {
             LoadType.REFRESH -> {
                 val remoteKeys = getRemoteKeyClosestToCurrentPosition(state)
@@ -47,7 +44,6 @@ class SimpleRemoteMediator<D : Datum<RK>, RK : RemoteKey, DT : RoomDatabase>(
                     ?: return MediatorResult.Success(endOfPaginationReached = remoteKeys != null)
             }
         }
-        Log.i(TAG, "load: $page")
         try {
             val apiResponse = service(page, state.config.pageSize)
 

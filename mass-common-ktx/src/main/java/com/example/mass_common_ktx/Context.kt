@@ -1,12 +1,13 @@
 package com.example.mass_common_ktx
 
 import android.content.Context
+import android.view.View
 import androidx.core.app.ComponentActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.work.ListenableWorker
 
-fun<T> Any.context(function: Context.() -> T) = (when (this) {
+fun <T> T.context(function: Context.() -> T) = (when (this) {
     is ComponentActivity -> {
         this
     }

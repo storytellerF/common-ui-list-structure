@@ -5,7 +5,6 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
-import android.text.Spannable
 import android.text.SpannableString
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -172,7 +171,7 @@ class ListWithState @JvmOverloads constructor(
                 selected.value =
                     toggleSpecial.let {
                         val backgroundFromTag = getBackgroundFromTag(viewHolder)
-                        if (it!!.second) {
+                        if (it.second) {
                             viewHolder.view.setBackgroundColor(adapterViewHolder.getColor(R.color.greyAlpha))
                         } else {
                             viewHolder.view.background = backgroundFromTag
@@ -181,15 +180,7 @@ class ListWithState @JvmOverloads constructor(
                     }
             }
 
-            override fun onChildDraw(
-                c: Canvas,
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                dX: Float,
-                dY: Float,
-                actionState: Int,
-                isCurrentlyActive: Boolean
-            ) {
+            override fun onChildDraw(c: Canvas, recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean) {
                 if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
                     if (dX >= 300) {
                         paint.color = Color.GREEN
@@ -206,28 +197,12 @@ class ListWithState @JvmOverloads constructor(
                         if (swipeEvent) {
                             swipeEvent = false
                         }
-                        super.onChildDraw(
-                            c,
-                            recyclerView,
-                            viewHolder,
-                            dX / 2,
-                            dY,
-                            actionState,
-                            isCurrentlyActive
-                        )
+                        super.onChildDraw(c, recyclerView, viewHolder, dX / 2, dY, actionState, isCurrentlyActive)
                     } else {
                         val secondLine = firstLine + 100
                         if (dX < secondLine) {
                             val firstMax = firstLine / 2
-                            super.onChildDraw(
-                                c,
-                                recyclerView,
-                                viewHolder,
-                                firstMax + (dX - firstLine) / 4,
-                                dY,
-                                actionState,
-                                isCurrentlyActive
-                            )
+                            super.onChildDraw(c, recyclerView, viewHolder, firstMax + (dX - firstLine) / 4, dY, actionState, isCurrentlyActive)
                         } else if (dX >= secondLine) {
                             if (!swipeEvent) {
                                 swipeViewHolder(viewHolder)
@@ -298,7 +273,7 @@ class ListWithState @JvmOverloads constructor(
         val data: Boolean,
         val empty: Boolean,
         val progress: Boolean,
-        val error: Spannable?,
+        val error: CharSequence?,
         val refresh: Boolean?
     ) {
         val showErrorPage get() = retry || error != null
