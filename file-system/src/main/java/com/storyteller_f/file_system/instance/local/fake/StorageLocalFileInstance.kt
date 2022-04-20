@@ -2,18 +2,29 @@ package com.storyteller_f.file_system.instance.local.fake
 
 import android.content.Context
 import android.os.Build
+import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.local.ForbidChangeDirectoryLocalFileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FilesAndDirectories
 import com.storyteller_f.file_system.util.FileUtility
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 
 class StorageLocalFileInstance(val context: Context) :
-    ForbidChangeDirectoryLocalFileInstance("/storage") {
+    ForbidChangeDirectoryLocalFileInstance(FileInstanceFactory.storagePath) {
 
     override fun getDirectory(): DirectoryItemModel =
-        DirectoryItemModel("storage", path, isHide, File("/storage").lastModified())
+        DirectoryItemModel("storage", path, isHide, File(FileInstanceFactory.storagePath).lastModified())
+
+    override fun getFileInputStream(): FileInputStream {
+        TODO("Not yet implemented")
+    }
+
+    override fun getFileOutputStream(): FileOutputStream {
+        TODO("Not yet implemented")
+    }
 
     override fun getFileLength(): Long = -1L
 
@@ -25,10 +36,12 @@ class StorageLocalFileInstance(val context: Context) :
                 mutableListOf(),
                 storageVolume.mapNotNull {
                     it.uuid?.let { uuid ->
-                        DirectoryItemModel(uuid, "/storage/${uuid}", false, 0)
+                        val s = "${FileInstanceFactory.storagePath}/${uuid}"
+                        DirectoryItemModel(uuid, s, false, File(s).lastModified())
                     }
                 }.toMutableList().apply {
-                    add(DirectoryItemModel("emulated", "/storage/emulated", false, 0))
+                    val path = FileInstanceFactory.emulatedRootPath
+                    add(DirectoryItemModel("emulated", path, false, File(path).lastModified()))
                 }
             )
         } else {

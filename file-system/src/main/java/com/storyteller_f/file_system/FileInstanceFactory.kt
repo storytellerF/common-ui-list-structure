@@ -42,6 +42,8 @@ object FileInstanceFactory {
         return getFileInstance(filter, path, context)
     }
 
+    val regularPath = listOf("/system", "/mnt")
+
     private fun getFileInstance(filter: Filter?, path: String, context: Context): FileInstance {
         assert(!path.endsWith("/"))
         return when {
@@ -68,12 +70,17 @@ object FileInstanceFactory {
                 else -> RegularLocalFileInstance(context, filter, path)
             }
             path.startsWith(sdCardPath) -> RegularLocalFileInstance(context, filter, path)
-            path.startsWith("/mnt") -> RegularLocalFileInstance(context, filter, path)
+            regularPath.any {
+                path.startsWith(it)
+            } -> RegularLocalFileInstance(context, filter, path)
             path.startsWith("/data/data/${context.packageName}") -> RegularLocalFileInstance(context, filter, path)
             else -> FakeDirectoryLocalFileInstance(path, context)
         }
     }
 
+    /**
+     * @return 如果返回值是空字符串，代表应该使用fake 型file instance
+     */
     @JvmStatic
     fun getPrefix(path: String, context: Context): String {
         assert(!path.endsWith("/")) {
@@ -89,7 +96,7 @@ object FileInstanceFactory {
                 path.substring(0, endIndex + 1)
             }
             path.startsWith(sdCardPath) -> sdCardPath
-            path.startsWith("/mnt") -> "/mnt"
+            regularPath.any { path.startsWith(it) } -> "/"
             path.startsWith("/data/data/${context.packageName}") -> "/data/data/${context.packageName}"
             else -> ""
         }
@@ -110,15 +117,10 @@ object FileInstanceFactory {
     }
 
     @Throws(Exception::class)
-    fun toChild(
-        fileInstance: FileInstance,
-        name: String,
-        isFile: Boolean,
-        context: Context,
-        createWhenNoExists: Boolean
-    ): FileInstance {
-        val parentPrefix = getPrefix(fileInstance.path, context)
-        val path = fileInstance.path + "/" + name
+    fun toChild(fileInstance: FileInstance, name: String, isFile: Boolean, context: Context, createWhenNoExists: Boolean): FileInstance {
+        val parentPath = fileInstance.path
+        val parentPrefix = getPrefix(parentPath, context)
+        val path = "$parentPath/$name"
         val childPrefix = getPrefix(path, context)
         return if (parentPrefix == childPrefix) {
             fileInstance.toChild(name, isFile, createWhenNoExists)

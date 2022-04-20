@@ -5,6 +5,8 @@ import android.os.Build;
 import android.util.Log;
 
 
+import androidx.annotation.WorkerThread;
+
 import com.storyteller_f.file_system.Filter;
 import com.storyteller_f.file_system.model.DirectoryItemModel;
 import com.storyteller_f.file_system.model.FileItemModel;
@@ -203,14 +205,17 @@ public class RegularLocalFileInstance extends LocalFileInstance {
         return new BufferedWriter(new FileWriter(path));
     }
 
+    @Override
     public FileInputStream getFileInputStream() throws FileNotFoundException {
         return new FileInputStream(file);
     }
 
+    @Override
     public FileOutputStream getFileOutputStream() throws FileNotFoundException {
         return new FileOutputStream(file);
     }
 
+    @WorkerThread
     private FilesAndDirectories getFilesAndDirectoriesByListFiles() {
         FilesAndDirectories filesAndDirectories = listSafe();
         List<FileItemModel> f = filesAndDirectories.getFiles();
@@ -239,6 +244,7 @@ public class RegularLocalFileInstance extends LocalFileInstance {
         return filesAndDirectories;
     }
 
+    @WorkerThread
     private FilesAndDirectories getFilesAndDirectoriesByCommand(ArrayList<FileItemModel> files, ArrayList<DirectoryItemModel> directories) {
         ProcessBuilder processBuilder = new ProcessBuilder("ls", "-Al").directory(new File(path));
         Process process = null;
@@ -307,6 +313,7 @@ public class RegularLocalFileInstance extends LocalFileInstance {
 
 
     @Override
+    @WorkerThread
     public FilesAndDirectories list() {
         ArrayList<FileItemModel> files = new ArrayList<>();
         ArrayList<DirectoryItemModel> directories = new ArrayList<>();
@@ -387,6 +394,7 @@ public class RegularLocalFileInstance extends LocalFileInstance {
         return getFileSize(file);
     }
 
+    @WorkerThread
     private long getFileSize(File file) {
         long size = 0;
         File[] files = file.listFiles();

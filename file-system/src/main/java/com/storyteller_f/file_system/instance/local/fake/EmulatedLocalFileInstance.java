@@ -3,6 +3,7 @@ package com.storyteller_f.file_system.instance.local.fake;
 import android.content.Context;
 import android.util.Log;
 
+import com.storyteller_f.file_system.FileInstanceFactory;
 import com.storyteller_f.file_system.Filter;
 import com.storyteller_f.file_system.instance.local.LocalFileInstance;
 import com.storyteller_f.file_system.model.DirectoryItemModel;
@@ -13,6 +14,10 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,11 +25,11 @@ public class EmulatedLocalFileInstance extends LocalFileInstance {
     private static final String TAG = "EmulatedLocalFileInstan";
 
     public EmulatedLocalFileInstance(Context context, Filter filter) {
-        super(context, filter, "/storage/emulated");
+        super(context, filter, FileInstanceFactory.emulatedRootPath);
     }
 
     public EmulatedLocalFileInstance(Context context) {
-        super(context, "/storage/emulated");
+        super(context, FileInstanceFactory.emulatedRootPath);
     }
 
     @Override
@@ -63,15 +68,24 @@ public class EmulatedLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
+    public FileInputStream getFileInputStream() throws FileNotFoundException {
+        return null;
+    }
+
+    @Override
+    public FileOutputStream getFileOutputStream() throws FileNotFoundException {
+        return null;
+    }
+
+    @Override
     public FilesAndDirectories listSafe() {
         return list();
     }
 
     @Override
     public FilesAndDirectories list() {
-        Log.d(TAG, "list() called");
         List<DirectoryItemModel> directoryItemModels = new ArrayList<>();
-        directoryItemModels.add(new DirectoryItemModel("0", path + "/0", false, 0));
+        directoryItemModels.add(new DirectoryItemModel("0", path + "/0", false, new File(FileInstanceFactory.rootUserEmulatedPath).lastModified()));
         return new FilesAndDirectories(new ArrayList<>(), directoryItemModels);
     }
 

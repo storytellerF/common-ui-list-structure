@@ -9,7 +9,6 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
@@ -22,13 +21,12 @@ import com.storyteller_f.common_ktx.contextSuspend
 import com.storyteller_f.common_ktx.mm
 import com.storyteller_f.common_ui.SimpleActivity
 import com.storyteller_f.common_ui.setVisible
-import com.storyteller_f.common_ui.waiting
 import com.storyteller_f.common_vm_ktx.GenericValueModel
 import com.storyteller_f.common_vm_ktx.toDiff
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
-import com.storyteller_f.file_system.fillIcon
+import com.storyteller_f.file_system.fileIcon
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.TorrentFileModel
@@ -122,9 +120,9 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
     @BindClickEvent(FileItemHolder::class)
     fun toChild(itemHolder: FileItemHolder) {
         if (itemHolder.file.item.isDirectory) {
-            val fileInstance1 = fileInstance.data.value ?: return
+            val old = fileInstance.data.value ?: return
             fileInstance.data.value = FileInstanceFactory.toChild(
-                fileInstance1,
+                old,
                 itemHolder.file.name,
                 false,
                 this,
@@ -231,13 +229,10 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
     AdapterViewHolder<FileItemHolder>(binding) {
     override fun bindData(itemHolder: FileItemHolder) {
         binding.fileName.text = itemHolder.file.name
-        binding.fileIcon.fillIcon(itemHolder.file.item)
+        binding.fileIcon.fileIcon(itemHolder.file.item)
         val item = itemHolder.file.item
         if (itemHolder.selected.value?.valueContains(
-                Pair(
-                    itemHolder,
-                    0
-                )
+                Pair(itemHolder, 0)
             ) == true
         ) binding.root.setBackgroundColor(getColor(com.storyteller_f.ui_list.R.color.greyAlpha))
         else

@@ -5,6 +5,7 @@ import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.RequiresApi;
+import androidx.annotation.WorkerThread;
 
 
 import com.storyteller_f.file_system.Filter;
@@ -52,6 +53,7 @@ public abstract class LocalFileInstance extends BaseContextFileInstance {
         super(context);
     }
 
+    @WorkerThread
     public FilesAndDirectories listSafe() {
         try {
             Log.d(TAG, "listWalk() called");
@@ -65,6 +67,7 @@ public abstract class LocalFileInstance extends BaseContextFileInstance {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
+    @WorkerThread
     private FilesAndDirectories getFilesAndDirectoriesOnWalk(final ArrayList<FileItemModel> files, final ArrayList<DirectoryItemModel> directories) throws IOException {
         Files.walkFileTree(new File(path).toPath(), EnumSet.of(FileVisitOption.FOLLOW_LINKS), 1, new FileVisitor<Path>() {
             @Override

@@ -4,25 +4,28 @@ import java.io.File
 
 open class FileItemModel : FileSystemItemModel {
     var md: String? = null
+
+    /**
+     * first char is not [.]
+     */
     val extension: String?
 
     constructor(
         file: File,
         isHide: Boolean,
-        lastModifiedTime: Long,
-        extension: String?
-    ) : super(file.name, file.absolutePath, isHide, lastModifiedTime) {
+        extension: String? = null
+    ) : super(file.name, file.absolutePath, isHide, file.lastModified()) {
         this.extension = extension
     }
 
     constructor(
         name: String,
-        fullPath: String?,
+        fullPath: String,
         isHidden: Boolean,
         lastModifiedTime: Long,
-        extension: String?
+        extension: String? = null
     ) : super(
-        name, fullPath!!, isHidden, lastModifiedTime
+        name, fullPath, isHidden, lastModifiedTime
     ) {
         this.extension = extension
     }

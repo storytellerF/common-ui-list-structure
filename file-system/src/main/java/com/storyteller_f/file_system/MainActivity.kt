@@ -159,8 +159,12 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-fun ImageView.fillIcon(fileSystemItemModel: FileSystemItemModel) {
+fun ImageView.fileIcon(fileSystemItemModel: FileSystemItemModel) {
     if (fileSystemItemModel is FileItemModel) {
+        if (fileSystemItemModel.fullPath.startsWith("/data/app/")) {
+            setImageDrawable(context.packageManager.getApplicationIcon(fileSystemItemModel.name))
+            return
+        }
         val extension = fileSystemItemModel.extension
         if (extension != null) {
             setImageResource(

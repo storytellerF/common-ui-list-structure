@@ -2,6 +2,7 @@ package com.storyteller_f.file_system.instance;
 
 
 import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
 
 import com.storyteller_f.file_system.Filter;
 import com.storyteller_f.file_system.model.DirectoryItemModel;
@@ -25,6 +26,9 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 
+/**
+ * notice 如果需要给name 设置值，那就需要提供path。或者自行处理
+ */
 public abstract class FileInstance {
     public final static int file_operate_type_move_delete = 1;
     public final static int file_operate_type_copy = 2;
@@ -50,7 +54,6 @@ public abstract class FileInstance {
     }
 
     public FileInstance(String path) {
-        this.filter = null;
         this.path = path;
         initName(path);
     }
@@ -119,11 +122,16 @@ public abstract class FileInstance {
         return new OutputStreamWriter(getBufferedOutputStream(), charset);
     }
 
+    public abstract FileInputStream getFileInputStream() throws FileNotFoundException;
+
+    public abstract FileOutputStream getFileOutputStream() throws FileNotFoundException;
+
     /**
      * 应该仅用于目录
      *
      * @return 返回所有的文件和目录
      */
+    @WorkerThread
     public abstract FilesAndDirectories list();
 
     /**
@@ -179,6 +187,7 @@ public abstract class FileInstance {
      */
     public abstract void changeToParent() throws Exception;
 
+    @WorkerThread
     public abstract long getDirectorySize();
 
     public String getPath() {
@@ -220,6 +229,7 @@ public abstract class FileInstance {
      */
     public abstract String getParent();
 
+    @WorkerThread
     public abstract FilesAndDirectories listSafe();
 
     public void destroy() {
@@ -287,7 +297,7 @@ public abstract class FileInstance {
                 files.add(new TorrentFileModel(chileFile.getName(), chileFile.getAbsolutePath(), hidden, time));
                 return;
             }
-            FileItemModel fileItemModel = new FileItemModel(chileFile, hidden, time, extension);
+            FileItemModel fileItemModel = new FileItemModel(chileFile, hidden, extension);
             fileItemModel.setDetail(detail);
             files.add(fileItemModel);
         }

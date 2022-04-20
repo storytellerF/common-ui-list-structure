@@ -54,10 +54,7 @@ class FileCopy(
         val listSafe = f.listSafe()
         listSafe.files.forEach {
             if (needStop()) return false
-            copyFileFaster(
-                FileInstanceFactory.toChild(f, it.name, true, context, true),
-                t
-            )
+            copyFileFaster(FileInstanceFactory.toChild(f, it.name, true, context, true), t)
         }
         listSafe.directories.forEach {
             if (needStop()) return false
@@ -73,8 +70,8 @@ class FileCopy(
     private fun copyFileFaster(f: FileInstance, t: FileInstance): Boolean {
         try {
             val toChild = FileInstanceFactory.toChild(t, f.name, true, context, true)
-            (f as RegularLocalFileInstance).fileInputStream.channel.use { int ->
-                (toChild as RegularLocalFileInstance).fileOutputStream.channel.use { out ->
+            (f).fileInputStream.channel.use { int ->
+                (toChild).fileOutputStream.channel.use { out ->
                     val byteArray = ByteBuffer.allocateDirect(1024)
                     while (int.read(byteArray) != -1) {
                         if (needStop()) return false

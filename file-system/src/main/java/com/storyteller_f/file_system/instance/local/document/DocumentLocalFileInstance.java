@@ -2,8 +2,10 @@ package com.storyteller_f.file_system.instance.local.document;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
+import androidx.core.content.FileProvider;
 import androidx.documentfile.provider.DocumentFile;
 
 
@@ -21,7 +23,9 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -438,6 +442,15 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
     @Override
     public BufferedWriter getBufferedWriter() throws FileNotFoundException {
         return new BufferedWriter(new OutputStreamWriter(getOutputStream()));
+    }
+    @Override
+    public FileInputStream getFileInputStream() throws FileNotFoundException {
+        ParcelFileDescriptor r = context.getContentResolver().openFileDescriptor(current.getUri(), "r");
+        return new FileInputStream(r.getFileDescriptor());
+    }
+    @Override
+    public FileOutputStream getFileOutputStream() throws FileNotFoundException {
+        return new FileOutputStream(context.getContentResolver().openFileDescriptor(current.getUri(), "w").getFileDescriptor());
     }
 
     @Override

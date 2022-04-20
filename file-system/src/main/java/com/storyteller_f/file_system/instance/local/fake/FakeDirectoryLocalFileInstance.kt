@@ -1,29 +1,54 @@
 package com.storyteller_f.file_system.instance.local.fake
 
 import android.content.Context
+import androidx.annotation.WorkerThread
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.local.ForbidChangeDirectoryLocalFileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
+import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FilesAndDirectories
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.lang.Exception
 
 class FakeDirectoryLocalFileInstance(path: String, val context: Context) :
     ForbidChangeDirectoryLocalFileInstance(path) {
-    val dy: MutableMap<String, MutableList<String>> = mutableMapOf(
-        "/data/user/0" to mutableListOf(context.packageName),
-        "/data/data" to mutableListOf(context.packageName)
+    private val dy: MutableMap<String, List<String>> = mutableMapOf(
+        "/data/user/0" to listOf(context.packageName),
+        "/data/data" to listOf(context.packageName),
     )
+
+    private val dyf: MutableMap<String, List<String>> = mutableMapOf(
+        "/data/app" to context.packageManager.getInstalledApplications(0).map {
+            it.packageName ?: "unknown"
+        }
+    )
+
 
     override fun getDirectory(): DirectoryItemModel {
         return DirectoryItemModel("/", "/", false, -1)
     }
 
+    override fun getFileInputStream(): FileInputStream {
+        TODO("Not yet implemented")
+    }
+
+    override fun getFileOutputStream(): FileOutputStream {
+        TODO("Not yet implemented")
+    }
+
     override fun getFileLength() = -1L
 
+    @WorkerThread
     override fun list(): FilesAndDirectories {
         return FilesAndDirectories(
-            mutableListOf(), (map[path] ?: dy[path])?.map {
-                DirectoryItemModel(it, "$path/$it", false, -1)
+            dyf[path]?.map {
+                FileItemModel(it, "$path/$it", false, File("$path/$it").lastModified()).apply {
+                    size = File(context.packageManager.getApplicationInfo(it, 0).publicSourceDir).length()
+                }
+            }?.toMutableList() ?: mutableListOf(), (map[path] ?: dy[path])?.map {
+                DirectoryItemModel(it, "$path/$it", false, File("$path/$it").lastModified())
             }?.toMutableList() ?: mutableListOf()
         )
     }
@@ -69,9 +94,9 @@ class FakeDirectoryLocalFileInstance(path: String, val context: Context) :
 
     companion object {
         val map = mapOf(
-            "" to listOf("sdcard", "storage", "data", "mnt"),
+            "" to listOf("sdcard", "storage", "data", "mnt", "system"),
             "/data" to listOf("user", "data", "app"),
-            "/data/user" to listOf("0")
+            "/data/user" to listOf("0"),
         )
     }
 }
