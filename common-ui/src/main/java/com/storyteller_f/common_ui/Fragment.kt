@@ -1,6 +1,8 @@
 package com.storyteller_f.common_ui
 
+import android.content.Context
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,9 +10,11 @@ import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.compose.ui.platform.ComposeView
+import androidx.core.app.ComponentActivity
 import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.viewbinding.ViewBinding
 
@@ -20,7 +24,7 @@ import androidx.viewbinding.ViewBinding
 
 abstract class CommonFragment<T : ViewBinding>(
     val viewBindingFactory: (LayoutInflater) -> T
-) : Fragment() {
+) : Fragment(), KeyEvent.Callback {
     lateinit var binding: T
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -46,6 +50,14 @@ abstract class CommonFragment<T : ViewBinding>(
     operator fun set(requestKey: String, action: (Bundle) -> Unit) {
         waiting[requestKey] = action
     }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?) = false
+
+    override fun onKeyLongPress(keyCode: Int, event: KeyEvent?) = false
+
+    override fun onKeyUp(keyCode: Int, event: KeyEvent?) = false
+
+    override fun onKeyMultiple(keyCode: Int, count: Int, event: KeyEvent?) = false
 }
 
 /**
@@ -75,7 +87,7 @@ fun Fragment.toolbarCompose() =
 
 abstract class CommonDialogFragment<T : ViewBinding>(
     val viewBindingFactory: (LayoutInflater) -> T
-) : DialogFragment() {
+) : DialogFragment(), KeyEvent.Callback {
     lateinit var binding: T
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -93,8 +105,32 @@ abstract class CommonDialogFragment<T : ViewBinding>(
         super.onViewCreated(view, savedInstanceState)
         (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
     }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?) = false
+
+    override fun onKeyLongPress(keyCode: Int, event: KeyEvent?) = false
+
+    override fun onKeyUp(keyCode: Int, event: KeyEvent?) = false
+
+    override fun onKeyMultiple(keyCode: Int, count: Int, event: KeyEvent?) = false
 }
 
 val Fragment.scope get() = viewLifecycleOwner.lifecycleScope
 
 val waiting = mutableMapOf<String, (Bundle) -> Unit>()
+
+/**
+ * 3 代表支持三种类型
+ */
+fun<T> KeyEvent.Callback.context3(function: Context.() -> T) = (when (this) {
+    is ComponentActivity -> this
+    is Fragment -> requireContext()
+    is View -> context
+    else -> throw java.lang.Exception("context is null")
+}).run(function)
+
+suspend fun<T> KeyEvent.Callback.contextSuspend3(function: suspend Context.() -> T): T = when (this) {
+    is ComponentActivity -> this
+    is Fragment -> requireContext()
+    else -> throw java.lang.Exception("context is null")
+}.function()
