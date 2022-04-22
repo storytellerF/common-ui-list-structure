@@ -3,7 +3,6 @@ package com.storyteller_f.giant_explorer
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
-import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
 import android.view.Menu
@@ -104,15 +103,15 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        MenuInflater(this).inflate(R.menu.main_menu, menu);
+        MenuInflater(this).inflate(R.menu.main_menu, menu)
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.add_file -> {
-                dialog("add-file", NewNameDialog::class.java) { bundle ->
-                    fileInstance.data.value?.toChild(bundle.getString("name"), true, true)
+                fragment<NewNameDialog.NewNameResult>("add-file", NewNameDialog::class.java) { bundle ->
+                    fileInstance.data.value?.toChild(bundle.name, true, true)
                 }
             }
         }
@@ -132,15 +131,14 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
                 false
             )
         } else {
-            dialog(OpenFileDialog.key, OpenFileDialog::class.java, Bundle().apply {
+            fragment<OpenFileDialog.OpenFileResult>(OpenFileDialog.key, OpenFileDialog::class.java, Bundle().apply {
                 putString("path", itemHolder.file.fullPath)
             }) {
-                val string = it.getString("result")
                 Intent("android.intent.action.VIEW").apply {
                     addCategory("android.intent.category.DEFAULT")
                     val file = File(itemHolder.file.fullPath)
                     val uriForFile = FileProvider.getUriForFile(this@MainActivity, "$packageName.file-provider", file)
-                    setDataAndType(uriForFile, string)
+                    setDataAndType(uriForFile, it.mimeType)
                     flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 }.let {
                     startActivity(Intent.createChooser(it, "open by"))
@@ -152,8 +150,8 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
     @BindLongClickEvent(FileItemHolder::class)
     fun test(itemHolder: FileItemHolder) {
         RequestPathDialog().show(supportFragmentManager, "request-path")
-        dialog("request-path", RequestPathDialog::class.java) { bundle ->
-            bundle.getString("path")?.mm {
+        fragment<RequestPathDialog.RequestPathResult>("request-path", RequestPathDialog::class.java) { result ->
+            result.path.mm {
                 FileInstanceFactory.getFileInstance(it, this)
             }.mm {
                 selected.value?.map { pair -> (pair.first as FileItemHolder).file.item } ?: listOf(itemHolder.file.item)

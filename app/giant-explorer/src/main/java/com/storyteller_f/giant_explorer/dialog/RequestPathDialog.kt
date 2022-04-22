@@ -1,11 +1,10 @@
 package com.storyteller_f.giant_explorer.dialog
 
-import android.os.Bundle
-import androidx.documentfile.provider.DocumentFile
-import androidx.fragment.app.setFragmentResult
+import android.os.Parcelable
 import androidx.lifecycle.MutableLiveData
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ui.CommonDialogFragment
+import com.storyteller_f.common_ui.setFragmentResult
 import com.storyteller_f.common_ui.setOnClick
 import com.storyteller_f.common_vm_ktx.GenericValueModel
 import com.storyteller_f.common_vm_ktx.vm
@@ -20,6 +19,7 @@ import com.storyteller_f.giant_explorer.supportDirectoryContent
 import com.storyteller_f.ui_list.core.SearchProducer
 import com.storyteller_f.ui_list.core.SimpleSourceAdapter
 import com.storyteller_f.ui_list.core.search
+import kotlinx.parcelize.Parcelize
 
 class RequestPathDialog :
     CommonDialogFragment<DialogRequestPathBinding>(DialogRequestPathBinding::inflate) {
@@ -29,6 +29,9 @@ class RequestPathDialog :
                 FileInstanceFactory.getFileInstance("/storage/emulated/0", requireContext())
         }
     }
+
+    @Parcelize
+    class RequestPathResult(val path: String) : Parcelable
 
     private val data by search(
         SearchProducer(::service) { it, _ ->
@@ -42,10 +45,10 @@ class RequestPathDialog :
             it.keepScreenOn = it.isChecked
         }
         binding.bottom.positive.setOnClick {
-            setFragmentResult("request-path", Bundle().apply {
-                putString("path", fileInstance.data.value?.path)
-            })
-            dismiss()
+            fileInstance.data.value?.path?.let {
+                setFragmentResult("request-path", RequestPathResult(it))
+                dismiss()
+            }
         }
         binding.bottom.negative.setOnClick {
             dismiss()

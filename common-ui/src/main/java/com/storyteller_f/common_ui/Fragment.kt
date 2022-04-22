@@ -49,10 +49,6 @@ abstract class CommonFragment<T : ViewBinding>(
         super.onStart()
     }
 
-    operator fun set(requestKey: String, action: (Bundle) -> Unit) {
-        waiting[requestKey] = action
-    }
-
     override fun onKeyDown(keyCode: Int, event: KeyEvent?) = false
 
     override fun onKeyLongPress(keyCode: Int, event: KeyEvent?) = false
@@ -128,7 +124,9 @@ val LifecycleOwner.scope
         else -> throw Exception("unknown type $this")
     }
 
-val waiting = mutableMapOf<String, (Bundle) -> Unit>()
+class FragmentAction(val action: (String, Bundle) -> Unit)
+
+val waiting = mutableMapOf<String, FragmentAction>()
 
 /**
  * 3 代表支持三种类型
@@ -146,7 +144,7 @@ suspend fun <T> KeyEvent.Callback.contextSuspend3(function: suspend Context.() -
     else -> throw java.lang.Exception("context is null")
 }.function()
 
-public fun Fragment.setFragmentResult(requestKey: String, result: Parcelable) {
+fun <T : Parcelable> Fragment.setFragmentResult(requestKey: String, result: T) {
     parentFragmentManager.setFragmentResult(requestKey, Bundle().apply {
         putParcelable("result", result)
     })

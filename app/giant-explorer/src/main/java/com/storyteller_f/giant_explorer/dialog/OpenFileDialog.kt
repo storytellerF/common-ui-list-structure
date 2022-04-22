@@ -1,14 +1,13 @@
 package com.storyteller_f.giant_explorer.dialog
 
 import android.graphics.Color
-import android.os.Bundle
+import android.os.Parcelable
 import android.webkit.MimeTypeMap
-import androidx.fragment.app.setFragmentResult
 import com.j256.simplemagic.ContentInfo
 import com.j256.simplemagic.ContentInfoUtil
 import com.storyteller_f.common_ui.CommonDialogFragment
 import com.storyteller_f.common_ui.scope
-import com.storyteller_f.common_ui.setOnClick
+import com.storyteller_f.common_ui.setFragmentResult
 import com.storyteller_f.common_vm_ktx.GenericValueModel
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.file_system.FileInstanceFactory
@@ -16,11 +15,11 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.giant_explorer.databinding.DialogOpenFileBinding
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.parcelize.Parcelize
 import kotlin.concurrent.thread
 import kotlin.coroutines.resumeWithException
-import kotlin.system.measureTimeMillis
 
-interface StringResult{
+interface StringResult {
     fun onResult(string: String)
 }
 
@@ -28,9 +27,13 @@ class OpenFileDialog : CommonDialogFragment<DialogOpenFileBinding>(DialogOpenFil
     companion object {
         const val key = "open file"
     }
+
     private val dataType by vm {
         GenericValueModel<ContentInfo?>()
     }
+
+    @Parcelize
+    class OpenFileResult(val mimeType: String) : Parcelable
 
     override fun onBindViewEvent(binding: DialogOpenFileBinding) {
         val path = requireArguments().getString("path")!!
@@ -39,9 +42,7 @@ class OpenFileDialog : CommonDialogFragment<DialogOpenFileBinding>(DialogOpenFil
         binding.dataType = dataType
         binding.handler = object : StringResult {
             override fun onResult(string: String) {
-                setFragmentResult(key, Bundle().apply {
-                    putString("result", string)
-                })
+                setFragmentResult(key, OpenFileResult(string))
                 dismiss()
             }
         }
