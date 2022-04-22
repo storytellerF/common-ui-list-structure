@@ -30,9 +30,6 @@ import java.util.ArrayList;
  * notice 如果需要给name 设置值，那就需要提供path。或者自行处理
  */
 public abstract class FileInstance {
-    public final static int file_operate_type_move_delete = 1;
-    public final static int file_operate_type_copy = 2;
-    public final static int file_operate_type_delete = 3;
     //在线程下执行才有意义
     protected String path;
     protected String name;
@@ -138,7 +135,6 @@ public abstract class FileInstance {
      * 是否是文件
      *
      * @return true 代表是文件
-     * @throws Exception
      */
     public abstract boolean isFile() throws Exception;
 

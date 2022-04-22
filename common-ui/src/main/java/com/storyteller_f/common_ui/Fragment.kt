@@ -2,6 +2,7 @@ package com.storyteller_f.common_ui
 
 import android.content.Context
 import android.os.Bundle
+import android.os.Parcelable
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -32,6 +33,7 @@ abstract class CommonFragment<T : ViewBinding>(
         savedInstanceState: Bundle?
     ): View? {
         binding = viewBindingFactory(layoutInflater)
+        (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
         onBindViewEvent(binding)
         return binding.root
     }
@@ -85,6 +87,9 @@ fun Fragment.toolbarCompose() =
     (activity!!.findViewById<Toolbar>(R.id.toolbar)).getChildAt(0) as
             ComposeView
 
+/**
+ * @param viewBindingFactory inflate
+ */
 abstract class CommonDialogFragment<T : ViewBinding>(
     val viewBindingFactory: (LayoutInflater) -> T
 ) : DialogFragment(), KeyEvent.Callback {
@@ -95,6 +100,7 @@ abstract class CommonDialogFragment<T : ViewBinding>(
         savedInstanceState: Bundle?
     ): View? {
         binding = viewBindingFactory(layoutInflater)
+        (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
         onBindViewEvent(binding)
         return binding.root
     }
@@ -115,22 +121,33 @@ abstract class CommonDialogFragment<T : ViewBinding>(
     override fun onKeyMultiple(keyCode: Int, count: Int, event: KeyEvent?) = false
 }
 
-val Fragment.scope get() = viewLifecycleOwner.lifecycleScope
+val LifecycleOwner.scope
+    get() = when (this) {
+        is Fragment -> viewLifecycleOwner.lifecycleScope
+        is ComponentActivity -> lifecycleScope
+        else -> throw Exception("unknown type $this")
+    }
 
 val waiting = mutableMapOf<String, (Bundle) -> Unit>()
 
 /**
  * 3 代表支持三种类型
  */
-fun<T> KeyEvent.Callback.context3(function: Context.() -> T) = (when (this) {
+fun <T> KeyEvent.Callback.context3(function: Context.() -> T) = (when (this) {
     is ComponentActivity -> this
     is Fragment -> requireContext()
     is View -> context
     else -> throw java.lang.Exception("context is null")
 }).run(function)
 
-suspend fun<T> KeyEvent.Callback.contextSuspend3(function: suspend Context.() -> T): T = when (this) {
+suspend fun <T> KeyEvent.Callback.contextSuspend3(function: suspend Context.() -> T): T = when (this) {
     is ComponentActivity -> this
     is Fragment -> requireContext()
     else -> throw java.lang.Exception("context is null")
 }.function()
+
+public fun Fragment.setFragmentResult(requestKey: String, result: Parcelable) {
+    parentFragmentManager.setFragmentResult(requestKey, Bundle().apply {
+        putParcelable("result", result)
+    })
+}

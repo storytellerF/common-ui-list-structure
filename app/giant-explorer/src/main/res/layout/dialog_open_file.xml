@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="com.storyteller_f.giant_explorer.dialog.StringResult" />
+
+        <import type="com.storyteller_f.common_vm_ktx.GenericValueModel" />
+
+        <import type="com.j256.simplemagic.ContentInfo" />
+
+        <variable
+            name="handler"
+            type="StringResult" />
+
+        <variable
+            name="dataType"
+            type="GenericValueModel&lt;ContentInfo>" />
+
+        <variable
+            name="mimeType"
+            type="String" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <TextView
+            android:id="@+id/fileName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="/storage/emulated/0/test.txt" />
+
+        <Button
+            android:id="@+id/typeDeduced"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:onClickListener="@{()->handler.onResult(dataType.data.contentType.mimeType)}"
+            android:text="@{dataType.data.contentType.mimeType}"
+            app:layout_constraintEnd_toEndOf="@+id/fileName"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/fileName"
+            app:layout_constraintTop_toBottomOf="@+id/fileName"
+            tools:text="image/jpeg" />
+
+        <Button
+            android:id="@+id/type"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:onClickListener="@{()->handler.onResult(mimeType)}"
+            android:text="@{mimeType}"
+            app:layout_constraintEnd_toEndOf="@+id/typeDeduced"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/typeDeduced"
+            app:layout_constraintTop_toBottomOf="@+id/typeDeduced"
+            tools:text="image/jpeg" />
+
+        <androidx.constraintlayout.helper.widget.Flow
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            app:constraint_referenced_ids="openByPicture,openByVideo,openByText,openByMusic,openByHex"
+            app:flow_wrapMode="aligned"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/type" />
+
+        <Button
+            android:id="@+id/openByPicture"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClickListener="@{()->handler.onResult(`image/*`)}"
+            android:text="图片" />
+
+        <Button
+            android:id="@+id/openByVideo"
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClickListener="@{()->handler.onResult(`video/*`)}"
+            android:text="视频" />
+
+        <Button
+            android:id="@+id/openByText"
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClickListener="@{()->handler.onResult(`video/*`)}"
+            android:text="文本" />
+
+        <Button
+            android:id="@+id/openByMusic"
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClickListener="@{()->handler.onResult(`audio/*`)}"
+            android:text="音乐" />
+
+        <Button
+            android:id="@+id/openByHex"
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClickListener="@{()->handler.onResult(`application/*`)}"
+            android:text="十六进制" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

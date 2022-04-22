@@ -3,12 +3,14 @@ package com.storyteller_f.giant_explorer
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
+import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
@@ -36,6 +38,7 @@ import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.ActivityMainBinding
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileBinding
 import com.storyteller_f.giant_explorer.dialog.NewNameDialog
+import com.storyteller_f.giant_explorer.dialog.OpenFileDialog
 import com.storyteller_f.giant_explorer.dialog.RequestPathDialog
 import com.storyteller_f.giant_explorer.model.FileModel
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
@@ -49,6 +52,7 @@ import com.storyteller_f.ui_list.ui.valueContains
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.io.File
 import java.util.*
 import kotlin.math.min
 
@@ -107,8 +111,7 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.add_file -> {
-                NewNameDialog().show(supportFragmentManager, "new-name")
-                listener("add-file") { bundle ->
+                dialog("add-file", NewNameDialog::class.java) { bundle ->
                     fileInstance.data.value?.toChild(bundle.getString("name"), true, true)
                 }
             }
@@ -128,13 +131,28 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
                 this,
                 false
             )
+        } else {
+            dialog(OpenFileDialog.key, OpenFileDialog::class.java, Bundle().apply {
+                putString("path", itemHolder.file.fullPath)
+            }) {
+                val string = it.getString("result")
+                Intent("android.intent.action.VIEW").apply {
+                    addCategory("android.intent.category.DEFAULT")
+                    val file = File(itemHolder.file.fullPath)
+                    val uriForFile = FileProvider.getUriForFile(this@MainActivity, "$packageName.file-provider", file)
+                    setDataAndType(uriForFile, string)
+                    flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                }.let {
+                    startActivity(Intent.createChooser(it, "open by"))
+                }
+            }
         }
     }
 
     @BindLongClickEvent(FileItemHolder::class)
     fun test(itemHolder: FileItemHolder) {
         RequestPathDialog().show(supportFragmentManager, "request-path")
-        this["request-path"] = { bundle ->
+        dialog("request-path", RequestPathDialog::class.java) { bundle ->
             bundle.getString("path")?.mm {
                 FileInstanceFactory.getFileInstance(it, this)
             }.mm {
@@ -198,6 +216,7 @@ fun LifecycleOwner.supportDirectoryContent(
                 }
             }
             data.observer(lifecycleScope, it) { pagingData ->
+                listWithState.recyclerView.smoothScrollToPosition(0)
                 adapter.submitData(pagingData)
             }
             pathMan.drawPath(it.path)

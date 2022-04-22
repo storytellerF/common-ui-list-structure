@@ -1,6 +1,7 @@
 package com.storyteller_f.file_system.instance.local.fake
 
 import android.content.Context
+import android.os.Build
 import androidx.annotation.WorkerThread
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.local.ForbidChangeDirectoryLocalFileInstance
@@ -10,7 +11,9 @@ import com.storyteller_f.file_system.model.FilesAndDirectories
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.lang.Exception
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.attribute.BasicFileAttributes
 
 class FakeDirectoryLocalFileInstance(path: String, val context: Context) :
     ForbidChangeDirectoryLocalFileInstance(path) {
@@ -46,6 +49,15 @@ class FakeDirectoryLocalFileInstance(path: String, val context: Context) :
             dyf[path]?.map {
                 FileItemModel(it, "$path/$it", false, File("$path/$it").lastModified()).apply {
                     size = File(context.packageManager.getApplicationInfo(it, 0).publicSourceDir).length()
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        try {
+                            val basicFileAttributes = Files.readAttributes(file.toPath(), BasicFileAttributes::class.java)
+                            createdTime = basicFileAttributes.creationTime().toMillis()
+                            lastAccessTime = basicFileAttributes.lastAccessTime().toMillis()
+                        } catch (e: IOException) {
+                            e.printStackTrace()
+                        }
+                    }
                 }
             }?.toMutableList() ?: mutableListOf(), (map[path] ?: dy[path])?.map {
                 DirectoryItemModel(it, "$path/$it", false, File("$path/$it").lastModified())

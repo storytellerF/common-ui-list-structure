@@ -6,7 +6,7 @@ open class FileItemModel : FileSystemItemModel {
     var md: String? = null
 
     /**
-     * first char is not [.]
+     *  A file extension without the leading '.'
      */
     val extension: String?
 

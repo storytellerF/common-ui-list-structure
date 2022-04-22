@@ -1,0 +1,84 @@
+package com.storyteller_f.giant_explorer.dialog
+
+import android.graphics.Color
+import android.os.Bundle
+import android.webkit.MimeTypeMap
+import androidx.fragment.app.setFragmentResult
+import com.j256.simplemagic.ContentInfo
+import com.j256.simplemagic.ContentInfoUtil
+import com.storyteller_f.common_ui.CommonDialogFragment
+import com.storyteller_f.common_ui.scope
+import com.storyteller_f.common_ui.setOnClick
+import com.storyteller_f.common_vm_ktx.GenericValueModel
+import com.storyteller_f.common_vm_ktx.vm
+import com.storyteller_f.file_system.FileInstanceFactory
+import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.giant_explorer.databinding.DialogOpenFileBinding
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.concurrent.thread
+import kotlin.coroutines.resumeWithException
+import kotlin.system.measureTimeMillis
+
+interface StringResult{
+    fun onResult(string: String)
+}
+
+class OpenFileDialog : CommonDialogFragment<DialogOpenFileBinding>(DialogOpenFileBinding::inflate) {
+    companion object {
+        const val key = "open file"
+    }
+    private val dataType by vm {
+        GenericValueModel<ContentInfo?>()
+    }
+
+    override fun onBindViewEvent(binding: DialogOpenFileBinding) {
+        val path = requireArguments().getString("path")!!
+        val fileInstance = FileInstanceFactory.getFileInstance(path, requireContext())
+        binding.fileName.text = path
+        binding.dataType = dataType
+        binding.handler = object : StringResult {
+            override fun onResult(string: String) {
+                setFragmentResult(key, Bundle().apply {
+                    putString("result", string)
+                })
+                dismiss()
+            }
+        }
+        val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(FileInstance.getExtension(path))
+        binding.mimeType = mimeTypeFromExtension
+        scope.launch {
+            dataType.data.value = suspendCancellableCoroutine {
+                thread {
+                    try {
+                        val value = ContentInfoUtil().findMatch(fileInstance.bufferedInputSteam)
+                        it.resumeWith(Result.success(value))
+                    } catch (e: Exception) {
+                        it.resumeWithException(e)
+                    }
+                }
+            }
+        }
+        dataType.data.observe(viewLifecycleOwner) {
+            binding.openByPicture.setBackgroundColor(mixColor(mimeTypeFromExtension, "image"))
+            binding.openByText.setBackgroundColor(mixColor(mimeTypeFromExtension, "text"))
+            binding.openByMusic.setBackgroundColor(mixColor(mimeTypeFromExtension, "audio"))
+            binding.openByVideo.setBackgroundColor(mixColor(mimeTypeFromExtension, "video"))
+            binding.openByHex.setBackgroundColor(mixColor(mimeTypeFromExtension, "application"))
+        }
+
+    }
+
+    private fun mixColor(mimeType: String?, t: String): Int {
+        val elements = (if (dataType.data.value?.mimeType?.contains(t) == true) 1 else 2) + if (mimeType?.contains(t) == true) 4 else 8
+        return elements.let {
+            when (it) {
+                1, 9 -> Color.parseColor("#A25B32")
+                4, 6 -> Color.parseColor("#667DDA")
+                5 -> Color.parseColor("#D2D205")
+                else -> Color.GRAY
+            }
+        }
+    }
+}
+

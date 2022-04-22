@@ -2,6 +2,7 @@ package com.storyteller_f.common_ui
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.viewbinding.ViewBinding
 
 open class SimpleActivity : AppCompatActivity() {
     override fun onStart() {
@@ -16,11 +17,17 @@ open class SimpleActivity : AppCompatActivity() {
         }
     }
 
-    fun listener(requestKey: String, action: (Bundle) -> Unit) {
+    fun dialog(requestKey: String, dialog: Class<out CommonDialogFragment<out ViewBinding>>, parameters: Bundle? = null, action: (Bundle) -> Unit) {
+        dialog.newInstance().apply {
+            arguments = parameters
+        }.show(supportFragmentManager, requestKey)
         waiting[requestKey] = action
-    }
+        supportFragmentManager.setFragmentResultListener(requestKey, this) { s, r ->
+            if (waiting.containsKey(s)) {
+                action.invoke(r)
+                waiting.remove(s)
+            }
+        }
 
-    operator fun set(requestKey: String, action: (Bundle) -> Unit) {
-        listener(requestKey, action)
     }
 }

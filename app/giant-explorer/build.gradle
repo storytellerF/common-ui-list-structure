@@ -39,6 +39,7 @@ android {
     buildFeatures {
         compose true
         viewBinding true
+        dataBinding true
     }
 
     composeOptions {
@@ -105,5 +106,7 @@ dependencies {
 
     // optional - Multiprocess support
     implementation "androidx.work:work-multiprocess:$work_version"
+
+    implementation 'com.j256.simplemagic:simplemagic:1.17'
 
 }

@@ -24,14 +24,12 @@ class ExampleInstrumentedTest {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         //assertEquals("com.storyteller_f.file_system.test", appContext.packageName)
-        val fileInstance = FileInstanceFactory.getFileInstance("/system", appContext)
+        val fileInstance = FileInstanceFactory.getFileInstance("/data/app", appContext)
         val listSafe = fileInstance.listSafe()
-        val listFiles = File("/").listFiles()
-        appContext.packageManager.getInstalledApplications(
-            PackageManager.MATCH_APEX
-        ).map {
-            it.publicSourceDir
-        }
+        val listFiles = File("/data/app").listFiles()
+        val installedApplications = appContext.packageManager.getInstalledApplications(
+            0
+        )
         assertEquals(listFiles.size, 0)
     }
 }
