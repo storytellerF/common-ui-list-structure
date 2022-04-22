@@ -2,7 +2,6 @@ package com.storyteller_f.file_system.instance.local.document;
 
 import android.content.Context;
 
-import com.storyteller_f.file_system.FileSystemUriSaver;
 import com.storyteller_f.file_system.Filter;
 
 
@@ -13,19 +12,19 @@ public class MountedLocalFileInstance extends DocumentLocalFileInstance {
 
     public MountedLocalFileInstance(Filter filter, Context context, String path) {
         super(filter, context, path, Name, ROOT_URI);
-        updateRoot();
-        initCurrentFile();
+        updateRootKey();
+        initDocumentFile();
     }
 
     public MountedLocalFileInstance(Context context, String path) {
         super(context, path, Name, ROOT_URI);
-        updateRoot();
-        initCurrentFile();
+        updateRootKey();
+        initDocumentFile();
     }
 
     public MountedLocalFileInstance(String prefix, Context context) {
         super(context, Name, ROOT_URI);
-        updateRoot();
+        updateRootKey();
         this.prefix = prefix;
     }
 

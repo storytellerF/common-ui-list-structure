@@ -5,7 +5,6 @@ import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
-import androidx.core.content.FileProvider;
 import androidx.documentfile.provider.DocumentFile;
 
 
@@ -97,11 +96,12 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
     }
 
     /**
+     * 获取指定目录的document file
      * @param destination         目标地址
      * @param createDirectoryFlag 决定在没有文件夹的时候是否创建文件夹
      * @return 返回目标文件
      */
-    public DocumentFile getCurrent(String destination, boolean createDirectoryFlag) {
+    public DocumentFile getSpecialDocumentFile(String destination, boolean createDirectoryFlag) {
         if (!destination.startsWith(prefix)) {
             Log.e(TAG, "getCurrent: prefix 出错 " + prefix);
             return null;
@@ -152,7 +152,7 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
         return new DirectoryItemModel(name, path, false, current.lastModified());
     }
 
-    public void updateRoot() {
+    public void updateRootKey() {
         key = FileSystemUriSaver.getInstance().saveUri(sharedPreferenceName, sharedPreferenceKey, context);
         if (key == null) {
             Log.e(TAG, "updateRoot: 获取root失败:" + path + "，没有授予权限");
@@ -164,12 +164,12 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
      *
      * @return true 代表初始化成功
      */
-    public boolean initCurrentFile() {
+    public boolean initDocumentFile() {
         if (key == null) {
             Log.e(TAG, "initCurrentFile: 获取root 失败" + path + "不会进行初始化");
             return false;
         }
-        current = getCurrent(path, false);
+        current = getSpecialDocumentFile(path, false);
         if (current == null)
             Log.e(TAG, "initCurrentFile: 初始化失败" + path);
         return current != null;
@@ -185,9 +185,9 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
     }
 
     public boolean createDirectory() {
-        DocumentFile destDirectory = getCurrent(path, true);
+        DocumentFile destDirectory = getSpecialDocumentFile(path, true);
         if (destDirectory != null) {
-            return initCurrentFile();
+            return initDocumentFile();
         }
         return false;
     }
@@ -198,11 +198,11 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
         if (parent == null) {
             return false;
         } else {
-            DocumentFile destDirectory = getCurrent(parent, true);
-            if (destDirectory != null) {
-                DocumentFile file1 = destDirectory.createFile("*/*", file.getName());
+            DocumentFile parentDocumentFile = getSpecialDocumentFile(parent, true);
+            if (parentDocumentFile != null) {
+                DocumentFile file1 = parentDocumentFile.createFile("*/*", file.getName());
                 if (file1 != null) {
-                    return initCurrentFile();
+                    return initDocumentFile();
                 }
             }
         }
@@ -409,7 +409,7 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
         }
         if (path.startsWith(prefix)) {
             this.path = path;
-            initCurrentFile();
+            initDocumentFile();
         }
     }
 

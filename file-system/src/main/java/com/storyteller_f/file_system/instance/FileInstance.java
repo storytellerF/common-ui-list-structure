@@ -212,7 +212,6 @@ public abstract class FileInstance {
     /**
      * 基本上完成的工作是构造函数应该做的
      * 如果文件不存在也不会创建，因为在这种状态下，创建文件没有优势
-     * 需要自行判断是否需要判断
      *
      * @param path 新的文件路径，路径的根应该和当前对象符合，如果需要跨根跳转，需要使用FileInstanceFactory完成
      */

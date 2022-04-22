@@ -2,7 +2,6 @@ package com.storyteller_f.file_system.instance.local.document;
 
 import android.content.Context;
 
-import com.storyteller_f.file_system.FileSystemUriSaver;
 import com.storyteller_f.file_system.Filter;
 
 
@@ -16,13 +15,13 @@ public class ExternalDocumentLocalFileInstance extends DocumentLocalFileInstance
 
     public ExternalDocumentLocalFileInstance(Filter filter, Context context, String path) {
         super(filter, context, path, Name, STORAGE_URI);
-        updateRoot();
-        initCurrentFile();
+        updateRootKey();
+        initDocumentFile();
     }
 
     public ExternalDocumentLocalFileInstance(String prefix, Context context) {
         super(context, Name, STORAGE_URI);
-        updateRoot();
+        updateRootKey();
         this.prefix = prefix;
     }
 
