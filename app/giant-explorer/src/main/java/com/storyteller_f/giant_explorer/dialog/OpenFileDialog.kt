@@ -61,17 +61,17 @@ class OpenFileDialog : CommonDialogFragment<DialogOpenFileBinding>(DialogOpenFil
             }
         }
         dataType.data.observe(viewLifecycleOwner) {
-            binding.openByPicture.setBackgroundColor(mixColor(mimeTypeFromExtension, "image"))
-            binding.openByText.setBackgroundColor(mixColor(mimeTypeFromExtension, "text"))
-            binding.openByMusic.setBackgroundColor(mixColor(mimeTypeFromExtension, "audio"))
-            binding.openByVideo.setBackgroundColor(mixColor(mimeTypeFromExtension, "video"))
-            binding.openByHex.setBackgroundColor(mixColor(mimeTypeFromExtension, "application"))
+            binding.openByPicture.setBackgroundColor(mixColor(mimeTypeFromExtension, it, "image"))
+            binding.openByText.setBackgroundColor(mixColor(mimeTypeFromExtension, it, "text"))
+            binding.openByMusic.setBackgroundColor(mixColor(mimeTypeFromExtension, it, "audio"))
+            binding.openByVideo.setBackgroundColor(mixColor(mimeTypeFromExtension, it, "video"))
+            binding.openByHex.setBackgroundColor(mixColor(mimeTypeFromExtension, it, "application"))
         }
 
     }
 
-    private fun mixColor(mimeType: String?, t: String): Int {
-        val elements = (if (dataType.data.value?.mimeType?.contains(t) == true) 1 else 2) + if (mimeType?.contains(t) == true) 4 else 8
+    private fun mixColor(mimeType: String?, contentInfo: ContentInfo?, t: String): Int {
+        val elements = (if (contentInfo?.mimeType?.contains(t) == true) 1 else 2) + if (mimeType?.contains(t) == true) 4 else 8
         return elements.let {
             when (it) {
                 1, 9 -> Color.parseColor("#A25B32")
