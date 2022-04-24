@@ -300,24 +300,20 @@ suspend fun LifecycleOwner.service(
     count: Int
 ) = contextSuspend {
     val listSafe = path.listSafe()
-    val listFiles = listSafe.files.plus(listSafe.directories)
-    if ((start - 1) * count > listFiles.size) SimpleResponse(0)
+    val listFiles = listSafe.directories.plus(listSafe.files)
+    val total = listFiles.size
+    if ((start - 1) * count > total) SimpleResponse(0)
     else {
-        val map = listFiles
-            .subList(
-                (start - 1) * count, start + min(count, listFiles.size - start)
-            )
+        val items = listFiles
+            .subList((start - 1) * count, start + min(count, total - start))
             .map { model ->
                 val length = if (model is FileItemModel) {
                     requireDatabase().mdDao().search(model.fullPath)?.let {
-                        if (it.lastUpdateTime > model.lastModifiedTime) {
-                            model.md = it.data
-                        }
+                        if (it.lastUpdateTime > model.lastModifiedTime) model.md = it.data
                     }
                     if (model is TorrentFileModel)
                         requireDatabase().torrentDao().search(model.fullPath)?.let {
-                            if (it.lastUpdateTime > model.lastModifiedTime)
-                                model.torrentName = it.torrent
+                            if (it.lastUpdateTime > model.lastModifiedTime) model.torrentName = it.torrent
                         }
                     model.size
                 } else {
@@ -332,9 +328,9 @@ suspend fun LifecycleOwner.service(
                 FileModel(model.name, model.fullPath, length, model.isHidden, model)
             }
         SimpleResponse(
-            total = listFiles.size,
-            items = map,
-            if (listFiles.size > count * start) start + 1 else null
+            total = total,
+            items = items,
+            if (total > count * start) start + 1 else null
         )
     }
 }
