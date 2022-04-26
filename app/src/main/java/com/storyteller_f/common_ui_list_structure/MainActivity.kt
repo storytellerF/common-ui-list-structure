@@ -10,6 +10,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
@@ -22,6 +23,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowInsetsCompat
@@ -46,6 +49,7 @@ import com.storyteller_f.ui_list.event.viewBinding
 import com.storyteller_f.view_holder_compose.ComposeSourceAdapter
 import com.storyteller_f.view_holder_compose.ComposeViewHolder
 import com.storyteller_f.view_holder_compose.EDComposeView
+import com.storyteller_f.view_holder_compose.EdComposeViewEventEmitter
 import kotlinx.coroutines.flow.collectLatest
 
 class MainActivity : AppCompatActivity() {
@@ -95,6 +99,7 @@ class MainActivity : AppCompatActivity() {
             viewModel.content?.collectLatest {
                 adapter.submitData(it)
             }
+            binding.content.recyclerView.smoothScrollToPosition(0)
         }
         binding.root.setOnApplyWindowInsetsListener { v, insets ->
             printInsets(insets)
@@ -147,14 +152,17 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MainActivity"
     }
+
     @Preview
     @Composable
     fun ButtonGroup() {
         Row(
-            modifier = Modifier.background(
-                Brush.linearGradient(listOf(Color.Black, Color.White)),
-                RoundedCornerShape(3)
-            )
+            modifier = Modifier
+                .background(
+                    Brush.linearGradient(listOf(Color.Black, Color.White)),
+                    RoundedCornerShape(3)
+                )
+                .fillMaxWidth()
         ) {
             Button(
                 onClick = {
@@ -247,25 +255,41 @@ class SeparatorItemHolder(val info: String) : DataItemHolder() {
 @BindItemHolder(SeparatorItemHolder::class)
 class SeparatorViewHolder(edComposeView: EDComposeView) :
     ComposeViewHolder<SeparatorItemHolder>(edComposeView) {
-    @OptIn(ExperimentalFoundationApi::class)
     override fun bindData(itemHolder: SeparatorItemHolder) {
         edComposeView.composeView.setContent {
-            Card(backgroundColor = colorResource(id = R.color.separatorBackground),
-                modifier = Modifier.combinedClickable(
-                    onClick = { edComposeView.notifyClickEvent("card") },
-                    onLongClick = { edComposeView.notifyLongClickEvent("card") }
-                )) {
-                Text(
-                    text = itemHolder.info, modifier = Modifier.padding(12.dp),
-                    color = colorResource(
-                        id = R.color.separatorText
-                    ),
-                    fontSize = 25.sp,
-                )
-            }
-
+            Separator(itemHolder, edComposeView)
         }
     }
+
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Preview
+@Composable
+private fun Separator(@PreviewParameter(RepoSeparatorProvider::class) itemHolder: SeparatorItemHolder, edComposeView: EdComposeViewEventEmitter = EdComposeViewEventEmitter.default) {
+    Card(backgroundColor = colorResource(id = R.color.separatorBackground),
+        modifier = Modifier
+            .combinedClickable(
+                onClick = { edComposeView.notifyClickEvent("card") },
+                onLongClick = { edComposeView.notifyLongClickEvent("card") }
+            )
+            .fillMaxWidth()) {
+        Text(
+            text = itemHolder.info, modifier = Modifier.padding(12.dp),
+            color = colorResource(
+                id = R.color.separatorText
+            ),
+            fontSize = 25.sp,
+        )
+    }
+}
+
+class RepoSeparatorProvider : PreviewParameterProvider<SeparatorItemHolder> {
+    override val values: Sequence<SeparatorItemHolder>
+        get() = sequence {
+            yield(SeparatorItemHolder("90.000+ starts"))
+        }
+
 }
 
 private val RepoItemHolder.roundedStarCount: Int

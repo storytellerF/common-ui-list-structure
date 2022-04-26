@@ -7,17 +7,37 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.storyteller_f.ui_list.core.AbstractAdapterViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 
+interface EdComposeViewEventEmitter {
+    fun notifyClickEvent(viewName: String)
+
+    fun notifyLongClickEvent(viewName: String)
+
+
+    companion object{
+        val default = object : EdComposeViewEventEmitter {
+            override fun notifyClickEvent(viewName: String) {
+                TODO("Not yet implemented")
+            }
+
+            override fun notifyLongClickEvent(viewName: String) {
+                TODO("Not yet implemented")
+            }
+        }
+    }
+}
+
 class EDComposeView(
     context: Context,
-) {
+) : EdComposeViewEventEmitter {
     val composeView: ComposeView = ComposeView(context = context)
     var clickListener: ((String) -> Unit)? = null
     var longClickListener: ((String) -> Unit)? = null
-    fun notifyClickEvent(viewName: String) {
+
+    override fun notifyClickEvent(viewName: String) {
         clickListener?.invoke(viewName)
     }
 
-    fun notifyLongClickEvent(viewName: String) {
+    override fun notifyLongClickEvent(viewName: String) {
         longClickListener?.invoke(viewName)
     }
 
