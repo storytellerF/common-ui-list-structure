@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import android.os.StatFs
 import android.util.Log
+import androidx.annotation.WorkerThread
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.instance.FileInstance
@@ -38,12 +39,13 @@ object FileInstanceFactory {
     }
 
     @JvmStatic
+    @WorkerThread
     fun getFileInstance(path: String, context: Context): FileInstance {
         return getFileInstance(filter, path, context)
     }
 
-    val regularPath = listOf("/system", "/mnt")
-
+    private val regularPath = listOf("/system", "/mnt")
+    @WorkerThread
     private fun getFileInstance(filter: Filter?, path: String, context: Context): FileInstance {
         assert(!path.endsWith("/"))
         return when {

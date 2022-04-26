@@ -1,9 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:title="@string/string_add">
-        <menu >
-            <item android:title="@string/string_add_file" android:id="@+id/add_file" />
-            <item android:title="@string/string_add_directory" android:id="@+id/add_directory"/>
+        <menu>
+            <item
+                android:id="@+id/add_file"
+                android:title="@string/string_add_file" />
+            <item
+                android:id="@+id/add_directory"
+                android:title="@string/string_add_directory" />
         </menu>
     </item>
+    <item
+        android:id="@+id/filterHiddenFile"
+        android:checkable="true"
+        android:title="过滤隐藏文件" />
+
 </menu>

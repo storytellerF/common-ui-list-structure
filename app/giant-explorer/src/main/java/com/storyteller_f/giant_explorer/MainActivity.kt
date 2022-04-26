@@ -3,20 +3,17 @@ package com.storyteller_f.giant_explorer
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
-import android.graphics.Color
 import android.os.Bundle
 import android.os.IBinder
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
-import android.view.WindowManager
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import androidx.core.view.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
@@ -25,9 +22,10 @@ import com.storyteller_f.common_ktx.context
 import com.storyteller_f.common_ktx.contextSuspend
 import com.storyteller_f.common_ktx.mm
 import com.storyteller_f.common_ui.SimpleActivity
+import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui.setVisible
 import com.storyteller_f.common_ui.supportNavigatorBarImmersive
-import com.storyteller_f.common_vm_ktx.GenericValueModel
+import com.storyteller_f.common_vm_ktx.combine
 import com.storyteller_f.common_vm_ktx.toDiff
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.file_system.FileInstanceFactory
@@ -35,6 +33,8 @@ import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.fileIcon
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
+import com.storyteller_f.file_system.model.FileSystemItemModel
+import com.storyteller_f.file_system.model.FilesAndDirectories
 import com.storyteller_f.file_system.model.TorrentFileModel
 import com.storyteller_f.file_system.requestPermissionForSpecialPath
 import com.storyteller_f.file_system_ktx.isDirectory
@@ -54,35 +54,41 @@ import com.storyteller_f.ui_list.event.viewBinding
 import com.storyteller_f.ui_list.ui.ListWithState
 import com.storyteller_f.ui_list.ui.valueContains
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
 import java.util.*
+import kotlin.concurrent.thread
 import kotlin.math.min
+import kotlin.system.measureTimeMillis
+
+class FileExplorerSession : ViewModel() {
+    val filterHiddenFile = MutableLiveData(false)
+    val selected = MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>()
+    val fileInstance = MutableLiveData<FileInstance>()
+}
 
 class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
-    private val fileInstance by vm {
-        GenericValueModel<FileInstance>().apply {
-            data.value =
-                FileInstanceFactory.getFileInstance("/storage/emulated/0", this@MainActivity)
-        }
-    }
-
-
     private val data by search(
         SearchProducer(::service) { it, _ ->
-            FileItemHolder(it, selected)
+            FileItemHolder(it, session.selected)
         }
     )
-    private val binding by viewBinding(ActivityMainBinding::inflate)
     private val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
-    private val selected = MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>()
+    private val binding by viewBinding(ActivityMainBinding::inflate)
+    private val session by vm {
+        FileExplorerSession()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setSupportActionBar(binding.toolbar)
         supportNavigatorBarImmersive(binding.root)
-        supportDirectoryContent(binding.content, binding.pathMan, adapter, fileInstance, data, selected)
-        selected.toDiff().observe(this) {
+        supportDirectoryContent(binding.content, binding.pathMan, adapter, data, session)
+        session.selected.toDiff().observe(this) {
         }
         context {
             //连接服务
@@ -100,6 +106,18 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
                 )
             }
         }
+        if (session.fileInstance.value == null)
+            scope.launch {
+                suspendCancellableCoroutine<FileInstance> {
+                    thread {
+                        val result = Result.success(FileInstanceFactory.getFileInstance("/storage/emulated/0", this@MainActivity))
+                        it.resumeWith(result)
+                    }
+                }.let {
+                    session.fileInstance.value = it
+                }
+            }
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -107,12 +125,22 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
         return super.onCreateOptionsMenu(menu)
     }
 
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        menu?.findItem(R.id.filterHiddenFile)?.let {
+            it.isChecked = session.filterHiddenFile.value == true
+        }
+        return super.onPrepareOptionsMenu(menu)
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.add_file -> {
                 fragment<NewNameDialog.NewNameResult>("add-file", NewNameDialog::class.java) { bundle ->
-                    fileInstance.data.value?.toChild(bundle.name, true, true)
+                    session.fileInstance.value?.toChild(bundle.name, true, true)
                 }
+            }
+            R.id.filterHiddenFile -> {
+                session.filterHiddenFile.value = session.filterHiddenFile.value?.not() ?: true
             }
         }
         return super.onOptionsItemSelected(item)
@@ -122,8 +150,8 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
     @BindClickEvent(FileItemHolder::class)
     fun toChild(itemHolder: FileItemHolder) {
         if (itemHolder.file.item.isDirectory) {
-            val old = fileInstance.data.value ?: return
-            fileInstance.data.value = FileInstanceFactory.toChild(
+            val old = session.fileInstance.value ?: return
+            session.fileInstance.value = FileInstanceFactory.toChild(
                 old,
                 itemHolder.file.name,
                 false,
@@ -154,7 +182,7 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
             result.path.mm {
                 FileInstanceFactory.getFileInstance(it, this)
             }.mm {
-                selected.value?.map { pair -> (pair.first as FileItemHolder).file.item } ?: listOf(itemHolder.file.item)
+                session.selected.value?.map { pair -> (pair.first as FileItemHolder).file.item } ?: listOf(itemHolder.file.item)
             }.let {
                 println(it)
             }
@@ -194,30 +222,28 @@ fun LifecycleOwner.supportDirectoryContent(
     listWithState: ListWithState,
     pathMan: EditablePathMan,
     adapter: SimpleSourceAdapter<FileItemHolder, FileViewHolder>,
-    fileInstance: GenericValueModel<FileInstance>,
-    data: SimpleSearchViewModel<FileModel, FileInstance, FileItemHolder>,
-    selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>?,
+    data: SimpleSearchViewModel<FileModel, FileExplorerSearch, FileItemHolder>,
+    session: FileExplorerSession
 ) {
     val owner = if (this is Fragment) viewLifecycleOwner else this
     context {
-        listWithState.sourceUp(
-            adapter,
-            lifecycleScope,
-            selected,
-            flash = ListWithState.Companion::remote
-        )
-        fileInstance.data.observe(owner) {
+        listWithState.sourceUp(adapter, lifecycleScope, session.selected, flash = ListWithState.Companion::remote)
+        combine("file" to session.fileInstance, "filter" to session.filterHiddenFile).observe(owner) {
+            val filter = it["filter"] as Boolean
+            val file = it["file"] as FileInstance? ?: return@observe
+            val path = file.path
             //检查权限
             lifecycleScope.launch {
-                if (!checkPathPermission(it.path)) {
-                    requestPermissionForSpecialPath(it.path)
+                if (!checkPathPermission(path)) {
+                    requestPermissionForSpecialPath(path)
                 }
             }
-            data.observer(lifecycleScope, it) { pagingData ->
+
+            data.observerInScope(lifecycleScope, FileExplorerSearch(file, filter)) { pagingData ->
                 listWithState.recyclerView.smoothScrollToPosition(0)
                 adapter.submitData(pagingData)
             }
-            pathMan.drawPath(it.path)
+            pathMan.drawPath(path)
         }
         callbackFlow {
             pathMan.setPathChangeListener {
@@ -227,7 +253,7 @@ fun LifecycleOwner.supportDirectoryContent(
                 pathMan.setPathChangeListener(null)
             }
         }.onEach {
-            fileInstance.data.value = FileInstanceFactory.getFileInstance(it, this)
+            session.fileInstance.value = FileInstanceFactory.getFileInstance(it, this)
         }.launchIn(owner.lifecycleScope)
     }
 }
@@ -294,13 +320,27 @@ fun format1024(args: Long): String {
     return String.format(Locale.CHINA, "%.2f %s", size, flags[flag])
 }
 
+class FileExplorerSearch(val path: FileInstance, val filterHiddenFile: Boolean)
+
 suspend fun LifecycleOwner.service(
-    path: FileInstance,
+    searchQuery: FileExplorerSearch,
     start: Int,
     count: Int
 ) = contextSuspend {
-    val listSafe = path.listSafe()
-    val listFiles = listSafe.directories.plus(listSafe.files)
+    val listSafe = suspendCancellableCoroutine<FilesAndDirectories> {
+        thread {
+            searchQuery.path.listSafe().run {
+                it.resumeWith(Result.success(this))
+            }
+        }
+    }
+
+    val predicate: (FileSystemItemModel) -> Boolean = {
+        !it.isHidden || !searchQuery.filterHiddenFile
+    }
+    val listFiles = if (searchQuery.filterHiddenFile) {
+        listSafe.directories.filter(predicate).plus(listSafe.files.filter(predicate))
+    } else listSafe.directories.plus(listSafe.files)
     val total = listFiles.size
     if ((start - 1) * count > total) SimpleResponse(0)
     else {
@@ -318,9 +358,9 @@ suspend fun LifecycleOwner.service(
                     model.size
                 } else {
                     //从数据库中查找
-                    val search = requireDatabase().sizeDao().search(model.fullPath)
-                    if (search != null && search.lastUpdateTime > model.lastModifiedTime) {
-                        search.size
+                    val directory = requireDatabase().sizeDao().search(model.fullPath)
+                    if (directory != null && directory.lastUpdateTime > model.lastModifiedTime) {
+                        directory.size
                     } else -1
                 }
                 model.formattedSize = format1024(length)
