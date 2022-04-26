@@ -99,7 +99,6 @@ class MainActivity : AppCompatActivity() {
             viewModel.content?.collectLatest {
                 adapter.submitData(it)
             }
-            binding.content.recyclerView.smoothScrollToPosition(0)
         }
         binding.root.setOnApplyWindowInsetsListener { v, insets ->
             printInsets(insets)

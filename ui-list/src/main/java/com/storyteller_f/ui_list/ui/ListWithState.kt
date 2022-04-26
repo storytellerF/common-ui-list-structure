@@ -27,16 +27,13 @@ import com.storyteller_f.ui_list.data.isLoading
 import com.storyteller_f.ui_list.data.isNotLoading
 import com.storyteller_f.ui_list.databinding.ListWithStateBinding
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 
 class ListWithState @JvmOverloads constructor(
     context: Context,
     attributeSet: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : FrameLayout(context, attributeSet) {
+) : FrameLayout(context, attributeSet, defStyleAttr) {
     private fun flash(uiState: UIState) {
         // Only show the list if refresh succeeds.
         binding.list.isVisible = uiState.data
@@ -65,13 +62,22 @@ class ListWithState @JvmOverloads constructor(
             adapter.withLoadStateHeaderAndFooter(header = SimpleLoadStateAdapter { adapter.retry() },
                 footer = SimpleLoadStateAdapter { adapter.retry() }), adapter
         )
-        callbackFlow {
+        val callbackFlow = callbackFlow {
             val listener: (CombinedLoadStates) -> Unit = {
                 trySend(it)
             }
             adapter.addLoadStateListener(listener)
             awaitClose { adapter.removeLoadStateListener(listener) }
-        }.map {
+        }
+        callbackFlow.distinctUntilChanged { old, new ->
+            old.mediator?.refresh.isLoading == new.mediator?.refresh.isLoading
+        }.onEach {
+            if (it.mediator?.refresh.isNotLoading) {
+                binding.list.smoothScrollToPosition(0)
+            }
+        }.launchIn(lifecycleCoroutineScope)
+        callbackFlow.map {
+            println(it.mediator)
             flash(it, adapter.itemCount)
         }.onEach {
             flash(it)
