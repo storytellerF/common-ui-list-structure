@@ -3,13 +3,17 @@ package com.storyteller_f.giant_explorer
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Color
 import android.os.Bundle
 import android.os.IBinder
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
+import android.view.WindowManager
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.view.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
@@ -22,6 +26,7 @@ import com.storyteller_f.common_ktx.contextSuspend
 import com.storyteller_f.common_ktx.mm
 import com.storyteller_f.common_ui.SimpleActivity
 import com.storyteller_f.common_ui.setVisible
+import com.storyteller_f.common_ui.supportNavigatorBarImmersive
 import com.storyteller_f.common_vm_ktx.GenericValueModel
 import com.storyteller_f.common_vm_ktx.toDiff
 import com.storyteller_f.common_vm_ktx.vm
@@ -74,14 +79,9 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
     private val selected = MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        supportDirectoryContent(
-            binding.content,
-            binding.pathMan,
-            adapter,
-            fileInstance,
-            data,
-            selected
-        )
+        setSupportActionBar(binding.toolbar)
+        supportNavigatorBarImmersive(binding.root)
+        supportDirectoryContent(binding.content, binding.pathMan, adapter, fileInstance, data, selected)
         selected.toDiff().observe(this) {
         }
         context {

@@ -32,6 +32,7 @@ import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ui.navigator
 import com.storyteller_f.common_ui.status
+import com.storyteller_f.common_ui.supportNavigatorBarImmersive
 import com.storyteller_f.common_ui.updateMargins
 import com.storyteller_f.common_ui_list_structure.api.requireReposService
 import com.storyteller_f.common_ui_list_structure.databinding.ActivityMainBinding
@@ -45,6 +46,7 @@ import com.storyteller_f.ui_list.event.viewBinding
 import com.storyteller_f.view_holder_compose.ComposeSourceAdapter
 import com.storyteller_f.view_holder_compose.ComposeViewHolder
 import com.storyteller_f.view_holder_compose.EDComposeView
+import kotlinx.coroutines.flow.collectLatest
 
 class MainActivity : AppCompatActivity() {
     private val binding by viewBinding(ActivityMainBinding::inflate)
@@ -88,6 +90,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding.content.sourceUp(adapter, lifecycleScope)
+        supportNavigatorBarImmersive(binding.root)
         lifecycleScope.launchWhenResumed {
             viewModel.content?.collectLatest {
                 adapter.submitData(it)
