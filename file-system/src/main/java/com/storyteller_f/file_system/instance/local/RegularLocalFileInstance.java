@@ -381,12 +381,14 @@ public class RegularLocalFileInstance extends LocalFileInstance {
 
     @Override
     public LocalFileInstance toParent() {
-        return null;
+        return new RegularLocalFileInstance(context, filter, new File(path).getParent());
     }
 
     @Override
     public void changeToParent() {
-
+        File parentFile = new File(path).getParentFile();
+        path = parentFile.getPath();
+        name = parentFile.getName();
     }
 
     @Override

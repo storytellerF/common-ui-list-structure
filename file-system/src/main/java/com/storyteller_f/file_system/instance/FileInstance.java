@@ -170,6 +170,7 @@ public abstract class FileInstance {
 
     /**
      * 移动指针，指向他的父文件夹
+     * 不应该考虑能否转换成功
      *
      * @return 返回他的文件夹
      * @throws Exception 无法获得父文件夹
@@ -178,6 +179,7 @@ public abstract class FileInstance {
 
     /**
      * 移动指针，把当前对象指向他的父文件夹
+     * 不应该考虑能否转换成功
      *
      * @throws Exception 无法变成父文件夹
      */
@@ -200,6 +202,7 @@ public abstract class FileInstance {
     /**
      * 调用者只能是一个路径
      * 如果目标文件或者文件夹不存在，将会自动创建，因为在这种状态下，新建文件速度快，特别是外部存储目录
+     * 不应该考虑能否转换成功
      *
      * @param name     名称
      * @param reCreate 是否创建
@@ -207,11 +210,20 @@ public abstract class FileInstance {
      */
     public abstract FileInstance toChild(String name, boolean isFile, boolean reCreate) throws Exception;
 
+    /**
+     * 不应该考虑能否转换成功
+     *
+     * @param name
+     * @param isFile
+     * @param reCreate
+     * @throws Exception
+     */
     public abstract void changeToChild(String name, boolean isFile, boolean reCreate) throws Exception;
 
     /**
      * 基本上完成的工作是构造函数应该做的
      * 如果文件不存在也不会创建，因为在这种状态下，创建文件没有优势
+     * 不应该考虑能否转换成功
      *
      * @param path 新的文件路径，路径的根应该和当前对象符合，如果需要跨根跳转，需要使用FileInstanceFactory完成
      */

@@ -9,6 +9,7 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
@@ -113,6 +114,17 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
             }
         }
         session.init(this)
+        onBackPressedDispatcher.addCallback(this) {
+            val value = session.fileInstance.value
+            if (value != null) {
+                if (value.path == "/" || value.path == FileInstanceFactory.rootUserEmulatedPath) {
+                    isEnabled = false
+                    onBackPressed()
+                } else {
+                    session.fileInstance.value = FileInstanceFactory.toParent(value, this@MainActivity)
+                }
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
