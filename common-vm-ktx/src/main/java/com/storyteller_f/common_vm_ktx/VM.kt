@@ -8,6 +8,7 @@ package com.storyteller_f.common_vm_ktx
 
 import androidx.activity.ComponentActivity
 import androidx.annotation.MainThread
+import androidx.annotation.NonNull
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import androidx.savedstate.SavedStateRegistryOwner
@@ -77,7 +78,7 @@ inline fun <reified VM : ViewModel, T> T.kvm(
     return KeyedViewModelLazy(keyPrefixProvider, VM::class, { viewModelStore },
         {
             object : AbstractSavedStateViewModelFactory(this, null) {
-                override fun <T : ViewModel?> create(
+                override fun <T : ViewModel> create(
                     key: String,
                     modelClass: Class<T>,
                     handle: SavedStateHandle
@@ -93,7 +94,7 @@ inline fun <reified VM : ViewModel, T> T.vm(
     return ViewModelLazy(VM::class, { viewModelStore },
         {
             object : AbstractSavedStateViewModelFactory(this, null) {
-                override fun <T : ViewModel?> create(
+                override fun <T : ViewModel> create(
                     key: String,
                     modelClass: Class<T>,
                     handle: SavedStateHandle
@@ -112,7 +113,7 @@ inline fun <reified VM : ViewModel> Fragment.avm(
     return ViewModelLazy(VM::class, { requireActivity().viewModelStore },
         {
             object : AbstractSavedStateViewModelFactory(requireActivity(), null) {
-                override fun <T : ViewModel?> create(
+                override fun <T : ViewModel> create(
                     key: String,
                     modelClass: Class<T>,
                     handle: SavedStateHandle

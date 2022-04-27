@@ -4,22 +4,17 @@ import android.os.Parcelable
 import androidx.lifecycle.MutableLiveData
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ui.CommonDialogFragment
-import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui.setFragmentResult
+import com.storyteller_f.common_ui.setOnClick
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.file_system.FileInstanceFactory
-import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.*
 import com.storyteller_f.giant_explorer.databinding.DialogRequestPathBinding
 import com.storyteller_f.ui_list.core.SearchProducer
 import com.storyteller_f.ui_list.core.SimpleSourceAdapter
 import com.storyteller_f.ui_list.core.search
-import kotlinx.coroutines.launch
-import com.storyteller_f.common_ui.setOnClick
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.parcelize.Parcelize
-import kotlin.concurrent.thread
 
 class RequestPathDialog :
     CommonDialogFragment<DialogRequestPathBinding>(DialogRequestPathBinding::inflate) {
@@ -51,17 +46,7 @@ class RequestPathDialog :
             dismiss()
         }
         supportDirectoryContent(binding.content, binding.pathMan, adapter, data, session)
-        if (session.fileInstance.value == null)
-            scope.launch {
-                suspendCancellableCoroutine<FileInstance> {
-                    thread {
-                        val result = Result.success(FileInstanceFactory.getFileInstance("/storage/emulated/0", requireContext()))
-                        it.resumeWith(result)
-                    }
-                }.let {
-                    session.fileInstance.value = it
-                }
-            }
+        session.init(this)
     }
 
     @BindClickEvent(FileItemHolder::class)

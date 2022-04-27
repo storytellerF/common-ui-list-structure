@@ -11,10 +11,8 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.*
+import androidx.lifecycle.Observer
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.annotation_defination.BindLongClickEvent
@@ -63,12 +61,28 @@ import java.io.File
 import java.util.*
 import kotlin.concurrent.thread
 import kotlin.math.min
-import kotlin.system.measureTimeMillis
 
 class FileExplorerSession : ViewModel() {
     val filterHiddenFile = MutableLiveData(false)
     val selected = MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>()
     val fileInstance = MutableLiveData<FileInstance>()
+
+    fun init(owner: LifecycleOwner) {
+        owner.context {
+            if (fileInstance.value == null)
+                owner.scope.launch {
+                    suspendCancellableCoroutine<FileInstance> {
+                        thread {
+                            val result = Result.success(FileInstanceFactory.getFileInstance("/storage/emulated/0", context = this@context))
+                            it.resumeWith(result)
+                        }
+                    }.let {
+                        fileInstance.value = it
+                    }
+                }
+        }
+    }
+
 }
 
 class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
@@ -88,36 +102,17 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
         setSupportActionBar(binding.toolbar)
         supportNavigatorBarImmersive(binding.root)
         supportDirectoryContent(binding.content, binding.pathMan, adapter, data, session)
-        session.selected.toDiff().observe(this) {
-        }
+        session.selected.toDiff().observe(this, Observer {
+        })
         context {
             //连接服务
             try {
-                bindService(
-                    Intent(this, FileOperateService::class.java),
-                    connection,
-                    BIND_AUTO_CREATE
-                )
+                bindService(Intent(this, FileOperateService::class.java), connection, BIND_AUTO_CREATE)
             } catch (e: Exception) {
-                bindService(
-                    Intent(this, FileOperateService::class.java),
-                    connection,
-                    0
-                )
+                bindService(Intent(this, FileOperateService::class.java), connection, 0)
             }
         }
-        if (session.fileInstance.value == null)
-            scope.launch {
-                suspendCancellableCoroutine<FileInstance> {
-                    thread {
-                        val result = Result.success(FileInstanceFactory.getFileInstance("/storage/emulated/0", this@MainActivity))
-                        it.resumeWith(result)
-                    }
-                }.let {
-                    session.fileInstance.value = it
-                }
-            }
-
+        session.init(this)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
