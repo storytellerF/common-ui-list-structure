@@ -1,6 +1,7 @@
 package com.storyteller_f.giant_explorer.dialog
 
 import android.os.Parcelable
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.MutableLiveData
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ui.CommonDialogFragment
@@ -18,9 +19,7 @@ import kotlinx.parcelize.Parcelize
 
 class RequestPathDialog :
     CommonDialogFragment<DialogRequestPathBinding>(DialogRequestPathBinding::inflate) {
-    private val session by vm {
-        FileExplorerSession()
-    }
+    private val session by viewModels<FileExplorerSession>()
 
     @Parcelize
     class RequestPathResult(val path: String) : Parcelable

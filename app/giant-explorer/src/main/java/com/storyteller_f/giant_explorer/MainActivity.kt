@@ -10,7 +10,9 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.addCallback
+import androidx.activity.viewModels
 import androidx.core.content.FileProvider
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
@@ -63,8 +65,8 @@ import java.util.*
 import kotlin.concurrent.thread
 import kotlin.math.min
 
-class FileExplorerSession : ViewModel() {
-    val filterHiddenFile = MutableLiveData(false)
+class FileExplorerSession(private val state: SavedStateHandle) : ViewModel() {
+    val filterHiddenFile = state.getLiveData("filter-hidden-file", false)
     val selected = MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>()
     val fileInstance = MutableLiveData<FileInstance>()
 
@@ -94,9 +96,7 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
     )
     private val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
     private val binding by viewBinding(ActivityMainBinding::inflate)
-    private val session by vm {
-        FileExplorerSession()
-    }
+    private val session by viewModels<FileExplorerSession>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
