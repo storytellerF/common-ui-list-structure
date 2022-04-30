@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import androidx.fragment.app.Fragment
 import androidx.room.*
+import kotlinx.coroutines.flow.Flow
 
 @Entity(tableName = "file-size-record")
 class FileSizeRecord(
@@ -27,6 +28,13 @@ class FileTorrentRecord(
     val absolutePath: String,
     val torrent: String,
     val lastUpdateTime: Long
+)
+
+@Entity(tableName = "big-time-task", primaryKeys = ["absolutePath", "workerName"])
+class BigTimeTask(
+    val absolutePath: String,
+    val enable: Boolean,
+    val workerName: String
 )
 
 @Dao
@@ -59,8 +67,20 @@ interface FileTorrentRecordDao {
     suspend fun save(record: FileTorrentRecord)
 }
 
+@Dao
+interface BigTimeWorkerDao {
+    @Query("select * from `big-time-task`")
+    fun fetch(): Flow<List<BigTimeTask>>
+
+    @Query("select * from `big-time-task`")
+    suspend fun fetchSuspend(): List<BigTimeTask>
+
+    @Insert
+    suspend fun add(task: BigTimeTask)
+}
+
 @Database(
-    entities = [FileSizeRecord::class, FileMDRecord::class, FileTorrentRecord::class],
+    entities = [FileSizeRecord::class, FileMDRecord::class, FileTorrentRecord::class, BigTimeTask::class],
     version = 2,
     exportSchema = false
 )
@@ -69,6 +89,7 @@ abstract class FileSizeRecordDatabase : RoomDatabase() {
     abstract fun sizeDao(): FileSizeRecordDao
     abstract fun mdDao(): FileMDRecordDao
     abstract fun torrentDao(): FileTorrentRecordDao
+    abstract fun bigTimeDao(): BigTimeWorkerDao
 
     companion object {
 

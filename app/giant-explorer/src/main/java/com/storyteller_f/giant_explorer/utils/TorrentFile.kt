@@ -1,4 +1,4 @@
-package com.storyteller_f.giant_explorer
+package com.storyteller_f.giant_explorer.utils
 
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.multi_core.StoppableTask

@@ -1,4 +1,4 @@
-package com.storyteller_f.giant_explorer;
+package com.storyteller_f.giant_explorer.utils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

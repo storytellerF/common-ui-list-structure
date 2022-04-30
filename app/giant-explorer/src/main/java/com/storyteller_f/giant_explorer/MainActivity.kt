@@ -12,7 +12,6 @@ import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.viewModels
 import androidx.core.content.FileProvider
-import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
@@ -28,7 +27,6 @@ import com.storyteller_f.common_ui.setVisible
 import com.storyteller_f.common_ui.supportNavigatorBarImmersive
 import com.storyteller_f.common_vm_ktx.combine
 import com.storyteller_f.common_vm_ktx.toDiff
-import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.fileIcon
@@ -65,7 +63,7 @@ import java.util.*
 import kotlin.concurrent.thread
 import kotlin.math.min
 
-class FileExplorerSession(private val state: SavedStateHandle) : ViewModel() {
+class FileExplorerSession(state: SavedStateHandle) : ViewModel() {
     val filterHiddenFile = state.getLiveData("filter-hidden-file", false)
     val selected = MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>()
     val fileInstance = MutableLiveData<FileInstance>()
@@ -149,6 +147,9 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
             R.id.filterHiddenFile -> {
                 session.filterHiddenFile.value = session.filterHiddenFile.value?.not() ?: true
             }
+            R.id.background_task -> {
+                startActivity(Intent(this, BackgroundTaskConfigActivity::class.java))
+            }
         }
         return super.onOptionsItemSelected(item)
     }
@@ -191,7 +192,7 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
             }.mm {
                 session.selected.value?.map { pair -> (pair.first as FileItemHolder).file.item } ?: listOf(itemHolder.file.item)
             }.let {
-                println(it)
+                println("request path:$it")
             }
         }
     }
@@ -202,9 +203,9 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
             Toast.makeText(this@MainActivity, "服务已连接", Toast.LENGTH_SHORT).show()
             fileOperateBinder = service as FileOperateBinder
             fileOperateBinder?.setFileOperateResult(this@MainActivity)
-            fileOperateBinder?.state?.observe(this@MainActivity) {
+            fileOperateBinder?.state?.observe(this@MainActivity, Observer {
                 Toast.makeText(this@MainActivity, it.toString(), Toast.LENGTH_SHORT).show()
-            }
+            })
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -235,9 +236,9 @@ fun LifecycleOwner.supportDirectoryContent(
     val owner = if (this is Fragment) viewLifecycleOwner else this
     context {
         listWithState.sourceUp(adapter, lifecycleScope, session.selected, flash = ListWithState.Companion::remote)
-        combine("file" to session.fileInstance, "filter" to session.filterHiddenFile).observe(owner) {
-            val filter = it["filter"] as Boolean
-            val file = it["file"] as FileInstance? ?: return@observe
+        combine("file" to session.fileInstance, "filter" to session.filterHiddenFile).observe(owner, Observer {
+            val filter = it["filter"] as? Boolean ?: return@Observer
+            val file = it["file"] as FileInstance? ?: return@Observer
             val path = file.path
             //检查权限
             lifecycleScope.launch {
@@ -251,7 +252,7 @@ fun LifecycleOwner.supportDirectoryContent(
                 adapter.submitData(pagingData)
             }
             pathMan.drawPath(path)
-        }
+        })
         callbackFlow {
             pathMan.setPathChangeListener {
                 trySend(it)

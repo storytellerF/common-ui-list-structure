@@ -83,23 +83,26 @@ open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHold
     }
 }
 
+/**
+ * 支持排序，需要搭配SimpleDataViewModel和SimpleDataRepository
+ */
 class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<IH>> :
     ListAdapter<IH, VH>(SimpleSourceAdapter.common_diff_util as DiffUtil.ItemCallback<IH>) {
     var last = mutableListOf<IH>()
 
+    /**
+     * 下一次的observe 不处理
+     */
     private val mPending: AtomicBoolean = AtomicBoolean(true)
 
     var dataHook: SimpleDataViewModel.DataHook<*, IH, *>? = null
-    override fun onCreateViewHolder(
-        parent: ViewGroup,
-        viewType: Int
-    ): VH = list[viewType].invoke(parent) as VH
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH = list[viewType].invoke(parent) as VH
 
     override fun getItemViewType(position: Int): Int {
         val item = getItem(position) ?: return super.getItemViewType(position)
         return registerCenter[item::class.java]!!
     }
-
 
     override fun onBindViewHolder(holder: VH, position: Int) =
         holder.onBind(getItem(position) as IH)
@@ -126,5 +129,19 @@ class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<IH>>
         dataHook?.viewModel?.reset(last)
         notifyItemMoved(from, to)
     }
+
+}
+
+class ManualAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<IH>> : ListAdapter<IH, VH>(SimpleSourceAdapter.common_diff_util as DiffUtil.ItemCallback<IH>) {
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH = list[viewType].invoke(parent) as VH
+
+    override fun getItemViewType(position: Int): Int {
+        val item = getItem(position) ?: return super.getItemViewType(position)
+        return registerCenter[item::class.java]!!
+    }
+
+    override fun onBindViewHolder(holder: VH, position: Int) =
+        holder.onBind(getItem(position) as IH)
 
 }

@@ -7,7 +7,6 @@ import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ui.CommonDialogFragment
 import com.storyteller_f.common_ui.setFragmentResult
 import com.storyteller_f.common_ui.setOnClick
-import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.*
@@ -31,13 +30,17 @@ class RequestPathDialog :
     )
     private val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
 
+    companion object {
+        val requestKey = "request-path"
+    }
+
     override fun onBindViewEvent(binding: DialogRequestPathBinding) {
         binding.bottom.requestScreenOn.setOnClick {
             it.keepScreenOn = it.isChecked
         }
         binding.bottom.positive.setOnClick {
             session.fileInstance.value?.path?.let {
-                setFragmentResult("request-path", RequestPathResult(it))
+                setFragmentResult(Companion.requestKey, RequestPathResult(it))
                 dismiss()
             }
         }

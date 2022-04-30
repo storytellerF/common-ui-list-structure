@@ -16,7 +16,7 @@ import androidx.viewbinding.ViewBinding
 open class SimpleActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
-        waiting.forEach { t ->
+        waitingInActivity.forEach { t ->
             supportFragmentManager.setFragmentResultListener(t.key, this, t.value.action)
         }
     }
@@ -26,14 +26,14 @@ open class SimpleActivity : AppCompatActivity() {
             arguments = parameters
         }.show(supportFragmentManager, requestKey)
         val callback = { s: String, r: Bundle ->
-            if (waiting.containsKey(s)) {
+            if (waitingInActivity.containsKey(s)) {
                 r.getParcelable<T>("result")?.let {
                     action.invoke(it)
                 }
-                waiting.remove(s)
+                waitingInActivity.remove(s)
             }
         }
-        waiting[requestKey] = FragmentAction(callback)
+        waitingInActivity[requestKey] = FragmentAction(callback)
         supportFragmentManager.setFragmentResultListener(requestKey, this, callback)
     }
 }
@@ -46,7 +46,7 @@ fun ComponentActivity.supportNavigatorBarImmersive(view: View) {
     view.setOnApplyWindowInsetsListener { v, insets ->
         val top = WindowInsetsCompat.toWindowInsetsCompat(insets, v).getInsets(WindowInsetsCompat.Type.statusBars())
         v.updatePadding(top = top.top)
-        println("top:$top")
+//        println("top:$top")
         insets
     }
 }

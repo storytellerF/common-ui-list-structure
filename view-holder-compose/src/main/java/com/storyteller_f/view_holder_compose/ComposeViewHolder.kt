@@ -1,7 +1,6 @@
 package com.storyteller_f.view_holder_compose
 
 import android.content.Context
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.storyteller_f.ui_list.core.AbstractAdapterViewHolder

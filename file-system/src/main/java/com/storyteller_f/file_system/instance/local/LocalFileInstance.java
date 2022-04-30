@@ -56,7 +56,6 @@ public abstract class LocalFileInstance extends BaseContextFileInstance {
     @WorkerThread
     public FilesAndDirectories listSafe() {
         try {
-            Log.d(TAG, "listWalk() called");
             ArrayList<FileItemModel> files = new ArrayList<>();
             ArrayList<DirectoryItemModel> directories = new ArrayList<>();
             return getFilesAndDirectoriesOnWalk(files, directories);

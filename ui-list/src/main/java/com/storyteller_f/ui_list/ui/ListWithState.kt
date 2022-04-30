@@ -10,10 +10,7 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
 import androidx.core.view.isVisible
-import androidx.lifecycle.LifecycleCoroutineScope
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.map
+import androidx.lifecycle.*
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.ConcatAdapter
@@ -28,13 +25,14 @@ import com.storyteller_f.ui_list.data.isNotLoading
 import com.storyteller_f.ui_list.databinding.ListWithStateBinding
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 class ListWithState @JvmOverloads constructor(
     context: Context,
     attributeSet: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attributeSet, defStyleAttr) {
-    private fun flash(uiState: UIState) {
+    fun flash(uiState: UIState) {
         // Only show the list if refresh succeeds.
         binding.list.isVisible = uiState.data
         binding.emptyList.isVisible = uiState.empty
@@ -260,10 +258,15 @@ class ListWithState @JvmOverloads constructor(
         binding.retryButton.setOnClickListener {
             vm.retry()
         }
-        vm.loadState.map { simple(it.loadState, it.itemCount) }.observe(lifecycleOwner) {
+        vm.loadState.map { simple(it.loadState, it.itemCount) }.observe(lifecycleOwner, Observer {
             flash(it)
-        }
+        })
         setupSwapSupport(adapter)
+    }
+
+    fun manualUp(adapter: ManualAdapter<*, *>) {
+        recyclerView.adapter = adapter
+        setupLinearLayoutManager()
     }
 
     val recyclerView get() = binding.list

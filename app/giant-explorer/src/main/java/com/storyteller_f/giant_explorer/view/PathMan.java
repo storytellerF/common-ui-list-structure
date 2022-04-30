@@ -82,7 +82,7 @@ public class PathMan extends HorizontalScrollView {
     }
 
     public void init(Context context) {
-        Log.d(TAG, "init() called");
+//        Log.d(TAG, "init() called");
         linearLayout = new LinearLayout(context);
         addView(linearLayout, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT);
         drawPath("");
@@ -92,7 +92,7 @@ public class PathMan extends HorizontalScrollView {
             int contentWidth = linearLayout.getWidth();
             int containerWidth = getWidth();
             int result = contentWidth - containerWidth;
-            Log.i(TAG, "scroll: 内容宽度:" + contentWidth + ";容器宽度:" + containerWidth + ";result:" + result);
+//            Log.i(TAG, "scroll: 内容宽度:" + contentWidth + ";容器宽度:" + containerWidth + ";result:" + result);
             if (result > 0) {
                 scrollTo(result, 0);
             }
@@ -105,7 +105,7 @@ public class PathMan extends HorizontalScrollView {
      * @param path 全路径
      */
     public void drawPath(String path) {
-        Log.d(TAG, "drawPath() called with: path = [" + path + "]");
+//        Log.d(TAG, "drawPath() called with: path = [" + path + "]");
         pathBuilder.delete(0, pathBuilder.length());
         pathBuilder.append(path);
         LinearLayout.LayoutParams layoutParams = getLayoutParam();

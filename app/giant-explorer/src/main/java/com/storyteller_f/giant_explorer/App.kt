@@ -13,8 +13,11 @@ import com.storyteller_f.giant_explorer.database.FileMDRecord
 import com.storyteller_f.giant_explorer.database.FileSizeRecord
 import com.storyteller_f.giant_explorer.database.FileTorrentRecord
 import com.storyteller_f.giant_explorer.database.requireDatabase
+import com.storyteller_f.giant_explorer.utils.TorrentFile
 import com.storyteller_f.multi_core.StoppableTask
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.math.BigInteger
 import java.security.MessageDigest
@@ -24,31 +27,21 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         Temp.add()
-        WorkManager.getInstance(this).enqueueUniqueWork(
-            "big-time-folder",
-            ExistingWorkPolicy.KEEP,
-            OneTimeWorkRequestBuilder<FolderWorker>().setInputData(
-                Data.Builder().putStringArray("folders", arrayOf("/storage/emulated/0/Download"))
-                    .build()
-            ).build()
-        )
-        WorkManager.getInstance(this).enqueueUniqueWork(
-            "big-time-md",
-            ExistingWorkPolicy.KEEP,
-            OneTimeWorkRequestBuilder<MDWorker>().setInputData(
-                Data.Builder().putStringArray("folders", arrayOf("/storage/emulated/0/Download", "/storage/emulated/0/Alarms"))
-                    .build()
-            ).build()
-        )
-
-        WorkManager.getInstance(this).enqueueUniqueWork(
-            "big-time-torrent",
-            ExistingWorkPolicy.KEEP,
-            OneTimeWorkRequestBuilder<TorrentWorker>().setInputData(
-                Data.Builder().putStringArray("folders", arrayOf("/storage/emulated/0/Download"))
-                    .build()
-            ).build()
-        )
+        MainScope().launch {
+            val groupBy = requireDatabase().bigTimeDao().fetchSuspend().groupBy {
+                it.workerName
+            }
+            groupBy.forEach { entry ->
+                WorkManager.getInstance(this@App).enqueueUniqueWork(
+                    entry.key,
+                    ExistingWorkPolicy.KEEP,
+                    OneTimeWorkRequestBuilder<FolderWorker>().setInputData(
+                        Data.Builder().putStringArray("folders", entry.value.mapNotNull { if (it.enable) it.absolutePath else null }.toTypedArray())
+                            .build()
+                    ).build()
+                )
+            }
+        }
     }
 }
 
@@ -92,7 +85,6 @@ abstract class BigTimeWorker(
 class FolderWorker(context: Context, workerParams: WorkerParameters) :
     BigTimeWorker(context, workerParams) {
     override suspend fun work(context: Context, path: String): WorkerResult {
-        Log.d(TAG, "work() called with: context = $context, path = $path")
         return try {
             val fileInstance = FileInstanceFactory.getFileInstance(path, context)
             val record = context.requireDatabase().sizeDao().search(path)
@@ -144,7 +136,6 @@ class MDWorker(context: Context, workerParams: WorkerParameters) :
     BigTimeWorker(context, workerParams) {
 
     override suspend fun work(context: Context, path: String): WorkerResult {
-        Log.d(TAG, "work() called with: context = $context, path = $path")
         return try {
             val fileInstance = FileInstanceFactory.getFileInstance(path, context)
             val listSafe = fileInstance.listSafe()
@@ -181,7 +172,6 @@ class TorrentWorker(context: Context, workerParams: WorkerParameters) :
     BigTimeWorker(context, workerParams) {
 
     override suspend fun work(context: Context, path: String): WorkerResult {
-        Log.d(TAG, "work() called with: context = $context, path = $path")
         return try {
             val fileInstance = FileInstanceFactory.getFileInstance(path, context)
             val listSafe = fileInstance.listSafe()

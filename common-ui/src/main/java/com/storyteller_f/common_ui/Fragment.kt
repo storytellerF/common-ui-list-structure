@@ -1,12 +1,16 @@
 package com.storyteller_f.common_ui
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.os.Parcelable
+import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.IdRes
+import androidx.annotation.NavigationRes
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -47,6 +51,9 @@ abstract class CommonFragment<T : ViewBinding>(
 
     override fun onStart() {
         super.onStart()
+        waitingInFragment.forEach { t ->
+            parentFragmentManager.setFragmentResultListener(t.key, this, t.value.action)
+        }
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?) = false
@@ -56,6 +63,23 @@ abstract class CommonFragment<T : ViewBinding>(
     override fun onKeyUp(keyCode: Int, event: KeyEvent?) = false
 
     override fun onKeyMultiple(keyCode: Int, count: Int, event: KeyEvent?) = false
+
+    fun <T : Parcelable> fragment(requestKey: String, action: (T) -> Unit) {
+        val callback = { s: String, r: Bundle ->
+            if (waitingInFragment.containsKey(s)) {
+                r.getParcelable<T>("result")?.let {
+                    action.invoke(it)
+                }
+                waitingInFragment.remove(s)
+            }
+        }
+        waitingInFragment[requestKey] = FragmentAction(callback)
+        parentFragmentManager.setFragmentResultListener(requestKey, this, callback)
+    }
+
+    companion object {
+        private const val TAG = "Fragment"
+    }
 }
 
 /**
@@ -83,40 +107,6 @@ fun Fragment.toolbarCompose() =
     (activity!!.findViewById<Toolbar>(R.id.toolbar)).getChildAt(0) as
             ComposeView
 
-/**
- * @param viewBindingFactory inflate
- */
-abstract class CommonDialogFragment<T : ViewBinding>(
-    val viewBindingFactory: (LayoutInflater) -> T
-) : DialogFragment(), KeyEvent.Callback {
-    lateinit var binding: T
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        binding = viewBindingFactory(layoutInflater)
-        (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
-        onBindViewEvent(binding)
-        return binding.root
-    }
-
-    abstract fun onBindViewEvent(binding: T)
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
-    }
-
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?) = false
-
-    override fun onKeyLongPress(keyCode: Int, event: KeyEvent?) = false
-
-    override fun onKeyUp(keyCode: Int, event: KeyEvent?) = false
-
-    override fun onKeyMultiple(keyCode: Int, count: Int, event: KeyEvent?) = false
-}
-
 val LifecycleOwner.scope
     get() = when (this) {
         is Fragment -> viewLifecycleOwner.lifecycleScope
@@ -124,9 +114,18 @@ val LifecycleOwner.scope
         else -> throw Exception("unknown type $this")
     }
 
+val LifecycleOwner.cycle
+    @SuppressLint("RestrictedApi")
+    get() = when (this) {
+        is Fragment -> viewLifecycleOwner.lifecycle
+        is ComponentActivity -> lifecycle
+        else -> throw Exception("unknown type $this")
+    }
+
 class FragmentAction(val action: (String, Bundle) -> Unit)
 
-val waiting = mutableMapOf<String, FragmentAction>()
+val waitingInActivity = mutableMapOf<String, FragmentAction>()
+val waitingInFragment = mutableMapOf<String, FragmentAction>()
 
 /**
  * 3 代表支持三种类型
