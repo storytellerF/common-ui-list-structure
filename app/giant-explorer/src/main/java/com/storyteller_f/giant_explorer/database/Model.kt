@@ -77,6 +77,9 @@ interface BigTimeWorkerDao {
 
     @Insert
     suspend fun add(task: BigTimeTask)
+
+    @Update
+    fun update(task: BigTimeTask)
 }
 
 @Database(

@@ -339,7 +339,7 @@ class AdapterProcessor : AbstractProcessor() {
                                         parameterList(
                                             e.parameterList
                                         )
-                                    })\n" +
+                                    });\n" +
                                     "                         return null;//fragment return\n" +
                                     "                     });//fragment end\n")
                     } +

@@ -2,6 +2,7 @@ package com.storyteller_f.giant_explorer
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,9 +16,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ui.CommonFragment
+import com.storyteller_f.common_ui.end
 import com.storyteller_f.common_ui.scope
+import com.storyteller_f.common_ui.waitingDialog
 import com.storyteller_f.giant_explorer.database.BigTimeTask
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentFirstBinding
@@ -29,8 +33,11 @@ import com.storyteller_f.ui_list.ui.ListWithState
 import com.storyteller_f.view_holder_compose.ComposeViewHolder
 import com.storyteller_f.view_holder_compose.EDComposeView
 import com.storyteller_f.view_holder_compose.EdComposeViewEventEmitter
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.lang.Exception
 
 class FirstFragment : CommonFragment<FragmentFirstBinding>(FragmentFirstBinding::inflate) {
     private val adapter = ManualAdapter<DataItemHolder, AbstractAdapterViewHolder<DataItemHolder>>()
@@ -52,6 +59,22 @@ class FirstFragment : CommonFragment<FragmentFirstBinding>(FragmentFirstBinding:
                     })
                 }
                 adapter.submitList(list)
+            }
+        }
+    }
+
+    @BindClickEvent(BigTimeTaskItemHolder::class, "check")
+    fun onCheck(view: View, itemHolder: BigTimeTaskItemHolder) {
+        scope.launch {
+            val waitingDialog = waitingDialog()
+            try {
+                withContext(Dispatchers.IO) {
+                    requireDatabase().bigTimeDao().update(BigTimeTask(itemHolder.bigTimeWorker.absolutePath, !itemHolder.bigTimeWorker.enable, itemHolder.bigTimeWorker.workerName))
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), e.localizedMessage ?: e.javaClass.toString(), Toast.LENGTH_SHORT).show()
+            } finally {
+                waitingDialog.end()
             }
         }
     }
