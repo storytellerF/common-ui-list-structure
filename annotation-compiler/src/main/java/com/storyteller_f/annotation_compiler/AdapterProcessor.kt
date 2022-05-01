@@ -217,6 +217,9 @@ class AdapterProcessor : AbstractProcessor() {
         return eventMap
     }
 
+    /**
+     * 建立item holder 与view holder 的关系
+     */
     private fun getHolder(
         roundEnvironment: RoundEnvironment?,
         typeElement: TypeElement

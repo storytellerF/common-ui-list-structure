@@ -52,7 +52,7 @@ class ListWithState @JvmOverloads constructor(
 
     fun sourceUp(
         adapter: SimpleSourceAdapter<*, *>,
-        lifecycleCoroutineScope: LifecycleCoroutineScope,
+        lifecycleOwner: LifecycleOwner,
         selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>? = null,
         flash: ((CombinedLoadStates, Int) -> UIState) = Companion::simple
     ) {
@@ -67,19 +67,27 @@ class ListWithState @JvmOverloads constructor(
             adapter.addLoadStateListener(listener)
             awaitClose { adapter.removeLoadStateListener(listener) }
         }
-        callbackFlow.distinctUntilChanged { old, new ->
-            old.mediator?.refresh.isLoading == new.mediator?.refresh.isLoading
-        }.onEach {
-            if (it.mediator?.refresh.isNotLoading) {
-                binding.list.smoothScrollToPosition(0)
+        lifecycleOwner.lifecycleScope.launch {
+            lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    callbackFlow.distinctUntilChanged { old, new ->
+                        old.mediator?.refresh.isLoading == new.mediator?.refresh.isLoading
+                    }.shareIn(lifecycleOwner.lifecycleScope, SharingStarted.WhileSubscribed()).collectLatest {
+                        if (it.mediator?.refresh.isNotLoading) {
+                            binding.list.smoothScrollToPosition(0)
+                        }
+                    }
+                }
+                launch {
+                    callbackFlow.map {
+                        println(it.mediator)
+                        flash(it, adapter.itemCount)
+                    }.stateIn(lifecycleOwner.lifecycleScope, SharingStarted.WhileSubscribed(), UIState.empty).collectLatest {
+                        flash(it)
+                    }
+                }
             }
-        }.launchIn(lifecycleCoroutineScope)
-        callbackFlow.map {
-            println(it.mediator)
-            flash(it, adapter.itemCount)
-        }.onEach {
-            flash(it)
-        }.launchIn(lifecycleCoroutineScope)
+        }
 
         if (selected != null) {
             setupSelectableSupport(selected)
@@ -286,6 +294,11 @@ class ListWithState @JvmOverloads constructor(
         val refresh: Boolean?
     ) {
         val showErrorPage get() = retry || error != null
+        companion object {
+            val empty = UIState(false, false, false, false, null, null)
+            val loading = UIState(false, false, false, true, null, null)
+
+        }
     }
 
     companion object {

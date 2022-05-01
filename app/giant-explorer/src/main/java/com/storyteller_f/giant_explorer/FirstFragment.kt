@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.flowWithLifecycle
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ui.CommonFragment
@@ -34,7 +35,10 @@ import com.storyteller_f.view_holder_compose.ComposeViewHolder
 import com.storyteller_f.view_holder_compose.EDComposeView
 import com.storyteller_f.view_holder_compose.EdComposeViewEventEmitter
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.lang.Exception
@@ -48,18 +52,22 @@ class FirstFragment : CommonFragment<FragmentFirstBinding>(FragmentFirstBinding:
 
     override fun onBindViewEvent(binding: FragmentFirstBinding) {
         binding.content.manualUp(adapter)
+        binding.content.flash(ListWithState.UIState.loading)
         scope.launch {
-            requireDatabase().bigTimeDao().fetch().map { list -> list.groupBy { it.workerName } }.collect {
-                binding.content.flash(ListWithState.UIState(false, it.isNotEmpty(), empty = false, progress = false, null, null))
-                val list = mutableListOf<DataItemHolder>()
-                it.forEach { (workName, result) ->
-                    list.add(TaskTypeHolder(workName))
-                    list.addAll(result.map {
-                        BigTimeTaskItemHolder(it)
-                    })
+            requireDatabase().bigTimeDao().fetch().map { list -> list.groupBy { it.workerName } }
+                .flowWithLifecycle(viewLifecycleOwner.lifecycle)
+                .shareIn(scope, SharingStarted.WhileSubscribed())
+                .collect {
+                    binding.content.flash(ListWithState.UIState(false, it.isNotEmpty(), empty = false, progress = false, null, null))
+                    val list = mutableListOf<DataItemHolder>()
+                    it.forEach { (workName, result) ->
+                        list.add(TaskTypeHolder(workName))
+                        list.addAll(result.map {
+                            BigTimeTaskItemHolder(it)
+                        })
+                    }
+                    adapter.submitList(list)
                 }
-                adapter.submitList(list)
-            }
         }
     }
 

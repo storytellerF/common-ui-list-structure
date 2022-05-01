@@ -54,8 +54,7 @@ import com.storyteller_f.ui_list.ui.ListWithState
 import com.storyteller_f.ui_list.ui.valueContains
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
@@ -235,7 +234,7 @@ fun LifecycleOwner.supportDirectoryContent(
 ) {
     val owner = if (this is Fragment) viewLifecycleOwner else this
     context {
-        listWithState.sourceUp(adapter, lifecycleScope, session.selected, flash = ListWithState.Companion::remote)
+        listWithState.sourceUp(adapter, owner, session.selected, flash = ListWithState.Companion::remote)
         combine("file" to session.fileInstance, "filter" to session.filterHiddenFile).observe(owner, Observer {
             val filter = it["filter"] as? Boolean ?: return@Observer
             val file = it["file"] as FileInstance? ?: return@Observer
@@ -253,16 +252,18 @@ fun LifecycleOwner.supportDirectoryContent(
             }
             pathMan.drawPath(path)
         })
-        callbackFlow {
-            pathMan.setPathChangeListener {
-                trySend(it)
+        owner.lifecycleScope.launch {
+            callbackFlow {
+                pathMan.setPathChangeListener {
+                    trySend(it)
+                }
+                awaitClose {
+                    pathMan.setPathChangeListener(null)
+                }
+            }.flowWithLifecycle(owner.lifecycle).collectLatest {
+                session.fileInstance.value = FileInstanceFactory.getFileInstance(it, this@context)
             }
-            awaitClose {
-                pathMan.setPathChangeListener(null)
-            }
-        }.onEach {
-            session.fileInstance.value = FileInstanceFactory.getFileInstance(it, this)
-        }.launchIn(owner.lifecycleScope)
+        }
     }
 }
 

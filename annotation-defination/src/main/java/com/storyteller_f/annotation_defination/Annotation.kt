@@ -5,4 +5,4 @@ import kotlin.reflect.KProperty1
 
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.CLASS)
-annotation class BindItemHolder(val kProperty1: KClass<out Any>)
+annotation class BindItemHolder(val itemHolderClass: KClass<out Any>)
