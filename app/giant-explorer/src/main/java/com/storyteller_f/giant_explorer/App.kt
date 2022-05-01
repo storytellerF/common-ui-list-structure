@@ -28,14 +28,17 @@ class App : Application() {
         super.onCreate()
         Temp.add()
         MainScope().launch {
-            val groupBy = requireDatabase().bigTimeDao().fetchSuspend().groupBy {
+            requireDatabase().bigTimeDao().fetchSuspend().groupBy {
                 it.workerName
-            }
-            groupBy.forEach { entry ->
+            }.forEach { entry ->
                 WorkManager.getInstance(this@App).enqueueUniqueWork(
                     entry.key,
                     ExistingWorkPolicy.KEEP,
-                    OneTimeWorkRequestBuilder<FolderWorker>().setInputData(
+                    when (entry.key) {
+                        "message digest" -> OneTimeWorkRequestBuilder<MDWorker>()
+                        "folder size" -> OneTimeWorkRequestBuilder<FolderWorker>()
+                        else -> OneTimeWorkRequestBuilder<TorrentWorker>()
+                    }.setInputData(
                         Data.Builder().putStringArray("folders", entry.value.mapNotNull { if (it.enable) it.absolutePath else null }.toTypedArray())
                             .build()
                     ).build()
