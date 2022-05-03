@@ -9,7 +9,7 @@ import com.storyteller_f.common_ui.setFragmentResult
 import com.storyteller_f.common_ui.setOnClick
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system_ktx.isDirectory
-import com.storyteller_f.giant_explorer.*
+import com.storyteller_f.giant_explorer.control.*
 import com.storyteller_f.giant_explorer.databinding.DialogRequestPathBinding
 import com.storyteller_f.ui_list.core.SearchProducer
 import com.storyteller_f.ui_list.core.SimpleSourceAdapter

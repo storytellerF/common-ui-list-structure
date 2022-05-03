@@ -1,9 +1,8 @@
-package com.storyteller_f.giant_explorer
+package com.storyteller_f.giant_explorer.control
 
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,7 +26,6 @@ import com.storyteller_f.giant_explorer.database.BigTimeTask
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentFirstBinding
 import com.storyteller_f.ui_list.core.AbstractAdapterViewHolder
-import com.storyteller_f.ui_list.core.AdapterViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.core.ManualAdapter
 import com.storyteller_f.ui_list.ui.ListWithState
@@ -38,7 +36,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.lang.Exception

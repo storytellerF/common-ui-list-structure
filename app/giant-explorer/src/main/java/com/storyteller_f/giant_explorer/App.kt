@@ -8,7 +8,7 @@ import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.TorrentFileModel
-import com.storyteller_f.giant_explorer.adapter_produce.Temp
+import com.storyteller_f.giant_explorer.control.adapter_produce.Temp
 import com.storyteller_f.giant_explorer.database.FileMDRecord
 import com.storyteller_f.giant_explorer.database.FileSizeRecord
 import com.storyteller_f.giant_explorer.database.FileTorrentRecord

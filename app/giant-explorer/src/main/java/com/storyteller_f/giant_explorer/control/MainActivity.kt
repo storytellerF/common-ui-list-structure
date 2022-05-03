@@ -1,4 +1,4 @@
-package com.storyteller_f.giant_explorer
+package com.storyteller_f.giant_explorer.control
 
 import android.content.ComponentName
 import android.content.Intent
@@ -40,6 +40,7 @@ import com.storyteller_f.file_system.model.FilesAndDirectories
 import com.storyteller_f.file_system.model.TorrentFileModel
 import com.storyteller_f.file_system.requestPermissionForSpecialPath
 import com.storyteller_f.file_system_ktx.isDirectory
+import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.ActivityMainBinding
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileBinding

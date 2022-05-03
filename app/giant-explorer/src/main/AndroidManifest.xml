@@ -14,12 +14,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Common_ui_list_structure">
         <activity
-            android:name=".BackgroundTaskConfigActivity"
+            android:name=".control.BackgroundTaskConfigActivity"
             android:exported="false"
             android:label="@string/title_activity_background_task_config"
             android:theme="@style/Theme.Common_ui_list_structure.NoActionBar" />
         <activity
-            android:name=".MainActivity"
+            android:name=".control.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
