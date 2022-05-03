@@ -125,4 +125,6 @@ dependencies {
 
     implementation 'com.j256.simplemagic:simplemagic:1.17'
 
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.9.1'
+
 }
