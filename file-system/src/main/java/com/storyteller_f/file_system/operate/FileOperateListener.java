@@ -10,14 +10,14 @@ public interface FileOperateListener {
      *
      * @param type 暂时没有用到
      */
-    void onOneFile(FileInstance fileInstance, int type, Message message);
+    void onFileDone(FileInstance fileInstance, int type, Message message);
 
     /**
      * 当一个文件夹处理完成
      *
      * @param type 暂时没有用到
      */
-    void onOneDirectory(FileInstance fileInstance, int type, Message message);
+    void onDirectoryDone(FileInstance fileInstance, int type, Message message);
 
     void onError(Message message, int type);
 }

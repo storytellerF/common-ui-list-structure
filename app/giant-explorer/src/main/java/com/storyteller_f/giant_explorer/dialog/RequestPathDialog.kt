@@ -31,7 +31,7 @@ class RequestPathDialog :
     private val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
 
     companion object {
-        val requestKey = "request-path"
+        const val requestKey = "request-path"
     }
 
     override fun onBindViewEvent(binding: DialogRequestPathBinding) {
@@ -40,7 +40,7 @@ class RequestPathDialog :
         }
         binding.bottom.positive.setOnClick {
             session.fileInstance.value?.path?.let {
-                setFragmentResult(Companion.requestKey, RequestPathResult(it))
+                setFragmentResult(requestKey, RequestPathResult(it))
                 dismiss()
             }
         }

@@ -44,3 +44,9 @@ fun <T : View> T.setVisible(visible: Boolean, block: (T) -> Unit) {
 
 val Context.lf: LayoutInflater get() = LayoutInflater.from(this)
 val View.lf: LayoutInflater get() = context.lf
+
+fun List<View>.onVisible(view: View) {
+    forEach {
+        it.isVisible = it === view
+    }
+}

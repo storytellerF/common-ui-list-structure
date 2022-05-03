@@ -209,3 +209,16 @@ fun <T> LiveData<T>.toDiff(compare: ((T, T) -> Boolean)? = null): MediatorLiveDa
     }
     return mediatorLiveData
 }
+
+fun <T> LiveData<T>.toDiffNoNull(compare: ((T, T) -> Boolean)? = null): MediatorLiveData<Pair<T, T>> {
+    val mediatorLiveData = MediatorLiveData<Pair<T, T>>()
+    var oo: T? = value
+    mediatorLiveData.addSource(this) {
+        val l = oo
+        if (l != null && it != null && compare?.invoke(l, it) != true) {
+            mediatorLiveData.value = Pair(l, it)
+        }
+        oo = it
+    }
+    return mediatorLiveData
+}

@@ -3,7 +3,6 @@ package com.storyteller_f.file_system.operate
 import android.content.Context
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.FileInstance
-import com.storyteller_f.file_system.instance.local.RegularLocalFileInstance
 import com.storyteller_f.file_system.message.Message
 import com.storyteller_f.multi_core.StoppableTask
 import java.lang.Exception
@@ -13,13 +12,14 @@ import java.util.concurrent.Callable
 abstract class FileOperator(val task: StoppableTask, val fileInstance: FileInstance, val context: Context) : Callable<Boolean?> {
     var fileOperateListener: FileOperateListener? = null
 }
+
 /**
  * target 必须是一个目录
  */
-abstract class FileOperatorAim(
+abstract class FileOperatorWithTarget(
     task: StoppableTask,
     fileInstance: FileInstance,
-    val target: FileInstance,
+    target: FileInstance,
     context: Context
 ) : FileOperator(task, fileInstance, context) {
     init {
@@ -38,9 +38,9 @@ abstract class FileOperatorSelf(
 class FileCopy(
     task: StoppableTask,
     fileInstance: FileInstance,
-    target: FileInstance,
+    val target: FileInstance,
     context: Context
-) : FileOperatorAim(task, fileInstance, target, context) {
+) : FileOperatorWithTarget(task, fileInstance, target, context) {
     override fun call(): Boolean {
         return if (fileInstance.isFile) {
             //新建一个文件
@@ -63,7 +63,7 @@ class FileCopy(
                 FileInstanceFactory.toChild(t, it.name, false, context, true)
             )
         }
-        fileOperateListener?.onOneDirectory(fileInstance, 0, Message("${f.name} success"))
+        fileOperateListener?.onDirectoryDone(fileInstance, 0, Message("${f.name} success"))
         return true
     }
 
@@ -79,7 +79,7 @@ class FileCopy(
                         out.write(byteArray)
                         byteArray.clear()
                     }
-                    fileOperateListener?.onOneFile(f, 0, Message(""))
+                    fileOperateListener?.onFileDone(f, 0, Message(""))
                     return true
                 }
 
@@ -103,17 +103,17 @@ class FileCopy(
 class FileMove(
     task: StoppableTask,
     fileInstance: FileInstance,
-    target: FileInstance,
+    val target: FileInstance,
     context: Context
-) : FileOperatorAim(task, fileInstance, target, context), FileOperateListener {
+) : FileOperatorWithTarget(task, fileInstance, target, context), FileOperateListener {
     override fun call(): Boolean {
         return FileCopy(task, fileInstance, target, context).also {
             it.fileOperateListener = this
         }.call()
     }
 
-    override fun onOneFile(fileInstance: FileInstance?, type: Int, message: Message?) {
-        fileOperateListener?.onOneFile(fileInstance, type, Message("move success"))
+    override fun onFileDone(fileInstance: FileInstance?, type: Int, message: Message?) {
+        fileOperateListener?.onFileDone(fileInstance, type, Message("move success"))
         try {
             fileInstance?.deleteFileOrEmptyDirectory()
         } catch (e: Exception) {
@@ -121,8 +121,8 @@ class FileMove(
         }
     }
 
-    override fun onOneDirectory(fileInstance: FileInstance?, type: Int, message: Message?) {
-        fileOperateListener?.onOneDirectory(fileInstance, type, Message("move directory success"))
+    override fun onDirectoryDone(fileInstance: FileInstance?, type: Int, message: Message?) {
+        fileOperateListener?.onDirectoryDone(fileInstance, type, Message("move directory success"))
         try {
             fileInstance?.deleteFileOrEmptyDirectory()
         } catch (e: Exception) {
@@ -138,9 +138,9 @@ class FileMove(
 class FileMoveCmd(
     task: StoppableTask,
     fileInstance: FileInstance,
-    target: FileInstance,
+    val target: FileInstance,
     context: Context
-) : FileOperatorAim(task, fileInstance, target, context) {
+) : FileOperatorWithTarget(task, fileInstance, target, context) {
     override fun call(): Boolean {
         val exec = Runtime.getRuntime().exec("mv ${fileInstance.path} ${target.path}")
         val waitFor = exec.waitFor()
@@ -148,7 +148,7 @@ class FileMoveCmd(
         if (b) {
             fileOperateListener?.onError(Message("exec return $waitFor"), 0)
         } else {
-            fileOperateListener?.onOneDirectory(fileInstance, 0, Message("success"))
+            fileOperateListener?.onDirectoryDone(fileInstance, 0, Message("success"))
         }
         return b
     }
@@ -167,6 +167,9 @@ class FileDelete(
         return deleteDirectory(fileInstance)
     }
 
+    /**
+     * @return 是否成功
+     */
     private fun deleteDirectory(fileInstance: FileInstance): Boolean {
         try {
             val listSafe = fileInstance.listSafe()
@@ -175,7 +178,7 @@ class FileDelete(
                         FileInstanceFactory.toChild(fileInstance, it.name, true, context, false)
                     !toChild.deleteFileOrEmptyDirectory().apply {
                         if (this)
-                            fileOperateListener?.onOneFile(
+                            fileOperateListener?.onFileDone(
                                 toChild,
                                 0,
                                 Message("delete ${it.name} success")
@@ -196,7 +199,7 @@ class FileDelete(
                     )
                     !deleteDirectory(c).apply {
                         if (this)
-                            fileOperateListener?.onOneFile(
+                            fileOperateListener?.onFileDone(
                                 c,
                                 0,
                                 Message("delete ${it.name} success")
@@ -207,7 +210,8 @@ class FileDelete(
                 }) {
                 return false
             }
-            return false
+            fileInstance.deleteFileOrEmptyDirectory()
+            return true
         } catch (e: Exception) {
             return false
         }

@@ -11,34 +11,34 @@ import com.storyteller_f.file_system.operate.FileMoveCmd
 import com.storyteller_f.file_system.operate.FileOperateListener
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.multi_core.StoppableTask
-import java.io.File
 
 abstract class FileOperateWorker internal constructor(
-    val context: Context, val fileCount: Int, val folderCount: Int, val size: Long,
+    val context: Context, private val fileCount: Int, private val folderCount: Int, val size: Long,
     val focused: FileSystemItemModel
 ) : Runnable, FileOperateListener, StoppableTask {
-    var listener: Listener? = null
+    constructor(context: Context, focused: FileSystemItemModel, task: Task):this(context, task.fileCount, task.folderCount, task.size, focused)
+    var fileOperationProgressListener: FileOperationProgressListener? = null
     var leftFileCount = fileCount
     var leftFolderCount = folderCount
     var leftSize = size
     fun emitCurrentStateMessage() {
-        listener?.onLeft(leftFileCount, leftFolderCount, leftSize)
-        listener?.onProgress(progress)
+        fileOperationProgressListener?.onLeft(leftFileCount, leftFolderCount, leftSize)
+        fileOperationProgressListener?.onProgress(progress)
     }
 
-    override fun onOneFile(fileInstance: FileInstance?, type: Int, message: Message?) {
+    override fun onFileDone(fileInstance: FileInstance?, type: Int, message: Message?) {
         leftFileCount--
         leftSize -= size
         emitCurrentStateMessage()
     }
 
-    override fun onOneDirectory(fileInstance: FileInstance?, type: Int, message: Message?) {
+    override fun onDirectoryDone(fileInstance: FileInstance?, type: Int, message: Message?) {
         leftFolderCount--
         emitCurrentStateMessage()
     }
 
     override fun onError(message: Message?, type: Int) {
-        listener?.onDetail(message?.name + message?.get(), R.color.color_failed)
+        fileOperationProgressListener?.onDetail(message?.name + message?.get(), R.color.color_failed)
     }
 
 
@@ -57,7 +57,7 @@ abstract class FileOperateWorker internal constructor(
             return (completedCount * 1.0 / sumCount * 100).toInt()
         }
 
-    interface Listener {
+    interface FileOperationProgressListener {
         /**
          * 进度改变
          *
@@ -94,16 +94,15 @@ abstract class FileOperateWorker internal constructor(
          *
          * @param dest
          */
-        fun onComplete(dest: File?)
+        fun onComplete(dest: String?)
     }
 
 }
 
 class CopyImpl(
-    context: Context, private val detectorTasks: List<DetectorTask>,
-    fileCount: Int, folderCount: Int, size: Long,
+    context: Context, private val detectorTasks: List<DetectorTask>, task: Task,
     focused: FileSystemItemModel, private val isMove: Boolean, private val dest: FileInstance
-) : FileOperateWorker(context, fileCount, folderCount, size, focused) {
+) : FileOperateWorker(context, focused, task) {
     override val description: String
         get() {
             val taskName: String
@@ -117,7 +116,7 @@ class CopyImpl(
         }
 
     override fun run() {
-        detectorTasks.any {
+        val any = detectorTasks.any {
             if (needStop()) return
             val file = it.file
             val fileInstance = FileInstanceFactory.getFileInstance(file.fullPath, context)
@@ -129,6 +128,9 @@ class CopyImpl(
                 !FileCopy(this, fileInstance, dest, context).apply {
                     fileOperateListener = this@CopyImpl
                 }.call()
+        }
+        if (!any) {
+            fileOperationProgressListener?.onComplete(dest.path)
         }
     }
 
@@ -142,9 +144,10 @@ class CopyImpl(
 
 class DeleteImpl(
     context: Context, private val detectorTasks: List<DetectorTask>,
-    fileCount: Int, folderCount: Int, size: Long,
+    task: Task,
     focused: FileSystemItemModel
-) : FileOperateWorker(context, fileCount, folderCount, size, focused) {
+) : FileOperateWorker(context, focused, task) {
+
     override val description: String
         get() {
             return if (detectorTasks.size == 1) {
@@ -155,8 +158,12 @@ class DeleteImpl(
         }
 
     override fun run() {
-        detectorTasks.any {
-            !FileDelete(this, FileInstanceFactory.getFileInstance(it.file.fullPath, context), context).call()
+        if (detectorTasks.any {//如果有一个失败了，就提前退出
+                !FileDelete(this, FileInstanceFactory.getFileInstance(it.file.fullPath, context), context).call()
+            }) {
+            fileOperationProgressListener?.onDetail("error", 0)
+        } else {
+            fileOperationProgressListener?.onComplete(focused.fullPath)
         }
     }
 

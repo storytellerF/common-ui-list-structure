@@ -3,17 +3,17 @@ package com.storyteller_f.giant_explorer.service
 import android.content.Context
 import android.os.Binder
 import android.util.Log
+import androidx.annotation.WorkerThread
 import androidx.lifecycle.MutableLiveData
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.giant_explorer.service.FileOperateService.FileOperateResult
-import java.io.File
 import java.util.*
 import kotlin.concurrent.thread
 
-class FileOperateBinder(val context: Context) : Binder(), FileOperateWorker.Listener {
-    var listener: FileOperateWorker.Listener? = null
+class FileOperateBinder(val context: Context) : Binder() {
+    var fileOperationProgressListener: FileOperateWorker.FileOperationProgressListener? = null
     val state = MutableLiveData(state_null)
     private var fileOperateResult: FileOperateResult? = null
     fun setFileOperateResult(fileOperateResult: FileOperateResult?) {
@@ -25,19 +25,15 @@ class FileOperateBinder(val context: Context) : Binder(), FileOperateWorker.List
      * @param selected  要删除的多个文件
      * @param focused     内存卡根部tree fileSystemItemModel
      */
-    fun delete(selected: List<FileSystemItemModel?>, focused: FileSystemItemModel) {
-        val detectorTasks = preTask(selected)
-        detectorTasks?.let {
-            startDeleteTask(detectorTasks, focused)
+    fun delete(focused: FileSystemItemModel, selected: List<FileSystemItemModel?>) {
+        thread {
+            val detectorTasks = preTask(selected)
+            detectorTasks?.let {
+                startDeleteTask(focused, detectorTasks)
+            }
+            fileOperateResult?.onSuccess(null, focused.fullPath)
         }
-    }
 
-    fun copyTo(dest: FileInstance, selected: List<FileSystemItemModel>, focused: FileSystemItemModel) {
-        moveOrCopy(dest, selected, focused, false)
-    }
-
-    fun moveTo(dest: FileInstance, selected: List<FileSystemItemModel>, focused: FileSystemItemModel) {
-        moveOrCopy(dest, selected, focused, true)
     }
 
     private fun preTask(selected: List<FileSystemItemModel?>): LinkedList<DetectorTask>? {
@@ -51,7 +47,18 @@ class FileOperateBinder(val context: Context) : Binder(), FileOperateWorker.List
         return detectorTasks
     }
 
-    private fun startDeleteTask(detectorTasks: LinkedList<DetectorTask>, focused: FileSystemItemModel) {
+    @WorkerThread
+    private fun startDeleteTask(focused: FileSystemItemModel, detectorTasks: LinkedList<DetectorTask>) {
+        state.postValue(state_compute)
+        val compute = TaskCompute(detectorTasks, context).compute()
+        Log.i(TAG, "startDeleteTask: compute size ${compute.size}")
+        state.postValue(state_running)
+        DeleteImpl(context, detectorTasks, compute, focused).let {
+            it.fileOperationProgressListener = fileOperationProgressListener
+            it.run()
+        }
+        state.postValue(state_end)
+        fileOperateResult?.onSuccess(null, focused.fullPath)
     }
 
     /**
@@ -61,20 +68,22 @@ class FileOperateBinder(val context: Context) : Binder(), FileOperateWorker.List
      * @param focused          被复制的路径
      * @param detectorTasks 分配好的任务
      */
+    @WorkerThread
     private fun startCopyTask(dest: FileInstance, focused: FileSystemItemModel, deleteOrigin: Boolean, detectorTasks: List<DetectorTask>) {
         state.postValue(state_compute)
         val computeSize = TaskCompute(detectorTasks, context).compute()
         Log.i(TAG, "startCopyTask: compute size ${computeSize.size}")
         state.postValue(state_running)
-        CopyImpl(context, detectorTasks, computeSize.fileCount, computeSize.folderCount, computeSize.size, focused, deleteOrigin, dest).let {
-            it.listener = this
+        CopyImpl(context, detectorTasks, computeSize, focused, deleteOrigin, dest).let {
+            it.fileOperationProgressListener = fileOperationProgressListener
             it.run()
         }
         state.postValue(state_end)
+        fileOperateResult?.onSuccess(dest.path, focused.fullPath)
     }
 
 
-    private fun moveOrCopy(dest: FileInstance, selected: List<FileSystemItemModel>, focused: FileSystemItemModel, deleteOrigin: Boolean) {
+    fun moveOrCopy(dest: FileInstance, selected: List<FileSystemItemModel>, focused: FileSystemItemModel, deleteOrigin: Boolean) {
         state.value = state_detect
         thread {
             val detectorTasks = preTask(selected)
@@ -93,35 +102,11 @@ class FileOperateBinder(val context: Context) : Binder(), FileOperateWorker.List
         const val state_running = 3
         const val state_end = 4
     }
-
-    override fun onProgress(progress: Int) {
-        listener?.onProgress(progress)
-    }
-
-    override fun onState(state: String?) {
-        listener?.onState(state)
-    }
-
-    override fun onTip(tip: String?) {
-        listener?.onTip(tip)
-    }
-
-    override fun onDetail(detail: String?, color: Int) {
-        listener?.onDetail(detail, color)
-    }
-
-    override fun onLeft(file_count: Int, folder_count: Int, size: Long) {
-        listener?.onLeft(file_count, folder_count, size)
-    }
-
-    override fun onComplete(dest: File?) {
-        listener?.onComplete(dest)
-    }
 }
 
 class Task(val fileCount: Int, val folderCount: Int, val size: Long)
 
-class TaskCompute(val detectorTasks: List<DetectorTask>, val context: Context) {
+class TaskCompute(private val detectorTasks: List<DetectorTask>, val context: Context) {
     var count = 0
     var folderCount = 0
     fun compute(): Task {
@@ -151,14 +136,14 @@ class TaskCompute(val detectorTasks: List<DetectorTask>, val context: Context) {
         val fileInstance = FileInstanceFactory.getFileInstance(file.fullPath, context)
         val listSafe = fileInstance.listSafe()
 
-        val map = listSafe.files.map {
+        val fileSize = listSafe.files.map {
             count++
             it.size
         }.plus(0).reduce { acc, l -> acc + l }
-        val map1 = listSafe.directories.map {
+        val directorySize = listSafe.directories.map {
             getDirectorySize(it)
         }.plus(0).reduce { acc, l -> acc + l }
-        return map + map1
+        return fileSize + directorySize
     }
 
 }
