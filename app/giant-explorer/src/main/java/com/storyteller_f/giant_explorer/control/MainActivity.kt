@@ -14,6 +14,7 @@ import androidx.activity.addCallback
 import androidx.activity.viewModels
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.FileProvider
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
@@ -273,6 +274,11 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
                 Toast.makeText(this@MainActivity, "cancel", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        fileOperateBinder?.setFileOperateResult(null)
     }
 }
 

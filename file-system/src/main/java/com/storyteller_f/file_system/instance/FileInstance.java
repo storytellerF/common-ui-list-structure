@@ -3,6 +3,7 @@ package com.storyteller_f.file_system.instance;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
+import androidx.core.util.ObjectsCompat;
 
 import com.storyteller_f.file_system.Filter;
 import com.storyteller_f.file_system.model.DirectoryItemModel;
@@ -25,6 +26,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Objects;
 
 /**
  * notice 如果需要给name 设置值，那就需要提供path。或者自行处理
@@ -57,6 +59,20 @@ public abstract class FileInstance {
 
     public FileInstance() {
 
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FileInstance that = (FileInstance) o;
+        return ObjectsCompat.equals(path, that.path) && ObjectsCompat.equals(name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(path, name);
     }
 
     @Nullable
