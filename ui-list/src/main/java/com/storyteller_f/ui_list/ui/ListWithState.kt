@@ -80,7 +80,6 @@ class ListWithState @JvmOverloads constructor(
                 }
                 launch {
                     callbackFlow.map {
-                        println(it.mediator)
                         flash(it, adapter.itemCount)
                     }.stateIn(lifecycleOwner.lifecycleScope, SharingStarted.WhileSubscribed(), UIState.empty).collectLatest {
                         flash(it)
@@ -101,7 +100,7 @@ class ListWithState @JvmOverloads constructor(
     ) {
         setupLinearLayoutManager()
         binding.list.adapter = concatAdapter
-//        setupRefresh(adapter)
+        setupRefresh(adapter)
     }
 
     private fun setupRefresh(adapter: SimpleSourceAdapter<*, *>) {

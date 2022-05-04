@@ -22,6 +22,7 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.requestPermissionForSpecialPath
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.control.*
+import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.DialogRequestPathBinding
 import com.storyteller_f.ui_list.core.SearchProducer
 import com.storyteller_f.ui_list.core.SimpleSourceAdapter
@@ -41,13 +42,16 @@ class RequestPathDialog :
     private val filterHiddenFile by svm {
         HasStateValueModel(it, "filter-hidden-file", false)
     }
+
     @Parcelize
     class RequestPathResult(val path: String) : Parcelable
 
-    private val data by search(
-        SearchProducer(::service) { it, _ ->
-            FileItemHolder(it, MutableLiveData(mutableListOf()))
+    private val data by search({ requireDatabase() }, {
+        SearchProducer(service(it)) { fileModel, _ ->
+            FileItemHolder(fileModel, MutableLiveData(mutableListOf()))
         }
+    }
+
     )
     private val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
 

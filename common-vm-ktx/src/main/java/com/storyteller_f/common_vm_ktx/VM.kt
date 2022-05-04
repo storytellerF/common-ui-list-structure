@@ -6,9 +6,7 @@ package com.storyteller_f.common_vm_ktx
  * @author storyteller_f
  */
 
-import androidx.activity.ComponentActivity
 import androidx.annotation.MainThread
-import androidx.annotation.NonNull
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import androidx.savedstate.SavedStateRegistryOwner

@@ -35,6 +35,7 @@ import com.storyteller_f.file_system.model.FilesAndDirectories
 import com.storyteller_f.file_system.model.TorrentFileModel
 import com.storyteller_f.file_system.requestPermissionForSpecialPath
 import com.storyteller_f.giant_explorer.R
+import com.storyteller_f.giant_explorer.database.FileSizeRecordDatabase
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.ActivityMainBinding
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileBinding
@@ -309,55 +310,57 @@ fun format1024(args: Long): String {
 
 class FileExplorerSearch(val path: FileInstance, val filterHiddenFile: Boolean)
 
-suspend fun LifecycleOwner.service(
-    searchQuery: FileExplorerSearch,
-    start: Int,
-    count: Int
-) = contextSuspend {
-    val listSafe = suspendCancellableCoroutine<FilesAndDirectories> {
-        thread {
-            searchQuery.path.listSafe().run {
-                it.resumeWith(Result.success(this))
+fun service(
+    database: FileSizeRecordDatabase
+): suspend (searchQuery: FileExplorerSearch, start: Int, count: Int) -> SimpleResponse<FileModel> {
+    return { searchQuery: FileExplorerSearch, start: Int, count: Int ->
+        val listSafe = suspendCancellableCoroutine<FilesAndDirectories> {
+            thread {
+                searchQuery.path.listSafe().run {
+                    it.resumeWith(Result.success(this))
+                }
             }
         }
+
+        val predicate: (FileSystemItemModel) -> Boolean = {
+            !it.isHidden || !searchQuery.filterHiddenFile
+        }
+        val listFiles = if (searchQuery.filterHiddenFile) {
+            listSafe.directories.filter(predicate).plus(listSafe.files.filter(predicate))
+        } else listSafe.directories.plus(listSafe.files)
+        val total = listFiles.size
+        if ((start - 1) * count > total) SimpleResponse(0)
+        else {
+            val items = listFiles
+                .subList((start - 1) * count, start + min(count, total - start))
+                .map { model ->
+                    val length = if (model is FileItemModel) {
+                        database.mdDao().search(model.fullPath)?.let {
+                            if (it.lastUpdateTime > model.lastModifiedTime) model.md = it.data
+                        }
+                        if (model is TorrentFileModel)
+                            database.torrentDao().search(model.fullPath)?.let {
+                                if (it.lastUpdateTime > model.lastModifiedTime) model.torrentName = it.torrent
+                            }
+                        model.size
+                    } else {
+                        //从数据库中查找
+                        val directory = database.sizeDao().search(model.fullPath)
+                        if (directory != null && directory.lastUpdateTime > model.lastModifiedTime) {
+                            directory.size
+                        } else -1
+                    }
+                    model.formattedSize = format1024(length)
+                    model.size = length
+                    FileModel(model.name, model.fullPath, length, model.isHidden, model)
+                }
+            SimpleResponse(
+                total = total,
+                items = items,
+                if (total > count * start) start + 1 else null
+            )
+        }
+
     }
 
-    val predicate: (FileSystemItemModel) -> Boolean = {
-        !it.isHidden || !searchQuery.filterHiddenFile
-    }
-    val listFiles = if (searchQuery.filterHiddenFile) {
-        listSafe.directories.filter(predicate).plus(listSafe.files.filter(predicate))
-    } else listSafe.directories.plus(listSafe.files)
-    val total = listFiles.size
-    if ((start - 1) * count > total) SimpleResponse(0)
-    else {
-        val items = listFiles
-            .subList((start - 1) * count, start + min(count, total - start))
-            .map { model ->
-                val length = if (model is FileItemModel) {
-                    requireDatabase().mdDao().search(model.fullPath)?.let {
-                        if (it.lastUpdateTime > model.lastModifiedTime) model.md = it.data
-                    }
-                    if (model is TorrentFileModel)
-                        requireDatabase().torrentDao().search(model.fullPath)?.let {
-                            if (it.lastUpdateTime > model.lastModifiedTime) model.torrentName = it.torrent
-                        }
-                    model.size
-                } else {
-                    //从数据库中查找
-                    val directory = requireDatabase().sizeDao().search(model.fullPath)
-                    if (directory != null && directory.lastUpdateTime > model.lastModifiedTime) {
-                        directory.size
-                    } else -1
-                }
-                model.formattedSize = format1024(length)
-                model.size = length
-                FileModel(model.name, model.fullPath, length, model.isHidden, model)
-            }
-        SimpleResponse(
-            total = total,
-            items = items,
-            if (total > count * start) start + 1 else null
-        )
-    }
 }

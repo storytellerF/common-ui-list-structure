@@ -174,8 +174,8 @@ class SimpleSearchViewModel<D : Model, SQ : Any, Holder : DataItemHolder>(
         }
         currentQueryValue = sq
         val newResult: Flow<PagingData<Holder>> = repository.search(sq)
-            .map {
-                it.map {
+            .map { pagingData ->
+                pagingData.map {
                     processFactory(it, last).apply {
                         last = it
                     }

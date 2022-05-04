@@ -31,4 +31,8 @@ class HomeFragment : RegularFragment<FragmentHomeBinding>(FragmentHomeBinding::i
         }
     }
 
+    override fun requestKey(): String {
+        return "home"
+    }
+
 }

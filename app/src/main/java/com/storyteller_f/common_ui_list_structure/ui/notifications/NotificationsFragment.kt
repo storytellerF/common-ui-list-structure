@@ -24,4 +24,8 @@ class NotificationsFragment : CommonFragment<FragmentNotificationsBinding>(Fragm
             textView.text = it.fullName
         }
     }
+
+    override fun requestKey(): String {
+        return "notification"
+    }
 }

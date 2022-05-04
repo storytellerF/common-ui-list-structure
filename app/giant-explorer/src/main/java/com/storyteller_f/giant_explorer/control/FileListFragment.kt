@@ -22,28 +22,38 @@ import com.storyteller_f.common_vm_ktx.asvm
 import com.storyteller_f.common_vm_ktx.toDiff
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.model.FileItemModel
+import com.storyteller_f.file_system.model.FileSystemItemModel
+import com.storyteller_f.file_system.model.FilesAndDirectories
+import com.storyteller_f.file_system.model.TorrentFileModel
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.R
+import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentFileListBinding
 import com.storyteller_f.giant_explorer.dialog.NewNameDialog
 import com.storyteller_f.giant_explorer.dialog.OpenFileDialog
 import com.storyteller_f.giant_explorer.dialog.OpenFileDialogArgs
 import com.storyteller_f.giant_explorer.dialog.RequestPathDialog
+import com.storyteller_f.giant_explorer.model.FileModel
 import com.storyteller_f.ui_list.core.SearchProducer
 import com.storyteller_f.ui_list.core.SimpleSourceAdapter
 import com.storyteller_f.ui_list.core.search
+import com.storyteller_f.ui_list.data.SimpleResponse
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
 import kotlin.concurrent.thread
+import kotlin.math.min
 
 class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileListBinding::inflate) {
     private val fileOperateBinder
         get() = (requireContext() as MainActivity).fileOperateBinder
-    private val data by search(
-        SearchProducer(::service) { it, _ ->
-            FileItemHolder(it, session.selected)
+    private val data by search({ requireDatabase() to session.selected }, {(database, selected)->
+        SearchProducer(service(database)) { fileModel, _ ->
+            FileItemHolder(fileModel, selected)
         }
+    }
+
     )
     private val filterHiddenFile by asvm {
         HasStateValueModel(it, "filter-hidden-file", false)
@@ -98,7 +108,7 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
     fun toChild(itemHolder: FileItemHolder) {
         if (itemHolder.file.item.isDirectory) {
             val old = session.fileInstance.value ?: return
-            findNavController().navigate(R.id.action_fileListFragment_self, FileListFragmentArgs( File(old.path, itemHolder.file.name).absolutePath).toBundle())
+            findNavController().navigate(R.id.action_fileListFragment_self, FileListFragmentArgs(File(old.path, itemHolder.file.name).absolutePath).toBundle())
         } else {
             findNavController().navigate(R.id.action_fileListFragment_to_openFileDialog, OpenFileDialogArgs(itemHolder.file.fullPath).toBundle())
             fragment<OpenFileDialog.OpenFileResult> {
