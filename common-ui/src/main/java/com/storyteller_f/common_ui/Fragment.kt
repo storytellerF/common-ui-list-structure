@@ -149,3 +149,15 @@ fun <T : Parcelable> Fragment.setFragmentResult(requestKey: String, result: T) {
         putParcelable("result", result)
     })
 }
+
+fun <T : Parcelable> CommonFragment<*>.setFragmentResult(result: T) {
+    parentFragmentManager.setFragmentResult(requestKey(), Bundle().apply {
+        putParcelable("result", result)
+    })
+}
+
+fun <T : Parcelable> CommonDialogFragment<*>.setFragmentResult(result: T) {
+    parentFragmentManager.setFragmentResult(requestKey(), Bundle().apply {
+        putParcelable("result", result)
+    })
+}

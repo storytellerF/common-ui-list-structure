@@ -10,7 +10,7 @@ import kotlinx.parcelize.Parcelize
 class NewNameDialog : CommonDialogFragment<DialogNewNameBinding>(DialogNewNameBinding::inflate) {
     override fun onBindViewEvent(binding: DialogNewNameBinding) {
         binding.bottom.positive.setOnClick {
-            setFragmentResult(requestKey, NewNameResult(binding.newName.text.toString()))
+            setFragmentResult(NewNameResult(binding.newName.text.toString()))
             dismiss()
         }
         binding.bottom.negative.setOnClick {

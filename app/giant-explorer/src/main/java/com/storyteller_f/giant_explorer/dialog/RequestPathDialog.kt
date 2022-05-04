@@ -65,7 +65,7 @@ class RequestPathDialog :
         }
         binding.bottom.positive.setOnClick {
             session.fileInstance.value?.path?.let {
-                setFragmentResult(requestKey, RequestPathResult(it))
+                setFragmentResult(RequestPathResult(it))
                 dismiss()
             }
         }

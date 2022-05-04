@@ -15,9 +15,6 @@ import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 import java.lang.Exception
 
-/**
- * A simple [Fragment] subclass as the second destination in the navigation.
- */
 class SecondFragment : CommonFragment<FragmentSecondBinding>(FragmentSecondBinding::inflate) {
 
     override fun onBindViewEvent(binding: FragmentSecondBinding) {
@@ -27,7 +24,7 @@ class SecondFragment : CommonFragment<FragmentSecondBinding>(FragmentSecondBindi
                 val waitingDialog = waitingDialog()
                 try {
                     requireDatabase().bigTimeDao().add(BigTimeTask(result.path, result.enable, result.workerName))
-                    setFragmentResult(requestKey, result)
+                    setFragmentResult(result)
                     findNavController().navigateUp()
                 } catch (e: Exception) {
                     Toast.makeText(requireContext(), e.localizedMessage ?: e.javaClass.toString(), Toast.LENGTH_SHORT).show()

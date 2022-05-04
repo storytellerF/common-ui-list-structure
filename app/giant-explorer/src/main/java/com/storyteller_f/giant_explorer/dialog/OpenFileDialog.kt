@@ -45,7 +45,7 @@ class OpenFileDialog : CommonDialogFragment<DialogOpenFileBinding>(DialogOpenFil
         binding.dataType = dataType
         binding.handler = object : StringResult {
             override fun onResult(string: String) {
-                setFragmentResult(key, OpenFileResult(string))
+                setFragmentResult(OpenFileResult(string))
                 dismiss()
             }
         }
