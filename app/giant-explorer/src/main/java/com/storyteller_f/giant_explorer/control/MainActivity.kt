@@ -139,6 +139,11 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
             R.id.filterHiddenFile -> {
                 filterHiddenFile.data.value = filterHiddenFile.data.value?.not() ?: true
             }
+            R.id.newWindow -> {
+                startActivity(Intent(this, MainActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+                })
+            }
         }
         return super.onOptionsItemSelected(item)
     }
