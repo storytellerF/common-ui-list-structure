@@ -4,20 +4,16 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.os.Parcelable
-import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.IdRes
-import androidx.annotation.NavigationRes
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.ComponentActivity
 import androidx.databinding.ViewDataBinding
-import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -30,30 +26,31 @@ import androidx.viewbinding.ViewBinding
 abstract class CommonFragment<T : ViewBinding>(
     val viewBindingFactory: (LayoutInflater) -> T
 ) : Fragment(), KeyEvent.Callback {
-    lateinit var binding: T
+    var binding: T? = null
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        binding = viewBindingFactory(layoutInflater)
+        val bindingLocal = viewBindingFactory(layoutInflater)
+        binding = bindingLocal
         (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
-        onBindViewEvent(binding)
-        return binding.root
+        onBindViewEvent(bindingLocal)
+        return bindingLocal.root
     }
 
     abstract fun onBindViewEvent(binding: T)
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
-    }
 
     override fun onStart() {
         super.onStart()
         waitingInFragment.forEach { t ->
             parentFragmentManager.setFragmentResultListener(t.key, this, t.value.action)
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        binding = null
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?) = false

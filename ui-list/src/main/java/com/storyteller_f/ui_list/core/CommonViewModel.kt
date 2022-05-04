@@ -1,9 +1,9 @@
 package com.storyteller_f.ui_list.core
 
-import androidx.activity.ComponentActivity
-import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.paging.PagingSource
 import androidx.room.RoomDatabase
+import androidx.savedstate.SavedStateRegistryOwner
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.ui_list.data.*
 import com.storyteller_f.ui_list.database.CommonRoomDatabase
@@ -32,14 +32,14 @@ class SearchProducer<D : Model, SQ : Any, Holder : DataItemHolder>(
     val processFactory: (D, list: D?) -> Holder,
 )
 
-fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, Database : RoomDatabase, Composite : CommonRoomDatabase<D, RK, Database>, ARG> ComponentActivity.source(
+fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, Database : RoomDatabase, Composite : CommonRoomDatabase<D, RK, Database>, ARG, T> T.source(
     arg: () -> ARG,
     sourceProducer: (ARG) -> SourceProducer<RK, D, Holder, Database, Composite>,
-) = source(sourceProducer(arg()))
+) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = source(sourceProducer(arg()))
 
-fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, Database : RoomDatabase, Composite : CommonRoomDatabase<D, RK, Database>> ComponentActivity.source(
+fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, Database : RoomDatabase, Composite : CommonRoomDatabase<D, RK, Database>, T> T.source(
     sourceContent: SourceProducer<RK, D, Holder, Database, Composite>,
-): Lazy<SimpleSourceViewModel<D, Holder, RK, Database>> {
+): Lazy<SimpleSourceViewModel<D, Holder, RK, Database>> where T : SavedStateRegistryOwner, T : ViewModelStoreOwner {
     return vm {
         SimpleSourceViewModel(
             SimpleSourceRepository(
@@ -51,9 +51,9 @@ fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, Database : RoomData
     }
 }
 
-fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder> ComponentActivity.data(
+fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, T> T.data(
     dataContent: DataProducer<RK, D, Holder>,
-): Lazy<SimpleDataViewModel<D, Holder, RK>> {
+): Lazy<SimpleDataViewModel<D, Holder, RK>> where T : SavedStateRegistryOwner, T : ViewModelStoreOwner {
     return vm {
         SimpleDataViewModel(
             SimpleDataRepository(
@@ -63,31 +63,14 @@ fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder> ComponentActivity.d
     }
 }
 
-fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, ARG> ComponentActivity.data(
+fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, ARG, T> T.data(
     arg: () -> ARG,
     dataContentProducer: (ARG) -> DataProducer<RK, D, Holder>,
-) = data(dataContentProducer(arg()))
+) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = data(dataContentProducer(arg()))
 
-fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder> Fragment.data(
-    dataContent: DataProducer<RK, D, Holder>,
-): Lazy<SimpleDataViewModel<D, Holder, RK>> {
-    return vm {
-        SimpleDataViewModel(
-            SimpleDataRepository(
-                dataContent.service,
-            ), dataContent.processFactory
-        )
-    }
-}
-
-fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, ARG> Fragment.data(
-    arg: () -> ARG,
-    dataContentProducer: (ARG) -> DataProducer<RK, D, Holder>,
-) = data(dataContentProducer(arg()))
-
-fun <D : Any> Fragment.detail(
+fun <D : Any, T> T.detail(
     detailContent: DetailProducer<D>,
-): Lazy<SimpleDetailViewModel<D>> {
+): Lazy<SimpleDetailViewModel<D>> where T : SavedStateRegistryOwner, T : ViewModelStoreOwner {
     return vm {
         SimpleDetailViewModel(
             detailContent.producer,
@@ -96,25 +79,14 @@ fun <D : Any> Fragment.detail(
     }
 }
 
-fun <D : Any, ARG> Fragment.detail(
+fun <D : Any, ARG, T> T.detail(
     arg: () -> ARG,
     detailContentProducer: (ARG) -> DetailProducer<D>,
-) = detail(detailContentProducer(arg()))
+) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = detail(detailContentProducer(arg()))
 
-fun <D : Model, SQ : Any, Holder : DataItemHolder> ComponentActivity.search(
+fun <D : Model, SQ : Any, Holder : DataItemHolder, T> T.search(
     searchProducer: SearchProducer<D, SQ, Holder>
-): Lazy<SimpleSearchViewModel<D, SQ, Holder>> {
-    return vm {
-        SimpleSearchViewModel(
-            SimpleSearchRepository(searchProducer.service),
-            searchProducer.processFactory,
-        )
-    }
-}
-
-fun <D : Model, SQ : Any, Holder : DataItemHolder> Fragment.search(
-    searchProducer: SearchProducer<D, SQ, Holder>
-): Lazy<SimpleSearchViewModel<D, SQ, Holder>> {
+): Lazy<SimpleSearchViewModel<D, SQ, Holder>> where T : ViewModelStoreOwner, T : SavedStateRegistryOwner {
     return vm {
         SimpleSearchViewModel(
             SimpleSearchRepository(searchProducer.service),

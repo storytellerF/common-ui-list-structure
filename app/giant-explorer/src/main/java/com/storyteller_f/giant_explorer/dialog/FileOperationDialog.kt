@@ -20,7 +20,7 @@ class FileOperationDialog : CommonDialogFragment<DialogFileOperationBinding>(Dia
         val list = listOf(binding.stateProgress, binding.stateRunning, binding.stateDone)
         if (::binder.isInitialized) {
             binder.state.distinctUntilChanged().observe(viewLifecycleOwner) {
-                when(it) {
+                when (it) {
                     FileOperateBinder.state_running -> list.onVisible(binding.stateRunning)
                     FileOperateBinder.state_end -> list.onVisible(binding.stateDone)
                     else -> list.onVisible(binding.stateProgress)
@@ -52,6 +52,10 @@ class FileOperationDialog : CommonDialogFragment<DialogFileOperationBinding>(Dia
 
             }
         }
+    }
+
+    companion object {
+        const val tag = "file-operation"
     }
 
     interface Handler {

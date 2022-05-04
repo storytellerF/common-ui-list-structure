@@ -5,31 +5,25 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
-import android.view.View
 import android.widget.Toast
-import androidx.activity.addCallback
-import androidx.activity.viewModels
-import androidx.appcompat.widget.PopupMenu
-import androidx.core.content.FileProvider
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
-import com.storyteller_f.annotation_defination.BindClickEvent
+import androidx.navigation.findNavController
 import com.storyteller_f.annotation_defination.BindItemHolder
-import com.storyteller_f.annotation_defination.BindLongClickEvent
 import com.storyteller_f.common_ktx.context
 import com.storyteller_f.common_ktx.contextSuspend
-import com.storyteller_f.common_ktx.mm
 import com.storyteller_f.common_ui.SimpleActivity
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui.setVisible
 import com.storyteller_f.common_ui.supportNavigatorBarImmersive
+import com.storyteller_f.common_vm_ktx.HasStateValueModel
 import com.storyteller_f.common_vm_ktx.combine
-import com.storyteller_f.common_vm_ktx.toDiff
+import com.storyteller_f.common_vm_ktx.svm
 import com.storyteller_f.common_vm_ktx.toDiffNoNull
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
@@ -40,19 +34,14 @@ import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.model.FilesAndDirectories
 import com.storyteller_f.file_system.model.TorrentFileModel
 import com.storyteller_f.file_system.requestPermissionForSpecialPath
-import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.ActivityMainBinding
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileBinding
 import com.storyteller_f.giant_explorer.dialog.FileOperationDialog
-import com.storyteller_f.giant_explorer.dialog.NewNameDialog
-import com.storyteller_f.giant_explorer.dialog.OpenFileDialog
-import com.storyteller_f.giant_explorer.dialog.RequestPathDialog
 import com.storyteller_f.giant_explorer.model.FileModel
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
 import com.storyteller_f.giant_explorer.service.FileOperateService
-import com.storyteller_f.giant_explorer.view.EditablePathMan
 import com.storyteller_f.ui_list.core.*
 import com.storyteller_f.ui_list.data.SimpleResponse
 import com.storyteller_f.ui_list.event.viewBinding
@@ -63,23 +52,21 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import java.io.File
 import java.util.*
 import kotlin.concurrent.thread
 import kotlin.math.min
 
-class FileExplorerSession(state: SavedStateHandle) : ViewModel() {
-    val filterHiddenFile = state.getLiveData("filter-hidden-file", false)
+class FileExplorerSession : ViewModel() {
     val selected = MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>()
     val fileInstance = MutableLiveData<FileInstance>()
 
-    fun init(owner: LifecycleOwner) {
+    fun init(owner: LifecycleOwner, path: String?) {
         owner.context {
             if (fileInstance.value == null)
                 owner.scope.launch {
                     suspendCancellableCoroutine<FileInstance> {
                         thread {
-                            val result = Result.success(FileInstanceFactory.getFileInstance("/storage/emulated/0", context = this@context))
+                            val result = Result.success(FileInstanceFactory.getFileInstance(path ?: FileInstanceFactory.rootUserEmulatedPath, context = this@context))
                             it.resumeWith(result)
                         }
                     }.let {
@@ -89,25 +76,23 @@ class FileExplorerSession(state: SavedStateHandle) : ViewModel() {
         }
     }
 
+    companion object {
+        private const val TAG = "MainActivity"
+    }
+
 }
 
 class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
-    private val data by search(
-        SearchProducer(::service) { it, _ ->
-            FileItemHolder(it, session.selected)
-        }
-    )
-    private val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
+
     private val binding by viewBinding(ActivityMainBinding::inflate)
-    private val session by viewModels<FileExplorerSession>()
+    private val filterHiddenFile by svm {
+        HasStateValueModel(it, "filter-hidden-file", false)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setSupportActionBar(binding.toolbar)
         supportNavigatorBarImmersive(binding.root)
-        supportDirectoryContent(binding.content, binding.pathMan, adapter, data, session)
-        session.selected.toDiff().observe(this, Observer {
-        })
         context {
             //连接服务
             try {
@@ -116,18 +101,24 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
                 bindService(Intent(this, FileOperateService::class.java), connection, 0)
             }
         }
-        session.init(this)
-        onBackPressedDispatcher.addCallback(this) {
-            val value = session.fileInstance.value
-            if (value != null) {
-                if (value.path == "/" || value.path == FileInstanceFactory.rootUserEmulatedPath) {
-                    isEnabled = false
-                    onBackPressed()
-                } else {
-                    session.fileInstance.value = FileInstanceFactory.toParent(value, this@MainActivity)
+        scope.launch {
+            callbackFlow {
+                binding.pathMan.setPathChangeListener {
+                    trySend(it)
                 }
+                awaitClose {
+                    binding.pathMan.setPathChangeListener(null)
+                }
+            }.flowWithLifecycle(lifecycle).collectLatest {
+                findNavController(R.id.nav_host_fragment_main).navigate(R.id.fileListFragment, Bundle().apply {
+                    putString("path", it)
+                })
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "MainActivity"
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -135,97 +126,23 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
         return super.onCreateOptionsMenu(menu)
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        menu?.findItem(R.id.filterHiddenFile)?.let {
-            it.isChecked = session.filterHiddenFile.value == true
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        menu.findItem(R.id.filterHiddenFile)?.let {
+            it.isChecked = filterHiddenFile.data.value == true
         }
         return super.onPrepareOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.add_file -> {
-                fragment<NewNameDialog.NewNameResult>("add-file", NewNameDialog::class.java) { bundle ->
-                    session.fileInstance.value?.toChild(bundle.name, true, true)
-                }
-            }
             R.id.filterHiddenFile -> {
-                session.filterHiddenFile.value = session.filterHiddenFile.value?.not() ?: true
-            }
-            R.id.background_task -> {
-                startActivity(Intent(this, BackgroundTaskConfigActivity::class.java))
+                filterHiddenFile.data.value = filterHiddenFile.data.value?.not() ?: true
             }
         }
         return super.onOptionsItemSelected(item)
     }
 
-
-    @BindClickEvent(FileItemHolder::class)
-    fun toChild(itemHolder: FileItemHolder) {
-        if (itemHolder.file.item.isDirectory) {
-            val old = session.fileInstance.value ?: return
-            session.fileInstance.value = FileInstanceFactory.toChild(
-                old,
-                itemHolder.file.name,
-                false,
-                this,
-                false
-            )
-        } else {
-            fragment<OpenFileDialog.OpenFileResult>(OpenFileDialog.key, OpenFileDialog::class.java, Bundle().apply {
-                putString("path", itemHolder.file.fullPath)
-            }) {
-                Intent("android.intent.action.VIEW").apply {
-                    addCategory("android.intent.category.DEFAULT")
-                    val file = File(itemHolder.file.fullPath)
-                    val uriForFile = FileProvider.getUriForFile(this@MainActivity, "$packageName.file-provider", file)
-                    setDataAndType(uriForFile, it.mimeType)
-                    flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                }.let {
-                    startActivity(Intent.createChooser(it, "open by"))
-                }
-            }
-        }
-    }
-
-    @BindLongClickEvent(FileItemHolder::class)
-    fun test(view: View, itemHolder: FileItemHolder) {
-        PopupMenu(this, view).apply {
-            inflate(R.menu.item_context_menu)
-            setOnMenuItemClickListener {
-                when (it.itemId) {
-                    R.id.delete -> {
-                        fileOperateBinder?.delete(itemHolder.file.item, listOf(itemHolder.file.item))
-                    }
-                    R.id.move_to -> {
-                        moveOrCopy(true, itemHolder)
-                    }
-                    R.id.copy_to -> {
-                        moveOrCopy(false, itemHolder)
-                    }
-
-                }
-                true
-            }
-        }.show()
-    }
-
-    private fun moveOrCopy(move: Boolean, itemHolder: FileItemHolder) {
-        RequestPathDialog().show(supportFragmentManager, "request-path")
-        fragment<RequestPathDialog.RequestPathResult>("request-path", RequestPathDialog::class.java) { result ->
-            result.path.mm {
-                FileInstanceFactory.getFileInstance(it, this)
-            }.mm { dest ->
-                val detectSelected = detectSelected(itemHolder)
-                fileOperateBinder?.moveOrCopy(dest, detectSelected, itemHolder.file.item, move)
-            }
-        }
-    }
-
-    private fun detectSelected(itemHolder: FileItemHolder) =
-        session.selected.value?.map { pair -> (pair.first as FileItemHolder).file.item } ?: listOf(itemHolder.file.item)
-
-    private var fileOperateBinder: FileOperateBinder? = null
+    var fileOperateBinder: FileOperateBinder? = null
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             Toast.makeText(this@MainActivity, "服务已连接", Toast.LENGTH_SHORT).show()
@@ -240,7 +157,7 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
                     if (it.first == 0) {
                         FileOperationDialog().apply {
                             this.binder = fileOperateBinderLocal
-                        }.show(supportFragmentManager, "file-operation")
+                        }.show(supportFragmentManager, FileOperationDialog.tag)
                     }
                 })
             }
@@ -257,7 +174,7 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
                 Toast.makeText(this, "dest $dest origin $origin", Toast.LENGTH_SHORT).show()
             }
         }
-        adapter.refresh()
+//        adapter.refresh()
     }
 
     override fun onError(string: String?) {
@@ -280,47 +197,42 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
         super.onDestroy()
         fileOperateBinder?.setFileOperateResult(null)
     }
+
+    fun drawPath(path: String) {
+        binding.pathMan.drawPath(path)
+    }
 }
 
 fun LifecycleOwner.supportDirectoryContent(
     listWithState: ListWithState,
-    pathMan: EditablePathMan,
     adapter: SimpleSourceAdapter<FileItemHolder, FileViewHolder>,
     data: SimpleSearchViewModel<FileModel, FileExplorerSearch, FileItemHolder>,
-    session: FileExplorerSession
+    session: FileExplorerSession,
+    filterHiddenFile: LiveData<Boolean>,
+    updatePathMan: (String) -> Unit
 ) {
     val owner = if (this is Fragment) viewLifecycleOwner else this
     context {
         listWithState.sourceUp(adapter, owner, session.selected, flash = ListWithState.Companion::remote)
-        combine("file" to session.fileInstance, "filter" to session.filterHiddenFile).observe(owner, Observer {
+        session.fileInstance.observe(owner, Observer {
+            updatePathMan(it.path)
+        })
+        combine("file" to session.fileInstance, "filter" to filterHiddenFile).observe(owner, Observer {
             val filter = it["filter"] as? Boolean ?: return@Observer
             val file = it["file"] as FileInstance? ?: return@Observer
             val path = file.path
             //检查权限
-            lifecycleScope.launch {
+            owner.lifecycleScope.launch {
                 if (!checkPathPermission(path)) {
                     requestPermissionForSpecialPath(path)
                 }
             }
 
-            data.observerInScope(lifecycleScope, FileExplorerSearch(file, filter)) { pagingData ->
-                listWithState.recyclerView.smoothScrollToPosition(0)
+            data.observerInScope(owner, FileExplorerSearch(file, filter)) { pagingData ->
                 adapter.submitData(pagingData)
             }
-            pathMan.drawPath(path)
         })
-        owner.lifecycleScope.launch {
-            callbackFlow {
-                pathMan.setPathChangeListener {
-                    trySend(it)
-                }
-                awaitClose {
-                    pathMan.setPathChangeListener(null)
-                }
-            }.flowWithLifecycle(owner.lifecycle).collectLatest {
-                session.fileInstance.value = FileInstanceFactory.getFileInstance(it, this@context)
-            }
-        }
+
     }
 }
 

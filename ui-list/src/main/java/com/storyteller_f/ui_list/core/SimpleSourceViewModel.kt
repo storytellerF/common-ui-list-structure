@@ -16,12 +16,13 @@
 
 package com.storyteller_f.ui_list.core
 
-import androidx.activity.ComponentActivity
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import androidx.paging.*
 import androidx.room.RoomDatabase
-import com.storyteller_f.ui_list.data.*
+import com.storyteller_f.ui_list.data.MoreInfoLoadState
+import com.storyteller_f.ui_list.data.SimpleDataRepository
+import com.storyteller_f.ui_list.data.SimpleSearchRepository
+import com.storyteller_f.ui_list.data.SimpleSourceRepository
 import com.storyteller_f.ui_list.database.RemoteKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -187,14 +188,16 @@ class SimpleSearchViewModel<D : Model, SQ : Any, Holder : DataItemHolder>(
 }
 
 fun <SQ : Any, Holder : DataItemHolder> SimpleSearchViewModel<*, SQ, Holder>.observerInScope(
-    lifecycleCoroutineScope: LifecycleCoroutineScope,
+    lifecycleOwner: LifecycleOwner,
     search: SQ,
     block: suspend (PagingData<Holder>) -> Unit
 ) {
     lastJob?.cancel()
-    lastJob = lifecycleCoroutineScope.launch {
-        search(search).collectLatest {
-            block(it)
+    lastJob = lifecycleOwner.lifecycleScope.launch {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            search(search).collectLatest {
+                block(it)
+            }
         }
     }
 }

@@ -122,10 +122,45 @@ inline fun <reified VM : ViewModel> Fragment.avm(
         })
 }
 
+@MainThread
+inline fun <reified VM : ViewModel> Fragment.asvm(
+    crossinline factoryProducer: (SavedStateHandle) -> VM
+): Lazy<VM> {
+    return ViewModelLazy(VM::class, { requireActivity().viewModelStore },
+        {
+            object : AbstractSavedStateViewModelFactory(requireActivity(), null) {
+                override fun <T : ViewModel> create(
+                    key: String,
+                    modelClass: Class<T>,
+                    handle: SavedStateHandle
+                ): T = modelClass.cast(factoryProducer(handle))!!
+            }
+        })
+}
+
+inline fun <reified VM : ViewModel, T> T.svm(
+    crossinline factoryProducer: (SavedStateHandle) -> VM
+): Lazy<VM> where T : SavedStateRegistryOwner, T : ViewModelStoreOwner {
+    return ViewModelLazy(VM::class, { viewModelStore },
+        {
+            object : AbstractSavedStateViewModelFactory(this, null) {
+                override fun <T : ViewModel> create(
+                    key: String,
+                    modelClass: Class<T>,
+                    handle: SavedStateHandle
+                ): T = modelClass.cast(factoryProducer(handle))!!
+            }
+        })
+}
+
 class GenericValueModel<T> : ViewModel() {
     val data = MutableLiveData<T>()
 }
 
 class GenericListValueModel<T> : ViewModel() {
     val data = MutableLiveData<List<T>>()
+}
+
+class HasStateValueModel<T>(stateHandle: SavedStateHandle, key: String, default: T) : ViewModel() {
+    val data = stateHandle.getLiveData<T>(key, default)
 }

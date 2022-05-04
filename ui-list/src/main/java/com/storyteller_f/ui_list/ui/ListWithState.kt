@@ -51,7 +51,7 @@ class ListWithState @JvmOverloads constructor(
     }
 
     fun sourceUp(
-        adapter: SimpleSourceAdapter<*, *>,
+        adapter: SimpleSourceAdapter<out DataItemHolder, out AbstractAdapterViewHolder<*>>,
         lifecycleOwner: LifecycleOwner,
         selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>? = null,
         flash: ((CombinedLoadStates, Int) -> UIState) = Companion::simple
@@ -97,11 +97,11 @@ class ListWithState @JvmOverloads constructor(
 
     private fun setAdapter(
         concatAdapter: ConcatAdapter,
-        adapter: SimpleSourceAdapter<*, *>
+        adapter: SimpleSourceAdapter<out DataItemHolder, out AbstractAdapterViewHolder<*>>
     ) {
         setupLinearLayoutManager()
         binding.list.adapter = concatAdapter
-        setupRefresh(adapter)
+//        setupRefresh(adapter)
     }
 
     private fun setupRefresh(adapter: SimpleSourceAdapter<*, *>) {
