@@ -105,20 +105,20 @@
             android:layout_height="match_parent">
 
             <TextView
-                android:layout_margin="50dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:textSize="30sp"
-                tools:text="done" />
+                android:layout_margin="50dp"
+                android:text="done"
+                android:textSize="30sp" />
 
             <Button
-                android:text="close"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|end"
                 android:layout_marginEnd="5dp"
-                android:onClickListener="@{()->handler.close()}" />
+                android:onClickListener="@{()->handler.close()}"
+                android:text="close" />
         </FrameLayout>
     </FrameLayout>
 </layout>

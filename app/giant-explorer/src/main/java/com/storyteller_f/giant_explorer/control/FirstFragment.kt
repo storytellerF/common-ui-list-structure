@@ -87,6 +87,10 @@ class FirstFragment : CommonFragment<FragmentFirstBinding>(FragmentFirstBinding:
     companion object {
         private const val TAG = "FirstFragment"
     }
+
+    override fun requestKey(): String {
+        return TAG
+    }
 }
 
 class TaskTypeHolder(val title: String) : DataItemHolder() {

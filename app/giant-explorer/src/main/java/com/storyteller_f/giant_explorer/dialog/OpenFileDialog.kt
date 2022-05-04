@@ -3,6 +3,7 @@ package com.storyteller_f.giant_explorer.dialog
 import android.graphics.Color
 import android.os.Parcelable
 import android.webkit.MimeTypeMap
+import androidx.navigation.fragment.navArgs
 import com.j256.simplemagic.ContentInfo
 import com.j256.simplemagic.ContentInfoUtil
 import com.storyteller_f.common_ui.CommonDialogFragment
@@ -32,11 +33,13 @@ class OpenFileDialog : CommonDialogFragment<DialogOpenFileBinding>(DialogOpenFil
         GenericValueModel<ContentInfo?>()
     }
 
+    private val args by navArgs<OpenFileDialogArgs>()
+
     @Parcelize
     class OpenFileResult(val mimeType: String) : Parcelable
 
     override fun onBindViewEvent(binding: DialogOpenFileBinding) {
-        val path = requireArguments().getString("path")!!
+        val path = args.path
         val fileInstance = FileInstanceFactory.getFileInstance(path, requireContext())
         binding.fileName.text = path
         binding.dataType = dataType
@@ -80,6 +83,10 @@ class OpenFileDialog : CommonDialogFragment<DialogOpenFileBinding>(DialogOpenFil
                 else -> Color.GRAY
             }
         }
+    }
+
+    override fun requestKey(): String {
+        return key
     }
 }
 

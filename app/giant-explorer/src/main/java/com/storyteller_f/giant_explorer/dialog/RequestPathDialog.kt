@@ -139,4 +139,8 @@ class RequestPathDialog :
             )
         }
     }
+
+    override fun requestKey(): String {
+        return requestKey
+    }
 }

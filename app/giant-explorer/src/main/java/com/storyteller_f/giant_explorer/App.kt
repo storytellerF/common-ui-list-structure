@@ -23,7 +23,6 @@ import java.math.BigInteger
 import java.security.MessageDigest
 
 class App : Application() {
-    val ll = listOf(FileInstanceFactory.rootUserEmulatedPath)
     override fun onCreate() {
         super.onCreate()
         Temp.add()

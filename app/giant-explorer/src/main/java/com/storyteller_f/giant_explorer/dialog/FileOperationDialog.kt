@@ -61,4 +61,8 @@ class FileOperationDialog : CommonDialogFragment<DialogFileOperationBinding>(Dia
     interface Handler {
         fun close();
     }
+
+    override fun requestKey(): String {
+        return "file-operation"
+    }
 }

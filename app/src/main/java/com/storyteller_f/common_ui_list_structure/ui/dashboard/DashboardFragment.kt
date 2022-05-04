@@ -71,4 +71,8 @@ class DashboardFragment : RegularFragment<FragmentDashboardBinding>(FragmentDash
             }
         }
     }
+
+    override fun requestKey(): String {
+        TODO("Not yet implemented")
+    }
 }

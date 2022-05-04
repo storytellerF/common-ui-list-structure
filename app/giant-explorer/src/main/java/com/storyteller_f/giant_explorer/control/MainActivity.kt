@@ -115,6 +115,7 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
                 })
             }
         }
+        findNavController(R.id.nav_host_fragment_main).setGraph(R.navigation.nav_main, FileListFragmentArgs(FileInstanceFactory.rootUserEmulatedPath).toBundle())
     }
 
     companion object {

@@ -10,7 +10,7 @@ import kotlinx.parcelize.Parcelize
 class NewNameDialog : CommonDialogFragment<DialogNewNameBinding>(DialogNewNameBinding::inflate) {
     override fun onBindViewEvent(binding: DialogNewNameBinding) {
         binding.bottom.positive.setOnClick {
-            setFragmentResult("add-file", NewNameResult(binding.newName.text.toString()))
+            setFragmentResult(requestKey, NewNameResult(binding.newName.text.toString()))
             dismiss()
         }
         binding.bottom.negative.setOnClick {
@@ -20,4 +20,12 @@ class NewNameDialog : CommonDialogFragment<DialogNewNameBinding>(DialogNewNameBi
 
     @Parcelize
     class NewNameResult(val name: String) : Parcelable
+
+    companion object{
+        const val requestKey = "add-file"
+    }
+
+    override fun requestKey(): String {
+        return requestKey
+    }
 }

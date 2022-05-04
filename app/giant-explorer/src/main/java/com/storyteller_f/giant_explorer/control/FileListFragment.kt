@@ -10,6 +10,7 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.FileProvider
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import androidx.paging.PagingData
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindLongClickEvent
@@ -26,6 +27,7 @@ import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.databinding.FragmentFileListBinding
 import com.storyteller_f.giant_explorer.dialog.NewNameDialog
 import com.storyteller_f.giant_explorer.dialog.OpenFileDialog
+import com.storyteller_f.giant_explorer.dialog.OpenFileDialogArgs
 import com.storyteller_f.giant_explorer.dialog.RequestPathDialog
 import com.storyteller_f.ui_list.core.SearchProducer
 import com.storyteller_f.ui_list.core.SimpleSourceAdapter
@@ -46,9 +48,8 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
     private val filterHiddenFile by asvm {
         HasStateValueModel(it, "filter-hidden-file", false)
     }
-    val path by lazy {
-        arguments?.getString("path")
-    }
+
+    private val args by navArgs<FileListFragmentArgs>()
 
     private val session by viewModels<FileExplorerSession>()
 
@@ -63,12 +64,7 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
         session.selected.toDiff().observe(this) {
         }
 
-        session.init(this, path)
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        data.lastJob?.cancel()
+        session.init(this, args.path)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -85,7 +81,7 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
         when (item.itemId) {
             R.id.add_file -> {
                 findNavController().navigate(R.id.action_fileListFragment_to_newNameDialog)
-                fragment<NewNameDialog.NewNameResult>("add-file") { bundle ->
+                fragment<NewNameDialog.NewNameResult> { bundle ->
                     session.fileInstance.value?.toChild(bundle.name, true, true)
                 }
             }
@@ -102,14 +98,10 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
     fun toChild(itemHolder: FileItemHolder) {
         if (itemHolder.file.item.isDirectory) {
             val old = session.fileInstance.value ?: return
-            findNavController().navigate(R.id.fileListFragment, Bundle().apply {
-                putString("path", File(old.path, itemHolder.file.name).absolutePath)
-            })
+            findNavController().navigate(R.id.action_fileListFragment_self, FileListFragmentArgs( File(old.path, itemHolder.file.name).absolutePath).toBundle())
         } else {
-            findNavController().navigate(R.id.action_fileListFragment_to_openFileDialog, Bundle().apply {
-                putString("path", itemHolder.file.fullPath)
-            })
-            fragment<OpenFileDialog.OpenFileResult>(OpenFileDialog.key) {
+            findNavController().navigate(R.id.action_fileListFragment_to_openFileDialog, OpenFileDialogArgs(itemHolder.file.fullPath).toBundle())
+            fragment<OpenFileDialog.OpenFileResult> {
                 Intent("android.intent.action.VIEW").apply {
                     addCategory("android.intent.category.DEFAULT")
                     val file = File(itemHolder.file.fullPath)
@@ -146,8 +138,8 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
     }
 
     private fun moveOrCopy(move: Boolean, itemHolder: FileItemHolder) {
-        RequestPathDialog().show(parentFragmentManager, "request-path")
-        fragment<RequestPathDialog.RequestPathResult>("request-path") { result ->
+        RequestPathDialog().show(parentFragmentManager, RequestPathDialog.requestKey)
+        fragment<RequestPathDialog.RequestPathResult> { result ->
             result.path.mm {
                 FileInstanceFactory.getFileInstance(it, requireContext())
             }.mm { dest ->
@@ -163,5 +155,7 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
 
     private fun detectSelected(itemHolder: FileItemHolder) =
         session.selected.value?.map { pair -> (pair.first as FileItemHolder).file.item } ?: listOf(itemHolder.file.item)
+
+    override fun requestKey() = "file-list"
 
 }

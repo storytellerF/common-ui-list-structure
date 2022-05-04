@@ -40,7 +40,7 @@ class SecondFragment : CommonFragment<FragmentSecondBinding>(FragmentSecondBindi
         binding.selectWorkerName.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, arrayOf("message digest", "torrent name", "folder size"))
         binding.selectPath.setOnClick {
             findNavController().navigate(R.id.action_SecondFragment_to_requestPathDialog)
-            fragment<RequestPathDialog.RequestPathResult>(RequestPathDialog.requestKey) {
+            fragment<RequestPathDialog.RequestPathResult> {
                 binding.path.setText(it.path)
             }
         }
@@ -51,4 +51,6 @@ class SecondFragment : CommonFragment<FragmentSecondBinding>(FragmentSecondBindi
     companion object {
         const val requestKey = "test"
     }
+
+    override fun requestKey() = requestKey
 }

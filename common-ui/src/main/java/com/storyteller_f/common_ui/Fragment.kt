@@ -26,14 +26,18 @@ import androidx.viewbinding.ViewBinding
 abstract class CommonFragment<T : ViewBinding>(
     val viewBindingFactory: (LayoutInflater) -> T
 ) : Fragment(), KeyEvent.Callback {
-    var binding: T? = null
+    var _binding: T? = null
+    val binding: T get() = _binding!!
+    abstract fun requestKey(): String
+    fun tag(): String = requestKey()
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val bindingLocal = viewBindingFactory(layoutInflater)
-        binding = bindingLocal
+        _binding = bindingLocal
         (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
         onBindViewEvent(bindingLocal)
         return bindingLocal.root
@@ -50,7 +54,7 @@ abstract class CommonFragment<T : ViewBinding>(
 
     override fun onDestroyView() {
         super.onDestroyView()
-        binding = null
+        _binding = null
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?) = false
@@ -61,7 +65,7 @@ abstract class CommonFragment<T : ViewBinding>(
 
     override fun onKeyMultiple(keyCode: Int, count: Int, event: KeyEvent?) = false
 
-    fun <T : Parcelable> fragment(requestKey: String, action: (T) -> Unit) {
+    fun <T : Parcelable> fragment(action: (T) -> Unit) {
         val callback = { s: String, r: Bundle ->
             if (waitingInFragment.containsKey(s)) {
                 r.getParcelable<T>("result")?.let {
@@ -70,8 +74,8 @@ abstract class CommonFragment<T : ViewBinding>(
                 waitingInFragment.remove(s)
             }
         }
-        waitingInFragment[requestKey] = FragmentAction(callback)
-        parentFragmentManager.setFragmentResultListener(requestKey, this, callback)
+        waitingInFragment[requestKey()] = FragmentAction(callback)
+        parentFragmentManager.setFragmentResultListener(requestKey(), this, callback)
     }
 
     companion object {

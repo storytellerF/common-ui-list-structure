@@ -19,20 +19,27 @@ import kotlinx.coroutines.launch
 abstract class CommonDialogFragment<T : ViewBinding>(
     val viewBindingFactory: (LayoutInflater) -> T
 ) : DialogFragment(), KeyEvent.Callback {
-    lateinit var binding: T
+    var binding: T? = null
+    abstract fun requestKey(): String
+    fun tag():String = requestKey()
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        binding = viewBindingFactory(layoutInflater)
-        (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
-        onBindViewEvent(binding)
-        return binding.root
+        val bindingLocal = viewBindingFactory(layoutInflater)
+        binding = bindingLocal
+        (bindingLocal as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
+        onBindViewEvent(bindingLocal)
+        return bindingLocal.root
     }
 
     abstract fun onBindViewEvent(binding: T)
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        binding = null
+    }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
