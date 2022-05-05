@@ -203,6 +203,11 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
     override fun onDestroy() {
         super.onDestroy()
         fileOperateBinder?.setFileOperateResult(null)
+        try {
+            unbindService(connection)
+        } catch (e: Exception) {
+            Toast.makeText(this, e.localizedMessage ?: e.javaClass.toString(), Toast.LENGTH_LONG).show()
+        }
     }
 
     fun drawPath(path: String) {
