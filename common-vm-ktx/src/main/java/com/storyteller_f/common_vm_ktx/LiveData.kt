@@ -6,6 +6,8 @@ import android.util.Log
 import androidx.annotation.MainThread
 import androidx.annotation.Nullable
 import androidx.lifecycle.*
+import androidx.lifecycle.Observer
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.collections.set
 
@@ -219,6 +221,28 @@ fun <T> LiveData<T>.toDiffNoNull(compare: ((T, T) -> Boolean)? = null): Mediator
             mediatorLiveData.value = Pair(l, it)
         }
         oo = it
+    }
+    return mediatorLiveData
+}
+
+
+fun <T> LiveData<T>.debounce(ms: Long): MediatorLiveData<T> {
+    val mediatorLiveData = MediatorLiveData<T>()
+    var lastTime: Long? = null
+    val timer = Timer()
+    mediatorLiveData.addSource(this) {
+        val l = lastTime
+        if (l == null || l - System.currentTimeMillis() > ms) {
+            timer.cancel()
+            mediatorLiveData.value = it
+            lastTime = System.currentTimeMillis()
+        } else {
+            timer.schedule(object : TimerTask() {
+                override fun run() {
+                    mediatorLiveData.value = it
+                }
+            }, ms)
+        }
     }
     return mediatorLiveData
 }

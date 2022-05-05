@@ -27,9 +27,8 @@ class FileOperateBinder(val context: Context) : Binder() {
      */
     fun delete(focused: FileSystemItemModel, selected: List<FileSystemItemModel?>) {
         thread {
-            val detectorTasks = preTask(selected)
-            detectorTasks?.let {
-                startDeleteTask(focused, detectorTasks)
+            preTask(selected)?.let {
+                startDeleteTask(focused, it)
             }
             fileOperateResult?.onSuccess(null, focused.fullPath)
         }
@@ -37,6 +36,7 @@ class FileOperateBinder(val context: Context) : Binder() {
     }
 
     private fun preTask(selected: List<FileSystemItemModel?>): LinkedList<DetectorTask>? {
+        state.postValue(state_detect)
         val multiDetector = MultiDetector(selected)
         val detectorTasks = multiDetector.start(context)
         val filterIsInstance = detectorTasks.filterIsInstance<ErrorTask>()
@@ -84,11 +84,9 @@ class FileOperateBinder(val context: Context) : Binder() {
 
 
     fun moveOrCopy(dest: FileInstance, selected: List<FileSystemItemModel>, focused: FileSystemItemModel, deleteOrigin: Boolean) {
-        state.value = state_detect
         thread {
-            val detectorTasks = preTask(selected)
-            detectorTasks?.let {
-                startCopyTask(dest, focused, deleteOrigin, detectorTasks)
+            preTask(selected)?.let {
+                startCopyTask(dest, focused, deleteOrigin, it)
             }
         }
     }

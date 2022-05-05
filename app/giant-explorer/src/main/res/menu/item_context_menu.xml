@@ -10,4 +10,7 @@
     <item
         android:id="@+id/copy_to"
         android:title="copy to" />
+    <item
+        android:id="@+id/copy_file"
+        android:title="copy" />
 </menu>

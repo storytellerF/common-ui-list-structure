@@ -164,9 +164,7 @@ class MDWorker(context: Context, workerParams: WorkerParameters) :
 
     }
 
-    companion object {
-        private const val TAG = "App"
-    }
+    companion object
 
 }
 
@@ -245,8 +243,8 @@ fun getFileMD5(fileInstance: FileInstance, mdWorker: StoppableTask): String? {
     return try {
         var len: Int
         val digest = MessageDigest.getInstance("MD5")
-        fileInstance.bufferedInputSteam.use {
-            while (it.read(buffer).also { len = it } != -1) {
+        fileInstance.bufferedInputSteam.use { stream ->
+            while (stream.read(buffer).also { len = it } != -1) {
                 if (mdWorker.needStop()) return null
                 digest.update(buffer, 0, len)
             }

@@ -1,19 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-xmlns:app="http://schemas.android.com/apk/res-auto">
-<item android:title="@string/string_add">
-    <menu>
-        <item
-            android:id="@+id/add_file"
-            android:title="@string/string_add_file" />
-        <item
-            android:id="@+id/add_directory"
-            android:title="@string/string_add_directory" />
-    </menu>
-</item>
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:title="@string/string_add">
+        <menu>
+            <item
+                android:id="@+id/add_file"
+                android:title="@string/string_add_file" />
+            <item
+                android:id="@+id/add_directory"
+                android:title="@string/string_add_directory" />
+        </menu>
+    </item>
+    <item
+        android:id="@+id/paste_file"
+        android:title="paste" />
 
-<item
-    android:id="@+id/background_task"
-    android:title="后台任务管理"/>
+    <item
+        android:id="@+id/background_task"
+        android:title="后台任务管理" />
 
 </menu>

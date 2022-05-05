@@ -1,8 +1,10 @@
 package com.storyteller_f.giant_explorer.dialog
 
 import androidx.lifecycle.distinctUntilChanged
+import androidx.lifecycle.switchMap
 import com.storyteller_f.common_ui.CommonDialogFragment
 import com.storyteller_f.common_ui.onVisible
+import com.storyteller_f.common_vm_ktx.debounce
 import com.storyteller_f.giant_explorer.databinding.DialogFileOperationBinding
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
 import com.storyteller_f.giant_explorer.service.FileOperateWorker
@@ -19,7 +21,7 @@ class FileOperationDialog : CommonDialogFragment<DialogFileOperationBinding>(Dia
         dialog?.setCanceledOnTouchOutside(false)
         val list = listOf(binding.stateProgress, binding.stateRunning, binding.stateDone)
         if (::binder.isInitialized) {
-            binder.state.distinctUntilChanged().observe(viewLifecycleOwner) {
+            binder.state.debounce(200).distinctUntilChanged().observe(viewLifecycleOwner) {
                 when (it) {
                     FileOperateBinder.state_running -> list.onVisible(binding.stateRunning)
                     FileOperateBinder.state_end -> list.onVisible(binding.stateDone)

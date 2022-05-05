@@ -1,31 +1,28 @@
 package com.storyteller_f.giant_explorer.control
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import androidx.paging.PagingData
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindLongClickEvent
 import com.storyteller_f.common_ktx.mm
 import com.storyteller_f.common_ui.CommonFragment
-import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_vm_ktx.HasStateValueModel
 import com.storyteller_f.common_vm_ktx.asvm
 import com.storyteller_f.common_vm_ktx.toDiff
 import com.storyteller_f.file_system.FileInstanceFactory
-import com.storyteller_f.file_system.instance.FileInstance
-import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.model.FileSystemItemModel
-import com.storyteller_f.file_system.model.FilesAndDirectories
-import com.storyteller_f.file_system.model.TorrentFileModel
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.requireDatabase
@@ -34,21 +31,15 @@ import com.storyteller_f.giant_explorer.dialog.NewNameDialog
 import com.storyteller_f.giant_explorer.dialog.OpenFileDialog
 import com.storyteller_f.giant_explorer.dialog.OpenFileDialogArgs
 import com.storyteller_f.giant_explorer.dialog.RequestPathDialog
-import com.storyteller_f.giant_explorer.model.FileModel
 import com.storyteller_f.ui_list.core.SearchProducer
 import com.storyteller_f.ui_list.core.SimpleSourceAdapter
 import com.storyteller_f.ui_list.core.search
-import com.storyteller_f.ui_list.data.SimpleResponse
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
-import kotlin.concurrent.thread
-import kotlin.math.min
 
 class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileListBinding::inflate) {
     private val fileOperateBinder
         get() = (requireContext() as MainActivity).fileOperateBinder
-    private val data by search({ requireDatabase() to session.selected }, {(database, selected)->
+    private val data by search({ requireDatabase() to session.selected }, { (database, selected) ->
         SearchProducer(service(database)) { fileModel, _ ->
             FileItemHolder(fileModel, selected)
         }
@@ -56,7 +47,7 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
 
     )
     private val filterHiddenFile by asvm {
-        HasStateValueModel(it, "filter-hidden-file", false)
+        HasStateValueModel(it, filterHiddenFileKey, false)
     }
 
     private val args by navArgs<FileListFragmentArgs>()
@@ -95,7 +86,38 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
                     session.fileInstance.value?.toChild(bundle.name, true, true)
                 }
             }
+            R.id.paste_file -> {
+                ContextCompat.getSystemService(requireContext(), ClipboardManager::class.java)?.let { manager ->
+                    manager.primaryClip?.let { data ->
+                        val mutableList = MutableList(data.itemCount) {
+                            data.getItemAt(it)
+                        }
+                        val uriList = mutableList.map {
+                            Uri.parse(it.coerceToText(requireContext()).toString())
+                        }
+                        val localFilePath = uriList.filter {
+                            it.scheme == "file"
+                        }.map {
+                            it.path
+                        }
+                        val map = uriList.filter {
+                            it.scheme == "http" || it.scheme == "https"
+                        }.map {
+                            it.path
+                        }
+                        val selected = localFilePath.filterNotNull().map { path ->
+                            FileInstanceFactory.getFileInstance(path, requireContext()).let {
+                                if (it.isDirectory) it.directory else it.file
+                            }
+                        }
+//                        if (selected.isNotEmpty())
+//                            session.fileInstance.value?.let { instance ->
+//                                fileOperateBinder?.moveOrCopy(instance, selected, selected.first(), false)
+//                            }
+                    }
+                }
 
+            }
             R.id.background_task -> {
                 startActivity(Intent(requireContext(), BackgroundTaskConfigActivity::class.java))
             }
@@ -129,8 +151,8 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
     fun test(view: View, itemHolder: FileItemHolder) {
         PopupMenu(requireContext(), view).apply {
             inflate(R.menu.item_context_menu)
-            setOnMenuItemClickListener {
-                when (it.itemId) {
+            setOnMenuItemClickListener { item ->
+                when (item.itemId) {
                     R.id.delete -> {
                         fileOperateBinder?.delete(itemHolder.file.item, listOf(itemHolder.file.item))
                     }
@@ -139,6 +161,19 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
                     }
                     R.id.copy_to -> {
                         moveOrCopy(false, itemHolder)
+                    }
+                    R.id.copy_file -> {
+                        ContextCompat.getSystemService(requireContext(), ClipboardManager::class.java)?.let { manager ->
+                            val map = detectSelected(itemHolder).map {
+                                Uri.fromFile(File(it.fullPath))
+                            }
+                            val apply = ClipData.newPlainText("file explorer", map.first().toString()).apply {
+                                if (map.size > 1) map.subList(1, map.size).forEach {
+                                    addItem(ClipData.Item(it))
+                                }
+                            }
+                            manager.setPrimaryClip(apply)
+                        }
                     }
 
                 }
@@ -161,6 +196,7 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
 
     companion object {
         private const val TAG = "FileListFragment"
+        const val filterHiddenFileKey = "filter-hidden-file"
     }
 
     private fun detectSelected(itemHolder: FileItemHolder) =

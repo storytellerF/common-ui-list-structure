@@ -40,7 +40,7 @@ class RequestPathDialog :
     CommonDialogFragment<DialogRequestPathBinding>(DialogRequestPathBinding::inflate) {
     private val session by viewModels<FileExplorerSession>()
     private val filterHiddenFile by svm {
-        HasStateValueModel(it, "filter-hidden-file", false)
+        HasStateValueModel(it, FileListFragment.filterHiddenFileKey, false)
     }
 
     @Parcelize
