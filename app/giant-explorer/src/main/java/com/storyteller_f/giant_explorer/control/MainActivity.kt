@@ -24,10 +24,7 @@ import com.storyteller_f.common_ui.SimpleActivity
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui.setVisible
 import com.storyteller_f.common_ui.supportNavigatorBarImmersive
-import com.storyteller_f.common_vm_ktx.HasStateValueModel
-import com.storyteller_f.common_vm_ktx.combine
-import com.storyteller_f.common_vm_ktx.svm
-import com.storyteller_f.common_vm_ktx.toDiffNoNull
+import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.fileIcon
@@ -90,11 +87,17 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
 
     private val binding by viewBinding(ActivityMainBinding::inflate)
     private val filterHiddenFile by svm {
-        HasStateValueModel(it, "filter-hidden-file", false)
+        HasStateValueModel(it, FileListFragment.filterHiddenFileKey, false)
+    }
+    private val uuid by vm {
+        GenericValueModel<String>().apply {
+            data.value = UUID.randomUUID().toString()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        uuid
         setSupportActionBar(binding.toolbar)
         supportNavigatorBarImmersive(binding.root)
         context {
@@ -161,6 +164,7 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             Toast.makeText(this@MainActivity, "服务已连接", Toast.LENGTH_SHORT).show()
             val fileOperateBinderLocal = service as FileOperateBinder
+            Log.i(TAG, "onServiceConnected: $fileOperateBinderLocal")
             fileOperateBinder = fileOperateBinderLocal
             fileOperateBinderLocal.let { binder ->
                 binder.setFileOperateResult(this@MainActivity)
@@ -194,7 +198,7 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
     override fun onError(string: String?) {
         scope.launch {
             context {
-                Toast.makeText(this, "dest $string", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "dest $string error", Toast.LENGTH_SHORT).show()
             }
         }
     }

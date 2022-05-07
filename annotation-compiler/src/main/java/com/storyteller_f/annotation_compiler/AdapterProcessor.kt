@@ -30,6 +30,7 @@ class Event(
     val receiverFullName: String,
     val functionName: String,
     val parameterList: String,
+    val key: String,
     val origin: Element
 ) {
     override fun toString(): String {
@@ -184,7 +185,7 @@ class AdapterProcessor : AbstractProcessor() {
             }?.let { list ->
                 list.first()?.value?.toString()?.let {
                     it.substring(it.lastIndexOf(".") + 1)
-                } to if (list.size == 2) list[1]?.value.toString() else "getRoot()"
+                } to if (list.size >= 2) list[1].value.toString() else "getRoot()"
             }
         }) { element ->
             val parameterList = element.asType().toString().let { s ->
@@ -206,11 +207,19 @@ class AdapterProcessor : AbstractProcessor() {
                     }
                 }
             }
+            val key = element.annotationMirrors.first()?.elementValues?.map {
+                it.value
+            }?.let {
+                if (it.size >= 3) {
+                    it[2].value.toString()
+                } else "default"
+            } ?: "default"
             Event(
                 element.enclosingElement.simpleName.toString(),
                 element.enclosingElement.toString(),
                 element.simpleName.toString(),
                 parameterList,
+                key,
                 element
             )
         }
@@ -310,15 +319,15 @@ class AdapterProcessor : AbstractProcessor() {
 
     private fun buildViewHolder(
         entry: Entry,
-        event: Map<String, List<Event>>,
-        eventList2: Map<String, List<Event>>
+        eventMapClick: Map<String, List<Event>>,
+        eventMapLongClick: Map<String, List<Event>>
     ): String {
         return "    public static ${entry.viewHolderName} build${entry.viewHolderName}(ViewGroup view) {\n" +
                 "        Context context = view.getContext();\n" +
                 "        ${entry.bindingName} inflate = ${entry.bindingName}.inflate(LayoutInflater.from(context), view, false);\n" +
                 "\n" +
                 "        ${entry.viewHolderName} viewHolder = new ${entry.viewHolderName}(inflate);\n" +
-                buildClickListener(event, eventList2) +
+                buildClickListener(eventMapClick, eventMapLongClick) +
                 "        return viewHolder;\n" +
                 "   }"
     }
@@ -328,7 +337,7 @@ class AdapterProcessor : AbstractProcessor() {
             "                if (s == \"${it.key}\") {\n" +
                     it.value.joinToString("\n") { e ->
                         if (e.receiver.contains("Activity"))
-                            ("                    ViewJava.doWhenIs(context, ${e.receiver}.class, (activity) -> {\n" +
+                            ("                    if(\"${e.key}\".equals(viewHolder.keyed)) ViewJava.doWhenIs(context, ${e.receiver}.class, (activity) -> {\n" +
                                     "                         activity.${e.functionName}(${
                                         parameterList(
                                             e.parameterList
@@ -337,7 +346,7 @@ class AdapterProcessor : AbstractProcessor() {
                                     "                         return null;//activity return\n" +
                                     "                     });//activity end\n")
                         else
-                            ("                    ViewJava.findActionReceiverOrNull(composeView.getComposeView(), ${e.receiver}.class, (fragment) -> {\n" +
+                            ("                    if(\"${e.key}\".equals(viewHolder.keyed)) ViewJava.findActionReceiverOrNull(composeView.getComposeView(), ${e.receiver}.class, (fragment) -> {\n" +
                                     "                         fragment.${e.functionName}(${
                                         parameterList(
                                             e.parameterList
@@ -371,12 +380,12 @@ class AdapterProcessor : AbstractProcessor() {
     private fun buildClickListener(events: List<Event>): String {
         return events.joinToString("\n") { event ->
             if (event.receiver.contains("Activity")) {
-                "            ViewJava.doWhenIs(context, ${event.receiver}.class, (activity)->{\n" +
+                "            if(\"${event.key}\" == viewHolder.keyed) ViewJava.doWhenIs(context, ${event.receiver}.class, (activity)->{\n" +
                         "                activity.${event.functionName}(${parameterList(event.parameterList)});\n" +
                         "                return null;\n" +
                         "            });"
             } else {
-                "            ViewJava.findActionReceiverOrNull(v, ${event.receiver}.class, (fragment) -> {\n" +
+                "            if(\"${event.key}\" == viewHolder.keyed) ViewJava.findActionReceiverOrNull(v, ${event.receiver}.class, (fragment) -> {\n" +
                         "                fragment.${event.functionName}(${parameterList(event.parameterList)});\n" +
                         "                return null;\n" +
                         "            });"

@@ -29,6 +29,7 @@ abstract class DataItemHolder {
 abstract class AbstractAdapterViewHolder<IH : DataItemHolder>(val view: View) :
     RecyclerView.ViewHolder(view) {
     private var _itemHolder: IH? = null
+    lateinit var keyed: String
     val itemHolder get() = _itemHolder as IH
     fun onBind(itemHolder: IH) {
         this._itemHolder = itemHolder
@@ -43,7 +44,7 @@ abstract class AbstractAdapterViewHolder<IH : DataItemHolder>(val view: View) :
 abstract class AdapterViewHolder<IH : DataItemHolder>(binding: ViewBinding) :
     AbstractAdapterViewHolder<IH>(binding.root)
 
-open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<IH>> :
+open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<IH>>(val key: String? = null) :
     PagingDataAdapter<IH, VH>(
         common_diff_util as DiffUtil.ItemCallback<IH>
     ) {
@@ -57,7 +58,9 @@ open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHold
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
-        list[viewType].invoke(parent) as VH
+        (list[viewType].invoke(parent) as VH).apply {
+            keyed = key ?: "default"
+        }
 
     companion object {
         val common_diff_util = object : DiffUtil.ItemCallback<DataItemHolder>() {
@@ -86,7 +89,7 @@ open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHold
 /**
  * 支持排序，需要搭配SimpleDataViewModel和SimpleDataRepository
  */
-class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<IH>> :
+class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<IH>>(val key: String? = null) :
     ListAdapter<IH, VH>(SimpleSourceAdapter.common_diff_util as DiffUtil.ItemCallback<IH>) {
     var last = mutableListOf<IH>()
 
@@ -97,7 +100,9 @@ class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<IH>>
 
     var dataHook: SimpleDataViewModel.DataHook<*, IH, *>? = null
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH = list[viewType].invoke(parent) as VH
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH = (list[viewType].invoke(parent) as VH).apply {
+        keyed = key ?: "default"
+    }
 
     override fun getItemViewType(position: Int): Int {
         val item = getItem(position) ?: return super.getItemViewType(position)
@@ -132,9 +137,11 @@ class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<IH>>
 
 }
 
-class ManualAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<IH>> : ListAdapter<IH, VH>(SimpleSourceAdapter.common_diff_util as DiffUtil.ItemCallback<IH>) {
+class ManualAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<IH>>(val key: String? = null) : ListAdapter<IH, VH>(SimpleSourceAdapter.common_diff_util as DiffUtil.ItemCallback<IH>) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH = list[viewType].invoke(parent) as VH
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH = (list[viewType].invoke(parent) as VH).apply {
+        keyed = key ?: "default"
+    }
 
     override fun getItemViewType(position: Int): Int {
         val item = getItem(position) ?: return super.getItemViewType(position)

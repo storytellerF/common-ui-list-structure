@@ -26,6 +26,8 @@
             android:id="@+id/state_running"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minWidth="200dp"
+            android:minHeight="200dp"
             android:orientation="vertical">
 
             <LinearLayout
@@ -36,6 +38,7 @@
                 android:paddingEnd="21dp">
 
                 <TextView
+                    android:layout_marginEnd="20dp"
                     android:id="@+id/textView_task"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -96,6 +99,14 @@
                         android:paddingBottom="1dp" />
                 </FrameLayout>
             </ScrollView>
+
+            <Button
+                android:id="@+id/close_when_error"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClickListener="@{()->handler.close()}"
+                android:text="close"
+                android:visibility="gone" />
 
         </LinearLayout>
 

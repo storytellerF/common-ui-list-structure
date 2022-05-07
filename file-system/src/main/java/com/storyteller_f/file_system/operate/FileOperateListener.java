@@ -9,8 +9,9 @@ public interface FileOperateListener {
      * 当一个文件处理完成
      *
      * @param type 暂时没有用到
+     * @param size
      */
-    void onFileDone(FileInstance fileInstance, int type, Message message);
+    void onFileDone(FileInstance fileInstance, int type, Message message, long size);
 
     /**
      * 当一个文件夹处理完成

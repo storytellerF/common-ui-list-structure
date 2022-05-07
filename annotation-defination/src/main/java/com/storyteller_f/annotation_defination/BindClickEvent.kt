@@ -4,8 +4,8 @@ import kotlin.reflect.KClass
 
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.FUNCTION)
-annotation class BindClickEvent(val kClass: KClass<out Any>, val viewName: String = "getRoot()")
+annotation class BindClickEvent(val kClass: KClass<out Any>, val viewName: String = "getRoot()", val key: String = "default")
 
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.FUNCTION)
-annotation class BindLongClickEvent(val kClass: KClass<out Any>, val viewName: String = "getRoot()")
+annotation class BindLongClickEvent(val kClass: KClass<out Any>, val viewName: String = "getRoot()", val key: String = "default")

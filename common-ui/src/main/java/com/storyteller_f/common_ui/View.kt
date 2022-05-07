@@ -15,6 +15,12 @@ fun <T : View> T.setOnClick(block: (T) -> Unit) {
     }
 }
 
+fun <T: View> T.pp(block: (T) -> Unit) {
+    post {
+        block(this)
+    }
+}
+
 fun WindowInsets.navigator() =
     WindowInsetsCompat.toWindowInsetsCompat(this)
         .getInsets(WindowInsetsCompat.Type.navigationBars())

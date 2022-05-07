@@ -53,7 +53,7 @@ class RequestPathDialog :
     }
 
     )
-    private val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
+    private val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>(requestKey)
 
     companion object {
         const val requestKey = "request-path"
@@ -130,7 +130,7 @@ class RequestPathDialog :
 //        }
     }
 
-    @BindClickEvent(FileItemHolder::class)
+    @BindClickEvent(FileItemHolder::class, viewName = "getRoot()", key = requestKey)
     fun toChild(itemHolder: FileItemHolder) {
         if (itemHolder.file.item.isDirectory) {
             val current = session.fileInstance.value ?: return

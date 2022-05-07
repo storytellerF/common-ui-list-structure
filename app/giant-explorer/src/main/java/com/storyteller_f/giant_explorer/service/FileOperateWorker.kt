@@ -1,6 +1,7 @@
 package com.storyteller_f.giant_explorer.service
 
 import android.content.Context
+import android.util.Log
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.message.Message
@@ -9,24 +10,25 @@ import com.storyteller_f.file_system.operate.FileCopy
 import com.storyteller_f.file_system.operate.FileDelete
 import com.storyteller_f.file_system.operate.FileMoveCmd
 import com.storyteller_f.file_system.operate.FileOperateListener
-import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.multi_core.StoppableTask
+import java.util.concurrent.Callable
 
 abstract class FileOperateWorker internal constructor(
     val context: Context, private val fileCount: Int, private val folderCount: Int, val size: Long,
-    val focused: FileSystemItemModel
-) : Runnable, FileOperateListener, StoppableTask {
-    constructor(context: Context, focused: FileSystemItemModel, task: Task):this(context, task.fileCount, task.folderCount, task.size, focused)
+    val focused: FileSystemItemModel, val key: String
+) : Callable<Boolean>, FileOperateListener, StoppableTask {
+    constructor(context: Context, focused: FileSystemItemModel, task: Task, key: String) : this(context, task.fileCount, task.folderCount, task.size, focused, key)
+
     var fileOperationProgressListener: FileOperationProgressListener? = null
     var leftFileCount = fileCount
     var leftFolderCount = folderCount
     var leftSize = size
-    fun emitCurrentStateMessage() {
-        fileOperationProgressListener?.onLeft(leftFileCount, leftFolderCount, leftSize)
-        fileOperationProgressListener?.onProgress(progress)
+    private fun emitCurrentStateMessage() {
+        fileOperationProgressListener?.onLeft(leftFileCount, leftFolderCount, leftSize, key)
+        fileOperationProgressListener?.onProgress(progress, key)
     }
 
-    override fun onFileDone(fileInstance: FileInstance?, type: Int, message: Message?) {
+    override fun onFileDone(fileInstance: FileInstance?, type: Int, message: Message?, size: Long) {
         leftFileCount--
         leftSize -= size
         emitCurrentStateMessage()
@@ -38,7 +40,7 @@ abstract class FileOperateWorker internal constructor(
     }
 
     override fun onError(message: Message?, type: Int) {
-        fileOperationProgressListener?.onDetail(message?.name + message?.get(), R.color.color_failed)
+        fileOperationProgressListener?.onDetail(message?.name + message?.get(), Log.ERROR, key)
     }
 
 
@@ -46,9 +48,14 @@ abstract class FileOperateWorker internal constructor(
         return Thread.currentThread().isInterrupted
     }
 
-    abstract val description: String?
+    protected fun emitDetailMessage(detail: String, level: Int) {
+        fileOperationProgressListener?.onDetail(detail, level, key)
+    }
+    protected fun emitStateMessage(tip: String) {
+        fileOperationProgressListener?.onState(tip, key)
+    }
 
-    abstract override fun run()
+    abstract val description: String?
 
     open val progress: Int
         get() {
@@ -63,50 +70,73 @@ abstract class FileOperateWorker internal constructor(
          *
          * @param progress 新的进度
          */
-        fun onProgress(progress: Int)
+        fun onProgress(progress: Int, key: String)
 
         /**
          * 正在做的工作
          *
          * @param state 新的状态信息
          */
-        fun onState(state: String?)
+        fun onState(state: String?, key: String)
 
         /**
          * 进入某个文件夹
          *
          * @param tip 新的提示
          */
-        fun onTip(tip: String?)
+        fun onTip(tip: String?, key: String)
 
         /**
          * 需要展示的详细信息
          */
-        fun onDetail(detail: String?, color: Int)
+        fun onDetail(detail: String?, level: Int, key: String)
 
         /**
          * 还剩余的任务
          */
-        fun onLeft(file_count: Int, folder_count: Int, size: Long)
+        fun onLeft(fileCount: Int, folderCount: Int, size: Long, key: String)
 
         /**
          * 任务完成，可以刷新页面
          *
          * @param dest
          */
-        fun onComplete(dest: String?)
+        fun onComplete(dest: String?, isSuccess: Boolean, key: String)
+    }
+
+    open class DefaultProgressListener : FileOperationProgressListener {
+        override fun onProgress(progress: Int, key: String) {
+
+        }
+
+        override fun onState(state: String?, key: String) {
+        }
+
+        override fun onTip(tip: String?, key: String) {
+        }
+
+        override fun onDetail(detail: String?, level: Int, key: String) {
+        }
+
+        override fun onLeft(fileCount: Int, folderCount: Int, size: Long, key: String) {
+        }
+
+        override fun onComplete(dest: String?, isSuccess: Boolean, key: String) {
+        }
+
+
     }
 
 }
 
 class CopyImpl(
-    context: Context, private val detectorTasks: List<DetectorTask>, task: Task,
-    focused: FileSystemItemModel, private val isMove: Boolean, private val dest: FileInstance
-) : FileOperateWorker(context, focused, task) {
+    context: Context, private val detectorTasks: List<FileSystemItemModel>, task: Task,
+    focused: FileSystemItemModel, private val isMove: Boolean, private val dest: FileInstance, key: String
+) : FileOperateWorker(context, focused, task, key) {
     override val description: String
         get() {
             val taskName: String
-            val fileName: String = detectorTasks[0].file.name
+            val fileName: String = detectorTasks[0].name
             taskName = if (detectorTasks.size == 1) {
                 fileName
             } else {
@@ -115,23 +145,30 @@ class CopyImpl(
             return (if (isMove) "移动" else "复制") + taskName + "到" + dest.name
         }
 
-    override fun run() {
-        val any = detectorTasks.any {
-            if (needStop()) return
-            val file = it.file
-            val fileInstance = FileInstanceFactory.getFileInstance(file.fullPath, context)
-            if (isMove)
-                !FileMoveCmd(this, fileInstance, dest, context).apply {
-                    fileOperateListener = this@CopyImpl
-                }.call()
-            else
-                !FileCopy(this, fileInstance, dest, context).apply {
-                    fileOperateListener = this@CopyImpl
-                }.call()
-        }
-        if (!any) {
-            fileOperationProgressListener?.onComplete(dest.path)
-        }
+    override fun call(): Boolean {
+        val isSuccess = if (!detectorTasks.any {
+                if (needStop()) {
+                    emitDetailMessage("已暂停", Log.WARN)
+                    return false
+                }
+                val fileInstance = FileInstanceFactory.getFileInstance(it.fullPath, context)
+                emitStateMessage("处理${fileInstance.path}")
+                if (isMove)
+                    !FileMoveCmd(this, fileInstance, dest, context).apply {
+                        fileOperateListener = this@CopyImpl
+                    }.call()
+                else
+                    !FileCopy(this, fileInstance, dest, context).apply {
+                        fileOperateListener = this@CopyImpl
+                    }.call()
+            }) {
+            emitDetailMessage("error", Log.ERROR)
+            true
+        } else false
+        fileOperationProgressListener?.onComplete(
+            dest.path, isSuccess, key
+        )
+        return isSuccess
     }
 
     override val progress: Int
@@ -143,10 +180,10 @@ class CopyImpl(
 }
 
 class DeleteImpl(
-    context: Context, private val detectorTasks: List<DetectorTask>,
+    context: Context, private val detectorTasks: List<FileSystemItemModel>,
     task: Task,
-    focused: FileSystemItemModel
-) : FileOperateWorker(context, focused, task) {
+    focused: FileSystemItemModel, key: String
+) : FileOperateWorker(context, focused, task, key) {
 
     override val description: String
         get() {
@@ -157,14 +194,19 @@ class DeleteImpl(
             }
         }
 
-    override fun run() {
-        if (detectorTasks.any {//如果有一个失败了，就提前退出
-                !FileDelete(this, FileInstanceFactory.getFileInstance(it.file.fullPath, context), context).call()
+    override fun call(): Boolean {
+
+        val isSuccess = if (detectorTasks.any {//如果有一个失败了，就提前退出
+                emitStateMessage("处理${it.fullPath}")
+                !FileDelete(this, FileInstanceFactory.getFileInstance(it.fullPath, context), context).call()
             }) {
-            fileOperationProgressListener?.onDetail("error", 0)
-        } else {
-            fileOperationProgressListener?.onComplete(focused.fullPath)
-        }
+            emitDetailMessage("error", Log.ERROR)
+            false
+        } else true
+        fileOperationProgressListener?.onComplete(
+            focused.fullPath, isSuccess, key
+        )
+        return isSuccess
     }
 
 }

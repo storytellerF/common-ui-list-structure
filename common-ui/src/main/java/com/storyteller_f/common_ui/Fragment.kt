@@ -48,7 +48,8 @@ abstract class CommonFragment<T : ViewBinding>(
     override fun onStart() {
         super.onStart()
         waitingInFragment.forEach { t ->
-            parentFragmentManager.setFragmentResultListener(t.key, this, t.value.action)
+            childFragmentManager.clearFragmentResult(t.key)
+            childFragmentManager.setFragmentResultListener(t.key, this, t.value.action)
         }
     }
 
@@ -74,10 +75,24 @@ abstract class CommonFragment<T : ViewBinding>(
                 waitingInFragment.remove(s)
             }
         }
-        waitingInFragment[requestKey()] = FragmentAction(callback)
-        parentFragmentManager.setFragmentResultListener(requestKey(), this, callback)
+        val requestKey = requestKey()
+        waitingInFragment[requestKey] = FragmentAction(callback)
+        childFragmentManager.setFragmentResultListener(requestKey, this, callback)
     }
-
+    fun <T : Parcelable> dialog(dialogFragment: CommonDialogFragment<*>, action: (T) -> Unit) {
+        val requestKey = dialogFragment.requestKey()
+        dialogFragment.show(childFragmentManager, requestKey)
+        val callback = { s: String, r: Bundle ->
+            if (waitingInFragment.containsKey(s)) {
+                r.getParcelable<T>("result")?.let {
+                    action.invoke(it)
+                }
+                waitingInFragment.remove(s)
+            }
+        }
+        waitingInFragment[requestKey] = FragmentAction(callback)
+        childFragmentManager.setFragmentResultListener(requestKey, this, callback)
+    }
     companion object {
         private const val TAG = "Fragment"
     }

@@ -19,9 +19,7 @@ import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindLongClickEvent
 import com.storyteller_f.common_ktx.mm
 import com.storyteller_f.common_ui.CommonFragment
-import com.storyteller_f.common_vm_ktx.HasStateValueModel
-import com.storyteller_f.common_vm_ktx.asvm
-import com.storyteller_f.common_vm_ktx.toDiff
+import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.R
@@ -35,10 +33,16 @@ import com.storyteller_f.ui_list.core.SearchProducer
 import com.storyteller_f.ui_list.core.SimpleSourceAdapter
 import com.storyteller_f.ui_list.core.search
 import java.io.File
+import java.util.*
 
 class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileListBinding::inflate) {
     private val fileOperateBinder
         get() = (requireContext() as MainActivity).fileOperateBinder
+    private val uuid by kavm({ "uuid" }) {
+        GenericValueModel<String>().apply {
+            data.value = UUID.randomUUID().toString()
+        }
+    }
     private val data by search({ requireDatabase() to session.selected }, { (database, selected) ->
         SearchProducer(service(database)) { fileModel, _ ->
             FileItemHolder(fileModel, selected)
@@ -154,7 +158,8 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
             setOnMenuItemClickListener { item ->
                 when (item.itemId) {
                     R.id.delete -> {
-                        fileOperateBinder?.delete(itemHolder.file.item, listOf(itemHolder.file.item))
+                        val key = uuid.data.value ?: return@setOnMenuItemClickListener true
+                        fileOperateBinder?.delete(itemHolder.file.item, listOf(itemHolder.file.item), key)
                     }
                     R.id.move_to -> {
                         moveOrCopy(true, itemHolder)
@@ -183,13 +188,13 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
     }
 
     private fun moveOrCopy(move: Boolean, itemHolder: FileItemHolder) {
-        RequestPathDialog().show(parentFragmentManager, RequestPathDialog.requestKey)
-        fragment<RequestPathDialog.RequestPathResult> { result ->
+        dialog<RequestPathDialog.RequestPathResult>(RequestPathDialog()) { result ->
             result.path.mm {
                 FileInstanceFactory.getFileInstance(it, requireContext())
             }.mm { dest ->
+                val key = uuid.data.value ?: return@mm
                 val detectSelected = detectSelected(itemHolder)
-                fileOperateBinder?.moveOrCopy(dest, detectSelected, itemHolder.file.item, move)
+                fileOperateBinder?.moveOrCopy(dest, detectSelected, itemHolder.file.item, move, key)
             }
         }
     }

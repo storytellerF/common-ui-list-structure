@@ -63,43 +63,47 @@ fun <VM : ViewModel, T> T.keyedViewModels(
 @MainThread
 inline fun <reified VM : ViewModel, T> T.kvm(
     keyPrefix: String,
-    noinline ownerProducer: () -> ViewModelStoreOwner = { this },
-    noinline factoryProducer: (() -> ViewModelProvider.Factory)? = null
+    crossinline factoryProducer: () -> VM,
 ) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner, T : HasDefaultViewModelProviderFactory =
-    keyedViewModels({ keyPrefix }, VM::class, { ownerProducer().viewModelStore }, factoryProducer)
+    keyedViewModels({ keyPrefix }, VM::class, { viewModelStore }, defaultFactory(factoryProducer))
+
+inline fun <reified VM : ViewModel, T> T.defaultFactory(
+    crossinline factoryProducer: () -> VM,
+    noinline ownerProducer: () -> SavedStateRegistryOwner = { this },
+
+    ): () -> ViewModelProvider.Factory where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = {
+    object : AbstractSavedStateViewModelFactory(ownerProducer(), null) {
+        override fun <T : ViewModel> create(
+            key: String,
+            modelClass: Class<T>,
+            handle: SavedStateHandle
+        ): T = modelClass.cast(factoryProducer())!!
+    }
+}
+
+inline fun <reified VM : ViewModel, T> T.stateDefaultFactory(
+    crossinline factoryProducer: (SavedStateHandle) -> VM,
+    noinline ownerProducer: () -> SavedStateRegistryOwner = { this },
+): () -> ViewModelProvider.Factory where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = {
+    object : AbstractSavedStateViewModelFactory(ownerProducer(), null) {
+        override fun <T : ViewModel> create(
+            key: String,
+            modelClass: Class<T>,
+            handle: SavedStateHandle
+        ): T = modelClass.cast(factoryProducer(handle))!!
+    }
+}
 
 @MainThread
 inline fun <reified VM : ViewModel, T> T.kvm(
     noinline keyPrefixProvider: () -> String,
     crossinline factoryProducer: () -> VM
-): Lazy<VM> where T : SavedStateRegistryOwner, T : ViewModelStoreOwner {
-    return KeyedViewModelLazy(keyPrefixProvider, VM::class, { viewModelStore },
-        {
-            object : AbstractSavedStateViewModelFactory(this, null) {
-                override fun <T : ViewModel> create(
-                    key: String,
-                    modelClass: Class<T>,
-                    handle: SavedStateHandle
-                ): T = modelClass.cast(factoryProducer())!!
-            }
-        })
-}
+) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = KeyedViewModelLazy(keyPrefixProvider, VM::class, { viewModelStore }, defaultFactory(factoryProducer))
 
 @MainThread
 inline fun <reified VM : ViewModel, T> T.vm(
     crossinline factoryProducer: () -> VM
-): Lazy<VM> where T : ViewModelStoreOwner, T : SavedStateRegistryOwner {
-    return ViewModelLazy(VM::class, { viewModelStore },
-        {
-            object : AbstractSavedStateViewModelFactory(this, null) {
-                override fun <T : ViewModel> create(
-                    key: String,
-                    modelClass: Class<T>,
-                    handle: SavedStateHandle
-                ): T = modelClass.cast(factoryProducer())!!
-            }
-        })
-}
+) where T : ViewModelStoreOwner, T : SavedStateRegistryOwner = ViewModelLazy(VM::class, { viewModelStore }, defaultFactory(factoryProducer))
 
 /**
  * 虽然是Fragment 的扩展函数，但是调用的activity的
@@ -107,48 +111,25 @@ inline fun <reified VM : ViewModel, T> T.vm(
 @MainThread
 inline fun <reified VM : ViewModel> Fragment.avm(
     crossinline factoryProducer: () -> VM
-): Lazy<VM> {
-    return ViewModelLazy(VM::class, { requireActivity().viewModelStore },
-        {
-            object : AbstractSavedStateViewModelFactory(requireActivity(), null) {
-                override fun <T : ViewModel> create(
-                    key: String,
-                    modelClass: Class<T>,
-                    handle: SavedStateHandle
-                ): T = modelClass.cast(factoryProducer())!!
-            }
-        })
-}
+) = ViewModelLazy(VM::class, { requireActivity().viewModelStore }, defaultFactory(factoryProducer) { requireActivity() })
+
+@MainThread
+inline fun <reified VM : ViewModel> Fragment.kavm(
+    noinline keyPrefixProvider: () -> String,
+    crossinline factoryProducer: () -> VM
+) = KeyedViewModelLazy(keyPrefixProvider, VM::class, { requireActivity().viewModelStore }, defaultFactory(factoryProducer) { requireActivity() })
+
 
 @MainThread
 inline fun <reified VM : ViewModel> Fragment.asvm(
     crossinline factoryProducer: (SavedStateHandle) -> VM
-): Lazy<VM> {
-    return ViewModelLazy(VM::class, { requireActivity().viewModelStore },
-        {
-            object : AbstractSavedStateViewModelFactory(requireActivity(), null) {
-                override fun <T : ViewModel> create(
-                    key: String,
-                    modelClass: Class<T>,
-                    handle: SavedStateHandle
-                ): T = modelClass.cast(factoryProducer(handle))!!
-            }
-        })
-}
+) = ViewModelLazy(VM::class, { requireActivity().viewModelStore }, stateDefaultFactory(factoryProducer) { requireActivity() }
+)
 
 inline fun <reified VM : ViewModel, T> T.svm(
     crossinline factoryProducer: (SavedStateHandle) -> VM
 ): Lazy<VM> where T : SavedStateRegistryOwner, T : ViewModelStoreOwner {
-    return ViewModelLazy(VM::class, { viewModelStore },
-        {
-            object : AbstractSavedStateViewModelFactory(this, null) {
-                override fun <T : ViewModel> create(
-                    key: String,
-                    modelClass: Class<T>,
-                    handle: SavedStateHandle
-                ): T = modelClass.cast(factoryProducer(handle))!!
-            }
-        })
+    return ViewModelLazy(VM::class, { viewModelStore }, stateDefaultFactory(factoryProducer))
 }
 
 class GenericValueModel<T> : ViewModel() {

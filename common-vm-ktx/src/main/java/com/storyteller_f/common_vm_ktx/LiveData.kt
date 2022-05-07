@@ -232,14 +232,14 @@ fun <T> LiveData<T>.debounce(ms: Long): MediatorLiveData<T> {
     val timer = Timer()
     mediatorLiveData.addSource(this) {
         val l = lastTime
-        if (l == null || l - System.currentTimeMillis() > ms) {
-            timer.cancel()
+        if (l == null || l - System.currentTimeMillis() >= ms) {
+            timer.purge()
             mediatorLiveData.value = it
             lastTime = System.currentTimeMillis()
         } else {
             timer.schedule(object : TimerTask() {
                 override fun run() {
-                    mediatorLiveData.value = it
+                    mediatorLiveData.postValue(it)
                 }
             }, ms)
         }

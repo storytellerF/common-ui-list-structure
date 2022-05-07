@@ -38,7 +38,7 @@ abstract class FileOperatorSelf(
 class FileCopy(
     task: StoppableTask,
     fileInstance: FileInstance,
-    val target: FileInstance,
+    private val target: FileInstance,
     context: Context
 ) : FileOperatorWithTarget(task, fileInstance, target, context) {
     override fun call(): Boolean {
@@ -67,7 +67,14 @@ class FileCopy(
         return true
     }
 
+    private fun copyFileTest(f: FileInstance): Boolean {
+        Thread.sleep(1000)
+        fileOperateListener?.onFileDone(f, 0, Message(""), f.fileLength)
+        return true
+    }
+
     private fun copyFileFaster(f: FileInstance, t: FileInstance): Boolean {
+        return copyFileTest(f)
         try {
             val toChild = FileInstanceFactory.toChild(t, f.name, true, context, true)
             (f).fileInputStream.channel.use { int ->
@@ -79,7 +86,7 @@ class FileCopy(
                         out.write(byteArray)
                         byteArray.clear()
                     }
-                    fileOperateListener?.onFileDone(f, 0, Message(""))
+                    fileOperateListener?.onFileDone(f, 0, Message(""), f.fileLength)
                     return true
                 }
 
@@ -103,7 +110,7 @@ class FileCopy(
 class FileMove(
     task: StoppableTask,
     fileInstance: FileInstance,
-    val target: FileInstance,
+    private val target: FileInstance,
     context: Context
 ) : FileOperatorWithTarget(task, fileInstance, target, context), FileOperateListener {
     override fun call(): Boolean {
@@ -112,8 +119,8 @@ class FileMove(
         }.call()
     }
 
-    override fun onFileDone(fileInstance: FileInstance?, type: Int, message: Message?) {
-        fileOperateListener?.onFileDone(fileInstance, type, Message("move success"))
+    override fun onFileDone(fileInstance: FileInstance?, type: Int, message: Message?, size: Long) {
+        fileOperateListener?.onFileDone(fileInstance, type, Message("move success"), size)
         try {
             fileInstance?.deleteFileOrEmptyDirectory()
         } catch (e: Exception) {
@@ -138,7 +145,7 @@ class FileMove(
 class FileMoveCmd(
     task: StoppableTask,
     fileInstance: FileInstance,
-    val target: FileInstance,
+    private val target: FileInstance,
     context: Context
 ) : FileOperatorWithTarget(task, fileInstance, target, context) {
     override fun call(): Boolean {
@@ -181,8 +188,8 @@ class FileDelete(
                             fileOperateListener?.onFileDone(
                                 toChild,
                                 0,
-                                Message("delete ${it.name} success")
-                            )
+                                Message("delete ${it.name} success"),
+                            fileInstance.fileLength)
                         else
                             fileOperateListener?.onError(Message("delete ${it.name} failed"), 0)
                     }
@@ -202,8 +209,8 @@ class FileDelete(
                             fileOperateListener?.onFileDone(
                                 c,
                                 0,
-                                Message("delete ${it.name} success")
-                            )
+                                Message("delete ${it.name} success"),
+                            fileInstance.fileLength)
                         else
                             fileOperateListener?.onError(Message("delete ${it.name} failed"), 0)
                     }
