@@ -212,6 +212,9 @@ fun <T> LiveData<T>.toDiff(compare: ((T, T) -> Boolean)? = null): MediatorLiveDa
     return mediatorLiveData
 }
 
+/**
+ * @param compare 如果返回真，那么就会被过滤掉
+ */
 fun <T> LiveData<T>.toDiffNoNull(compare: ((T, T) -> Boolean)? = null): MediatorLiveData<Pair<T, T>> {
     val mediatorLiveData = MediatorLiveData<Pair<T, T>>()
     var oo: T? = value

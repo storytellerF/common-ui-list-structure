@@ -12,7 +12,7 @@ import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.giant_explorer.databinding.DialogFileOperationBinding
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
-import com.storyteller_f.giant_explorer.service.FileOperateWorker
+import com.storyteller_f.giant_explorer.service.LocalFileOperateWorker
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
@@ -48,16 +48,26 @@ class FileOperationDialog : CommonDialogFragment<DialogFileOperationBinding>(Dia
         dialog?.setCanceledOnTouchOutside(false)
         val list = listOf(binding.stateProgress, binding.stateRunning, binding.stateDone)
         if (::binder.isInitialized) {
-            val value = uuid.data.value ?: return
+            Log.i(TAG, "onBindViewEvent: state ${binder.state.value}")
+            val key = uuid.data.value ?: return
+            if (!binder.map.containsKey(key)) dismiss()
             binder.state.debounce(200).distinctUntilChanged().observe(viewLifecycleOwner) {
                 when (it) {
                     FileOperateBinder.state_running -> {
+                        val task = binder.map[key]?.taskEquivalent
                         list.onVisible(binding.stateRunning)
-                        val task = binder.map[value]
-                        Log.i(TAG, "onBindViewEvent: $value $task")
+                        Log.i(TAG, "onBindViewEvent: $key $task")
                         binding.textViewTask.text = String.format("total size: %d\ntotal file:%d\ntotal folder:%d", task?.size, task?.fileCount, task?.folderCount)
                     }
-                    FileOperateBinder.state_end -> list.onVisible(binding.stateDone)
+                    FileOperateBinder.state_end -> {
+                        binding.doneText.text = "done"
+                        list.onVisible(binding.stateDone)
+                    }
+                    FileOperateBinder.state_error -> {
+                        val task = binder.map[key]
+                        binding.doneText.text = task?.message
+                        list.onVisible(binding.stateDone)
+                    }
                     else -> list.onVisible(binding.stateProgress)
                 }
             }
@@ -73,8 +83,8 @@ class FileOperationDialog : CommonDialogFragment<DialogFileOperationBinding>(Dia
             leftVM.data.observe(viewLifecycleOwner) {
                 binding.textViewLeft.text = String.format("size: %d\nleft file:%d\nleft folder:%d", it.third, it.first, it.second)
             }
-            val orPut = binder.fileOperationProgressListener.getOrPut(value) { mutableListOf() }
-            orPut.add(object : FileOperateWorker.DefaultProgressListener() {
+            val orPut = binder.fileOperationProgressListener.getOrPut(key) { mutableListOf() }
+            orPut.add(object : LocalFileOperateWorker.DefaultProgressListener() {
                 override fun onProgress(progress: Int, key: String) {
                     progressVM.data.postValue(progress)
                 }
@@ -99,7 +109,7 @@ class FileOperationDialog : CommonDialogFragment<DialogFileOperationBinding>(Dia
 
             })
             val callbackFlow = callbackFlow {
-                val element = object : FileOperateWorker.DefaultProgressListener() {
+                val element = object : LocalFileOperateWorker.DefaultProgressListener() {
                     override fun onDetail(detail: String?, level: Int, key: String) {
                         trySend(detail ?: "null")
                     }
@@ -107,14 +117,15 @@ class FileOperationDialog : CommonDialogFragment<DialogFileOperationBinding>(Dia
                 orPut.add(element)
                 awaitClose { orPut.remove(element) }
             }
+            val detail = binding.textViewDetail
             scope.launch {
                 viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                     callbackFlow.collect {
-                        binding.textViewDetail.append(it)
+                        detail.append(it)
                     }
                 }
             }
-        }
+        } else dismiss()
     }
 
     override fun onDestroyView() {

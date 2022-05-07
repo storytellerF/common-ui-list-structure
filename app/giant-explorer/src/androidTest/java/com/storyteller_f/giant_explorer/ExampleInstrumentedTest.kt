@@ -1,5 +1,6 @@
 package com.storyteller_f.giant_explorer
 
+import android.net.Uri
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
 
@@ -20,5 +21,7 @@ class ExampleInstrumentedTest {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("com.storyteller_f.giant_explorer", appContext.packageName)
+        val parse = Uri.parse("https://www.jianshu.com/u/a1f69fa1b85f")
+        parse
     }
 }

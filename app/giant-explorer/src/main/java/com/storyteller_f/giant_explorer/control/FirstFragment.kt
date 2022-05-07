@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.flowWithLifecycle
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
+import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.common_ui.CommonFragment
 import com.storyteller_f.common_ui.end
 import com.storyteller_f.common_ui.scope
@@ -77,7 +78,7 @@ class FirstFragment : CommonFragment<FragmentFirstBinding>(FragmentFirstBinding:
                     requireDatabase().bigTimeDao().update(BigTimeTask(itemHolder.bigTimeWorker.absolutePath, !itemHolder.bigTimeWorker.enable, itemHolder.bigTimeWorker.workerName))
                 }
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), e.localizedMessage ?: e.javaClass.toString(), Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), e.exceptionMessage, Toast.LENGTH_SHORT).show()
             } finally {
                 waitingDialog.end()
             }

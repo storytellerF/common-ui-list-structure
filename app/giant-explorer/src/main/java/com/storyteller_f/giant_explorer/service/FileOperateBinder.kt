@@ -1,8 +1,8 @@
 package com.storyteller_f.giant_explorer.service
 
 import android.content.Context
+import android.net.Uri
 import android.os.Binder
-import android.util.Log
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.MutableLiveData
 import com.storyteller_f.file_system.FileInstanceFactory.getFileInstance
@@ -14,9 +14,9 @@ import java.util.*
 import kotlin.concurrent.thread
 
 class FileOperateBinder(val context: Context) : Binder() {
-    var fileOperationProgressListener = mutableMapOf<String, MutableList<FileOperateWorker.FileOperationProgressListener>>()
-    val map = mutableMapOf<String, Task>()
-    private val progressListenerLocal = object : FileOperateWorker.FileOperationProgressListener {
+    var fileOperationProgressListener = mutableMapOf<String, MutableList<LocalFileOperateWorker.FileOperationProgressListener>>()
+    val map = mutableMapOf<String, TaskSession>()
+    private val progressListenerLocal = object : LocalFileOperateWorker.FileOperationProgressListener {
         override fun onProgress(progress: Int, key: String) {
             fileOperationProgressListener[key]?.forEach { it.onProgress(progress, key) }
         }
@@ -54,21 +54,10 @@ class FileOperateBinder(val context: Context) : Binder() {
      * @param focused     内存卡根部tree fileSystemItemModel
      */
     fun delete(focused: FileSystemItemModel, selected: List<FileSystemItemModel>, key: String) {
+        whenStart(key)
         thread {
             startDeleteTask(focused, selected, key)
         }
-    }
-
-    private fun preTask(selected: List<FileSystemItemModel?>): LinkedList<DetectorTask>? {
-        state.postValue(state_detect)
-        val multiDetector = MultiDetector(selected)
-        val detectorTasks = multiDetector.start(context)
-        val filterIsInstance = detectorTasks.filterIsInstance<ErrorTask>()
-        if (filterIsInstance.isNotEmpty()) {
-            fileOperateResult?.onError(filterIsInstance.first().message)
-            return null
-        }
-        return detectorTasks
     }
 
     @WorkerThread
@@ -76,18 +65,23 @@ class FileOperateBinder(val context: Context) : Binder() {
         state.postValue(state_compute)
         val compute = TaskCompute(selected, context).compute()
         if (compute == null) {
-            fileOperateResult?.onError("出现错误")
+            whenError(key, "error when detect")
             return
         }
-        Log.i(TAG, "startDeleteTask: compute size ${compute.size}")
         state.postValue(state_running)
         if (DeleteImpl(context, selected, compute, focused, key).let {
                 it.fileOperationProgressListener = progressListenerLocal
                 it.call()
             }) {
-            state.postValue(state_end)
+            whenEnd(key)
             fileOperateResult?.onSuccess(null, focused.fullPath)
         }
+    }
+
+    private fun whenError(key: String, message: String) {
+        map[key] = TaskSession(null, message)
+        state.postValue(state_error)
+        fileOperateResult?.onError(message)
     }
 
     /**
@@ -103,31 +97,90 @@ class FileOperateBinder(val context: Context) : Binder() {
         focused: FileSystemItemModel,
         deleteOrigin: Boolean,
         selected: List<FileSystemItemModel>,
-        uuid: String
+        key: String
     ) {
         state.postValue(state_compute)
         val computeSize = TaskCompute(selected, context).compute()
         if (computeSize == null) {
-            fileOperateResult?.onError("error")
+            whenError(key, "error when detect")
             return
         }
-        Log.i(TAG, "startCopyTask: compute size ${computeSize.size}")
         state.postValue(state_running)
-        map[uuid] = computeSize
-        if (CopyImpl(context, selected, computeSize, focused, deleteOrigin, dest, uuid).let {
+        map[key] = TaskSession(computeSize, null)
+        if (CopyImpl(context, selected, computeSize, focused, deleteOrigin, dest, key).let {
                 it.fileOperationProgressListener = progressListenerLocal
                 it.call()
             }) {
-            state.postValue(state_end)
+            whenEnd(key)
             fileOperateResult?.onSuccess(dest.path, focused.fullPath)
         }
     }
 
 
-    fun moveOrCopy(dest: FileInstance, selected: List<FileSystemItemModel>, focused: FileSystemItemModel, deleteOrigin: Boolean, uuid: String) {
+    fun moveOrCopy(dest: FileInstance, selected: List<FileSystemItemModel>, focused: FileSystemItemModel, deleteOrigin: Boolean, key: String) {
+        whenStart(key)
         thread {
-            startCopyTask(dest, focused, deleteOrigin, selected, uuid)
+            startCopyTask(dest, focused, deleteOrigin, selected, key)
         }
+    }
+
+    private fun preTask(selected: List<Uri>, key: String): LinkedList<DetectorTask>? {
+        state.postValue(state_detect)
+        val detectorTasks = MultiDetector(selected).start()
+        if (detectorTasks.isEmpty()) {
+            whenError(key, "无合法任务")
+            return null
+        }
+        val hasErrorTask = detectorTasks.filterIsInstance<ErrorTask>()
+        if (hasErrorTask.isNotEmpty()) {
+            whenError(key, hasErrorTask.first().message)
+            return null
+        }
+        return detectorTasks
+    }
+
+    fun compoundTask(selected: List<Uri>, dest: FileInstance, key: String) {
+        whenStart(key)
+        thread {
+            preTask(selected, key)?.let { linkedList ->
+                startCompoundTask(linkedList, dest, key)
+            }
+        }
+    }
+
+    private fun whenStart(key: String) {
+        map.getOrPut(key) {
+            TaskSession(null, null)
+        }
+        state.postValue(state_null)
+    }
+
+    private fun startCompoundTask(linkedList: LinkedList<DetectorTask>, dest: FileInstance, key: String) {
+        state.postValue(state_running)
+        val filterIsInstance = linkedList.filterIsInstance<LocalTask>().map {
+            getFileInstance(it.path, context).fileSystemItem
+        }
+        val count = linkedList.filter {
+            it is ContentTask || it is DownloadTask
+        }.size
+        val compute = if (filterIsInstance.isNotEmpty()) {
+            TaskCompute(filterIsInstance, context).compute() ?: kotlin.run {
+                whenError(key, "error when detect")
+                return
+            }
+        } else TaskEquivalent(0, 0, 0)
+        if (CompoundImpl(linkedList, dest, context, count + compute.fileCount, compute.folderCount, compute.size, key).let {
+                it.fileOperationProgressListener = progressListenerLocal
+                it.call()
+            }) {
+            whenEnd(key)
+            fileOperateResult?.onSuccess(dest.path, null)
+        }
+    }
+
+    private fun whenEnd(key: String) {
+        state.postValue(state_end)
+        map.remove(key)
     }
 
     companion object {
@@ -138,15 +191,18 @@ class FileOperateBinder(val context: Context) : Binder() {
         const val state_compute = 2
         const val state_running = 3
         const val state_end = 4
+        const val state_error = 5
     }
 }
 
-class Task(val fileCount: Int, val folderCount: Int, val size: Long)
+class TaskSession(val taskEquivalent: TaskEquivalent?, val message: CharSequence?)
+
+class TaskEquivalent(val fileCount: Int, val folderCount: Int, val size: Long)
 
 class TaskCompute(private val detectorTasks: List<FileSystemItemModel>, val context: Context) {
     var count = 0
     var folderCount = 0
-    fun compute(): Task? {
+    fun compute(): TaskEquivalent? {
         val size = detectorTasks.map {
             val fileInstance = getFileInstance(it.fullPath, context)
             if (!fileInstance.exists()) {
@@ -158,8 +214,9 @@ class TaskCompute(private val detectorTasks: List<FileSystemItemModel>, val cont
             } else {
                 getDirectorySize(it)
             }
-        }.reduce { acc, l -> acc + l }
-        return Task(count, folderCount, size)
+        }.plus(0).reduce { acc, l -> acc + l }
+        if (count.toLong() + folderCount.toLong() + size == 0L) return null
+        return TaskEquivalent(count, folderCount, size)
     }
 
     private fun getDirectorySize(file: FileSystemItemModel): Long {

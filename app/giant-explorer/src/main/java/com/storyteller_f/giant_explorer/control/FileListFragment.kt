@@ -91,33 +91,20 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
                 }
             }
             R.id.paste_file -> {
+                val key = uuid.data.value ?: return true
                 ContextCompat.getSystemService(requireContext(), ClipboardManager::class.java)?.let { manager ->
                     manager.primaryClip?.let { data ->
                         val mutableList = MutableList(data.itemCount) {
                             data.getItemAt(it)
                         }
-                        val uriList = mutableList.map {
-                            Uri.parse(it.coerceToText(requireContext()).toString())
+                        val uriList = mutableList.mapNotNull {
+                            Uri.parse(it.coerceToText(requireContext()).toString()).takeIf { uri -> uri.toString().isNotEmpty() }
+                        }.plus(mutableList.mapNotNull {
+                            it.uri
+                        })
+                        session.fileInstance.value?.let {
+                            fileOperateBinder?.compoundTask(uriList, it, key)
                         }
-                        val localFilePath = uriList.filter {
-                            it.scheme == "file"
-                        }.map {
-                            it.path
-                        }
-                        val map = uriList.filter {
-                            it.scheme == "http" || it.scheme == "https"
-                        }.map {
-                            it.path
-                        }
-                        val selected = localFilePath.filterNotNull().map { path ->
-                            FileInstanceFactory.getFileInstance(path, requireContext()).let {
-                                if (it.isDirectory) it.directory else it.file
-                            }
-                        }
-//                        if (selected.isNotEmpty())
-//                            session.fileInstance.value?.let { instance ->
-//                                fileOperateBinder?.moveOrCopy(instance, selected, selected.first(), false)
-//                            }
                     }
                 }
 

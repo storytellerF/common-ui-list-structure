@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.navigation.fragment.findNavController
+import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.common_ui.*
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.BigTimeTask
@@ -27,7 +28,7 @@ class SecondFragment : CommonFragment<FragmentSecondBinding>(FragmentSecondBindi
                     setFragmentResult(result)
                     findNavController().navigateUp()
                 } catch (e: Exception) {
-                    Toast.makeText(requireContext(), e.localizedMessage ?: e.javaClass.toString(), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), e.exceptionMessage, Toast.LENGTH_SHORT).show()
                 } finally {
                     waitingDialog.end()
                 }

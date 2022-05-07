@@ -20,6 +20,7 @@ import androidx.navigation.findNavController
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ktx.context
 import com.storyteller_f.common_ktx.contextSuspend
+import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.common_ui.SimpleActivity
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui.setVisible
@@ -169,10 +170,10 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
             fileOperateBinderLocal.let { binder ->
                 binder.setFileOperateResult(this@MainActivity)
                 binder.state.toDiffNoNull { i, i2 ->
-                    i == i2
+                    i == i2 && i != FileOperateBinder.state_null
                 }.observe(this@MainActivity, Observer {
                     Toast.makeText(this@MainActivity, "${it.first} ${it.second}", Toast.LENGTH_SHORT).show()
-                    if (it.first == 0) {
+                    if (it.first == FileOperateBinder.state_null) {
                         FileOperationDialog().apply {
                             this.binder = fileOperateBinderLocal
                         }.show(supportFragmentManager, FileOperationDialog.tag)
@@ -198,7 +199,7 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
     override fun onError(string: String?) {
         scope.launch {
             context {
-                Toast.makeText(this, "dest $string error", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "error: $string", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -217,7 +218,7 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
         try {
             unbindService(connection)
         } catch (e: Exception) {
-            Toast.makeText(this, e.localizedMessage ?: e.javaClass.toString(), Toast.LENGTH_LONG).show()
+            Toast.makeText(this, e.exceptionMessage, Toast.LENGTH_LONG).show()
         }
     }
 

@@ -9,6 +9,9 @@ import java.lang.Exception
 import java.nio.ByteBuffer
 import java.util.concurrent.Callable
 
+/**
+ * 返回应该是任务是否成功
+ */
 abstract class FileOperator(val task: StoppableTask, val fileInstance: FileInstance, val context: Context) : Callable<Boolean?> {
     var fileOperateListener: FileOperateListener? = null
 }
@@ -79,12 +82,12 @@ class FileCopy(
             val toChild = FileInstanceFactory.toChild(t, f.name, true, context, true)
             (f).fileInputStream.channel.use { int ->
                 (toChild).fileOutputStream.channel.use { out ->
-                    val byteArray = ByteBuffer.allocateDirect(1024)
-                    while (int.read(byteArray) != -1) {
+                    val byteBuffer = ByteBuffer.allocateDirect(1024)
+                    while (int.read(byteBuffer) != -1) {
                         if (needStop()) return false
-                        byteArray.flip()
-                        out.write(byteArray)
-                        byteArray.clear()
+                        byteBuffer.flip()
+                        out.write(byteBuffer)
+                        byteBuffer.clear()
                     }
                     fileOperateListener?.onFileDone(f, 0, Message(""), f.fileLength)
                     return true

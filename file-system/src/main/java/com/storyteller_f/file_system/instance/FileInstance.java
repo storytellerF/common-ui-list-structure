@@ -92,6 +92,11 @@ public abstract class FileInstance {
 
     public abstract DirectoryItemModel getDirectory();
 
+    public FileSystemItemModel getFileSystemItem() throws Exception {
+        if (isFile()) return getFile();
+        else return getDirectory();
+    }
+
     private void initName(String path) {
         file = new File(path);
         name = file.getName();
