@@ -15,7 +15,7 @@ import com.storyteller_f.file_system.instance.local.fake.StorageLocalFileInstanc
 import com.storyteller_f.file_system.instance.local.document.MountedLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.FakeDirectoryLocalFileInstance
 import java.lang.Exception
-import java.util.ArrayList
+import java.util.*
 
 object FileInstanceFactory {
     private const val TAG = "FileInstanceFactory"
@@ -23,7 +23,7 @@ object FileInstanceFactory {
     const val emulatedRootPath = "/storage/emulated"
     const val currentEmulatedPath = "/storage/self"
     const val storagePath = "/storage"
-    const val sdCardPath = "/sdcard"
+    const val sdcardPath = "/sdcard"
     private val filter: Filter = object : Filter {
         override fun onPath(parent: String, absolutePath: String, isFile: Boolean): Boolean {
             return true
@@ -45,9 +45,13 @@ object FileInstanceFactory {
     }
 
     private val regularPath = listOf("/system", "/mnt")
+
     @WorkerThread
-    private fun getFileInstance(filter: Filter?, path: String, context: Context): FileInstance {
-        assert(!path.endsWith("/"))
+    private fun getFileInstance(filter: Filter?, unsafePath: String, context: Context): FileInstance {
+        assert(!unsafePath.endsWith("/")) {
+            unsafePath
+        }
+        val path = simplyPath(unsafePath)
         return when {
             path.startsWith(rootUserEmulatedPath) -> if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R && Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
                 ExternalDocumentLocalFileInstance(filter, context, path)
@@ -71,7 +75,7 @@ object FileInstanceFactory {
                 }
                 else -> RegularLocalFileInstance(context, filter, path)
             }
-            path.startsWith(sdCardPath) -> RegularLocalFileInstance(context, filter, path)
+            path.startsWith(sdcardPath) -> RegularLocalFileInstance(context, filter, path)
             regularPath.any {
                 path.startsWith(it)
             } -> RegularLocalFileInstance(context, filter, path)
@@ -84,10 +88,12 @@ object FileInstanceFactory {
      * @return 如果返回值是空字符串，代表应该使用fake 型file instance
      */
     @JvmStatic
-    fun getPrefix(path: String, context: Context): String {
-        assert(!path.endsWith("/")) {
-            path
+    fun getPrefix(unsafePath: String, context: Context): String {
+
+        assert(!unsafePath.endsWith("/")) {
+            unsafePath
         }
+        val path = simplyPath(unsafePath)
         return when {
             path.startsWith(rootUserEmulatedPath) -> rootUserEmulatedPath
             path.startsWith(emulatedRootPath) -> emulatedRootPath
@@ -97,7 +103,7 @@ object FileInstanceFactory {
                 if (endIndex == -1) endIndex = path.length
                 path.substring(0, endIndex + 1)
             }
-            path.startsWith(sdCardPath) -> sdCardPath
+            path.startsWith(sdcardPath) -> sdcardPath
             regularPath.any { path.startsWith(it) } -> "/"
             path.startsWith("/data/data/${context.packageName}") -> "/data/data/${context.packageName}"
             else -> ""
@@ -120,9 +126,19 @@ object FileInstanceFactory {
 
     @Throws(Exception::class)
     fun toChild(fileInstance: FileInstance, name: String, isFile: Boolean, context: Context, createWhenNoExists: Boolean): FileInstance {
+        assert(name.last() != '/') {
+            "$name is not a valid name"
+        }
+        if (name == ".") {
+            return fileInstance
+        }
+        if (name == "..") {
+            return toParent(fileInstance, context)
+        }
         val parentPath = fileInstance.path
         val parentPrefix = getPrefix(parentPath, context)
-        val path = "$parentPath/$name"
+        val unsafePath = "$parentPath/$name"
+        val path = simplyPath(unsafePath)
         val childPrefix = getPrefix(path, context)
         return if (parentPrefix == childPrefix) {
             fileInstance.toChild(name, isFile, createWhenNoExists)
@@ -140,5 +156,50 @@ object FileInstanceFactory {
         } else {
             getFileInstance(fileInstance.parent, context)
         }
+    }
+
+    @JvmStatic
+    public fun simplyPath(path: String): String {
+        assert(path[0] == '/') {
+            "$path is not valid"
+        }
+        val stack = LinkedList<String>()
+        var position = 1
+        stack.add("/")
+        val nameStack = LinkedList<Char>()
+        while (position < path.length) {
+            val current = path[position++]
+            if (current == '/') {
+                if (stack.last != "/" || nameStack.size != 0) {
+                    val name = nameStack.joinToString("")
+                    nameStack.clear()
+                    when (name) {
+                        ".." -> {
+                            stack.removeLast()
+                            stack.removeLast()//弹出上一个 name
+                        }
+                        "." -> {
+                            //无效操作
+                        }
+                        else -> {
+                            stack.add(name);
+                            stack.add("/")
+                        }
+                    }
+                }
+            } else nameStack.add(current)
+        }
+        val s = nameStack.joinToString("");
+        if (s.isNotEmpty())
+            if (s == "..") {
+                if (stack.size > 1) {
+                    stack.removeLast();
+                    stack.removeLast()
+                }
+            } else if (s != ".") {
+                stack.add(s)
+            }
+        if (stack.size > 1 && stack.last == "/") stack.removeLast()
+        return stack.joinToString("")
     }
 }

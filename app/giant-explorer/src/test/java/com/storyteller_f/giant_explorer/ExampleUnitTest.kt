@@ -1,5 +1,6 @@
 package com.storyteller_f.giant_explorer
 
+import com.storyteller_f.file_system.FileInstanceFactory
 import org.junit.Test
 
 /**
@@ -10,6 +11,7 @@ import org.junit.Test
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
-
+        val simplyPath = FileInstanceFactory.simplyPath(FileInstanceFactory.rootUserEmulatedPath)
+        assert(simplyPath == FileInstanceFactory.rootUserEmulatedPath)
     }
 }
