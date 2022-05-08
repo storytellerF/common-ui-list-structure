@@ -86,7 +86,7 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
         when (item.itemId) {
             R.id.add_file -> {
                 findNavController().navigate(R.id.action_fileListFragment_to_newNameDialog)
-                fragment<NewNameDialog.NewNameResult> { bundle ->
+                fragment<NewNameDialog.NewNameResult>(NewNameDialog.requestKey) { bundle ->
                     session.fileInstance.value?.toChild(bundle.name, true, true)
                 }
             }
@@ -124,7 +124,7 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
             findNavController().navigate(R.id.action_fileListFragment_self, FileListFragmentArgs(File(old.path, itemHolder.file.name).absolutePath).toBundle())
         } else {
             findNavController().navigate(R.id.action_fileListFragment_to_openFileDialog, OpenFileDialogArgs(itemHolder.file.fullPath).toBundle())
-            fragment<OpenFileDialog.OpenFileResult> {
+            fragment<OpenFileDialog.OpenFileResult>(OpenFileDialog.key) {
                 Intent("android.intent.action.VIEW").apply {
                     addCategory("android.intent.category.DEFAULT")
                     val file = File(itemHolder.file.fullPath)

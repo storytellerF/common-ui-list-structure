@@ -1,10 +1,8 @@
 package com.storyteller_f.common_ui
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.os.Bundle
 import android.os.Parcelable
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -43,8 +41,8 @@ abstract class CommonFragment<T : ViewBinding>(
     override fun onStart() {
         super.onStart()
         waitingInFragment.forEach { t ->
-            childFragmentManager.clearFragmentResult(t.key)
-            childFragmentManager.setFragmentResultListener(t.key, this, t.value.action)
+            fm.clearFragmentResult(t.key)
+            fm.setFragmentResultListener(t.key, owner, t.value.action)
         }
     }
 
@@ -53,33 +51,32 @@ abstract class CommonFragment<T : ViewBinding>(
         _binding = null
     }
 
-    fun <T : Parcelable> fragment(action: (T) -> Unit) {
+    fun <T : Parcelable> fragment(requestKey: String, action: (T) -> Unit) {
         val callback = { s: String, r: Bundle ->
             if (waitingInFragment.containsKey(s)) {
-                r.getParcelable<T>("result")?.let {
+                r.getParcelable<T>(resultKey)?.let {
                     action.invoke(it)
                 }
                 waitingInFragment.remove(s)
             }
         }
-        val requestKey = requestKey()
         waitingInFragment[requestKey] = FragmentAction(callback)
-        childFragmentManager.setFragmentResultListener(requestKey, this, callback)
+        fm.setFragmentResultListener(requestKey, owner, callback)
     }
 
     fun <T : Parcelable> dialog(dialogFragment: CommonDialogFragment<*>, action: (T) -> Unit) {
         val requestKey = dialogFragment.requestKey()
-        dialogFragment.show(childFragmentManager, requestKey)
+        dialogFragment.show(fm, requestKey)
         val callback = { s: String, r: Bundle ->
             if (waitingInFragment.containsKey(s)) {
-                r.getParcelable<T>("result")?.let {
+                r.getParcelable<T>(resultKey)?.let {
                     action.invoke(it)
                 }
                 waitingInFragment.remove(s)
             }
         }
         waitingInFragment[requestKey] = FragmentAction(callback)
-        childFragmentManager.setFragmentResultListener(requestKey, this, callback)
+        fm.setFragmentResultListener(requestKey, owner, callback)
     }
 
     companion object {
@@ -149,12 +146,16 @@ interface RequestFragment {
 
 fun <T : Parcelable> Fragment.setFragmentResult(requestKey: String, result: T) {
     fm.setFragmentResult(requestKey, Bundle().apply {
-        putParcelable("result", result)
+        putParcelable(resultKey, result)
     })
 }
 
 fun <T, F> F.setFragmentResult(result: T) where T : Parcelable, F : Fragment, F : RequestFragment {
-    fm.setFragmentResult(requestKey(), Bundle().apply {
-        putParcelable("result", result)
+    val requestKey = requestKey()
+    fm.setFragmentResult(requestKey, Bundle().apply {
+        putParcelable(resultKey, result)
     })
 }
+
+val Fragment.resultKey
+        get() = "result"

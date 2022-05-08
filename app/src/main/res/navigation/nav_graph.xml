@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/FirstFragment">
+
+    <fragment
+        android:id="@+id/FirstFragment"
+        android:name="com.storyteller_f.common_ui_list_structure.FirstFragment"
+        android:label="@string/first_fragment_label"
+        tools:layout="@layout/fragment_first">
+
+        <action
+            android:id="@+id/action_FirstFragment_to_SecondFragment"
+            app:destination="@id/SecondFragment" />
+        <action
+            android:id="@+id/action_FirstFragment_to_testDialog"
+            app:destination="@id/testDialog" />
+    </fragment>
+    <fragment
+        android:id="@+id/SecondFragment"
+        android:name="com.storyteller_f.common_ui_list_structure.SecondFragment"
+        android:label="@string/second_fragment_label"
+        tools:layout="@layout/fragment_second"/>
+    <dialog
+        android:id="@+id/testDialog"
+        android:name="com.storyteller_f.common_ui_list_structure.TestDialog"
+        android:label="TestDialog" />
+</navigation>
