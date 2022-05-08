@@ -18,17 +18,13 @@ import kotlinx.coroutines.launch
  */
 abstract class CommonDialogFragment<T : ViewBinding>(
     val viewBindingFactory: (LayoutInflater) -> T
-) : DialogFragment(), KeyEvent.Callback {
-    var binding: T? = null
-    abstract fun requestKey(): String
-    fun tag():String = requestKey()
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+) : DialogFragment(), RequestFragment {
+    private var _binding: T? = null
+    val binding: T get() = _binding!!
+    fun tag(): String = requestKey()
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val bindingLocal = viewBindingFactory(layoutInflater)
-        binding = bindingLocal
+        _binding = bindingLocal
         (bindingLocal as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
         onBindViewEvent(bindingLocal)
         return bindingLocal.root
@@ -38,20 +34,13 @@ abstract class CommonDialogFragment<T : ViewBinding>(
 
     override fun onDestroyView() {
         super.onDestroyView()
-        binding = null
+        _binding = null
     }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
     }
-
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?) = false
-
-    override fun onKeyLongPress(keyCode: Int, event: KeyEvent?) = false
-
-    override fun onKeyUp(keyCode: Int, event: KeyEvent?) = false
-
-    override fun onKeyMultiple(keyCode: Int, count: Int, event: KeyEvent?) = false
 }
 
 class WaitingDialog : DialogFragment(R.layout.dialog_waiting) {
@@ -71,7 +60,7 @@ fun Fragment.waitingDialog(): CompletableDeferred<Unit> {
     val deferred = CompletableDeferred<Unit>()
     WaitingDialog().apply {
         this.deferred = deferred
-    }.show(parentFragmentManager, "waiting")
+    }.show(fm, "waiting")
     return deferred
 }
 

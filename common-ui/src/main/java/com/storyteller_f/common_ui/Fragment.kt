@@ -25,17 +25,12 @@ import androidx.viewbinding.ViewBinding
 
 abstract class CommonFragment<T : ViewBinding>(
     val viewBindingFactory: (LayoutInflater) -> T
-) : Fragment(), KeyEvent.Callback {
-    var _binding: T? = null
+) : Fragment(), RequestFragment {
+    private var _binding: T? = null
     val binding: T get() = _binding!!
-    abstract fun requestKey(): String
     fun tag(): String = requestKey()
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val bindingLocal = viewBindingFactory(layoutInflater)
         _binding = bindingLocal
         (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
@@ -58,14 +53,6 @@ abstract class CommonFragment<T : ViewBinding>(
         _binding = null
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?) = false
-
-    override fun onKeyLongPress(keyCode: Int, event: KeyEvent?) = false
-
-    override fun onKeyUp(keyCode: Int, event: KeyEvent?) = false
-
-    override fun onKeyMultiple(keyCode: Int, count: Int, event: KeyEvent?) = false
-
     fun <T : Parcelable> fragment(action: (T) -> Unit) {
         val callback = { s: String, r: Bundle ->
             if (waitingInFragment.containsKey(s)) {
@@ -79,6 +66,7 @@ abstract class CommonFragment<T : ViewBinding>(
         waitingInFragment[requestKey] = FragmentAction(callback)
         childFragmentManager.setFragmentResultListener(requestKey, this, callback)
     }
+
     fun <T : Parcelable> dialog(dialogFragment: CommonDialogFragment<*>, action: (T) -> Unit) {
         val requestKey = dialogFragment.requestKey()
         dialogFragment.show(childFragmentManager, requestKey)
@@ -93,6 +81,7 @@ abstract class CommonFragment<T : ViewBinding>(
         waitingInFragment[requestKey] = FragmentAction(callback)
         childFragmentManager.setFragmentResultListener(requestKey, this, callback)
     }
+
     companion object {
         private const val TAG = "Fragment"
     }
@@ -138,41 +127,34 @@ val LifecycleOwner.cycle
         else -> throw Exception("unknown type $this")
     }
 
+val LifecycleOwner.owner
+    @SuppressLint("RestrictedApi")
+    get() = when (this) {
+        is Fragment -> viewLifecycleOwner
+        is ComponentActivity -> this
+        else -> throw Exception("unknown type $this")
+    }
+
+val Fragment.fm
+    get() = parentFragmentManager
+
 class FragmentAction(val action: (String, Bundle) -> Unit)
 
 val waitingInActivity = mutableMapOf<String, FragmentAction>()
 val waitingInFragment = mutableMapOf<String, FragmentAction>()
 
-/**
- * 3 代表支持三种类型
- */
-fun <T> KeyEvent.Callback.context3(function: Context.() -> T) = (when (this) {
-    is ComponentActivity -> this
-    is Fragment -> requireContext()
-    is View -> context
-    else -> throw java.lang.Exception("context is null")
-}).run(function)
-
-suspend fun <T> KeyEvent.Callback.contextSuspend3(function: suspend Context.() -> T): T = when (this) {
-    is ComponentActivity -> this
-    is Fragment -> requireContext()
-    else -> throw java.lang.Exception("context is null")
-}.function()
+interface RequestFragment {
+    fun requestKey(): String = this.javaClass.toString()
+}
 
 fun <T : Parcelable> Fragment.setFragmentResult(requestKey: String, result: T) {
-    parentFragmentManager.setFragmentResult(requestKey, Bundle().apply {
+    fm.setFragmentResult(requestKey, Bundle().apply {
         putParcelable("result", result)
     })
 }
 
-fun <T : Parcelable> CommonFragment<*>.setFragmentResult(result: T) {
-    parentFragmentManager.setFragmentResult(requestKey(), Bundle().apply {
-        putParcelable("result", result)
-    })
-}
-
-fun <T : Parcelable> CommonDialogFragment<*>.setFragmentResult(result: T) {
-    parentFragmentManager.setFragmentResult(requestKey(), Bundle().apply {
+fun <T, F> F.setFragmentResult(result: T) where T : Parcelable, F : Fragment, F : RequestFragment {
+    fm.setFragmentResult(requestKey(), Bundle().apply {
         putParcelable("result", result)
     })
 }

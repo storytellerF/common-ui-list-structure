@@ -7,15 +7,10 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.work.ListenableWorker
 
-fun <T> T.context(function: Context.() -> T) = (when (this) {
-    is ComponentActivity -> {
-        this
-    }
-    is Fragment -> {
-        requireContext()
-    }
-    is ListenableWorker -> {
-        applicationContext
-    }
+fun <T, R> T.contextAny(function: Context.() -> R) = (when (this) {
+    is ComponentActivity -> this
+    is Fragment -> requireContext()
+    is ListenableWorker -> applicationContext
+    is View -> context
     else -> throw java.lang.Exception("context is null")
 }).run(function)
