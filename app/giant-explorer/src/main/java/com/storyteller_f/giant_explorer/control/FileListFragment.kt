@@ -19,6 +19,8 @@ import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindLongClickEvent
 import com.storyteller_f.common_ktx.mm
 import com.storyteller_f.common_ui.CommonFragment
+import com.storyteller_f.common_ui.dialog
+import com.storyteller_f.common_ui.fragment
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system_ktx.isDirectory
@@ -86,8 +88,8 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
         when (item.itemId) {
             R.id.add_file -> {
                 findNavController().navigate(R.id.action_fileListFragment_to_newNameDialog)
-                fragment<NewNameDialog.NewNameResult>(NewNameDialog.requestKey) { bundle ->
-                    session.fileInstance.value?.toChild(bundle.name, true, true)
+                fragment(NewNameDialog.requestKey) { nameResult: NewNameDialog.NewNameResult ->
+                    session.fileInstance.value?.toChild(nameResult.name, true, true)
                 }
             }
             R.id.paste_file -> {
@@ -124,12 +126,12 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
             findNavController().navigate(R.id.action_fileListFragment_self, FileListFragmentArgs(File(old.path, itemHolder.file.name).absolutePath).toBundle())
         } else {
             findNavController().navigate(R.id.action_fileListFragment_to_openFileDialog, OpenFileDialogArgs(itemHolder.file.fullPath).toBundle())
-            fragment<OpenFileDialog.OpenFileResult>(OpenFileDialog.key) {
+            fragment(OpenFileDialog.key) { r: OpenFileDialog.OpenFileResult ->
                 Intent("android.intent.action.VIEW").apply {
                     addCategory("android.intent.category.DEFAULT")
                     val file = File(itemHolder.file.fullPath)
                     val uriForFile = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.file-provider", file)
-                    setDataAndType(uriForFile, it.mimeType)
+                    setDataAndType(uriForFile, r.mimeType)
                     flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 }.let {
                     startActivity(Intent.createChooser(it, "open by"))
@@ -175,7 +177,7 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
     }
 
     private fun moveOrCopy(move: Boolean, itemHolder: FileItemHolder) {
-        dialog<RequestPathDialog.RequestPathResult>(RequestPathDialog()) { result ->
+        dialog(RequestPathDialog()) { result: RequestPathDialog.RequestPathResult ->
             result.path.mm {
                 FileInstanceFactory.getFileInstance(it, requireContext())
             }.mm { dest ->

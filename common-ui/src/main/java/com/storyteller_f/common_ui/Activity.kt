@@ -13,15 +13,27 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updatePadding
 import androidx.viewbinding.ViewBinding
 
-open class SimpleActivity : AppCompatActivity() {
+open class SimpleActivity : AppCompatActivity(), RegistryFragment {
     override fun onStart() {
         super.onStart()
         waitingInActivity.forEach { t ->
-            supportFragmentManager.setFragmentResultListener(t.key, this, t.value.action)
+            val action = t.value.action as Function2<SimpleActivity, Parcelable, Unit>
+            if (t.value.requestKey == registryKey()) {
+                val callback = { s: String, r: Bundle ->
+                    if (waitingInFragment.containsKey(s)) {
+                        r.getParcelable<Parcelable>("result")?.let {
+                            action(this, it)
+                        }
+                        waitingInFragment.remove(s)
+                    }
+                }
+                supportFragmentManager.clearFragmentResultListener(t.key)
+                supportFragmentManager.setFragmentResultListener(t.key, this, callback)
+            }
         }
     }
 
-    fun <T : Parcelable> fragment(requestKey: String, dialog: Class<out CommonDialogFragment<out ViewBinding>>, parameters: Bundle? = null, action: (T) -> Unit) {
+    fun <T : Parcelable> dialog(requestKey: String, dialog: Class<out CommonDialogFragment<out ViewBinding>>, parameters: Bundle? = null, action: (T) -> Unit) {
         dialog.newInstance().apply {
             arguments = parameters
         }.show(supportFragmentManager, requestKey)
@@ -33,7 +45,7 @@ open class SimpleActivity : AppCompatActivity() {
                 waitingInActivity.remove(s)
             }
         }
-        waitingInActivity[requestKey] = FragmentAction(callback)
+        waitingInActivity[requestKey] = ActivityAction(callback, registryKey())
         supportFragmentManager.setFragmentResultListener(requestKey, this, callback)
     }
 }

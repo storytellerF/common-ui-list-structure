@@ -1,34 +1,36 @@
 package com.storyteller_f.common_ui_list_structure
 
 import android.os.Bundle
+import android.widget.Toast
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
+import com.storyteller_f.common_ui.SimpleActivity
 import com.storyteller_f.common_ui_list_structure.databinding.ActivityMain3Binding
+import com.storyteller_f.ui_list.event.viewBinding
 
-class MainActivity3 : AppCompatActivity() {
+class MainActivity3 : SimpleActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
-    private lateinit var binding: ActivityMain3Binding
+    private val binding by viewBinding(ActivityMain3Binding::inflate)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        binding = ActivityMain3Binding.inflate(layoutInflater)
-        setContentView(binding.root)
-
+        binding
         setSupportActionBar(binding.toolbar)
-
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
 
         binding.fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show()
+            dialog<TestDialog2.Result>(TestDialog2::class.java.toString(), TestDialog2::class.java) {
+
+                Snackbar.make(view, it.test, Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show()
+            }
         }
     }
 

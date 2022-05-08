@@ -23,7 +23,7 @@ import androidx.viewbinding.ViewBinding
 
 abstract class CommonFragment<T : ViewBinding>(
     val viewBindingFactory: (LayoutInflater) -> T
-) : Fragment(), RequestFragment {
+) : Fragment(), RequestFragment, RegistryFragment {
     private var _binding: T? = null
     val binding: T get() = _binding!!
     fun tag(): String = requestKey()
@@ -41,8 +41,19 @@ abstract class CommonFragment<T : ViewBinding>(
     override fun onStart() {
         super.onStart()
         waitingInFragment.forEach { t ->
-            fm.clearFragmentResult(t.key)
-            fm.setFragmentResultListener(t.key, owner, t.value.action)
+            val action = t.value.action as Function2<CommonFragment<out ViewBinding>, Parcelable, Unit>
+            if (t.value.requestKey == registryKey()) {
+                val callback = { s: String, r: Bundle ->
+                    if (waitingInFragment.containsKey(s)) {
+                        r.getParcelable<Parcelable>(resultKey)?.let {
+                            action(this, it)
+                        }
+                        waitingInFragment.remove(s)
+                    }
+                }
+                fm.clearFragmentResultListener(t.key)
+                fm.setFragmentResultListener(t.key, owner, callback)
+            }
         }
     }
 
@@ -51,37 +62,37 @@ abstract class CommonFragment<T : ViewBinding>(
         _binding = null
     }
 
-    fun <T : Parcelable> fragment(requestKey: String, action: (T) -> Unit) {
-        val callback = { s: String, r: Bundle ->
-            if (waitingInFragment.containsKey(s)) {
-                r.getParcelable<T>(resultKey)?.let {
-                    action.invoke(it)
-                }
-                waitingInFragment.remove(s)
-            }
-        }
-        waitingInFragment[requestKey] = FragmentAction(callback)
-        fm.setFragmentResultListener(requestKey, owner, callback)
-    }
-
-    fun <T : Parcelable> dialog(dialogFragment: CommonDialogFragment<*>, action: (T) -> Unit) {
-        val requestKey = dialogFragment.requestKey()
-        dialogFragment.show(fm, requestKey)
-        val callback = { s: String, r: Bundle ->
-            if (waitingInFragment.containsKey(s)) {
-                r.getParcelable<T>(resultKey)?.let {
-                    action.invoke(it)
-                }
-                waitingInFragment.remove(s)
-            }
-        }
-        waitingInFragment[requestKey] = FragmentAction(callback)
-        fm.setFragmentResultListener(requestKey, owner, callback)
-    }
-
     companion object {
         private const val TAG = "Fragment"
     }
+}
+
+fun <T : Parcelable, F : CommonFragment<out ViewBinding>> F.fragment(requestKey: String, action: F.(T) -> Unit) {
+    val callback = { s: String, r: Bundle ->
+        if (waitingInFragment.containsKey(s)) {
+            r.getParcelable<T>(resultKey)?.let {
+                this.action(it)
+            }
+            waitingInFragment.remove(s)
+        }
+    }
+    waitingInFragment[requestKey] = FragmentAction(action, registryKey())
+    fm.setFragmentResultListener(requestKey, owner, callback)
+}
+
+fun <T : Parcelable, F : CommonFragment<out ViewBinding>> F.dialog(dialogFragment: CommonDialogFragment<*>, action: F.(T) -> Unit) {
+    val requestKey = dialogFragment.requestKey()
+    dialogFragment.show(fm, requestKey)
+    val callback = { s: String, r: Bundle ->
+        if (waitingInFragment.containsKey(s)) {
+            r.getParcelable<T>(resultKey)?.let {
+                this.action(it)
+            }
+            waitingInFragment.remove(s)
+        }
+    }
+    waitingInFragment[requestKey] = FragmentAction(action, registryKey())
+    fm.setFragmentResultListener(requestKey, owner, callback)
 }
 
 /**
@@ -135,13 +146,18 @@ val LifecycleOwner.owner
 val Fragment.fm
     get() = parentFragmentManager
 
-class FragmentAction(val action: (String, Bundle) -> Unit)
+class ActivityAction<T : Parcelable, F : SimpleActivity>(val action: F.(T) -> Unit, val requestKey: String)
+class FragmentAction<T : Parcelable, F : CommonFragment<out ViewBinding>>(val action: F.(T) -> Unit, val requestKey: String)
 
-val waitingInActivity = mutableMapOf<String, FragmentAction>()
-val waitingInFragment = mutableMapOf<String, FragmentAction>()
+val waitingInActivity = mutableMapOf<String, ActivityAction<*, *>>()
+val waitingInFragment = mutableMapOf<String, FragmentAction<*, *>>()
 
 interface RequestFragment {
     fun requestKey(): String = this.javaClass.toString()
+}
+
+interface RegistryFragment {
+    fun registryKey(): String = "${this.javaClass}-registry"
 }
 
 fun <T : Parcelable> Fragment.setFragmentResult(requestKey: String, result: T) {
@@ -158,4 +174,4 @@ fun <T, F> F.setFragmentResult(result: T) where T : Parcelable, F : Fragment, F 
 }
 
 val Fragment.resultKey
-        get() = "result"
+    get() = "result"
