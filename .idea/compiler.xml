@@ -3,6 +3,8 @@
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel target="1.7">
       <module name="common_ui_list_structure.annotation-compiler" target="11" />
+      <module name="common_ui_list_structure.annotation-compiler.main" target="11" />
+      <module name="common_ui_list_structure.annotation-compiler.test" target="11" />
       <module name="common_ui_list_structure.app" target="11" />
       <module name="common_ui_list_structure.app.b3" target="11" />
       <module name="common_ui_list_structure.app.giant-explorer" target="11" />

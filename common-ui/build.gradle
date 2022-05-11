@@ -36,6 +36,7 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion compose_version
     }
+    namespace 'com.storyteller_f.common_ui'
 }
 
 dependencies {

@@ -47,6 +47,7 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion compose_version
     }
+    namespace 'com.storyteller_f.giant_explorer'
 
     defaultConfig {
         def fileProvider = applicationId + ".file-provider"
