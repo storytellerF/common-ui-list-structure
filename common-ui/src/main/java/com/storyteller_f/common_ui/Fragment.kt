@@ -32,7 +32,7 @@ abstract class CommonFragment<T : ViewBinding>(
         val bindingLocal = viewBindingFactory(layoutInflater)
         _binding = bindingLocal
         (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
-        onBindViewEvent(bindingLocal)
+        onBindViewEvent(binding)
         return bindingLocal.root
     }
 

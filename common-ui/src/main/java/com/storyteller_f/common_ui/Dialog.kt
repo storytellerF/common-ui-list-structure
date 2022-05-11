@@ -26,7 +26,7 @@ abstract class CommonDialogFragment<T : ViewBinding>(
         val bindingLocal = viewBindingFactory(layoutInflater)
         _binding = bindingLocal
         (bindingLocal as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
-        onBindViewEvent(bindingLocal)
+        onBindViewEvent(binding)
         return bindingLocal.root
     }
 

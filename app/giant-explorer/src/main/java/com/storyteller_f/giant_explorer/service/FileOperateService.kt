@@ -45,7 +45,7 @@ class FileOperateService : Service() {
         return FileOperateBinder(applicationContext)
     }
 
-    interface FileOperateResult {
+    interface FileOperateResultContainer {
         /**
          * @param dest 去路径
          * @param origin 来路径

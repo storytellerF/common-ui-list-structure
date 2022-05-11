@@ -1,15 +1,12 @@
 package com.storyteller_f.giant_explorer.control
 
 import android.content.*
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.view.*
-import android.widget.ImageView
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.DragStartHelper
 import androidx.fragment.app.Fragment
@@ -18,7 +15,6 @@ import androidx.lifecycle.Observer
 import androidx.navigation.findNavController
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ktx.context
-import com.storyteller_f.common_ktx.contextSuspend
 import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.common_ui.SimpleActivity
 import com.storyteller_f.common_ui.scope
@@ -35,10 +31,8 @@ import com.storyteller_f.file_system.model.FilesAndDirectories
 import com.storyteller_f.file_system.model.TorrentFileModel
 import com.storyteller_f.file_system.requestPermissionForSpecialPath
 import com.storyteller_f.file_system_ktx.isDirectory
-import com.storyteller_f.file_system_ktx.isFile
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.FileSizeRecordDatabase
-import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.ActivityMainBinding
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileBinding
 import com.storyteller_f.giant_explorer.dialog.FileOperationDialog
@@ -86,7 +80,7 @@ class FileExplorerSession : ViewModel() {
 
 }
 
-class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
+class MainActivity : SimpleActivity(), FileOperateService.FileOperateResultContainer {
 
     private val binding by viewBinding(ActivityMainBinding::inflate)
     private val filterHiddenFile by svm {
@@ -170,7 +164,7 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
             Log.i(TAG, "onServiceConnected: $fileOperateBinderLocal")
             fileOperateBinder = fileOperateBinderLocal
             fileOperateBinderLocal.let { binder ->
-                binder.setFileOperateResult(this@MainActivity)
+                binder.fileOperateResultContainer = this@MainActivity
                 binder.state.toDiffNoNull { i, i2 ->
                     i == i2 && i != FileOperateBinder.state_null
                 }.observe(this@MainActivity, Observer {
@@ -216,7 +210,7 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResult {
 
     override fun onDestroy() {
         super.onDestroy()
-        fileOperateBinder?.setFileOperateResult(null)
+        fileOperateBinder?.fileOperateResultContainer = null
         try {
             unbindService(connection)
         } catch (e: Exception) {

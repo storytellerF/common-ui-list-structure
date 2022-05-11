@@ -108,7 +108,7 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
         return super.onOptionsItemSelected(item)
     }
 
-    private fun handleClipData(data: ClipData): Boolean {
+    fun handleClipData(data: ClipData): Boolean {
         val key = uuid.data.value ?: return true
         val mutableList = MutableList(data.itemCount) {
             data.getItemAt(it)

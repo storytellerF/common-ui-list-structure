@@ -10,7 +10,7 @@ import com.storyteller_f.file_system.FileInstanceFactory.getFileInstance
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
-import com.storyteller_f.giant_explorer.service.FileOperateService.FileOperateResult
+import com.storyteller_f.giant_explorer.service.FileOperateService.FileOperateResultContainer
 import okio.FileNotFoundException
 import java.util.*
 import kotlin.Exception
@@ -46,10 +46,7 @@ class FileOperateBinder(val context: Context) : Binder() {
 
     }
     val state = MutableLiveData(state_null)
-    private var fileOperateResult: FileOperateResult? = null
-    fun setFileOperateResult(fileOperateResult: FileOperateResult?) {
-        this.fileOperateResult = fileOperateResult
-    }
+    var fileOperateResultContainer: FileOperateResultContainer? = null
 
     /**
      * 删除文件或者文件夹
@@ -67,24 +64,20 @@ class FileOperateBinder(val context: Context) : Binder() {
     private fun startDeleteTask(focused: FileSystemItemModel, selected: List<FileSystemItemModel>, key: String) {
         state.postValue(state_compute)
         val compute = TaskCompute(selected, context).compute()
-        if (compute == null) {
-            whenError(key, "error when detect")
-            return
-        }
         state.postValue(state_running)
         if (DeleteImpl(context, selected, compute, focused, key).let {
                 it.fileOperationProgressListener = progressListenerLocal
                 it.call()
             }) {
             whenEnd(key)
-            fileOperateResult?.onSuccess(null, focused.fullPath)
+            fileOperateResultContainer?.onSuccess(null, focused.fullPath)
         }
     }
 
     private fun whenError(key: String, message: String) {
         map[key] = TaskSession(null, message)
         state.postValue(state_error)
-        fileOperateResult?.onError(message)
+        fileOperateResultContainer?.onError(message)
     }
 
     /**
@@ -104,10 +97,6 @@ class FileOperateBinder(val context: Context) : Binder() {
     ) {
         state.postValue(state_compute)
         val computeSize = TaskCompute(selected, context).compute()
-        if (computeSize == null) {
-            whenError(key, "error when detect")
-            return
-        }
         state.postValue(state_running)
         map[key] = TaskSession(computeSize, null)
         if (CopyImpl(context, selected, computeSize, focused, deleteOrigin, dest, key).let {
@@ -115,7 +104,7 @@ class FileOperateBinder(val context: Context) : Binder() {
                 it.call()
             }) {
             whenEnd(key)
-            fileOperateResult?.onSuccess(dest.path, focused.fullPath)
+            fileOperateResultContainer?.onSuccess(dest.path, focused.fullPath)
         }
     }
 
@@ -179,7 +168,7 @@ class FileOperateBinder(val context: Context) : Binder() {
                 it.call()
             }) {
             whenEnd(key)
-            fileOperateResult?.onSuccess(dest.path, null)
+            fileOperateResultContainer?.onSuccess(dest.path, null)
         }
     }
 
