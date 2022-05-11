@@ -1,18 +1,17 @@
 package com.storyteller_f.giant_explorer.control
 
-import android.content.ClipboardManager
-import android.content.ComponentName
-import android.content.Intent
-import android.content.ServiceConnection
+import android.content.*
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
+import android.view.*
+import android.widget.ImageView
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.DragStartHelper
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
@@ -35,6 +34,8 @@ import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.model.FilesAndDirectories
 import com.storyteller_f.file_system.model.TorrentFileModel
 import com.storyteller_f.file_system.requestPermissionForSpecialPath
+import com.storyteller_f.file_system_ktx.isDirectory
+import com.storyteller_f.file_system_ktx.isFile
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.FileSizeRecordDatabase
 import com.storyteller_f.giant_explorer.database.requireDatabase
@@ -46,6 +47,7 @@ import com.storyteller_f.giant_explorer.service.FileOperateBinder
 import com.storyteller_f.giant_explorer.service.FileOperateService
 import com.storyteller_f.ui_list.core.*
 import com.storyteller_f.ui_list.data.SimpleResponse
+import com.storyteller_f.ui_list.event.findActionReceiverOrNull
 import com.storyteller_f.ui_list.event.viewBinding
 import com.storyteller_f.ui_list.ui.ListWithState
 import com.storyteller_f.ui_list.ui.valueContains
@@ -299,6 +301,30 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
         }
 
         binding.detail.text = item.detail
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            val listener = OnDragStartListener@{ view: View, _: DragStartHelper ->
+                val clipData = ClipData.newPlainText("file explorer", itemHolder.file.fullPath)
+                val flags = View.DRAG_FLAG_GLOBAL or View.DRAG_FLAG_GLOBAL_URI_READ
+                return@OnDragStartListener view.startDragAndDrop(clipData, View.DragShadowBuilder(view), itemHolder.file, flags)
+            }
+            DragStartHelper(binding.root, listener).apply {
+                attach()
+            }
+            if (itemHolder.file.item.isDirectory)
+                binding.root.setOnDragListener { v, event ->
+                    (event.localState as? FileModel)?.let {
+                        if (itemHolder.file.fullPath.contains(it.item.fullPath)) return@setOnDragListener false
+                    }
+                    when (event.action) {
+                        DragEvent.ACTION_DROP -> {
+                            binding.root.findActionReceiverOrNull<FileListFragment>()?.handleClipData(event.clipData)
+                        }
+                    }
+                    return@setOnDragListener true
+                }
+            else binding.root.setOnDragListener(null)
+        }
+
     }
 }
 

@@ -141,5 +141,5 @@ class GenericListValueModel<T> : ViewModel() {
 }
 
 class HasStateValueModel<T>(stateHandle: SavedStateHandle, key: String, default: T) : ViewModel() {
-    val data = stateHandle.getLiveData<T>(key, default)
+    val data = stateHandle.getLiveData(key, default)
 }

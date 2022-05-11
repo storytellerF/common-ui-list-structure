@@ -51,7 +51,7 @@ class FileOperationDialog : CommonDialogFragment<DialogFileOperationBinding>(Dia
             Log.i(TAG, "onBindViewEvent: state ${binder.state.value}")
             val key = uuid.data.value ?: return
             if (!binder.map.containsKey(key)) dismiss()
-            binder.state.debounce(200).distinctUntilChanged().observe(viewLifecycleOwner) {
+            binder.state.debounce(500).distinctUntilChanged().observe(viewLifecycleOwner) {
                 when (it) {
                     FileOperateBinder.state_running -> {
                         val task = binder.map[key]?.taskEquivalent

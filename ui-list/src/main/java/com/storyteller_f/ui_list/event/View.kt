@@ -2,6 +2,7 @@ package com.storyteller_f.ui_list.event
 
 import android.view.LayoutInflater
 import android.view.View
+import androidx.annotation.Nullable
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager.findFragment
@@ -58,15 +59,15 @@ inline fun <T : ViewBinding> AppCompatActivity.viewBinding(crossinline bindingIn
         invoke
     }
 
-inline fun <reified T> findActionReceiverOrNull(view: View, actionReceive: Class<T>): T? {
+inline fun <reified T> View.findActionReceiverOrNull(): T? {
     var fragment: Fragment? = try {
-        findFragment(view)
+        findFragment(this)
     } catch (e: Exception) {
         null
     }
     while (fragment != null) {
-        if (actionReceive is T){
-            return fragment as T
+        if (fragment is T){
+            return fragment
         }
         fragment = fragment.parentFragment
     }

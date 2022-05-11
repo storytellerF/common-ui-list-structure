@@ -5,12 +5,15 @@ import android.net.Uri
 import android.os.Binder
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.MutableLiveData
+import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.file_system.FileInstanceFactory.getFileInstance
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.giant_explorer.service.FileOperateService.FileOperateResult
+import okio.FileNotFoundException
 import java.util.*
+import kotlin.Exception
 import kotlin.concurrent.thread
 
 class FileOperateBinder(val context: Context) : Binder() {
@@ -164,8 +167,10 @@ class FileOperateBinder(val context: Context) : Binder() {
             it is ContentTask || it is DownloadTask
         }.size
         val compute = if (filterIsInstance.isNotEmpty()) {
-            TaskCompute(filterIsInstance, context).compute() ?: kotlin.run {
-                whenError(key, "error when detect")
+            try {
+                TaskCompute(filterIsInstance, context).compute()
+            } catch (e: Exception) {
+                whenError(key, e.exceptionMessage)
                 return
             }
         } else TaskEquivalent(0, 0, 0)
@@ -202,11 +207,11 @@ class TaskEquivalent(val fileCount: Int, val folderCount: Int, val size: Long)
 class TaskCompute(private val detectorTasks: List<FileSystemItemModel>, val context: Context) {
     var count = 0
     var folderCount = 0
-    fun compute(): TaskEquivalent? {
+    fun compute(): TaskEquivalent {
         val size = detectorTasks.map {
             val fileInstance = getFileInstance(it.fullPath, context)
             if (!fileInstance.exists()) {
-                return null
+                throw FileNotFoundException(fileInstance.path)
             }
             if (it is FileItemModel) {
                 count++
@@ -215,7 +220,7 @@ class TaskCompute(private val detectorTasks: List<FileSystemItemModel>, val cont
                 getDirectorySize(it)
             }
         }.plus(0).reduce { acc, l -> acc + l }
-        if (count.toLong() + folderCount.toLong() + size == 0L) return null
+        if (count.toLong() + folderCount.toLong() + size == 0L) throw Exception("任务异常")
         return TaskEquivalent(count, folderCount, size)
     }
 

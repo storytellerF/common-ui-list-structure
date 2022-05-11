@@ -48,8 +48,8 @@ object FileInstanceFactory {
 
     @WorkerThread
     private fun getFileInstance(filter: Filter?, unsafePath: String, context: Context): FileInstance {
-        assert(!unsafePath.endsWith("/")) {
-            unsafePath
+        assert(!unsafePath.endsWith("/") || unsafePath.length == 1) {
+            "invalid path [$unsafePath]"
         }
         val path = simplyPath(unsafePath)
         return when {
@@ -90,7 +90,7 @@ object FileInstanceFactory {
     @JvmStatic
     fun getPrefix(unsafePath: String, context: Context): String {
 
-        assert(!unsafePath.endsWith("/")) {
+        assert(!unsafePath.endsWith("/") || unsafePath.length == 1) {
             unsafePath
         }
         val path = simplyPath(unsafePath)

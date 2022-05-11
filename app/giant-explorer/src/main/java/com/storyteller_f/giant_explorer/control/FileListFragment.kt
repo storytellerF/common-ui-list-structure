@@ -9,6 +9,7 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.webkit.URLUtil
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -93,20 +94,9 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
                 }
             }
             R.id.paste_file -> {
-                val key = uuid.data.value ?: return true
                 ContextCompat.getSystemService(requireContext(), ClipboardManager::class.java)?.let { manager ->
                     manager.primaryClip?.let { data ->
-                        val mutableList = MutableList(data.itemCount) {
-                            data.getItemAt(it)
-                        }
-                        val uriList = mutableList.mapNotNull {
-                            Uri.parse(it.coerceToText(requireContext()).toString()).takeIf { uri -> uri.toString().isNotEmpty() }
-                        }.plus(mutableList.mapNotNull {
-                            it.uri
-                        })
-                        session.fileInstance.value?.let {
-                            fileOperateBinder?.compoundTask(uriList, it, key)
-                        }
+                        handleClipData(data)
                     }
                 }
 
@@ -116,6 +106,26 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
             }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun handleClipData(data: ClipData): Boolean {
+        val key = uuid.data.value ?: return true
+        val mutableList = MutableList(data.itemCount) {
+            data.getItemAt(it)
+        }
+        val uriList = mutableList.mapNotNull {
+            val toString = it.coerceToText(requireContext()).toString()
+            (if (URLUtil.isNetworkUrl(toString)) Uri.parse(toString)
+            else {
+                Uri.fromFile(File(toString))
+            }).takeIf { uri -> uri.toString().isNotEmpty() }
+        }.plus(mutableList.mapNotNull {
+            it.uri
+        })
+        session.fileInstance.value?.let {
+            fileOperateBinder?.compoundTask(uriList, it, key)
+        }
+        return true
     }
 
 
