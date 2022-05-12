@@ -194,9 +194,9 @@ class ListWithState @JvmOverloads constructor(
                         paint.color = Color.RED
                     }
                     val text = dX.toString()
-                    c.drawText(text[0].toString() + "", 0f, viewHolder.itemView.y + 40, paint)
-                    c.drawText(text[1].toString() + "", 0f, viewHolder.itemView.y + 80, paint)
-                    c.drawText(text[2].toString() + "", 0f, viewHolder.itemView.y + 120, paint)
+                    c.drawText(text[0].toString(), 0f, viewHolder.itemView.y + 40, paint)
+                    c.drawText(text[1].toString(), 0f, viewHolder.itemView.y + 80, paint)
+                    c.drawText(text[2].toString(), 0f, viewHolder.itemView.y + 120, paint)
                     c.drawText(if (swipeEvent) "1" else "0", 0f, viewHolder.itemView.y + 160, paint)
                     val firstLine = 200
                     if (dX < firstLine) {

@@ -1,6 +1,7 @@
 package com.storyteller_f.giant_explorer.control
 
 import android.content.*
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -305,15 +306,19 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
             }
             if (itemHolder.file.item.isDirectory)
                 binding.root.setOnDragListener { v, event ->
-                    (event.localState as? FileModel)?.let {
-                        if (itemHolder.file.fullPath.contains(it.item.fullPath)) return@setOnDragListener false
-                    }
-                    when (event.action) {
+                    return@setOnDragListener when (event.action) {
+                        DragEvent.ACTION_DRAG_STARTED -> {
+                            val localState = event.localState
+                            event.clipDescription.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)
+                                    && localState is FileModel
+                                    && !itemHolder.file.fullPath.contains(localState.fullPath)
+                        }
                         DragEvent.ACTION_DROP -> {
                             binding.root.findActionReceiverOrNull<FileListFragment>()?.handleClipData(event.clipData)
+                            true
                         }
+                        else -> true
                     }
-                    return@setOnDragListener true
                 }
             else binding.root.setOnDragListener(null)
         }
