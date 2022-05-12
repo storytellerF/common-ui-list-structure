@@ -12,6 +12,7 @@ import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.giant_explorer.service.FileOperateService.FileOperateResultContainer
 import okio.FileNotFoundException
+import java.lang.ref.WeakReference
 import java.util.*
 import kotlin.Exception
 import kotlin.concurrent.thread
@@ -46,7 +47,7 @@ class FileOperateBinder(val context: Context) : Binder() {
 
     }
     val state = MutableLiveData(state_null)
-    var fileOperateResultContainer: FileOperateResultContainer? = null
+    var fileOperateResultContainer: WeakReference<FileOperateResultContainer> = WeakReference(null)
 
     /**
      * 删除文件或者文件夹
@@ -70,14 +71,14 @@ class FileOperateBinder(val context: Context) : Binder() {
                 it.call()
             }) {
             whenEnd(key)
-            fileOperateResultContainer?.onSuccess(null, focused.fullPath)
+            fileOperateResultContainer.get()?.onSuccess(null, focused.fullPath)
         }
     }
 
     private fun whenError(key: String, message: String) {
         map[key] = TaskSession(null, message)
         state.postValue(state_error)
-        fileOperateResultContainer?.onError(message)
+        fileOperateResultContainer.get()?.onError(message)
     }
 
     /**
@@ -104,7 +105,7 @@ class FileOperateBinder(val context: Context) : Binder() {
                 it.call()
             }) {
             whenEnd(key)
-            fileOperateResultContainer?.onSuccess(dest.path, focused.fullPath)
+            fileOperateResultContainer.get()?.onSuccess(dest.path, focused.fullPath)
         }
     }
 
@@ -168,7 +169,7 @@ class FileOperateBinder(val context: Context) : Binder() {
                 it.call()
             }) {
             whenEnd(key)
-            fileOperateResultContainer?.onSuccess(dest.path, null)
+            fileOperateResultContainer.get()?.onSuccess(dest.path, null)
         }
     }
 

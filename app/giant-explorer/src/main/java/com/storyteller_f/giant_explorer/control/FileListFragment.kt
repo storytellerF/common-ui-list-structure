@@ -59,7 +59,9 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
 
     private val args by navArgs<FileListFragmentArgs>()
 
-    private val session by viewModels<FileExplorerSession>()
+    private val session by vm({args.path}) {
+        FileExplorerSession(requireActivity().application, it)
+    }
 
     override fun onBindViewEvent(binding: FragmentFileListBinding) {
         val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
@@ -69,10 +71,6 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
         ) {
             (requireContext() as MainActivity).drawPath(it)
         }
-        session.selected.toDiff().observe(this) {
-        }
-
-        session.init(this, args.path)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

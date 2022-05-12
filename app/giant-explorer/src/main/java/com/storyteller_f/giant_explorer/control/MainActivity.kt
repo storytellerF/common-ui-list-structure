@@ -1,7 +1,7 @@
 package com.storyteller_f.giant_explorer.control
 
+import android.app.Application
 import android.content.*
-import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -51,34 +51,27 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.lang.ref.WeakReference
 import java.util.*
 import kotlin.concurrent.thread
 import kotlin.math.min
 
-class FileExplorerSession : ViewModel() {
+class FileExplorerSession(application: Application, path: String) : AndroidViewModel(application) {
     val selected = MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>()
     val fileInstance = MutableLiveData<FileInstance>()
 
-    fun init(owner: LifecycleOwner, path: String?) {
-        owner.context {
-            if (fileInstance.value == null)
-                owner.scope.launch {
-                    suspendCancellableCoroutine<FileInstance> {
-                        thread {
-                            val result = Result.success(FileInstanceFactory.getFileInstance(path ?: FileInstanceFactory.rootUserEmulatedPath, context = this@context))
-                            it.resumeWith(result)
-                        }
-                    }.let {
-                        fileInstance.value = it
-                    }
+    init {
+        viewModelScope.launch {
+            suspendCancellableCoroutine<FileInstance> {
+                thread {
+                    val result = Result.success(FileInstanceFactory.getFileInstance(path, application.applicationContext))
+                    it.resumeWith(result)
                 }
+            }.let {
+                fileInstance.value = it
+            }
         }
     }
-
-    companion object {
-        private const val TAG = "MainActivity"
-    }
-
 }
 
 class MainActivity : SimpleActivity(), FileOperateService.FileOperateResultContainer {
@@ -165,7 +158,7 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResultConta
             Log.i(TAG, "onServiceConnected: $fileOperateBinderLocal")
             fileOperateBinder = fileOperateBinderLocal
             fileOperateBinderLocal.let { binder ->
-                binder.fileOperateResultContainer = this@MainActivity
+                binder.fileOperateResultContainer = WeakReference(this@MainActivity)
                 binder.state.toDiffNoNull { i, i2 ->
                     i == i2 && i != FileOperateBinder.state_null
                 }.observe(this@MainActivity, Observer {
@@ -211,7 +204,6 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResultConta
 
     override fun onDestroy() {
         super.onDestroy()
-        fileOperateBinder?.fileOperateResultContainer = null
         try {
             unbindService(connection)
         } catch (e: Exception) {
@@ -309,12 +301,11 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
                     return@setOnDragListener when (event.action) {
                         DragEvent.ACTION_DRAG_STARTED -> {
                             val localState = event.localState
-                            event.clipDescription.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)
-                                    && localState is FileModel
+                            localState is FileModel
                                     && !itemHolder.file.fullPath.contains(localState.fullPath)
                         }
                         DragEvent.ACTION_DROP -> {
-                            binding.root.findActionReceiverOrNull<FileListFragment>()?.handleClipData(event.clipData)
+                            v.findActionReceiverOrNull<FileListFragment>()?.handleClipData(event.clipData)
                             true
                         }
                         else -> true

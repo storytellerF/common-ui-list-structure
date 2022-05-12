@@ -1,7 +1,6 @@
 package com.storyteller_f.giant_explorer.dialog
 
 import android.os.Parcelable
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.flowWithLifecycle
@@ -16,6 +15,7 @@ import com.storyteller_f.common_ui.setOnClick
 import com.storyteller_f.common_vm_ktx.HasStateValueModel
 import com.storyteller_f.common_vm_ktx.combine
 import com.storyteller_f.common_vm_ktx.svm
+import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
@@ -38,7 +38,9 @@ import kotlinx.parcelize.Parcelize
 
 class RequestPathDialog :
     CommonDialogFragment<DialogRequestPathBinding>(DialogRequestPathBinding::inflate) {
-    private val session by viewModels<FileExplorerSession>()
+    private val session by vm({FileInstanceFactory.rootUserEmulatedPath}) {
+        FileExplorerSession(requireActivity().application, it)
+    }
     private val filterHiddenFile by svm {
         HasStateValueModel(it, FileListFragment.filterHiddenFileKey, false)
     }
@@ -103,7 +105,6 @@ class RequestPathDialog :
             })
 
         }
-        session.init(this, null)
         scope.launch {
             callbackFlow {
                 binding.pathMan.setPathChangeListener {
