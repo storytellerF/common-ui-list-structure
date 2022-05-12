@@ -272,13 +272,12 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
         binding.fileName.text = itemHolder.file.name
         binding.fileIcon.fileIcon(itemHolder.file.item)
         val item = itemHolder.file.item
-        if (itemHolder.selected.value?.valueContains(
-                Pair(itemHolder, 0)
-            ) == true
-        ) binding.root.setBackgroundColor(getColor(com.storyteller_f.ui_list.R.color.greyAlpha))
-        else
-            binding.root.setBackgroundResource(if (itemHolder.file.item is FileItemModel) com.storyteller_f.file_system.R.drawable.file_background else com.storyteller_f.file_system.R.drawable.folder_background)
-
+        binding.root.isSelected = itemHolder.selected.value?.valueContains(
+            Pair(itemHolder, 0)
+        ) == true
+        binding.root.setBackgroundResource(
+            if (itemHolder.file.item is FileItemModel) R.drawable.background_file else R.drawable.background_folder
+        )
         binding.fileSize.setVisible(item.size != -1L) {
             it.text = item.formattedSize
         }

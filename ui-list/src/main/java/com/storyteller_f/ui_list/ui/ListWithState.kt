@@ -181,12 +181,7 @@ class ListWithState @JvmOverloads constructor(
                     selected.value.toggleSpecial(adapterViewHolder.itemHolder to viewHolder.absoluteAdapterPosition)
                 selected.value =
                     toggleSpecial.let {
-                        val backgroundFromTag = getBackgroundFromTag(viewHolder)
-                        if (it.second) {
-                            viewHolder.view.setBackgroundColor(adapterViewHolder.getColor(R.color.greyAlpha))
-                        } else {
-                            viewHolder.view.background = backgroundFromTag
-                        }
+                        viewHolder.view.isSelected = it.second
                         it.first
                     }
             }
