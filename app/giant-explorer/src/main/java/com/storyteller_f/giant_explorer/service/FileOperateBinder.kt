@@ -64,7 +64,7 @@ class FileOperateBinder(val context: Context) : Binder() {
     @WorkerThread
     private fun startDeleteTask(focused: FileSystemItemModel, selected: List<FileSystemItemModel>, key: String) {
         state.postValue(state_compute)
-        val compute = TaskCompute(selected, context).compute()
+        val compute = TaskCompute(selected, context, null).compute()
         state.postValue(state_running)
         if (DeleteImpl(context, selected, compute, focused, key).let {
                 it.fileOperationProgressListener = progressListenerLocal
@@ -97,7 +97,7 @@ class FileOperateBinder(val context: Context) : Binder() {
         key: String
     ) {
         state.postValue(state_compute)
-        val computeSize = TaskCompute(selected, context).compute()
+        val computeSize = TaskCompute(selected, context, dest).compute()
         state.postValue(state_running)
         map[key] = TaskSession(computeSize, null)
         if (CopyImpl(context, selected, computeSize, focused, deleteOrigin, dest, key).let {
@@ -158,7 +158,7 @@ class FileOperateBinder(val context: Context) : Binder() {
         }.size
         val compute = if (filterIsInstance.isNotEmpty()) {
             try {
-                TaskCompute(filterIsInstance, context).compute()
+                TaskCompute(filterIsInstance, context, dest).compute()
             } catch (e: Exception) {
                 whenError(key, e.exceptionMessage)
                 return
@@ -187,6 +187,10 @@ class FileOperateBinder(val context: Context) : Binder() {
         const val state_running = 3
         const val state_end = 4
         const val state_error = 5
+
+        fun checkOperationValid(path: String, dest: String): Boolean {
+            return !dest.contains(path)
+        }
     }
 }
 
@@ -194,11 +198,12 @@ class TaskSession(val taskEquivalent: TaskEquivalent?, val message: CharSequence
 
 class TaskEquivalent(val fileCount: Int, val folderCount: Int, val size: Long)
 
-class TaskCompute(private val detectorTasks: List<FileSystemItemModel>, val context: Context) {
+class TaskCompute(private val detectorTasks: List<FileSystemItemModel>, val context: Context, private val dest: FileInstance?) {
     var count = 0
     var folderCount = 0
     fun compute(): TaskEquivalent {
         val size = detectorTasks.map {
+            if (dest != null && FileOperateBinder.checkOperationValid(it.fullPath, dest.path)) throw Exception("不能将父文件夹移动到子文件夹")
             val fileInstance = getFileInstance(it.fullPath, context)
             if (!fileInstance.exists()) {
                 throw FileNotFoundException(fileInstance.path)

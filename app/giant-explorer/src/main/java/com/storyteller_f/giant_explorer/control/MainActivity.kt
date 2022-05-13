@@ -288,24 +288,24 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
 
         binding.detail.text = item.detail
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            val listener = OnDragStartListener@{ view: View, _: DragStartHelper ->
-                val clipData = ClipData.newPlainText("file explorer", itemHolder.file.fullPath)
+            val listener = { view: View, _: DragStartHelper ->
+                val clipData = ClipData.newPlainText(FileListFragment.clipDataKey, itemHolder.file.fullPath)
                 val flags = View.DRAG_FLAG_GLOBAL or View.DRAG_FLAG_GLOBAL_URI_READ
-                return@OnDragStartListener view.startDragAndDrop(clipData, View.DragShadowBuilder(view), itemHolder.file, flags)
+                view.startDragAndDrop(clipData, View.DragShadowBuilder(view), null, flags)
             }
             DragStartHelper(binding.root, listener).apply {
                 attach()
             }
             if (itemHolder.file.item.isDirectory)
                 binding.root.setOnDragListener { v, event ->
-                    return@setOnDragListener when (event.action) {
+                    when (event.action) {
                         DragEvent.ACTION_DRAG_STARTED -> {
-                            val localState = event.localState
-                            localState is FileModel
-                                    && !itemHolder.file.fullPath.contains(localState.fullPath)
+                            val clipDescription = event.clipDescription
+                            clipDescription.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)
+                                    && clipDescription.label == FileListFragment.clipDataKey
                         }
                         DragEvent.ACTION_DROP -> {
-                            v.findActionReceiverOrNull<FileListFragment>()?.handleClipData(event.clipData)
+                            v.findActionReceiverOrNull<FileListFragment>()?.handleClipData(event.clipData, itemHolder.file.fullPath)
                             true
                         }
                         else -> true
