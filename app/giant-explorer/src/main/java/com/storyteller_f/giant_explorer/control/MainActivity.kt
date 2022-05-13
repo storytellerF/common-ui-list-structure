@@ -160,7 +160,7 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResultConta
             fileOperateBinderLocal.let { binder ->
                 binder.fileOperateResultContainer = WeakReference(this@MainActivity)
                 binder.state.toDiffNoNull { i, i2 ->
-                    i == i2 && i != FileOperateBinder.state_null
+                    i == i2
                 }.observe(this@MainActivity, Observer {
                     Toast.makeText(this@MainActivity, "${it.first} ${it.second}", Toast.LENGTH_SHORT).show()
                     if (it.first == FileOperateBinder.state_null) {

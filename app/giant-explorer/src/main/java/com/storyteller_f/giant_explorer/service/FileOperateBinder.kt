@@ -145,7 +145,7 @@ class FileOperateBinder(val context: Context) : Binder() {
         map.getOrPut(key) {
             TaskSession(null, null)
         }
-        state.postValue(state_null)
+        state.value = state_null
     }
 
     private fun startCompoundTask(linkedList: LinkedList<DetectorTask>, dest: FileInstance, key: String) {
