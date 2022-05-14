@@ -15,13 +15,13 @@ dependencyResolutionManagement {
 }
 rootProject.name = "common_ui_list_structure"
 include ':app'
-include ':annotation-compiler'
+include ':ui-list-annotation-compiler'
 include ':common-vm-ktx'
 include ':ui-list'
 include ':view-holder-compose'
-include ':annotation-defination'
+include ':ui-list-annotation-definition'
 include ':common-ui'
-include ':composite-defination'
+include ':composite-definition'
 include ':composite-compiler'
 include ':app:b3'
 include ':app:giant-explorer'

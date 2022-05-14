@@ -10,7 +10,7 @@ java {
 }
 
 dependencies {
-    api project(":annotation-defination")
+    api project(':ui-list-annotation-definition')
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
     // configuration generator for services providers

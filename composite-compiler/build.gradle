@@ -9,5 +9,6 @@ java {
 }
 
 dependencies {
-    implementation(project(":composite-defination"))
+    implementation implementation(project(':composite-definition',))
 }
+

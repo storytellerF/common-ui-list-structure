@@ -51,8 +51,8 @@ android {
 dependencies {
 
     implementation(project(":ui-list"))
-    implementation project(path: ':annotation-defination')
-    implementation(project(":composite-defination"))
+    implementation project(path: ':ui-list-annotation-definition')
+    implementation implementation(project(':composite-definition',))
     implementation(project(":common-ui"))
     implementation 'androidx.navigation:navigation-fragment-ktx:2.4.1'
     implementation 'androidx.navigation:navigation-ui-ktx:2.4.1'
@@ -62,7 +62,7 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.4.1'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.1'
-    kapt(project(':annotation-compiler'))
+    kapt kapt(project(':ui-list-annotation-compiler',))
     kapt(project(":composite-compiler"))
     implementation(project(":view-holder-compose"))
 

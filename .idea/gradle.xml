@@ -11,8 +11,6 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/annotation-compiler" />
-            <option value="$PROJECT_DIR$/annotation-defination" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/app/b3" />
             <option value="$PROJECT_DIR$/app/giant-explorer" />
@@ -20,12 +18,14 @@
             <option value="$PROJECT_DIR$/common-ui" />
             <option value="$PROJECT_DIR$/common-vm-ktx" />
             <option value="$PROJECT_DIR$/composite-compiler" />
-            <option value="$PROJECT_DIR$/composite-defination" />
+            <option value="$PROJECT_DIR$/composite-definition" />
             <option value="$PROJECT_DIR$/file-system" />
             <option value="$PROJECT_DIR$/file-system-ktx" />
             <option value="$PROJECT_DIR$/mass-common-ktx" />
             <option value="$PROJECT_DIR$/multi-core" />
             <option value="$PROJECT_DIR$/ui-list" />
+            <option value="$PROJECT_DIR$/ui-list-annotation-compiler" />
+            <option value="$PROJECT_DIR$/ui-list-annotation-definition" />
             <option value="$PROJECT_DIR$/view-holder-compose" />
           </set>
         </option>
