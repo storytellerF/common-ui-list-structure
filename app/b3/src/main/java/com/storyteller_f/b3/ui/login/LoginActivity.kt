@@ -1,4 +1,4 @@
-package com.storyteller_f.b3.ui.login;
+package com.storyteller_f.b3.ui.login
 
 import android.os.Bundle
 import android.util.Log
@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 class LoginActivity : AppCompatActivity() {
-    val geetestResult by vm {
+    val geetestResult by vm({}) {
         GenericValueModel<GeetestResult>()
     }
     var requestTask: Job? = null

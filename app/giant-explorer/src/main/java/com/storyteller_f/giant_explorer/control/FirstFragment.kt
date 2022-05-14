@@ -1,7 +1,5 @@
 package com.storyteller_f.giant_explorer.control
 
-import android.os.Bundle
-import android.view.View
 import android.widget.Toast
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,10 +17,7 @@ import androidx.lifecycle.flowWithLifecycle
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ktx.exceptionMessage
-import com.storyteller_f.common_ui.CommonFragment
-import com.storyteller_f.common_ui.end
-import com.storyteller_f.common_ui.scope
-import com.storyteller_f.common_ui.waitingDialog
+import com.storyteller_f.common_ui.*
 import com.storyteller_f.giant_explorer.database.BigTimeTask
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentFirstBinding
@@ -41,12 +36,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.lang.Exception
 
-class FirstFragment : CommonFragment<FragmentFirstBinding>(FragmentFirstBinding::inflate) {
+class FirstFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding::inflate) {
     private val adapter = ManualAdapter<DataItemHolder, AbstractAdapterViewHolder<DataItemHolder>>()
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-    }
 
     override fun onBindViewEvent(binding: FragmentFirstBinding) {
         binding.content.manualUp(adapter)
@@ -70,7 +61,7 @@ class FirstFragment : CommonFragment<FragmentFirstBinding>(FragmentFirstBinding:
     }
 
     @BindClickEvent(BigTimeTaskItemHolder::class, "check")
-    fun onCheck(view: View, itemHolder: BigTimeTaskItemHolder) {
+    fun onCheck(itemHolder: BigTimeTaskItemHolder) {
         scope.launch {
             val waitingDialog = waitingDialog()
             try {

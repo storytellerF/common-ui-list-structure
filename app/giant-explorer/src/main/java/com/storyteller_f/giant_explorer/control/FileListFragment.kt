@@ -5,7 +5,6 @@ import android.content.ClipboardManager
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.os.FileUtils
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -15,27 +14,23 @@ import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import androidx.room.util.FileUtil
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindLongClickEvent
 import com.storyteller_f.common_ktx.mm
-import com.storyteller_f.common_ui.CommonFragment
+import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.common_ui.dialog
 import com.storyteller_f.common_ui.fragment
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
-import com.storyteller_f.file_system.util.FileUtility
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentFileListBinding
-import com.storyteller_f.giant_explorer.dialog.NewNameDialog
-import com.storyteller_f.giant_explorer.dialog.OpenFileDialog
-import com.storyteller_f.giant_explorer.dialog.OpenFileDialogArgs
-import com.storyteller_f.giant_explorer.dialog.RequestPathDialog
+import com.storyteller_f.giant_explorer.dialog.*
 import com.storyteller_f.ui_list.core.SearchProducer
 import com.storyteller_f.ui_list.core.SimpleSourceAdapter
 import com.storyteller_f.ui_list.core.search
@@ -43,22 +38,27 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*
 
-class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileListBinding::inflate) {
+class TempVM : ViewModel() {
+    var list: MutableList<String> = mutableListOf()
+    var dest: String? = null
+}
+
+class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileListBinding::inflate) {
     private val fileOperateBinder
         get() = (requireContext() as MainActivity).fileOperateBinder
-    private val uuid by kavm({ "uuid" }) {
+    private val uuid by kavm({ "uuid" }, {}) {
         GenericValueModel<String>().apply {
             data.value = UUID.randomUUID().toString()
         }
     }
+
     private val data by search({ requireDatabase() to session.selected }, { (database, selected) ->
         SearchProducer(service(database)) { fileModel, _ ->
             FileItemHolder(fileModel, selected)
         }
-    }
+    })
 
-    )
-    private val filterHiddenFile by asvm {
+    private val filterHiddenFile by asvm({}) { it, t ->
         HasStateValueModel(it, filterHiddenFileKey, false)
     }
 
@@ -66,6 +66,9 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
 
     private val session by vm({ args.path }) {
         FileExplorerSession(requireActivity().application, it)
+    }
+    private val temp by kpvm({ "temp" }, {}) {
+        TempVM()
     }
 
     override fun onBindViewEvent(binding: FragmentFileListBinding) {
@@ -116,11 +119,14 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
         viewLifecycleOwner.lifecycleScope.launch {
             val dest = path?.let {
                 FileInstanceFactory.getFileInstance(it, requireContext())
-            } ?: session.fileInstance.value
+            } ?: session.fileInstance.value ?: kotlin.run {
+                Toast.makeText(requireContext(), "无法确定目的地", Toast.LENGTH_LONG).show()
+                return@launch
+            }
             val mutableList = MutableList(data.itemCount) {
                 data.getItemAt(it)
             }
-            val regex = Regex("^/[\\w.]+$")
+            val regex = Regex("^/([\\w.]+/){0,}[\\w.]+$")
             val uriList = mutableList.mapNotNull {
                 val text = it.coerceToText(requireContext()).toString()
                 (if (URLUtil.isNetworkUrl(text)) Uri.parse(text)
@@ -133,8 +139,16 @@ class FileListFragment : CommonFragment<FragmentFileListBinding>(FragmentFileLis
             }.plus(mutableList.mapNotNull {
                 it.uri
             })
-            dest?.let {
-                fileOperateBinder?.compoundTask(uriList, it, key)
+            temp.list.clear()
+            temp.list.addAll(uriList.map { it.toString() })
+            temp.dest = dest.path
+            val fileOperateBinderLocal = fileOperateBinder ?: kotlin.run {
+                Toast.makeText(requireContext(), "未连接服务", Toast.LENGTH_LONG).show()
+                return@launch
+            }
+            dialog(TaskConfirmDialog()) { r: TaskConfirmDialog.Result ->
+                if (r.confirm)
+                    fileOperateBinderLocal.compoundTask(uriList, dest, key)
             }
         }
 

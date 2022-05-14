@@ -3,6 +3,7 @@ package com.storyteller_f.common_ui
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Parcelable
+import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -11,13 +12,15 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updatePadding
+import androidx.databinding.ViewDataBinding
 import androidx.viewbinding.ViewBinding
 
-open class SimpleActivity : AppCompatActivity(), RegistryFragment {
+abstract class CommonActivity : AppCompatActivity(), RegistryFragment {
     override fun onStart() {
         super.onStart()
+        //主要用于旋转屏幕
         waitingInActivity.forEach { t ->
-            val action = t.value.action as Function2<SimpleActivity, Parcelable, Unit>
+            val action = t.value.action as Function2<CommonActivity, Parcelable, Unit>
             if (t.value.requestKey == registryKey()) {
                 val callback = { s: String, r: Bundle ->
                     if (waitingInFragment.containsKey(s)) {
@@ -33,7 +36,7 @@ open class SimpleActivity : AppCompatActivity(), RegistryFragment {
         }
     }
 
-    fun <T : Parcelable> dialog(requestKey: String, dialog: Class<out CommonDialogFragment<out ViewBinding>>, parameters: Bundle? = null, action: (T) -> Unit) {
+    fun <T : Parcelable> dialog(requestKey: String, dialog: Class<out CommonDialogFragment>, parameters: Bundle? = null, action: (T) -> Unit) {
         dialog.newInstance().apply {
             arguments = parameters
         }.show(supportFragmentManager, requestKey)
@@ -50,6 +53,27 @@ open class SimpleActivity : AppCompatActivity(), RegistryFragment {
     }
 }
 
+abstract class SimpleActivity<T : ViewBinding>(
+    val viewBindingFactory: (LayoutInflater) -> T
+) : AppCompatActivity(), RegistryFragment {
+    private var _binding: T? = null
+    val binding: T get() = _binding!!
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val bindingLocal = viewBindingFactory(layoutInflater)
+        setContentView(bindingLocal.root)
+        _binding = bindingLocal
+        (binding as? ViewDataBinding)?.lifecycleOwner = this
+        onBindViewEvent(binding)
+    }
+
+    abstract fun onBindViewEvent(binding: T)
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
+    }
+}
+
 fun ComponentActivity.supportNavigatorBarImmersive(view: View) {
     WindowCompat.setDecorFitsSystemWindows(window, false)
     window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
@@ -58,7 +82,6 @@ fun ComponentActivity.supportNavigatorBarImmersive(view: View) {
     view.setOnApplyWindowInsetsListener { v, insets ->
         val top = WindowInsetsCompat.toWindowInsetsCompat(insets, v).getInsets(WindowInsetsCompat.Type.statusBars())
         v.updatePadding(top = top.top)
-//        println("top:$top")
         insets
     }
 }

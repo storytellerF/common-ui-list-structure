@@ -21,27 +21,12 @@ import androidx.viewbinding.ViewBinding
  * @author storyteller_f
  */
 
-abstract class CommonFragment<T : ViewBinding>(
-    val viewBindingFactory: (LayoutInflater) -> T
-) : Fragment(), RequestFragment, RegistryFragment {
-    private var _binding: T? = null
-    val binding: T get() = _binding!!
+abstract class CommonFragment : Fragment(), RequestFragment, RegistryFragment {
     fun tag(): String = requestKey()
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val bindingLocal = viewBindingFactory(layoutInflater)
-        _binding = bindingLocal
-        (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
-        onBindViewEvent(binding)
-        return bindingLocal.root
-    }
-
-    abstract fun onBindViewEvent(binding: T)
-
     override fun onStart() {
         super.onStart()
         waitingInFragment.forEach { t ->
-            val action = t.value.action as Function2<CommonFragment<out ViewBinding>, Parcelable, Unit>
+            val action = t.value.action as Function2<CommonFragment, Parcelable, Unit>
             if (t.value.requestKey == registryKey()) {
                 val callback = { s: String, r: Bundle ->
                     if (waitingInFragment.containsKey(s)) {
@@ -56,18 +41,28 @@ abstract class CommonFragment<T : ViewBinding>(
             }
         }
     }
+}
 
+abstract class SimpleFragment<T : ViewBinding>(
+    val viewBindingFactory: (LayoutInflater) -> T
+) : CommonFragment() {
+    private var _binding: T? = null
+    val binding: T get() = _binding!!
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        val bindingLocal = viewBindingFactory(layoutInflater)
+        _binding = bindingLocal
+        (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
+        onBindViewEvent(binding)
+        return bindingLocal.root
+    }
+    abstract fun onBindViewEvent(binding: T)
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
-
-    companion object {
-        private const val TAG = "Fragment"
-    }
 }
 
-fun <T : Parcelable, F : CommonFragment<out ViewBinding>> F.fragment(requestKey: String, action: F.(T) -> Unit) {
+fun <T : Parcelable, F : CommonFragment> F.fragment(requestKey: String, action: F.(T) -> Unit) {
     val callback = { s: String, r: Bundle ->
         if (waitingInFragment.containsKey(s)) {
             r.getParcelable<T>(resultKey)?.let {
@@ -80,7 +75,7 @@ fun <T : Parcelable, F : CommonFragment<out ViewBinding>> F.fragment(requestKey:
     fm.setFragmentResultListener(requestKey, owner, callback)
 }
 
-fun <T : Parcelable, F : CommonFragment<out ViewBinding>> F.dialog(dialogFragment: CommonDialogFragment<*>, action: F.(T) -> Unit) {
+fun <T : Parcelable, F : CommonFragment> F.dialog(dialogFragment: CommonDialogFragment, action: F.(T) -> Unit) {
     val requestKey = dialogFragment.requestKey()
     dialogFragment.show(fm, requestKey)
     val callback = { s: String, r: Bundle ->
@@ -103,8 +98,7 @@ fun <T : Parcelable, F : CommonFragment<out ViewBinding>> F.dialog(dialogFragmen
  */
 abstract class RegularFragment<T : ViewBinding>(
     viewBindingFactory: (LayoutInflater) -> T
-
-) : CommonFragment<T>(viewBindingFactory) {
+) : SimpleFragment<T>(viewBindingFactory) {
     override fun onStart() {
         super.onStart()
         toolbar().setDisplayHomeAsUpEnabled(up())
@@ -146,8 +140,8 @@ val LifecycleOwner.owner
 val Fragment.fm
     get() = parentFragmentManager
 
-class ActivityAction<T : Parcelable, F : SimpleActivity>(val action: F.(T) -> Unit, val requestKey: String)
-class FragmentAction<T : Parcelable, F : CommonFragment<out ViewBinding>>(val action: F.(T) -> Unit, val requestKey: String)
+class ActivityAction<T : Parcelable, F : CommonActivity>(val action: F.(T) -> Unit, val requestKey: String)
+class FragmentAction<T : Parcelable, F : CommonFragment>(val action: F.(T) -> Unit, val requestKey: String)
 
 val waitingInActivity = mutableMapOf<String, ActivityAction<*, *>>()
 val waitingInFragment = mutableMapOf<String, FragmentAction<*, *>>()

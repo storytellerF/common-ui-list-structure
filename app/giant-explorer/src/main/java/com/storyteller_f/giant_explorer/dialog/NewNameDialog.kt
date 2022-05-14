@@ -1,13 +1,11 @@
 package com.storyteller_f.giant_explorer.dialog
 
 import android.os.Parcelable
-import com.storyteller_f.common_ui.CommonDialogFragment
-import com.storyteller_f.common_ui.setFragmentResult
-import com.storyteller_f.common_ui.setOnClick
+import com.storyteller_f.common_ui.*
 import com.storyteller_f.giant_explorer.databinding.DialogNewNameBinding
 import kotlinx.parcelize.Parcelize
 
-class NewNameDialog : CommonDialogFragment<DialogNewNameBinding>(DialogNewNameBinding::inflate) {
+class NewNameDialog : SimpleDialogFragment<DialogNewNameBinding>(DialogNewNameBinding::inflate) {
     override fun onBindViewEvent(binding: DialogNewNameBinding) {
         binding.bottom.positive.setOnClick {
             setFragmentResult(NewNameResult(binding.newName.text.toString()))

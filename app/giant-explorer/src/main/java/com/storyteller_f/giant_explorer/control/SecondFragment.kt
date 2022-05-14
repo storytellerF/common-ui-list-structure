@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 import java.lang.Exception
 
-class SecondFragment : CommonFragment<FragmentSecondBinding>(FragmentSecondBinding::inflate) {
+class SecondFragment : SimpleFragment<FragmentSecondBinding>(FragmentSecondBinding::inflate) {
 
     override fun onBindViewEvent(binding: FragmentSecondBinding) {
         binding.button.setOnClickListener {

@@ -35,8 +35,8 @@ class SearchProducer<D : Model, SQ : Any, Holder : DataItemHolder>(
 fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, Database : RoomDatabase, Composite : CommonRoomDatabase<D, RK, Database>, ARG, T> T.source(
     arg: () -> ARG,
     sourceContentProducer: (ARG) -> SourceProducer<RK, D, Holder, Database, Composite>,
-) : Lazy<SimpleSourceViewModel<D, Holder, RK, Database>> where T : SavedStateRegistryOwner, T : ViewModelStoreOwner {
-    return vm {
+): Lazy<SimpleSourceViewModel<D, Holder, RK, Database>> where T : SavedStateRegistryOwner, T : ViewModelStoreOwner {
+    return vm({}) {
         val sourceContent = sourceContentProducer(arg())
         SimpleSourceViewModel(
             SimpleSourceRepository(
@@ -51,7 +51,7 @@ fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, Database : RoomData
 fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, Database : RoomDatabase, Composite : CommonRoomDatabase<D, RK, Database>, T> T.source(
     sourceContent: SourceProducer<RK, D, Holder, Database, Composite>,
 ): Lazy<SimpleSourceViewModel<D, Holder, RK, Database>> where T : SavedStateRegistryOwner, T : ViewModelStoreOwner {
-    return vm {
+    return vm({}) {
         SimpleSourceViewModel(
             SimpleSourceRepository(
                 sourceContent.service,
@@ -65,7 +65,7 @@ fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, Database : RoomData
 fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, T> T.data(
     dataContent: DataProducer<RK, D, Holder>,
 ): Lazy<SimpleDataViewModel<D, Holder, RK>> where T : SavedStateRegistryOwner, T : ViewModelStoreOwner {
-    return vm {
+    return vm({}) {
         SimpleDataViewModel(
             SimpleDataRepository(
                 dataContent.service,
@@ -82,7 +82,7 @@ fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, ARG, T> T.data(
 fun <D : Any, T> T.detail(
     detailContent: DetailProducer<D>,
 ): Lazy<SimpleDetailViewModel<D>> where T : SavedStateRegistryOwner, T : ViewModelStoreOwner {
-    return vm {
+    return vm({}) {
         SimpleDetailViewModel(
             detailContent.producer,
             detailContent.local
@@ -98,7 +98,7 @@ fun <D : Any, ARG, T> T.detail(
 fun <D : Model, SQ : Any, Holder : DataItemHolder, T> T.search(
     searchProducer: SearchProducer<D, SQ, Holder>
 ): Lazy<SimpleSearchViewModel<D, SQ, Holder>> where T : ViewModelStoreOwner, T : SavedStateRegistryOwner {
-    return vm {
+    return vm({}) {
         SimpleSearchViewModel(
             SimpleSearchRepository(searchProducer.service),
             searchProducer.processFactory,
@@ -110,7 +110,7 @@ fun <D : Model, SQ : Any, Holder : DataItemHolder, T, ARG> T.search(
     arg: () -> ARG,
     searchContentProducer: (ARG) -> SearchProducer<D, SQ, Holder>
 ): Lazy<SimpleSearchViewModel<D, SQ, Holder>> where T : ViewModelStoreOwner, T : SavedStateRegistryOwner {
-    return vm {
+    return vm({}) {
         val searchProducer = searchContentProducer(arg())
         SimpleSearchViewModel(
             SimpleSearchRepository(searchProducer.service),

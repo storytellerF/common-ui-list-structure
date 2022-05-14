@@ -61,81 +61,6 @@ fun <VM : ViewModel, T> T.keyedViewModels(
  * 实际使用 Fragment.keyedViewModels 构建，仅方便使用
  */
 @MainThread
-inline fun <reified VM : ViewModel, T> T.kvm(
-    keyPrefix: String,
-    crossinline factoryProducer: () -> VM,
-) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner, T : HasDefaultViewModelProviderFactory =
-    keyedViewModels({ keyPrefix }, VM::class, { viewModelStore }, defaultFactory(factoryProducer))
-
-inline fun <reified VM : ViewModel, T> T.defaultFactory(
-    crossinline factoryProducer: () -> VM,
-    noinline ownerProducer: () -> SavedStateRegistryOwner = { this },
-
-    ): () -> ViewModelProvider.Factory where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = {
-    object : AbstractSavedStateViewModelFactory(ownerProducer(), null) {
-        override fun <T : ViewModel> create(
-            key: String,
-            modelClass: Class<T>,
-            handle: SavedStateHandle
-        ): T = modelClass.cast(factoryProducer())!!
-    }
-}
-
-inline fun <reified VM : ViewModel, T> T.stateDefaultFactory(
-    crossinline factoryProducer: (SavedStateHandle) -> VM,
-    noinline ownerProducer: () -> SavedStateRegistryOwner = { this },
-): () -> ViewModelProvider.Factory where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = {
-    object : AbstractSavedStateViewModelFactory(ownerProducer(), null) {
-        override fun <T : ViewModel> create(
-            key: String,
-            modelClass: Class<T>,
-            handle: SavedStateHandle
-        ): T = modelClass.cast(factoryProducer(handle))!!
-    }
-}
-
-@MainThread
-inline fun <reified VM : ViewModel, T> T.kvm(
-    noinline keyPrefixProvider: () -> String,
-    crossinline factoryProducer: () -> VM
-) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = KeyedViewModelLazy(keyPrefixProvider, VM::class, { viewModelStore }, defaultFactory(factoryProducer))
-
-@MainThread
-inline fun <reified VM : ViewModel, T> T.vm(
-    crossinline factoryProducer: () -> VM
-) where T : ViewModelStoreOwner, T : SavedStateRegistryOwner = ViewModelLazy(VM::class, { viewModelStore }, defaultFactory(factoryProducer))
-
-/**
- * 虽然是Fragment 的扩展函数，但是调用的activity的
- */
-@MainThread
-inline fun <reified VM : ViewModel> Fragment.avm(
-    crossinline factoryProducer: () -> VM
-) = ViewModelLazy(VM::class, { requireActivity().viewModelStore }, defaultFactory(factoryProducer) { requireActivity() })
-
-@MainThread
-inline fun <reified VM : ViewModel> Fragment.kavm(
-    noinline keyPrefixProvider: () -> String,
-    crossinline factoryProducer: () -> VM
-) = KeyedViewModelLazy(keyPrefixProvider, VM::class, { requireActivity().viewModelStore }, defaultFactory(factoryProducer) { requireActivity() })
-
-
-@MainThread
-inline fun <reified VM : ViewModel> Fragment.asvm(
-    crossinline factoryProducer: (SavedStateHandle) -> VM
-) = ViewModelLazy(VM::class, { requireActivity().viewModelStore }, stateDefaultFactory(factoryProducer) { requireActivity() }
-)
-
-inline fun <reified VM : ViewModel, T> T.svm(
-    crossinline factoryProducer: (SavedStateHandle) -> VM
-): Lazy<VM> where T : SavedStateRegistryOwner, T : ViewModelStoreOwner {
-    return ViewModelLazy(VM::class, { viewModelStore }, stateDefaultFactory(factoryProducer))
-}
-
-/**
- * 实际使用 Fragment.keyedViewModels 构建，仅方便使用
- */
-@MainThread
 inline fun <reified VM : ViewModel, T, ARG> T.kvm(
     keyPrefix: String,
     crossinline arg: () -> ARG,
@@ -188,6 +113,12 @@ inline fun <reified VM : ViewModel, T, ARG> T.vm(
 ) where T : ViewModelStoreOwner, T : SavedStateRegistryOwner =
     ViewModelLazy(VM::class, { viewModelStore }, defaultFactory(arg, vmProducer))
 
+inline fun <reified VM : ViewModel, T, ARG> T.svm(
+    crossinline arg: () -> ARG,
+    crossinline vmProducer: (SavedStateHandle, ARG) -> VM
+) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner =
+    ViewModelLazy(VM::class, { viewModelStore }, stateDefaultFactory(arg, vmProducer))
+
 /**
  * 虽然是Fragment 的扩展函数，但是调用的activity的
  */
@@ -209,15 +140,30 @@ inline fun <reified VM : ViewModel, ARG> Fragment.kavm(
 inline fun <reified VM : ViewModel, ARG> Fragment.asvm(
     crossinline arg: () -> ARG,
     crossinline vmProducer: (SavedStateHandle, ARG) -> VM
-) = ViewModelLazy(VM::class, { requireActivity().viewModelStore }, stateDefaultFactory(arg, vmProducer) { requireActivity() }
-)
+) = ViewModelLazy(VM::class, { requireActivity().viewModelStore }, stateDefaultFactory(arg, vmProducer) { requireActivity() })
 
-inline fun <reified VM : ViewModel, T, ARG> T.svm(
+/**
+ * 虽然是Fragment 的扩展函数，但是调用的parent fragment的
+ */
+@MainThread
+inline fun <reified VM : ViewModel, ARG> Fragment.pvm(
+    crossinline arg: () -> ARG,
+    crossinline vmProducer: (ARG) -> VM
+) = ViewModelLazy(VM::class, { requireParentFragment().viewModelStore }, defaultFactory(arg, vmProducer) { requireParentFragment() })
+
+@MainThread
+inline fun <reified VM : ViewModel, ARG> Fragment.kpvm(
+    noinline keyPrefixProvider: () -> String,
+    crossinline arg: () -> ARG,
+    crossinline vmProducer: (ARG) -> VM
+) = KeyedViewModelLazy(keyPrefixProvider, VM::class, { requireParentFragment().viewModelStore }, defaultFactory(arg, vmProducer) { requireParentFragment() })
+
+
+@MainThread
+inline fun <reified VM : ViewModel, ARG> Fragment.psvm(
     crossinline arg: () -> ARG,
     crossinline vmProducer: (SavedStateHandle, ARG) -> VM
-): Lazy<VM> where T : SavedStateRegistryOwner, T : ViewModelStoreOwner {
-    return ViewModelLazy(VM::class, { viewModelStore }, stateDefaultFactory(arg, vmProducer))
-}
+) = ViewModelLazy(VM::class, { requireParentFragment().viewModelStore }, stateDefaultFactory(arg, vmProducer) { requireParentFragment() })
 
 class GenericValueModel<T> : ViewModel() {
     val data = MutableLiveData<T>()

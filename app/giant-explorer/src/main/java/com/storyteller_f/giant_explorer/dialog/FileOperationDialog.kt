@@ -5,10 +5,7 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.repeatOnLifecycle
-import com.storyteller_f.common_ui.CommonDialogFragment
-import com.storyteller_f.common_ui.onVisible
-import com.storyteller_f.common_ui.pp
-import com.storyteller_f.common_ui.scope
+import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.giant_explorer.databinding.DialogFileOperationBinding
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
@@ -18,21 +15,21 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import java.util.*
 
-class FileOperationDialog : CommonDialogFragment<DialogFileOperationBinding>(DialogFileOperationBinding::inflate) {
+class FileOperationDialog : SimpleDialogFragment<DialogFileOperationBinding>(DialogFileOperationBinding::inflate) {
     lateinit var binder: FileOperateBinder
-    private val progressVM by kvm("progress") {
+    private val progressVM by kvm("progress", {}) {
         GenericValueModel<Int>()
     }
-    private val leftVM by kvm("left") {
+    private val leftVM by kvm("left", {}) {
         GenericValueModel<Triple<Int, Int, Long>>()
     }
-    private val stateVM by kvm("state") {
+    private val stateVM by kvm("state", {}) {
         GenericValueModel<String>()
     }
-    private val tipVM by kvm("tip") {
+    private val tipVM by kvm("tip", {}) {
         GenericValueModel<String>()
     }
-    private val uuid by kavm({ "uuid" }) {
+    private val uuid by kavm({ "uuid" }, {}) {
         GenericValueModel<String>().apply {
             data.value = UUID.randomUUID().toString()
         }

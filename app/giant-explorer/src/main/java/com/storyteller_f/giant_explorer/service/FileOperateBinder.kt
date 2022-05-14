@@ -3,6 +3,7 @@ package com.storyteller_f.giant_explorer.service
 import android.content.Context
 import android.net.Uri
 import android.os.Binder
+import android.util.Log
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.MutableLiveData
 import com.storyteller_f.common_ktx.exceptionMessage
@@ -121,7 +122,7 @@ class FileOperateBinder(val context: Context) : Binder() {
         state.postValue(state_detect)
         val detectorTasks = MultiDetector(selected).start()
         if (detectorTasks.isEmpty()) {
-            whenError(key, "无合法任务")
+            whenError(key, "包含非法合法任务")
             return null
         }
         val hasErrorTask = detectorTasks.filterIsInstance<ErrorTask>()
@@ -189,7 +190,7 @@ class FileOperateBinder(val context: Context) : Binder() {
         const val state_error = 5
 
         fun checkOperationValid(path: String, dest: String): Boolean {
-            return !dest.contains(path)
+            return dest.contains(path)
         }
     }
 }
@@ -215,7 +216,7 @@ class TaskCompute(private val detectorTasks: List<FileSystemItemModel>, val cont
                 getDirectorySize(it)
             }
         }.plus(0).reduce { acc, l -> acc + l }
-        if (count.toLong() + folderCount.toLong() + size == 0L) throw Exception("任务异常")
+        if (count.toLong() + folderCount.toLong() + size == 0L) throw Exception("无合法任务")
         return TaskEquivalent(count, folderCount, size)
     }
 

@@ -1,7 +1,6 @@
 package com.storyteller_f.common_ui
 
 import android.os.Bundle
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,15 +12,18 @@ import androidx.viewbinding.ViewBinding
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 
+abstract class CommonDialogFragment : DialogFragment(), RequestFragment {
+    fun tag(): String = requestKey()
+}
+
 /**
  * @param viewBindingFactory inflate
  */
-abstract class CommonDialogFragment<T : ViewBinding>(
+abstract class SimpleDialogFragment<T : ViewBinding>(
     val viewBindingFactory: (LayoutInflater) -> T
-) : DialogFragment(), RequestFragment {
+) : CommonDialogFragment() {
     private var _binding: T? = null
     val binding: T get() = _binding!!
-    fun tag(): String = requestKey()
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val bindingLocal = viewBindingFactory(layoutInflater)
         _binding = bindingLocal
@@ -42,6 +44,7 @@ abstract class CommonDialogFragment<T : ViewBinding>(
         (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
     }
 }
+
 
 class WaitingDialog : DialogFragment(R.layout.dialog_waiting) {
     lateinit var deferred: CompletableDeferred<Unit>

@@ -7,6 +7,7 @@ import androidx.navigation.fragment.navArgs
 import com.j256.simplemagic.ContentInfo
 import com.j256.simplemagic.ContentInfoUtil
 import com.storyteller_f.common_ui.CommonDialogFragment
+import com.storyteller_f.common_ui.SimpleDialogFragment
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui.setFragmentResult
 import com.storyteller_f.common_vm_ktx.GenericValueModel
@@ -24,12 +25,12 @@ interface StringResult {
     fun onResult(string: String)
 }
 
-class OpenFileDialog : CommonDialogFragment<DialogOpenFileBinding>(DialogOpenFileBinding::inflate) {
+class OpenFileDialog : SimpleDialogFragment<DialogOpenFileBinding>(DialogOpenFileBinding::inflate) {
     companion object {
         const val key = "open file"
     }
 
-    private val dataType by vm {
+    private val dataType by vm({}) {
         GenericValueModel<ContentInfo?>()
     }
 

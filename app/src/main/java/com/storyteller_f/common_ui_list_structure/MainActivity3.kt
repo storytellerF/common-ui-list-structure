@@ -1,18 +1,16 @@
 package com.storyteller_f.common_ui_list_structure
 
 import android.os.Bundle
-import android.widget.Toast
-import com.google.android.material.snackbar.Snackbar
-import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-import com.storyteller_f.common_ui.SimpleActivity
+import com.google.android.material.snackbar.Snackbar
+import com.storyteller_f.common_ui.CommonActivity
 import com.storyteller_f.common_ui_list_structure.databinding.ActivityMain3Binding
 import com.storyteller_f.ui_list.event.viewBinding
 
-class MainActivity3 : SimpleActivity() {
+class MainActivity3 : CommonActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private val binding by viewBinding(ActivityMain3Binding::inflate)

@@ -17,10 +17,7 @@ import androidx.navigation.findNavController
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ktx.context
 import com.storyteller_f.common_ktx.exceptionMessage
-import com.storyteller_f.common_ui.SimpleActivity
-import com.storyteller_f.common_ui.scope
-import com.storyteller_f.common_ui.setVisible
-import com.storyteller_f.common_ui.supportNavigatorBarImmersive
+import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
@@ -74,13 +71,13 @@ class FileExplorerSession(application: Application, path: String) : AndroidViewM
     }
 }
 
-class MainActivity : SimpleActivity(), FileOperateService.FileOperateResultContainer {
+class MainActivity : CommonActivity(), FileOperateService.FileOperateResultContainer {
 
     private val binding by viewBinding(ActivityMainBinding::inflate)
-    private val filterHiddenFile by svm {
+    private val filterHiddenFile by svm({}) { it, _ ->
         HasStateValueModel(it, FileListFragment.filterHiddenFileKey, false)
     }
-    private val uuid by vm {
+    private val uuid by vm({}) {
         GenericValueModel<String>().apply {
             data.value = UUID.randomUUID().toString()
         }
@@ -144,6 +141,9 @@ class MainActivity : SimpleActivity(), FileOperateService.FileOperateResultConta
                 startActivity(Intent(this, MainActivity::class.java).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
                 })
+            }
+            R.id.open_settings -> {
+                startActivity(Intent(this, SettingsActivity::class.java))
             }
 
         }

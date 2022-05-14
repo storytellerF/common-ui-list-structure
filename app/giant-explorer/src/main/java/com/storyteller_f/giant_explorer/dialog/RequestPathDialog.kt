@@ -8,10 +8,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.paging.PagingData
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ktx.context
-import com.storyteller_f.common_ui.CommonDialogFragment
-import com.storyteller_f.common_ui.scope
-import com.storyteller_f.common_ui.setFragmentResult
-import com.storyteller_f.common_ui.setOnClick
+import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.HasStateValueModel
 import com.storyteller_f.common_vm_ktx.combine
 import com.storyteller_f.common_vm_ktx.svm
@@ -37,11 +34,11 @@ import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 
 class RequestPathDialog :
-    CommonDialogFragment<DialogRequestPathBinding>(DialogRequestPathBinding::inflate) {
-    private val session by vm({FileInstanceFactory.rootUserEmulatedPath}) {
+    SimpleDialogFragment<DialogRequestPathBinding>(DialogRequestPathBinding::inflate) {
+    private val session by vm({ FileInstanceFactory.rootUserEmulatedPath }) {
         FileExplorerSession(requireActivity().application, it)
     }
-    private val filterHiddenFile by svm {
+    private val filterHiddenFile by svm({}) { it, _ ->
         HasStateValueModel(it, FileListFragment.filterHiddenFileKey, false)
     }
 
