@@ -5,10 +5,6 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.IBinder
 import android.util.Log
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlin.coroutines.CoroutineContext
 
 class FileOperateService : Service() {
     override fun onCreate() {

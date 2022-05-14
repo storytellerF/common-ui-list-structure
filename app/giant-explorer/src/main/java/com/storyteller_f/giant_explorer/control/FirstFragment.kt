@@ -51,8 +51,8 @@ class FirstFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding:
                     val list = mutableListOf<DataItemHolder>()
                     it.forEach { (workName, result) ->
                         list.add(TaskTypeHolder(workName))
-                        list.addAll(result.map {
-                            BigTimeTaskItemHolder(it)
+                        list.addAll(result.map { task ->
+                            BigTimeTaskItemHolder(task)
                         })
                     }
                     adapter.submitList(list)

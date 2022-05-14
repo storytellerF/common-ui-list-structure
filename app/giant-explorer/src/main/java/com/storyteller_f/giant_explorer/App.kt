@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.util.Log
 import androidx.work.*
+import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
@@ -72,8 +73,7 @@ abstract class BigTimeWorker(
                     results.joinToString(",") {
                         when (it) {
                             is WorkerResult.Stopped -> "stop"
-                            is WorkerResult.Failure -> it.exception.javaClass.canonicalName
-                                ?: "" + it.exception.message
+                            is WorkerResult.Failure -> it.exception.exceptionMessage
                             else -> ""
                         }
                     }).build()
@@ -148,7 +148,7 @@ class MDWorker(context: Context, workerParams: WorkerParameters) :
             listSafe.files.forEach {
                 if (isStopped) return WorkerResult.Stopped
                 val search = context.requireDatabase().mdDao().search(it.fullPath)
-                if (search?.lastUpdateTime ?: 0 <= it.lastModifiedTime) {
+                if ((search?.lastUpdateTime ?: 0) <= it.lastModifiedTime) {
                     getFileMD5(
                         fileInstance.toChild(it.name, true, false), closeable
                     )?.let { data ->
@@ -182,7 +182,7 @@ class TorrentWorker(context: Context, workerParams: WorkerParameters) :
             listSafe.files.filterIsInstance<TorrentFileModel>().forEach {
                 if (isStopped) return WorkerResult.Stopped
                 val search = context.requireDatabase().torrentDao().search(it.fullPath)
-                if (search?.lastUpdateTime ?: 0 <= it.lastModifiedTime) {
+                if ((search?.lastUpdateTime ?: 0) <= it.lastModifiedTime) {
                     TorrentFile.getTorrentName(
                         fileInstance.toChild(it.name, true, false),
                         closeable

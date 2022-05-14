@@ -22,7 +22,7 @@ import java.lang.Exception
 import java.nio.ByteBuffer
 import java.util.concurrent.Callable
 
-abstract class FileOperateWorker(val context: Context, val fileCount: Int, val folderCount: Int, val size: Long, val key: String) : Callable<Boolean>,
+abstract class FileOperateWorker(val context: Context, private val fileCount: Int, private val folderCount: Int, val size: Long, val key: String) : Callable<Boolean>,
     StoppableTask {
     var fileOperationProgressListener: LocalFileOperateWorker.FileOperationProgressListener? = null
     var leftFileCount = fileCount
@@ -223,7 +223,7 @@ class DeleteImpl(
 
 }
 
-class CompoundImpl(private val selected: List<DetectorTask>, val dest: FileInstance, context: Context, fileCount: Int, folderCount: Int, size: Long, key: String) :
+class CompoundImpl(private val selected: List<DetectorTask>, private val dest: FileInstance, context: Context, fileCount: Int, folderCount: Int, size: Long, key: String) :
     FileOperateWorker(context, fileCount, folderCount, size, key) {
     override fun call(): Boolean {
         val okHttpClient = OkHttpClient()

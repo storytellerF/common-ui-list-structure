@@ -3,7 +3,6 @@ package com.storyteller_f.giant_explorer.service
 import android.content.Context
 import android.net.Uri
 import android.os.Binder
-import android.util.Log
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.MutableLiveData
 import com.storyteller_f.common_ktx.exceptionMessage
@@ -15,7 +14,6 @@ import com.storyteller_f.giant_explorer.service.FileOperateService.FileOperateRe
 import okio.FileNotFoundException
 import java.lang.ref.WeakReference
 import java.util.*
-import kotlin.Exception
 import kotlin.concurrent.thread
 
 class FileOperateBinder(val context: Context) : Binder() {

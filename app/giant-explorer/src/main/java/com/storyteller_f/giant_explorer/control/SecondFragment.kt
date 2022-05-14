@@ -1,7 +1,6 @@
 package com.storyteller_f.giant_explorer.control
 
 import android.os.Parcelable
-import androidx.fragment.app.Fragment
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.navigation.fragment.findNavController
@@ -14,7 +13,6 @@ import com.storyteller_f.giant_explorer.databinding.FragmentSecondBinding
 import com.storyteller_f.giant_explorer.dialog.RequestPathDialog
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
-import java.lang.Exception
 
 class SecondFragment : SimpleFragment<FragmentSecondBinding>(FragmentSecondBinding::inflate) {
 

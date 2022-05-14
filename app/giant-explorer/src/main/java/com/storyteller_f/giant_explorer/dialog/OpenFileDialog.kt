@@ -6,7 +6,6 @@ import android.webkit.MimeTypeMap
 import androidx.navigation.fragment.navArgs
 import com.j256.simplemagic.ContentInfo
 import com.j256.simplemagic.ContentInfoUtil
-import com.storyteller_f.common_ui.CommonDialogFragment
 import com.storyteller_f.common_ui.SimpleDialogFragment
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui.setFragmentResult

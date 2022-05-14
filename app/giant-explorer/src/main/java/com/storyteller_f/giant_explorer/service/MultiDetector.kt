@@ -1,12 +1,6 @@
 package com.storyteller_f.giant_explorer.service
 
 import android.net.Uri
-import com.storyteller_f.giant_explorer.service.DetectorTask
-import com.storyteller_f.giant_explorer.service.LocalTask
-import com.storyteller_f.giant_explorer.service.DownloadTask
-import com.storyteller_f.giant_explorer.service.ContentTask
-import com.storyteller_f.giant_explorer.service.ErrorTask
-import java.lang.Exception
 import java.util.*
 
 class MultiDetector(private val selected: List<Uri>) {

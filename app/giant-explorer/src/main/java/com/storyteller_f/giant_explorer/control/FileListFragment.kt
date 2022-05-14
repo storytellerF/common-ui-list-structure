@@ -27,6 +27,7 @@ import com.storyteller_f.common_ui.fragment
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system_ktx.isDirectory
+import com.storyteller_f.giant_explorer.BuildConfig
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentFileListBinding
@@ -58,7 +59,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         }
     })
 
-    private val filterHiddenFile by asvm({}) { it, t ->
+    private val filterHiddenFile by asvm({}) { it, _ ->
         HasStateValueModel(it, filterHiddenFileKey, false)
     }
 
@@ -126,7 +127,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             val mutableList = MutableList(data.itemCount) {
                 data.getItemAt(it)
             }
-            val regex = Regex("^/([\\w.]+/){0,}[\\w.]+$")
+            val regex = Regex("^/([\\w.]+/)*[\\w.]+$")
             val uriList = mutableList.mapNotNull {
                 val text = it.coerceToText(requireContext()).toString()
                 (if (URLUtil.isNetworkUrl(text)) Uri.parse(text)
@@ -166,7 +167,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                 Intent("android.intent.action.VIEW").apply {
                     addCategory("android.intent.category.DEFAULT")
                     val file = File(itemHolder.file.fullPath)
-                    val uriForFile = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.file-provider", file)
+                    val uriForFile = FileProvider.getUriForFile(requireContext(), BuildConfig.File_PROVIDER_AUTHORITY, file)
                     setDataAndType(uriForFile, r.mimeType)
                     flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 }.let {
@@ -225,7 +226,6 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     }
 
     companion object {
-        private const val TAG = "FileListFragment"
         const val filterHiddenFileKey = "filter-hidden-file"
         const val clipDataKey = "file explorer"
     }
