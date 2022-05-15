@@ -14,6 +14,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updatePadding
 import androidx.databinding.ViewDataBinding
 import androidx.viewbinding.ViewBinding
+import androidx.viewbinding.ViewBindings
 
 abstract class CommonActivity : AppCompatActivity(), RegistryFragment {
     override fun onStart() {

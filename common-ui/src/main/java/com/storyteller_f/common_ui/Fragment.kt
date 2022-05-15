@@ -14,6 +14,8 @@ import androidx.core.app.ComponentActivity
 import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.viewbinding.ViewBinding
 
@@ -136,6 +138,10 @@ val LifecycleOwner.owner
         is ComponentActivity -> this
         else -> throw Exception("unknown type $this")
     }
+
+fun <T>LifecycleOwner.withState(liveData: LiveData<T>, ob: Observer<in T>) {
+    liveData.observe(owner, ob)
+}
 
 val Fragment.fm
     get() = parentFragmentManager

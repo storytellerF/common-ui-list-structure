@@ -120,7 +120,7 @@ class FileOperateBinder(val context: Context) : Binder() {
         state.postValue(state_detect)
         val detectorTasks = MultiDetector(selected).start()
         if (detectorTasks.isEmpty()) {
-            whenError(key, "包含非法合法任务")
+            whenError(key, "包含非法任务")
             return null
         }
         val hasErrorTask = detectorTasks.filterIsInstance<ErrorTask>()

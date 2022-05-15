@@ -36,7 +36,7 @@ class FileOperationDialog : SimpleDialogFragment<DialogFileOperationBinding>(Dia
     }
 
     override fun onBindViewEvent(binding: DialogFileOperationBinding) {
-        binding.lifecycleOwner = viewLifecycleOwner
+        binding.lifecycleOwner = owner
         binding.handler = object : Handler {
             override fun close() {
                 dismiss()
@@ -48,7 +48,7 @@ class FileOperationDialog : SimpleDialogFragment<DialogFileOperationBinding>(Dia
             Log.i(TAG, "onBindViewEvent: state ${binder.state.value}")
             val key = uuid.data.value ?: return
             if (!binder.map.containsKey(key)) dismiss()
-            binder.state.debounce(500).distinctUntilChanged().observe(viewLifecycleOwner) {
+            binder.state.debounce(500).distinctUntilChanged().observe(owner) {
                 when (it) {
                     FileOperateBinder.state_running -> {
                         val task = binder.map[key]?.taskEquivalent
@@ -68,40 +68,30 @@ class FileOperationDialog : SimpleDialogFragment<DialogFileOperationBinding>(Dia
                     else -> list.onVisible(binding.stateProgress)
                 }
             }
-            progressVM.data.observe(viewLifecycleOwner) {
+            withState(progressVM.data) {
                 binding.progressBar.progress = it
             }
-            stateVM.data.observe(viewLifecycleOwner) {
+            withState(stateVM.data) {
                 binding.textViewState.text = it
             }
-            tipVM.data.observe(viewLifecycleOwner) {
+            withState(tipVM.data) {
                 binding.textViewDetail.text = it
             }
-            leftVM.data.observe(viewLifecycleOwner) {
+            withState(leftVM.data) {
                 binding.textViewLeft.text = String.format("size: %d\nleft file:%d\nleft folder:%d", it.third, it.first, it.second)
             }
             val orPut = binder.fileOperationProgressListener.getOrPut(key) { mutableListOf() }
             orPut.add(object : LocalFileOperateWorker.DefaultProgressListener() {
-                override fun onProgress(progress: Int, key: String) {
-                    progressVM.data.postValue(progress)
-                }
+                override fun onProgress(progress: Int, key: String) = progressVM.data.postValue(progress)
 
-                override fun onState(state: String?, key: String) {
-                    stateVM.data.postValue(state)
-                }
+                override fun onState(state: String?, key: String) = stateVM.data.postValue(state)
 
-                override fun onTip(tip: String?, key: String) {
-                    tipVM.data.postValue(tip)
-                }
+                override fun onTip(tip: String?, key: String) = tipVM.data.postValue(tip)
 
-                override fun onLeft(fileCount: Int, folderCount: Int, size: Long, key: String) {
-                    leftVM.data.postValue(fileCount to folderCount to size)
-                }
+                override fun onLeft(fileCount: Int, folderCount: Int, size: Long, key: String) = leftVM.data.postValue(fileCount to folderCount to size)
 
-                override fun onComplete(dest: String?, isSuccess: Boolean, key: String) {
-                    binding.closeWhenError.pp {
-                        it.isVisible = true
-                    }
+                override fun onComplete(dest: String?, isSuccess: Boolean, key: String) = binding.closeWhenError.pp {
+                    it.isVisible = true
                 }
 
             })
@@ -116,7 +106,7 @@ class FileOperationDialog : SimpleDialogFragment<DialogFileOperationBinding>(Dia
             }
             val detail = binding.textViewDetail
             scope.launch {
-                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                owner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                     callbackFlow.collect {
                         detail.append(it)
                     }
