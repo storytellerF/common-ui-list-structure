@@ -81,8 +81,7 @@ inline fun <reified VM : ViewModel, T, ARG> T.defaultFactory(
     crossinline arg: () -> ARG,
     crossinline vmProducer: (ARG) -> VM,
     noinline ownerProducer: () -> SavedStateRegistryOwner = { this },
-
-    ): () -> ViewModelProvider.Factory where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = {
+): () -> ViewModelProvider.Factory where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = {
     object : AbstractSavedStateViewModelFactory(ownerProducer(), null) {
         override fun <T : ViewModel> create(
             key: String,

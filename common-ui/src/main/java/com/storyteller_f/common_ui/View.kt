@@ -48,6 +48,14 @@ fun <T : View> T.setVisible(visible: Boolean, block: (T) -> Unit) {
         block(this)
 }
 
+inline fun <T : View, reified V> T.setVisible(obj: Any, visible: (V) -> Boolean, block: (T, V) -> Unit) {
+    val b = if (obj is V) {
+        visible(obj)
+    } else false
+    isVisible = b
+    if (b) block(this, obj as V)
+}
+
 val Context.lf: LayoutInflater get() = LayoutInflater.from(this)
 val View.lf: LayoutInflater get() = context.lf
 

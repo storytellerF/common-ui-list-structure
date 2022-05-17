@@ -274,12 +274,12 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
         binding.fileSize.setVisible(item.size != -1L) {
             it.text = item.formattedSize
         }
-        binding.fileMD.setVisible(item is FileItemModel && item.md.valid()) {
-            it.text = (item as? FileItemModel)?.md
+        binding.fileMD.setVisible(item, { it: FileItemModel -> it.md.valid() }) { it, i ->
+            it.text = i.md
         }
 
-        binding.torrentName.setVisible(item is TorrentFileModel && item.torrentName.valid()) {
-            it.text = (item as? TorrentFileModel)?.torrentName
+        binding.torrentName.setVisible(item, { it: TorrentFileModel -> it.torrentName.valid() }) { it, i ->
+            it.text = i.torrentName
         }
 
         binding.modifiedTime.setVisible(item.lastModifiedTime > 0 && item.formattedLastModifiedTime.valid()) {
