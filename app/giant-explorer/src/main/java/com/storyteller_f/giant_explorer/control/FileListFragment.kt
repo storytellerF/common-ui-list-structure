@@ -1,8 +1,10 @@
 package com.storyteller_f.giant_explorer.control
 
+import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
@@ -147,9 +149,13 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                 Toast.makeText(requireContext(), "未连接服务", Toast.LENGTH_LONG).show()
                 return@launch
             }
-            dialog(TaskConfirmDialog()) { r: TaskConfirmDialog.Result ->
-                if (r.confirm)
-                    fileOperateBinderLocal.compoundTask(uriList, dest, key)
+            if (activity?.getSharedPreferences("${requireContext().packageName}_preferences", Activity.MODE_PRIVATE)?.getBoolean("notify_before_paste", true) == true) {
+                dialog(TaskConfirmDialog()) { r: TaskConfirmDialog.Result ->
+                    if (r.confirm)
+                        fileOperateBinderLocal.compoundTask(uriList, dest, key)
+                }
+            } else {
+                fileOperateBinderLocal.compoundTask(uriList, dest, key)
             }
         }
 
