@@ -135,8 +135,8 @@ class AdapterProcessor : AbstractProcessor() {
         val buildAddFunction = buildAddFunction(holderEntry ?: listOf())
         var hasComposeView = false
         val buildViewHolder = holderEntry?.joinToString("\n") {
-            val eventList = eventMap?.get(it.itemHolderName) ?: mapOf()
-            val eventList2 = longClickEventMap?.get(it.itemHolderName) ?: mapOf()
+            val eventList = eventMap?.get(it.itemHolderFullName) ?: mapOf()
+            val eventList2 = longClickEventMap?.get(it.itemHolderFullName) ?: mapOf()
             if (it.bindingName.endsWith("Binding"))
                 buildViewHolder(it, eventList, eventList2)
             else {
@@ -180,13 +180,14 @@ class AdapterProcessor : AbstractProcessor() {
         val eventAnnotations =
             roundEnvironment?.getElementsAnnotatedWith(clazz)
         val eventMap = eventAnnotations?.splitKeyGroupBy({ element ->
-            element.annotationMirrors.first()?.elementValues?.map {
+            val viewName = if (clazz.simpleName == "BindClickEvent") element.getAnnotation(BindClickEvent::class.java).viewName
+            else element.getAnnotation(BindLongClickEvent::class.java).viewName
+            val let = element.annotationMirrors.first()?.elementValues?.map {
                 it.value
             }?.let { list ->
-                list.first()?.value?.toString()?.let {
-                    it.substring(it.lastIndexOf(".") + 1)
-                } to if (list.size >= 2) list[1].value.toString() else "getRoot()"
+                list.first()?.value?.toString() to viewName
             }
+            let
         }) { element ->
             val parameterList = element.asType().toString().let { s ->
                 val start = s.indexOf("(") + 1
@@ -207,13 +208,8 @@ class AdapterProcessor : AbstractProcessor() {
                     }
                 }
             }
-            val key = element.annotationMirrors.first()?.elementValues?.map {
-                it.value
-            }?.let {
-                if (it.size >= 3) {
-                    it[2].value.toString()
-                } else "default"
-            } ?: "default"
+            val key = if (clazz.simpleName == "BindClickEvent") element.getAnnotation(BindClickEvent::class.java).key
+            else element.getAnnotation(BindLongClickEvent::class.java).key
             Event(
                 element.enclosingElement.simpleName.toString(),
                 element.enclosingElement.toString(),
