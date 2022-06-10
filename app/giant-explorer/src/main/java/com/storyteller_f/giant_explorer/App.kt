@@ -3,7 +3,10 @@ package com.storyteller_f.giant_explorer
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.work.*
+import com.osama.firecrasher.CrashListener
+import com.osama.firecrasher.FireCrasher
 import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
@@ -16,10 +19,7 @@ import com.storyteller_f.giant_explorer.database.FileTorrentRecord
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.utils.TorrentFile
 import com.storyteller_f.multi_core.StoppableTask
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.math.BigInteger
 import java.security.MessageDigest
 
@@ -45,6 +45,17 @@ class App : Application() {
                 )
             }
         }
+        FireCrasher.install(this, object : CrashListener() {
+
+            override fun onCrash(throwable: Throwable) {
+                Toast.makeText(this@App, throwable.exceptionMessage, Toast.LENGTH_LONG).show()
+                // start the recovering process
+                recover()
+                //you need to add your crash reporting tool here
+                //Ex: Crashlytics.logException(throwable);
+            }
+        })
+
     }
 }
 

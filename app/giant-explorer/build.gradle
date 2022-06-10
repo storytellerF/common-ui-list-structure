@@ -130,4 +130,6 @@ dependencies {
 
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.9.1'
 
+    implementation 'com.github.osama-raddad:FireCrasher:2.0.0'
+
 }
