@@ -361,10 +361,12 @@ fun service(
             listSafe.directories.filter(predicate).plus(listSafe.files.filter(predicate))
         } else listSafe.directories.plus(listSafe.files)
         val total = listFiles.size
-        if ((start - 1) * count > total) SimpleResponse(0)
+        val index = start - 1
+        val startPosition = index * count
+        if (startPosition > total) SimpleResponse(0)
         else {
             val items = listFiles
-                .subList((start - 1) * count, start + min(count, total - start))
+                .subList(startPosition, startPosition + min(count, total - startPosition))
                 .map { model ->
                     val length = if (model is FileItemModel) {
                         database.mdDao().search(model.fullPath)?.let {
