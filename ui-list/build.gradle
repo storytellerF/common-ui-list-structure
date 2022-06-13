@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    compileSdk 31
+    compileSdk rootProject.ext.compileSdkVersion
 
     defaultConfig {
         minSdk 21
-        targetSdk 31
+        targetSdk rootProject.ext.targetSdkVersion
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -74,7 +74,7 @@ dependencies {
     kapt 'androidx.room:room-compiler:2.4.2'
 
 
-    kapt 'androidx.databinding:databinding-compiler-common:7.1.2'
+    kapt 'androidx.databinding:databinding-compiler-common:7.2.1'
 
 
     // retrofit & okhttp
