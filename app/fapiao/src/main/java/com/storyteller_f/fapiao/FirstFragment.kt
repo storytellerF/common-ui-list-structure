@@ -22,6 +22,7 @@ import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.fapiao.database.FaPiaoEntity
+import com.storyteller_f.fapiao.database.requireDatabase
 import com.storyteller_f.fapiao.databinding.FragmentFirstBinding
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder

@@ -50,8 +50,8 @@ class ListWithState @JvmOverloads constructor(
         }
     }
 
-    fun sourceUp(
-        adapter: SimpleSourceAdapter<out DataItemHolder, out AbstractViewHolder<*>>,
+    fun<IH: DataItemHolder, VH: AbstractViewHolder<IH>> sourceUp(
+        adapter: SimpleSourceAdapter<IH, VH>,
         lifecycleOwner: LifecycleOwner,
         selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>? = null,
         flash: ((CombinedLoadStates, Int) -> UIState) = Companion::simple

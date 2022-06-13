@@ -1,16 +1,21 @@
 package com.storyteller_f.ping
 
+import android.app.ActivityManager
 import android.app.WallpaperColors
 import android.content.ContentResolver
 import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
+import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.service.wallpaper.WallpaperService
 import android.util.Log
 import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.WindowInsets
+import com.storyteller_f.ping.shader.GLES20WallpaperRenderer
+import com.storyteller_f.ping.shader.GLES30WallpaperRenderer
+import com.storyteller_f.ping.shader.GLWallpaperRenderer
 import java.io.FileDescriptor
 import java.io.PrintWriter
 
@@ -21,72 +26,69 @@ class PingPagerService : WallpaperService() {
     }
 
     inner class PingEngine : WallpaperService.Engine() {
-        override fun getSurfaceHolder(): SurfaceHolder {
-            Log.d(TAG, "getSurfaceHolder() called")
-            return super.getSurfaceHolder()
-        }
-
         var player: MediaPlayer? = null
+        var render: GLWallpaperRenderer? = null
+        private val surfaceView: GLPingSurfaceView = GLPingSurfaceView(this@PingPagerService)
 
-        override fun getDesiredMinimumWidth(): Int {
-            Log.d(TAG, "getDesiredMinimumWidth() called")
-            return super.getDesiredMinimumWidth()
-        }
-
-        override fun getDesiredMinimumHeight(): Int {
-            Log.d(TAG, "getDesiredMinimumHeight() called")
-            return super.getDesiredMinimumHeight()
-        }
-
-        override fun isVisible(): Boolean {
-            Log.d(TAG, "isVisible() called")
-            return super.isVisible()
-        }
-
-        override fun isPreview(): Boolean {
-            Log.d(TAG, "isPreview() called")
-            return super.isPreview()
-        }
-
-        override fun setTouchEventsEnabled(enabled: Boolean) {
-            Log.d(TAG, "setTouchEventsEnabled() called with: enabled = $enabled")
-            super.setTouchEventsEnabled(enabled)
-        }
-
-        override fun setOffsetNotificationsEnabled(enabled: Boolean) {
-            Log.d(TAG, "setOffsetNotificationsEnabled() called with: enabled = $enabled")
-            super.setOffsetNotificationsEnabled(enabled)
+        inner class GLPingSurfaceView(context: Context) : GLSurfaceView(context) {
+            override fun getHolder() = surfaceHolder
+            fun destroy() {
+                super.onDetachedFromWindow()
+            }
         }
 
         override fun onCreate(surfaceHolder: SurfaceHolder?) {
             Log.d(TAG, "onCreate() called with: surfaceHolder = $surfaceHolder")
+            super.onCreate(surfaceHolder)
             if (player == null) player = MediaPlayer()
             val uri = Uri.Builder()
                 .scheme(ContentResolver.SCHEME_ANDROID_RESOURCE)
                 .authority(packageName)
-                .appendPath("${R.raw.ani}")
+                .appendPath("${R.raw.vi}")
                 .build()
             player?.setDataSource(this@PingPagerService, uri)
             player?.isLooping = true
-            player?.prepareAsync()
-            player?.setOnPreparedListener {
-                it.start()
+
+            val systemService = getSystemService(ActivityManager::class.java)
+            val deviceConfigurationInfo = systemService.deviceConfigurationInfo
+            val (ver, glWallpaperRenderer) = when {
+                deviceConfigurationInfo.reqGlEsVersion >= 0x30000 -> {
+                    3 to GLES30WallpaperRenderer(this@PingPagerService)
+                }
+                deviceConfigurationInfo.reqGlEsVersion >= 0x20000 -> {
+                    2 to GLES20WallpaperRenderer(this@PingPagerService)
+                }
+                else -> throw Exception("can not get gl version")
             }
-            super.onCreate(surfaceHolder)
+            Log.i(TAG, "onCreate: version: $ver")
+            surfaceView.setEGLContextClientVersion(ver)
+            render = glWallpaperRenderer
+            surfaceView.preserveEGLContextOnPause = true
+            surfaceView.setRenderer(render)
+            surfaceView.renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
+            player?.prepareAsync()
+            player?.setOnVideoSizeChangedListener { mp, width, height ->
+                Log.i(TAG, "onSurfaceCreated: width $width height $height")
+                render?.setVideoSizeAndRotation(width, height, 0)
+            }
         }
 
         override fun onDestroy() {
             Log.d(TAG, "onDestroy() called")
             player?.release()
+            surfaceView.destroy()
             super.onDestroy()
         }
 
         override fun onVisibilityChanged(visible: Boolean) {
             Log.d(TAG, "onVisibilityChanged() called with: visible = $visible")
             if (visible) {
-                if (player?.isPlaying == true) {
-
+                if (player?.isPlaying != true) {
+                    player?.start()
                 }
+            } else {
+                if (player?.isPlaying == true)
+                    player?.pause()
             }
             super.onVisibilityChanged(visible)
         }
@@ -107,21 +109,13 @@ class PingPagerService : WallpaperService() {
                 "onOffsetsChanged() called with: xOffset = $xOffset, yOffset = $yOffset, xOffsetStep = $xOffsetStep, yOffsetStep = $yOffsetStep, xPixelOffset = $xPixelOffset, yPixelOffset = $yPixelOffset"
             )
             super.onOffsetsChanged(xOffset, yOffset, xOffsetStep, yOffsetStep, xPixelOffset, yPixelOffset)
-        }
-
-        override fun onCommand(action: String?, x: Int, y: Int, z: Int, extras: Bundle?, resultRequested: Boolean): Bundle {
-            Log.d(TAG, "onCommand() called with: action = $action, x = $x, y = $y, z = $z, extras = $extras, resultRequested = $resultRequested")
-            return super.onCommand(action, x, y, z, extras, resultRequested)
-        }
-
-        override fun onDesiredSizeChanged(desiredWidth: Int, desiredHeight: Int) {
-            Log.d(TAG, "onDesiredSizeChanged() called with: desiredWidth = $desiredWidth, desiredHeight = $desiredHeight")
-            super.onDesiredSizeChanged(desiredWidth, desiredHeight)
+            render?.setOffset(0.5f - xOffset, 0.5f - yOffset)
         }
 
         override fun onSurfaceChanged(holder: SurfaceHolder?, format: Int, width: Int, height: Int) {
             Log.d(TAG, "onSurfaceChanged() called with: holder = $holder, format = $format, width = $width, height = $height")
             super.onSurfaceChanged(holder, format, width, height)
+            render?.setScreenSize(width, height)
         }
 
         override fun onSurfaceRedrawNeeded(holder: SurfaceHolder?) {
@@ -131,24 +125,25 @@ class PingPagerService : WallpaperService() {
 
         override fun onSurfaceCreated(holder: SurfaceHolder?) {
             Log.d(TAG, "onSurfaceCreated() called with: holder = $holder")
-            player?.setSurface(holder?.surface)
             super.onSurfaceCreated(holder)
+            val width = holder?.surfaceFrame?.width() ?: return
+            val height = holder.surfaceFrame.height()
+            render?.setScreenSize(width, height)
+            player?.setOnPreparedListener {
+                Log.i(TAG, "onCreate: OnPreparedListener")
+                render?.setSourcePlayer(player!!)
+                it.start()
+            }
         }
 
         override fun onSurfaceDestroyed(holder: SurfaceHolder?) {
             Log.d(TAG, "onSurfaceDestroyed() called with: holder = $holder")
             super.onSurfaceDestroyed(holder)
-//            player?.release()
         }
 
         override fun onZoomChanged(zoom: Float) {
             Log.d(TAG, "onZoomChanged() called with: zoom = $zoom")
             super.onZoomChanged(zoom)
-        }
-
-        override fun notifyColorsChanged() {
-            Log.d(TAG, "notifyColorsChanged() called")
-            super.notifyColorsChanged()
         }
 
         override fun onComputeColors(): WallpaperColors? {
@@ -159,11 +154,6 @@ class PingPagerService : WallpaperService() {
         override fun dump(prefix: String?, fd: FileDescriptor?, out: PrintWriter?, args: Array<out String>?) {
             Log.d(TAG, "dump() called with: prefix = $prefix, fd = $fd, out = $out, args = $args")
             super.dump(prefix, fd, out, args)
-        }
-
-        override fun getDisplayContext(): Context? {
-            Log.d(TAG, "getDisplayContext() called")
-            return super.getDisplayContext()
         }
     }
 
