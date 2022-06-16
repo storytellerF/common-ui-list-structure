@@ -151,7 +151,7 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
     }
 }
 
-class SimpleSearchSourceFactory<D : Model, SQ : Any>(
+class SimpleSearchSource<D : Model, SQ : Any>(
     val service: suspend (SQ, Int, Int) -> SimpleResponse<D>,
     private val sq: SQ
 ) : PagingSource<Int, D>() {
@@ -196,7 +196,7 @@ class SimpleSearchRepository<D : Model, SQ : Any>(
                 pageSize = NETWORK_PAGE_SIZE,
                 enablePlaceholders = false
             ),
-            pagingSourceFactory = { SimpleSearchSourceFactory(service, sq) }
+            pagingSourceFactory = { SimpleSearchSource(service, sq) }
         ).flow
     }
 }
