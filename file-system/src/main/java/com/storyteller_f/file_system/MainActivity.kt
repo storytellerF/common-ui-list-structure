@@ -119,15 +119,17 @@ class MainActivity : AppCompatActivity() {
                 )
             }
             REQUEST_MANAGE -> {
-                registerForActivityResult(
-                    ActivityResultContracts.StartActivityForResult()
-                ) { result: ActivityResult ->
-                    val ok = result.resultCode == Activity.RESULT_OK
-                    //boolean is=Environment.isExternalStorageManager();
-                    if (ok) {
-                        toast()
-                    } else failure()
-                }.launch(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    registerForActivityResult(
+                        ActivityResultContracts.StartActivityForResult()
+                    ) { result: ActivityResult ->
+                        val ok = result.resultCode == Activity.RESULT_OK
+                        //boolean is=Environment.isExternalStorageManager();
+                        if (ok) {
+                            toast()
+                        } else failure()
+                    }.launch(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
+                } else throw Exception("错误使用request manage！")
             }
         }
     }
@@ -208,69 +210,50 @@ fun Fragment.checkPathPermission(dest: String) = context {
     checkPathPermission(dest)
 }
 
+/**
+ * @return 返回是否含有权限。对于没有权限的，调用 requestPermissionForSpecialPath
+ */
 fun Context.checkPathPermission(dest: String): Boolean {
     return when {
-        dest.startsWith(FileInstanceFactory.rootUserEmulatedPath) -> {
-            when {
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
-                    Environment.isExternalStorageManager()
-                }
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
-                    val externalFileInstance = getSharedPreferences(
-                        ExternalDocumentLocalFileInstance.Name,
+        dest.startsWith(FileInstanceFactory.rootUserEmulatedPath) -> when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
+                Environment.isExternalStorageManager()
+            }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
+                val externalFileInstance = getSharedPreferences(
+                    ExternalDocumentLocalFileInstance.Name,
+                    Context.MODE_PRIVATE
+                )
+                val string = externalFileInstance.getString(
+                    ExternalDocumentLocalFileInstance.STORAGE_URI,
+                    null
+                )
+                string != null
+            }
+            else -> {
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+            }
+        }
+        dest == FileInstanceFactory.emulatedRootPath -> true
+        dest == "/storage" -> true
+        dest.startsWith("/storage") -> when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
+                Environment.isExternalStorageManager()
+            }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> {
+                val externalFileInstance =
+                    getSharedPreferences(
+                        MountedLocalFileInstance.Name,
                         Context.MODE_PRIVATE
                     )
-                    val string = externalFileInstance.getString(
-                        ExternalDocumentLocalFileInstance.STORAGE_URI,
-                        null
-                    )
-                    string != null
-                }
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> {
-                    checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-                }
-                else -> {
-                    ActivityCompat.checkSelfPermission(
-                        this,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE
-                    ) == PackageManager.PERMISSION_GRANTED
-                }
+                val string =
+                    externalFileInstance.getString(MountedLocalFileInstance.ROOT_URI, null)
+                string != null
+            }
+            else -> {
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
             }
         }
-        dest == FileInstanceFactory.emulatedRootPath -> {
-            true
-        }
-        dest == "/storage" -> {
-            true
-        }
-        dest.startsWith("/storage") -> {
-            when {
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
-                    Environment.isExternalStorageManager()
-                }
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> {
-                    val externalFileInstance =
-                        getSharedPreferences(
-                            MountedLocalFileInstance.Name,
-                            Context.MODE_PRIVATE
-                        )
-                    val string =
-                        externalFileInstance.getString(MountedLocalFileInstance.ROOT_URI, null)
-                    string != null
-                }
-                else -> {
-                    ActivityCompat.checkSelfPermission(
-                        this,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE
-                    ) == PackageManager.PERMISSION_GRANTED
-                }
-            }
-        }
-        else -> {
-            ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) == PackageManager.PERMISSION_GRANTED
-        }
+        else -> ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
     }
 }
