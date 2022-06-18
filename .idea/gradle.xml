@@ -13,12 +13,15 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/app/b3" />
+            <option value="$PROJECT_DIR$/app/fapiao" />
             <option value="$PROJECT_DIR$/app/giant-explorer" />
             <option value="$PROJECT_DIR$/common-ktx" />
+            <option value="$PROJECT_DIR$/common-pr" />
             <option value="$PROJECT_DIR$/common-ui" />
             <option value="$PROJECT_DIR$/common-vm-ktx" />
             <option value="$PROJECT_DIR$/composite-compiler" />
             <option value="$PROJECT_DIR$/composite-definition" />
+            <option value="$PROJECT_DIR$/fapiao-reader" />
             <option value="$PROJECT_DIR$/file-system" />
             <option value="$PROJECT_DIR$/file-system-ktx" />
             <option value="$PROJECT_DIR$/mass-common-ktx" />
