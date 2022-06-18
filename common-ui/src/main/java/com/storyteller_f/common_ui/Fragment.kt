@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.ComponentActivity
 import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
@@ -57,6 +58,7 @@ abstract class SimpleFragment<T : ViewBinding>(
         onBindViewEvent(binding)
         return bindingLocal.root
     }
+
     abstract fun onBindViewEvent(binding: T)
     override fun onDestroyView() {
         super.onDestroyView()
@@ -132,19 +134,18 @@ val LifecycleOwner.cycle
     }
 
 val LifecycleOwner.owner
-    @SuppressLint("RestrictedApi")
     get() = when (this) {
         is Fragment -> viewLifecycleOwner
         is ComponentActivity -> this
         else -> throw Exception("unknown type $this")
     }
 
-fun <T>LifecycleOwner.withState(liveData: LiveData<T>, ob: Observer<in T>) {
-    liveData.observe(owner, ob)
-}
-
-val Fragment.fm
-    get() = parentFragmentManager
+val LifecycleOwner.fm
+    get() = when (this) {
+        is Fragment -> parentFragmentManager
+        is FragmentActivity -> this.supportFragmentManager
+        else -> throw Exception("unknown type $this")
+    }
 
 class ActivityAction<T : Parcelable, F : CommonActivity>(val action: F.(T) -> Unit, val requestKey: String)
 class FragmentAction<T : Parcelable, F : CommonFragment>(val action: F.(T) -> Unit, val requestKey: String)

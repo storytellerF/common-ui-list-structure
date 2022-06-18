@@ -113,7 +113,7 @@ class ListWithState @JvmOverloads constructor(
     }
 
     /**
-     * 如果你传入的是data adapter，自动添加排序的支持
+     * 仅data adapter 可用
      */
     private fun setupSwapSupport(adapter: SimpleDataAdapter<*, *>) {
         ItemTouchHelper(object :
@@ -188,16 +188,6 @@ class ListWithState @JvmOverloads constructor(
 
             override fun onChildDraw(c: Canvas, recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean) {
                 if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
-                    if (dX >= 300) {
-                        paint.color = Color.GREEN
-                    } else {
-                        paint.color = Color.RED
-                    }
-                    val text = dX.toString()
-                    c.drawText(text[0].toString(), 0f, viewHolder.itemView.y + 40, paint)
-                    c.drawText(text[1].toString(), 0f, viewHolder.itemView.y + 80, paint)
-                    c.drawText(text[2].toString(), 0f, viewHolder.itemView.y + 120, paint)
-                    c.drawText(if (swipeEvent) "1" else "0", 0f, viewHolder.itemView.y + 160, paint)
                     val firstLine = 200
                     if (dX < firstLine) {
                         if (swipeEvent) {
@@ -220,14 +210,6 @@ class ListWithState @JvmOverloads constructor(
             }
 
         }).attachToRecyclerView(binding.list)
-    }
-
-    private fun getBackgroundFromTag(viewHolder: AbstractAdapterViewHolder<out DataItemHolder>): Drawable {
-        val b = viewHolder.view.getTag(R.id.view_holder_background_tag_id)
-        return if (b == null) {
-            viewHolder.view.setTag(R.id.view_holder_background_tag_id, viewHolder.view.background)
-            viewHolder.view.background
-        } else b as Drawable
     }
 
     private fun setupLinearLayoutManager() {
@@ -266,9 +248,10 @@ class ListWithState @JvmOverloads constructor(
         setupSwapSupport(adapter)
     }
 
-    fun manualUp(adapter: ManualAdapter<*, *>) {
+    fun manualUp(adapter: ManualAdapter<*, *>, selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>? = null) {
         recyclerView.adapter = adapter
         setupLinearLayoutManager()
+        if (selected != null) setupSelectableSupport(selected)
     }
 
     val recyclerView get() = binding.list

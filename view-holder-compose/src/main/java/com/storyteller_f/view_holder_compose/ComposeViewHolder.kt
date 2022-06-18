@@ -7,6 +7,8 @@ import com.storyteller_f.ui_list.core.AbstractAdapterViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 
 interface EdComposeViewEventEmitter {
+    val isSelected: Boolean
+
     fun notifyClickEvent(viewName: String)
 
     fun notifyLongClickEvent(viewName: String)
@@ -14,6 +16,9 @@ interface EdComposeViewEventEmitter {
 
     companion object{
         val default = object : EdComposeViewEventEmitter {
+            override val isSelected: Boolean
+                get() = false
+
             override fun notifyClickEvent(viewName: String) {
                 TODO("Not yet implemented")
             }
@@ -28,6 +33,8 @@ interface EdComposeViewEventEmitter {
 class EDComposeView(
     context: Context,
 ) : EdComposeViewEventEmitter {
+    override val isSelected: Boolean
+        get() = composeView.isSelected
     val composeView: ComposeView = ComposeView(context = context)
     var clickListener: ((String) -> Unit)? = null
     var longClickListener: ((String) -> Unit)? = null
