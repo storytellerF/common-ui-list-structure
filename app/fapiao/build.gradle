@@ -4,6 +4,7 @@ plugins {
     id 'kotlin-android'
     id 'kotlin-parcelize'
     id 'kotlin-kapt'
+    id 'com.google.devtools.ksp' version '1.6.21-1.0.6'
 }
 
 android {
@@ -48,6 +49,7 @@ android {
 }
 
 dependencies {
+    ksp project(":ext-func-compiler")
     implementation(project(":common-pr"))
     implementation(project(":fapiao-reader"))
     implementation(project(":ui-list"))

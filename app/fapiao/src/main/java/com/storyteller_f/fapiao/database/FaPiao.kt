@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.databinding.adapters.Converters
 import androidx.fragment.app.Fragment
 import androidx.room.*
+import com.example.ext_func_definition.ExtFuncFlat
 import com.storyteller_f.ui_list.database.DefaultTypeConverter
 import kotlinx.coroutines.flow.Flow
 import java.util.*
@@ -51,8 +52,5 @@ abstract class FaPiaoDatabase : RoomDatabase() {
     }
 }
 
-fun Fragment.requireDatabase() = FaPiaoDatabase.getInstance(requireContext())
-
-fun Activity.requireDatabase() = FaPiaoDatabase.getInstance(this)
-
+@ExtFuncFlat
 fun Context.requireDatabase() = FaPiaoDatabase.getInstance(this)

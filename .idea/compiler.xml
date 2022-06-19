@@ -12,6 +12,9 @@
       <module name="common_ui_list_structure.common-pr" target="11" />
       <module name="common_ui_list_structure.common-ui" target="11" />
       <module name="common_ui_list_structure.common-vm-ktx" target="11" />
+      <module name="common_ui_list_structure.ext-func-compiler" target="1.8" />
+      <module name="common_ui_list_structure.ext-func-compiler.main" target="1.8" />
+      <module name="common_ui_list_structure.ext-func-compiler.test" target="1.8" />
       <module name="common_ui_list_structure.fapiao-reader" target="11" />
       <module name="common_ui_list_structure.file-system" target="11" />
       <module name="common_ui_list_structure.file-system-ktx" target="11" />

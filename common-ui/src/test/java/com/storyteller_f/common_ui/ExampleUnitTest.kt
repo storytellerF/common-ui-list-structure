@@ -14,7 +14,5 @@ import org.junit.Assert.*
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
-        val plus = Rect(1, 1, 1, 1).plus(Rect(2, 0, 2, 0))
-        assertEquals(plus.left, 3)
     }
 }

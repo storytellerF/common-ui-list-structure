@@ -48,9 +48,6 @@ suspend fun Context.requestPermissionForSpecialPath(path: String) {
     task.await()
 }
 
-suspend fun Fragment.requestPermissionForSpecialPath(path: String) = requireContext().requestPermissionForSpecialPath(path)
-
-
 private suspend fun Context.requestWriteExternalStorage(task: CompletableDeferred<Boolean>) {
     if (yesOrNo("权限不足", "查看文件夹系统必须授予权限", "授予", "取消")) {
         MainActivity.task = task
