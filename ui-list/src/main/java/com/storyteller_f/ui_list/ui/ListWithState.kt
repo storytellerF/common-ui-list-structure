@@ -4,10 +4,11 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.drawable.Drawable
+import android.graphics.Rect
 import android.text.SpannableString
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import androidx.lifecycle.*
@@ -17,7 +18,6 @@ import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.storyteller_f.ui_list.R
 import com.storyteller_f.ui_list.core.*
 import com.storyteller_f.ui_list.data.isError
 import com.storyteller_f.ui_list.data.isLoading
@@ -89,7 +89,7 @@ class ListWithState @JvmOverloads constructor(
         }
 
         if (selected != null) {
-            setupSelectableSupport(selected)
+            setupSwipeSelectableSupport(selected)
         }
     }
 
@@ -130,7 +130,6 @@ class ListWithState @JvmOverloads constructor(
             }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                TODO("Not yet implemented")
             }
 
             override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
@@ -141,7 +140,7 @@ class ListWithState @JvmOverloads constructor(
         }).attachToRecyclerView(binding.list)
     }
 
-    private fun setupSelectableSupport(selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>) {
+    private fun setupSwipeSelectableSupport(selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>) {
 
         ItemTouchHelper(object :
             ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.START or ItemTouchHelper.END) {
@@ -163,9 +162,7 @@ class ListWithState @JvmOverloads constructor(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
                 target: RecyclerView.ViewHolder
-            ): Boolean {
-                TODO("Not yet implemented")
-            }
+            ) = false
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
             }
@@ -212,6 +209,38 @@ class ListWithState @JvmOverloads constructor(
         }).attachToRecyclerView(binding.list)
     }
 
+    fun setupClickSelectableSupport(editing: MutableLiveData<Boolean>, lifecycleOwner: LifecycleOwner, selectableDrawer: SelectableDrawer) {
+        editing.observe(lifecycleOwner, Observer {
+            val adapter = binding.list.adapter
+            binding.list.adapter = adapter
+        })
+        val value = object : RecyclerView.ItemDecoration() {
+            override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
+                super.getItemOffsets(outRect, view, parent, state)
+                if (editing.value == true) {
+                    outRect.right = selectableDrawer.width(view, parent, state, parent.getChildAdapterPosition(view), (parent.getChildViewHolder(view) as AbstractAdapterViewHolder<*>).itemHolder)
+                } else outRect.right = 0
+            }
+
+            override fun onDraw(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
+                super.onDraw(c, parent, state)
+                c.drawColor(Color.LTGRAY)
+                if (editing.value == true)
+                    for (i in 0 until parent.childCount) {
+                        val child = parent.getChildAt(i)
+                        val top = child.top
+                        val bottom = child.bottom
+                        selectableDrawer.draw(c, top, bottom, child.width, child.height, parent.width, parent.height, child, parent, state)
+                    }
+            }
+
+            override fun onDrawOver(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
+                super.onDrawOver(c, parent, state)
+            }
+        }
+        binding.list.addItemDecoration(value)
+    }
+
     private fun setupLinearLayoutManager() {
         binding.list.layoutManager =
             LinearLayoutManager(binding.list.context, LinearLayoutManager.VERTICAL, false)
@@ -251,7 +280,7 @@ class ListWithState @JvmOverloads constructor(
     fun manualUp(adapter: ManualAdapter<*, *>, selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>? = null) {
         recyclerView.adapter = adapter
         setupLinearLayoutManager()
-        if (selected != null) setupSelectableSupport(selected)
+        if (selected != null) setupSwipeSelectableSupport(selected)
     }
 
     val recyclerView get() = binding.list
@@ -271,9 +300,11 @@ class ListWithState @JvmOverloads constructor(
         val refresh: Boolean?
     ) {
         val showErrorPage get() = retry || error != null
+
         companion object {
-            val empty = UIState(false, false, false, false, null, null)
-            val loading = UIState(false, false, false, true, null, null)
+            val data = UIState(retry = false, data = true, empty = false, progress = false, error = null, refresh = false)
+            val empty = UIState(retry = false, data = false, empty = false, progress = false, error = null, refresh = null)
+            val loading = UIState(retry = false, data = false, empty = false, progress = true, error = null, refresh = null)
 
         }
     }
@@ -340,6 +371,11 @@ class ListWithState @JvmOverloads constructor(
             )
         }
 
+    }
+
+    interface SelectableDrawer {
+        fun width(view: View, parent: RecyclerView, state: RecyclerView.State, childAdapterPosition: Int, absoluteAdapterPosition: DataItemHolder): Int
+        fun draw(c: Canvas, top: Int, bottom: Int, childWidth: Int, childHeight: Int, parentWidth: Int, parentHeight: Int, child: View, parent: RecyclerView, state: RecyclerView.State)
     }
 }
 

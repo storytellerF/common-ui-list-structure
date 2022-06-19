@@ -32,7 +32,7 @@ android {
 
     kotlinOptions {
         jvmTarget = "1.8"
-        freeCompilerArgs += ["-Xopt-in=kotlin.RequiresOptIn"]
+        freeCompilerArgs += ["-Xopt-in=kotlin.RequiresOptIn"] + "-Xcontext-receivers"
     }
 
     buildFeatures {
@@ -48,7 +48,7 @@ android {
 }
 
 dependencies {
-
+    implementation(project(":common-pr"))
     implementation(project(":ui-list"))
     implementation project(path: ':ui-list-annotation-definition')
     implementation implementation(project(':composite-definition',))
