@@ -44,10 +44,10 @@ fun View.inset(
     navigatorPadding: Int = 0,
     navigatorMargin: Int = 0
 ) {
-    setOnApplyWindowInsetsListener { v, insets ->
+    ViewCompat.setOnApplyWindowInsetsListener(this) { v, insets ->
         val block = getInsetBlock()
-        val v1 = insets.navigator().bottom
-        val v2 = insets.status().top
+        val v1 = insets.navigator.bottom
+        val v2 = insets.status.top
         v.updatePadding(
             block.padding + statusPadding.insetBlock(v2) + navigatorPadding.insetBlock(v1)
         )
@@ -101,7 +101,7 @@ fun View.getInsetBlock() =
         })
 
 class Direction(val start: Int, val top: Int, val end: Int, val bottom: Int) {
-    public operator fun plus(r: Direction): Direction {
+    operator fun plus(r: Direction): Direction {
         return Direction(start + r.start, top + r.top, end + r.end, bottom + r.bottom)
     }
 

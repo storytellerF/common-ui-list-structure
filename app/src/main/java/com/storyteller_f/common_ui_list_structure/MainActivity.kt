@@ -1,10 +1,10 @@
 package com.storyteller_f.common_ui_list_structure
 
 import android.content.Intent
+import android.graphics.Canvas
 import android.os.Bundle
+import android.util.Log
 import android.view.View
-import android.view.WindowInsets
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -27,16 +27,18 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.RecyclerView
+import com.example.common_pr.dip
+import com.example.common_pr.dipToInt
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
-import com.storyteller_f.common_ui.navigator
-import com.storyteller_f.common_ui.status
-import com.storyteller_f.common_ui.supportNavigatorBarImmersive
-import com.storyteller_f.common_ui.updateMargins
+import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_ui_list_structure.api.requireReposService
 import com.storyteller_f.common_ui_list_structure.databinding.ActivityMainBinding
 import com.storyteller_f.common_ui_list_structure.databinding.RepoViewItemBinding
@@ -46,6 +48,7 @@ import com.storyteller_f.common_ui_list_structure.model.Repo
 import com.storyteller_f.common_vm_ktx.combine
 import com.storyteller_f.ui_list.core.*
 import com.storyteller_f.ui_list.event.viewBinding
+import com.storyteller_f.ui_list.ui.ListWithState
 import com.storyteller_f.view_holder_compose.ComposeSourceAdapter
 import com.storyteller_f.view_holder_compose.ComposeViewHolder
 import com.storyteller_f.view_holder_compose.EDComposeView
@@ -54,9 +57,7 @@ import kotlinx.coroutines.flow.collectLatest
 
 class MainActivity : AppCompatActivity() {
     private val binding by viewBinding(ActivityMainBinding::inflate)
-    private val toast by lazy {
-        Toast.makeText(this, "", Toast.LENGTH_SHORT)
-    }
+    private val editing = MutableLiveData(false)
     private val viewModel by source({ }, {
         SourceProducer(
             { RepoComposite(requireRepoDatabase()) },
@@ -94,18 +95,32 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding.content.sourceUp(adapter, this)
+        binding.content.setupClickSelectableSupport(editing, owner, object : ListWithState.SelectableDrawer {
+            override fun width(view: View, parent: RecyclerView, state: RecyclerView.State, childAdapterPosition: Int, absoluteAdapterPosition: DataItemHolder): Int {
+                return 200
+            }
+
+            override fun draw(c: Canvas, top: Int, bottom: Int, childWidth: Int, childHeight: Int, parentWidth: Int, parentHeight: Int, child: View, parent: RecyclerView, state: RecyclerView.State) {
+                val offset = (childHeight - 24.dip) / 2
+                ContextCompat.getDrawable(this@MainActivity, R.drawable.ic_baseline_radio_button_unchecked_24)?.run {
+                    setBounds((parentWidth - 24.dipToInt).toInt(), (top + offset).toInt(), (parentWidth).toInt(), (top + offset + 24.dipToInt).toInt())
+                    draw(c)
+                }
+            }
+
+        })
         supportNavigatorBarImmersive(binding.root)
         lifecycleScope.launchWhenResumed {
             viewModel.content?.collectLatest {
                 adapter.submitData(it)
             }
         }
-        binding.root.setOnApplyWindowInsetsListener { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             printInsets(insets)
             binding.buttonGroup.updateMargins {
-                topMargin = insets.status().top
+                topMargin = insets.status.top
             }
-            binding.content.recyclerView.updatePadding(bottom = insets.navigator().bottom)
+            binding.content.recyclerView.updatePadding(bottom = insets.navigator.bottom)
             insets
         }
         binding.buttonGroup.run {
@@ -142,10 +157,9 @@ class MainActivity : AppCompatActivity() {
         startActivity(Intent(this, MainActivity2::class.java))
     }
 
-    private fun printInsets(insets: WindowInsets) {
-        val insets1 = WindowInsetsCompat.toWindowInsetsCompat(insets)
-            .getInsets(WindowInsetsCompat.Type.navigationBars())
-        println("navigator ${insets1.bottom} status ${insets1.top}")
+    private fun printInsets(insets: WindowInsetsCompat) {
+        val insets1 = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+        Log.d(TAG, "printInsets: navigator ${insets1.bottom} status ${insets1.top}")
     }
 
     companion object {
@@ -165,23 +179,17 @@ class MainActivity : AppCompatActivity() {
         ) {
             Button(
                 onClick = {
-                    toast.apply {
-                        setText("full")
-                        show()
-                    }
+                    editing.value = true
                 },
             ) {
-                Text(text = "full")
+                Text(text = "edit")
             }
             Button(
                 onClick = {
-                    toast.apply {
-                        setText("recovery")
-                        show()
-                    }
+                    editing.value = false
                 },
             ) {
-                Text(text = "recovery")
+                Text(text = "redo")
             }
         }
     }

@@ -4,7 +4,6 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowInsets
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
@@ -21,13 +20,11 @@ fun <T: View> T.pp(block: (T) -> Unit) {
     }
 }
 
-fun WindowInsets.navigator() =
-    WindowInsetsCompat.toWindowInsetsCompat(this)
-        .getInsets(WindowInsetsCompat.Type.navigationBars())
+val WindowInsetsCompat.navigator get() = getInsets(WindowInsetsCompat.Type.navigationBars())
 
-fun WindowInsets.status() =
-    WindowInsetsCompat.toWindowInsetsCompat(this)
-        .getInsets(WindowInsetsCompat.Type.statusBars())
+val WindowInsetsCompat.status get() = getInsets(WindowInsetsCompat.Type.statusBars())
+
+val WindowInsetsCompat.ime get() = getInsets(WindowInsetsCompat.Type.ime())
 
 inline fun View.updateMargins(block: ViewGroup.MarginLayoutParams.() -> Unit) {
     updateLayoutParams(block)
