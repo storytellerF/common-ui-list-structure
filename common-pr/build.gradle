@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
+    id 'com.google.devtools.ksp' version '1.6.21-1.0.6'
 }
 
 android {
@@ -31,6 +32,8 @@ android {
 }
 
 dependencies {
+    implementation(project(":ext-func-definition"))
+    ksp project(":ext-func-compiler")
     implementation(project(":common-ktx"))
     implementation 'androidx.core:core-ktx:1.8.0'
     implementation 'androidx.appcompat:appcompat:1.4.2'
