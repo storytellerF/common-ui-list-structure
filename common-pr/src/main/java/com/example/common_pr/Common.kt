@@ -2,11 +2,13 @@ package com.example.common_pr
 
 import android.content.Context
 import android.util.TypedValue
+import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import com.example.ext_func_definition.ExtFuncFlat
+import com.example.ext_func_definition.ExtFuncFlatType
 
 context(LifecycleOwner)
 fun <T> LiveData<T>.withState(ob: Observer<in T>) {
@@ -16,21 +18,11 @@ fun <T> LiveData<T>.withState(ob: Observer<in T>) {
 }
 
 context(Context)
-@ExtFuncFlat
-val Int.dip
-    get() = toFloat().dip
-
-context(Context)
-@ExtFuncFlat
+@ExtFuncFlat(ExtFuncFlatType.v4, isContextReceiver = true)
 val Float.dip: Float
     get() = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this@dip, resources.displayMetrics)
 
 context(Context)
-@ExtFuncFlat
-val Int.dipToInt
-    get() = toFloat().dipToInt
-
-context(Context)
-@ExtFuncFlat
+@ExtFuncFlat(ExtFuncFlatType.v4, isContextReceiver = true)
 val Float.dipToInt: Float
     get() = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this@dipToInt, resources.displayMetrics)

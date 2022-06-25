@@ -88,14 +88,13 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         uuid
         setSupportActionBar(binding.toolbar)
         supportNavigatorBarImmersive(binding.root)
-        context {
-            //连接服务
-            try {
-                bindService(Intent(this, FileOperateService::class.java), connection, BIND_AUTO_CREATE)
-            } catch (e: Exception) {
-                bindService(Intent(this, FileOperateService::class.java), connection, 0)
-            }
+        //连接服务
+        try {
+            bindService(Intent(this, FileOperateService::class.java), connection, BIND_AUTO_CREATE)
+        } catch (e: Exception) {
+            bindService(Intent(this, FileOperateService::class.java), connection, 0)
         }
+
         scope.launch {
             callbackFlow {
                 binding.pathMan.setPathChangeListener {
@@ -179,26 +178,20 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
 
     override fun onSuccess(dest: String?, origin: String?) {
         scope.launch {
-            context {
-                Toast.makeText(this, "dest $dest origin $origin", Toast.LENGTH_SHORT).show()
-            }
+            Toast.makeText(this@MainActivity, "dest $dest origin $origin", Toast.LENGTH_SHORT).show()
         }
 //        adapter.refresh()
     }
 
     override fun onError(string: String?) {
         scope.launch {
-            context {
-                Toast.makeText(this, "error: $string", Toast.LENGTH_SHORT).show()
-            }
+            Toast.makeText(this@MainActivity, "error: $string", Toast.LENGTH_SHORT).show()
         }
     }
 
     override fun onCancel() {
         scope.launch {
-            context {
-                Toast.makeText(this@MainActivity, "cancel", Toast.LENGTH_SHORT).show()
-            }
+            Toast.makeText(this@MainActivity, "cancel", Toast.LENGTH_SHORT).show()
         }
     }
 
