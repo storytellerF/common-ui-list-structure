@@ -8,6 +8,11 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+    }
+}
 dependencies {
     implementation(project(":ext-func-definition"))
     implementation 'com.google.devtools.ksp:symbol-processing-api:1.6.21-1.0.6'

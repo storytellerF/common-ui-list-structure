@@ -15,16 +15,6 @@ fun <T> LifecycleOwner.context(function: Context.() -> T) = (when (this) {
     else -> throw Exception("context is null")
 }).run(function)
 
-suspend fun <T> LifecycleOwner.contextSuspend(function: suspend Context.() -> T): T = when (this) {
-    is ComponentActivity -> {
-        this
-    }
-    is Fragment -> {
-        requireContext()
-    }
-    else -> throw Exception("context is null")
-}.function()
-
 val LifecycleOwner.ctx
     get() = when (this) {
         is ComponentActivity -> this

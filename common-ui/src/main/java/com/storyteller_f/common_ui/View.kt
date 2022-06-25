@@ -54,7 +54,7 @@ inline fun <T : View, reified V> T.setVisible(obj: Any, visible: (V) -> Boolean,
     if (b) block(this, obj as V)
 }
 
-@ExtFuncFlat
+@ExtFuncFlat()
 val Context.lf: LayoutInflater get() = LayoutInflater.from(this)
 
 fun List<View>.onVisible(view: View) {
