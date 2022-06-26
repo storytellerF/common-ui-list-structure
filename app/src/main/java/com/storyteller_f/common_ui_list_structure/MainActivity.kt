@@ -36,6 +36,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.example.common_pr.dip
 import com.example.common_pr.dipToInt
+import com.example.dip
+import com.example.dipToInt
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ui.*
@@ -90,7 +92,7 @@ class MainActivity : AppCompatActivity() {
     })
 
     private val adapter =
-        ComposeSourceAdapter<DataItemHolder, AbstractAdapterViewHolder<DataItemHolder>>()
+        ComposeSourceAdapter<DataItemHolder, AbstractViewHolder<DataItemHolder>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,7 +105,7 @@ class MainActivity : AppCompatActivity() {
             override fun draw(c: Canvas, top: Int, bottom: Int, childWidth: Int, childHeight: Int, parentWidth: Int, parentHeight: Int, child: View, parent: RecyclerView, state: RecyclerView.State) {
                 val offset = (childHeight - 24.dip) / 2
                 ContextCompat.getDrawable(this@MainActivity, R.drawable.ic_baseline_radio_button_unchecked_24)?.run {
-                    setBounds((parentWidth - 24.dipToInt).toInt(), (top + offset).toInt(), (parentWidth).toInt(), (top + offset + 24.dipToInt).toInt())
+                    setBounds((parentWidth - 24.dipToInt).toInt(), (top + offset).toInt(), (parentWidth), (top + offset + 24.dipToInt).toInt())
                     draw(c)
                 }
             }
@@ -179,7 +181,8 @@ class MainActivity : AppCompatActivity() {
         ) {
             Button(
                 onClick = {
-                    editing.value = true
+                    adapter.type = "linear"
+                    adapter.notifyDataSetChanged()
                 },
             ) {
                 Text(text = "edit")
@@ -202,8 +205,40 @@ class RepoItemHolder(val repo: Repo) : DataItemHolder() {
     }
 }
 
-@BindItemHolder(RepoItemHolder::class)
+@BindItemHolder(RepoItemHolder::class, type = "linear")
 class Repo2ViewHolder(private val binding: RepoViewItemBinding) :
+    AdapterViewHolder<RepoItemHolder>(binding) {
+    override fun bindData(itemHolder: RepoItemHolder) {
+        binding.repoName.text = itemHolder.repo.name
+        // if the description is missing, hide the TextView
+        var descriptionVisibility = View.GONE
+        if (itemHolder.repo.description != null) {
+            binding.repoDescription.text = itemHolder.repo.description
+            descriptionVisibility = View.VISIBLE
+        }
+        binding.repoDescription.visibility = descriptionVisibility
+
+        binding.repoStars.text = itemHolder.repo.stars.toString()
+        binding.repoForks.text = itemHolder.repo.forks.toString()
+
+        // if the language is missing, hide the label and the value
+        var languageVisibility = View.GONE
+        if (!itemHolder.repo.language.isNullOrEmpty()) {
+            val resources = this.itemView.context.resources
+            binding.repoLanguage.text =
+                resources.getString(
+                    R.string.language,
+                    itemHolder.repo.language
+                )
+            languageVisibility = View.VISIBLE
+        }
+        binding.repoLanguage.visibility = languageVisibility
+    }
+
+}
+
+@BindItemHolder(RepoItemHolder::class)
+class Repo2ViewHolder2(private val binding: RepoViewItemBinding) :
     AdapterViewHolder<RepoItemHolder>(binding) {
     override fun bindData(itemHolder: RepoItemHolder) {
         binding.repoName.text = itemHolder.repo.name

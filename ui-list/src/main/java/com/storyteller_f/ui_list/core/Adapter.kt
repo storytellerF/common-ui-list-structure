@@ -14,7 +14,7 @@ import androidx.viewbinding.ViewBinding
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
-val list = mutableListOf<(ViewGroup) -> AbstractAdapterViewHolder<out DataItemHolder>>()
+val list = mutableListOf<(ViewGroup, String) -> AbstractViewHolder<out DataItemHolder>>()
 
 val registerCenter = mutableMapOf<Class<out DataItemHolder>, Int>()
 
@@ -26,7 +26,7 @@ abstract class DataItemHolder {
     fun areContentsTheSame(other: DataItemHolder): Boolean = this == other
 }
 
-abstract class AbstractAdapterViewHolder<IH : DataItemHolder>(val view: View) :
+abstract class AbstractViewHolder<IH : DataItemHolder>(val view: View) :
     RecyclerView.ViewHolder(view) {
     private var _itemHolder: IH? = null
     lateinit var keyed: String
@@ -42,12 +42,14 @@ abstract class AbstractAdapterViewHolder<IH : DataItemHolder>(val view: View) :
 }
 
 abstract class AdapterViewHolder<IH : DataItemHolder>(binding: ViewBinding) :
-    AbstractAdapterViewHolder<IH>(binding.root)
+    AbstractViewHolder<IH>(binding.root)
 
-open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<IH>>(val key: String? = null) :
+
+open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val key: String? = null) :
     PagingDataAdapter<IH, VH>(
         common_diff_util as DiffUtil.ItemCallback<IH>
     ) {
+    var type : String = ""
     override fun onBindViewHolder(holder: VH, position: Int) =
         holder.onBind(getItem(position) as IH)
 
@@ -58,7 +60,7 @@ open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHold
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
-        (list[viewType].invoke(parent) as VH).apply {
+        (list[viewType].invoke(parent, type) as VH).apply {
             keyed = key ?: "default"
         }
 
@@ -89,7 +91,7 @@ open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHold
 /**
  * 支持排序，需要搭配SimpleDataViewModel和SimpleDataRepository
  */
-class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<IH>>(val key: String? = null) :
+class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val key: String? = null) :
     ListAdapter<IH, VH>(SimpleSourceAdapter.common_diff_util as DiffUtil.ItemCallback<IH>) {
     var last = mutableListOf<IH>()
 
@@ -99,8 +101,8 @@ class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<IH>>
     private val mPending: AtomicBoolean = AtomicBoolean(true)
 
     var dataHook: SimpleDataViewModel.DataHook<*, IH, *>? = null
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH = (list[viewType].invoke(parent) as VH).apply {
+    var type = ""
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH = (list[viewType].invoke(parent, type) as VH).apply {
         keyed = key ?: "default"
     }
 
@@ -137,9 +139,9 @@ class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<IH>>
 
 }
 
-class ManualAdapter<IH : DataItemHolder, VH : AbstractAdapterViewHolder<IH>>(val key: String? = null) : ListAdapter<IH, VH>(SimpleSourceAdapter.common_diff_util as DiffUtil.ItemCallback<IH>) {
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH = (list[viewType].invoke(parent) as VH).apply {
+class ManualAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val key: String? = null) : ListAdapter<IH, VH>(SimpleSourceAdapter.common_diff_util as DiffUtil.ItemCallback<IH>) {
+    var type = ""
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH = (list[viewType].invoke(parent, type) as VH).apply {
         keyed = key ?: "default"
     }
 
