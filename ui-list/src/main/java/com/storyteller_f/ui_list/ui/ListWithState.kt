@@ -51,7 +51,7 @@ class ListWithState @JvmOverloads constructor(
     }
 
     fun sourceUp(
-        adapter: SimpleSourceAdapter<out DataItemHolder, out AbstractAdapterViewHolder<*>>,
+        adapter: SimpleSourceAdapter<out DataItemHolder, out AbstractViewHolder<*>>,
         lifecycleOwner: LifecycleOwner,
         selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>? = null,
         flash: ((CombinedLoadStates, Int) -> UIState) = Companion::simple
@@ -96,7 +96,7 @@ class ListWithState @JvmOverloads constructor(
 
     private fun setAdapter(
         concatAdapter: ConcatAdapter,
-        adapter: SimpleSourceAdapter<out DataItemHolder, out AbstractAdapterViewHolder<*>>
+        adapter: SimpleSourceAdapter<out DataItemHolder, out AbstractViewHolder<*>>
     ) {
         setupLinearLayoutManager()
         binding.list.adapter = concatAdapter
@@ -173,7 +173,7 @@ class ListWithState @JvmOverloads constructor(
             }
 
             private fun swipeViewHolder(viewHolder: RecyclerView.ViewHolder) {
-                val adapterViewHolder = viewHolder as AbstractAdapterViewHolder<out DataItemHolder>
+                val adapterViewHolder = viewHolder as AbstractViewHolder<out DataItemHolder>
                 val toggleSpecial =
                     selected.value.toggleSpecial(adapterViewHolder.itemHolder to viewHolder.absoluteAdapterPosition)
                 selected.value =
@@ -218,7 +218,7 @@ class ListWithState @JvmOverloads constructor(
             override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
                 super.getItemOffsets(outRect, view, parent, state)
                 if (editing.value == true) {
-                    outRect.right = selectableDrawer.width(view, parent, state, parent.getChildAdapterPosition(view), (parent.getChildViewHolder(view) as AbstractAdapterViewHolder<*>).itemHolder)
+                    outRect.right = selectableDrawer.width(view, parent, state, parent.getChildAdapterPosition(view), (parent.getChildViewHolder(view) as AbstractViewHolder<*>).itemHolder)
                 } else outRect.right = 0
             }
 

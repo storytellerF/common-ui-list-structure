@@ -23,7 +23,7 @@ import com.storyteller_f.common_ui.scope
 import com.storyteller_f.fapiao.database.FaPiaoEntity
 import com.storyteller_f.fapiao.database.requireDatabase
 import com.storyteller_f.fapiao.databinding.FragmentFirstBinding
-import com.storyteller_f.ui_list.core.AbstractAdapterViewHolder
+import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.core.ManualAdapter
 import com.storyteller_f.ui_list.ui.ListWithState
@@ -37,7 +37,7 @@ import java.util.*
 
 class FirstFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding::inflate) {
 
-    private val adapter = ManualAdapter<DataItemHolder, AbstractAdapterViewHolder<DataItemHolder>>()
+    private val adapter = ManualAdapter<DataItemHolder, AbstractViewHolder<DataItemHolder>>()
     private val selected = MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>()
     override fun onBindViewEvent(binding: FragmentFirstBinding) {
         binding.content.manualUp(adapter, selected)

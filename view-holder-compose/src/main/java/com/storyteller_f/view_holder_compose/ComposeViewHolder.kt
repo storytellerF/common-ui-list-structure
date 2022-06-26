@@ -3,7 +3,7 @@ package com.storyteller_f.view_holder_compose
 import android.content.Context
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import com.storyteller_f.ui_list.core.AbstractAdapterViewHolder
+import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 
 interface EdComposeViewEventEmitter {
@@ -53,7 +53,7 @@ class EDComposeView(
 }
 
 abstract class ComposeViewHolder<IH : DataItemHolder>(val edComposeView: EDComposeView) :
-    AbstractAdapterViewHolder<IH>(edComposeView.composeView) {
+    AbstractViewHolder<IH>(edComposeView.composeView) {
     init {
         edComposeView.composeView.setViewCompositionStrategy(
             ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
