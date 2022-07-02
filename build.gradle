@@ -18,11 +18,11 @@ task clean(type: Delete) {
 }
 
 ext {
-    kotlin_version = '1.6.21'
+    kotlin_version = '1.7.0'
     compileSdkVersion = 32
     minSdkVersion = 15
     targetSdkVersion = 32
-    supportLibVersion = '1.4.1'
+    supportLibVersion = '1.4.2'
     coreVersion = '1.8.0'
     recyclerViewVersion = '1.2.1'
     constraintLayoutVersion = '2.1.4'
@@ -32,7 +32,7 @@ ext {
     pagingVersion = '3.1.1'
     retrofitVersion = '2.9.0'
     okhttpLoggingInterceptorVersion = '5.0.0-alpha.6'
-    coroutines = '1.6.1'
-    compose_version = '1.2.0-beta03'
+    coroutines = '1.6.3'
+    compose_version = '1.2.0-rc02'
     nav_version = '2.4.2'
 }
