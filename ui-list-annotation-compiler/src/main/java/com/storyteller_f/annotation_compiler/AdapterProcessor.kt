@@ -15,8 +15,7 @@ class Holder(
     val bindingName: String,
     val bindingFullName: String,
     val viewHolderName: String,
-    val viewHolderFullName: String,
-    val type: String
+    val viewHolderFullName: String
 )
 
 class Entry(
@@ -137,20 +136,20 @@ class AdapterProcessor : AbstractProcessor() {
     }
 
     private fun createMultiViewHolder(entry: Entry, eventMapClick: Map<String, List<Event>>, eventMapLongClick: Map<String, List<Event>>): String {
-        val joinToString = entry.viewHolders.map {
+        val viewHolderBuilderContent = entry.viewHolders.map {
             val viewHolderContent = if (it.value.bindingName.endsWith("Binding"))
                 buildViewHolder(it.value, eventMapClick, eventMapLongClick)
             else buildComposeViewHolder(it.value, eventMapClick, eventMapLongClick)
             """if (type.equals("${it.key}")) {
-$viewHolderContent
+${viewHolderContent.prependIndent()}
 }//type if end
-""".prependIndent()
+"""
         }.joinToString("\n")
         return """public static AbstractViewHolder<?> buildFor${entry.itemHolderName}(ViewGroup view, String type) {
-$joinToString
+${viewHolderBuilderContent.prependIndent()}
     return null;
 }
-""".prependIndent()
+"""
     }
 
     private fun createClassFileContent(
@@ -173,33 +172,36 @@ $joinToString
             createMultiViewHolder(it, eventMapClick, eventMapLongClick)
         }
 
-        return "package $packageOf.adapter_produce;\n" +
-                "import static com.storyteller_f.ui_list.core.AdapterKt.getList;\n" +
-                "import static com.storyteller_f.ui_list.core.AdapterKt.getRegisterCenter;\n" +
-                "import android.content.Context;\n" +
-                "import com.storyteller_f.ui_list.core.AbstractViewHolder;\n" +
-                "import android.view.LayoutInflater;\n" +
-                "import android.view.ViewGroup;\n\n" +
-                (if (hasComposeView)
-                    "import androidx.compose.ui.platform.ComposeView;\n"
-                else "") +
-                "\n" +
-                importBindingClass + "\n" +
-                importReceiverClass + "\n" +
-                "import com.storyteller_f.ui_list.event.ViewJava;\n" +
-                (if (hasComposeView)
-                    "import com.storyteller_f.view_holder_compose.EDComposeView;\n\n" +
-                            "import kotlin.Unit;\n" +
-                            "import kotlin.jvm.functions.Function1;"
-                else "") +
-                "\n" +
-                "/**\n" +
-                " * @author storyteller_f\n" +
-                " */\n" +
-                "public class $className {\n" +
-                buildViewHolder + "\n" +
-                buildAddFunction + "\n" +
-                "}\n"
+        val importComposeLibrary = if (hasComposeView)
+            "import androidx.compose.ui.platform.ComposeView;\n"
+        else ""
+        val importComposeRelatedLibrary = if (hasComposeView)
+            """import com.storyteller_f.view_holder_compose.EDComposeView;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;"""
+        else ""
+        return """package $packageOf.adapter_produce;
+
+import static com.storyteller_f.ui_list.core.AdapterKt.getList;
+import static com.storyteller_f.ui_list.core.AdapterKt.getRegisterCenter;
+import android.content.Context;
+import com.storyteller_f.ui_list.core.AbstractViewHolder;
+import android.view.LayoutInflater;
+import android.view.ViewGroup;
+
+$importComposeLibrary
+$importBindingClass
+$importReceiverClass
+import com.storyteller_f.ui_list.event.ViewJava;
+$importComposeRelatedLibrary
+/**
+ * @author storyteller_f
+ */
+public class $className {
+${buildViewHolder?.prependIndent()}
+${buildAddFunction.prependIndent()}
+}
+"""
     }
 
     private fun getEvent(
@@ -274,7 +276,7 @@ $joinToString
                     val bindingName = bindingFullName.substring(bindingFullName.lastIndexOf(".") + 1)
                     val viewHolderName = element.simpleName.toString()
                     val viewHolderFullName = element.asType().toString()
-                    val viewHolders = mutableMapOf(type to Holder(bindingName, bindingFullName, viewHolderName, viewHolderFullName, type))
+                    val viewHolders = mutableMapOf(type to Holder(bindingName, bindingFullName, viewHolderName, viewHolderFullName))
                     Entry(itemHolder, itemHolderNameFullName, viewHolders, element)
                 }
         }
@@ -303,25 +305,25 @@ $joinToString
         eventList2: Map<String, List<Event>>
     ): String {
         return """Context context = view.getContext();
-    EDComposeView composeView = new EDComposeView(context);
-    ComposeView v = composeView.getComposeView();
-    ${it.viewHolderName} viewHolder = new ${it.viewHolderName}(composeView);
-    composeView.setClickListener(new Function1<String, Unit>() {
-        @Override
-        public Unit invoke(String s) {
-${buildComposeClickListener(eventList)}
-            return null;
-        }
-    });
-    composeView.setLongClickListener(new Function1<String, Unit>() {
-        @Override
-        public Unit invoke(String s) {
-${buildComposeClickListener(eventList2)}
-            return null;
-        }
-    });
-    return viewHolder;
-""".prependIndent()
+EDComposeView composeView = new EDComposeView(context);
+ComposeView v = composeView.getComposeView();
+${it.viewHolderName} viewHolder = new ${it.viewHolderName}(composeView);
+composeView.setClickListener(new Function1<String, Unit>() {
+    @Override
+    public Unit invoke(String s) {
+${buildComposeClickListener(eventList).prependIndent().prependIndent()}
+        return null;
+    }
+});
+composeView.setLongClickListener(new Function1<String, Unit>() {
+    @Override
+    public Unit invoke(String s) {
+${buildComposeClickListener(eventList2).prependIndent().prependIndent()}
+        return null;
+    }
+});
+return viewHolder;
+"""
     }
 
     override fun getSupportedAnnotationTypes(): MutableSet<String> {
@@ -348,47 +350,46 @@ ${entry.bindingName} inflate = ${entry.bindingName}.inflate(LayoutInflater.from(
 ${entry.viewHolderName} viewHolder = new ${entry.viewHolderName}(inflate);
 $buildClickListener       
 return viewHolder;
-""".prependIndent()
+"""
     }
 
-    private fun buildComposeClickListener(event: Map<String, List<Event>>): String {
-        return event.map {
-            val joinToString = it.value.joinToString("\n") { e ->
-                val parameterList = parameterList(e.parameterList)
-                if (e.receiver.contains("Activity"))
-                    """                    if("${e.key}".equals(viewHolder.keyed)) ViewJava.doWhenIs(context, ${e.receiver}.class, (activity) -> {
-                         activity.${e.functionName}($parameterList);
-                         return null;//activity return
-                     });//activity end
+    private fun buildComposeClickListener(event: Map<String, List<Event>>) = event.map {
+        val clickBlock = it.value.joinToString("\n") { e ->
+            val parameterList = parameterList(e.parameterList)
+            if (e.receiver.contains("Activity"))
+                """if("${e.key}".equals(viewHolder.keyed)) ViewJava.doWhenIs(context, ${e.receiver}.class, (activity) -> {
+    activity.${e.functionName}($parameterList);
+    return null;//activity return
+});//activity end
 """
-                else
-                    """                    if("${e.key}".equals(viewHolder.keyed)) ViewJava.findActionReceiverOrNull(composeView.getComposeView(), ${e.receiver}.class, (fragment) -> {
-                         fragment.${e.functionName}($parameterList);
-                         return null;//fragment return
-                     });//fragment end
+            else
+                """if("${e.key}".equals(viewHolder.keyed)) ViewJava.findActionReceiverOrNull(composeView.getComposeView(), ${e.receiver}.class, (fragment) -> {
+    fragment.${e.functionName}($parameterList);
+    return null;//fragment return
+});//fragment end
 """
-            }
-            """                if (s == "${it.key}") {
-$joinToString                }//if end
+        }
+        """if (s == "${it.key}") {
+${clickBlock.prependIndent()}                
+}//if end
 """
-        }.joinToString("\n")
-
-    }
+    }.joinToString("\n")
 
     private fun buildClickListener(event: Map<String, List<Event>>, event2: Map<String, List<Event>>): String {
-        return event.map {
+        val singleClickListener = event.map {
             """inflate.${it.key}.setOnClickListener((v) -> {
 ${buildClickListener(it.value).prependIndent()}
 });
 """
-        }.joinToString("\n") +
-                event2.map {
-                    """inflate.${it.key}.setOnLongClickListener((v) -> {
+        }.joinToString("\n")
+        val longClickListener = event2.map {
+            """inflate.${it.key}.setOnLongClickListener((v) -> {
 ${buildClickListener(it.value).prependIndent()}
-return true;
+    return true;
 });
 """
-                }.joinToString("\n")
+        }.joinToString("\n")
+        return singleClickListener + longClickListener
     }
 
     private fun buildClickListener(events: List<Event>): String {
@@ -416,24 +417,25 @@ return true;
 
     private fun importBindingClass(entries: List<Entry>): String {
         return entries.joinToString("\n") { entry ->
-            entry.viewHolders.map {
+            val allViewHolderModel = entry.viewHolders.map {
                 """import ${it.value.bindingFullName};
-                    import ${it.value.viewHolderFullName};""".trimIndent()
-            }.joinToString("\n") + "import ${entry.itemHolderFullName};"
+import ${it.value.viewHolderFullName};"""
+            }.joinToString("\n")
+            allViewHolderModel + "\nimport ${entry.itemHolderFullName};"
         }
     }
 
     private fun buildAddFunction(entry: List<Entry>): String {
         var index = 0
-        val joinToString = entry.joinToString("\n") {
-            """    getRegisterCenter().put(${it.itemHolderName}.class, ${index++});
-    getList().add($className::buildFor${it.itemHolderName});
+        val addFunctions = entry.joinToString("\n") {
+            """getRegisterCenter().put(${it.itemHolderName}.class, ${index++});
+getList().add($className::buildFor${it.itemHolderName});
 """
         }
         return """public static void add() {
-$joinToString   
+${addFunctions.prependIndent()}   
 }
-""".prependIndent()
+"""
     }
 }
 
