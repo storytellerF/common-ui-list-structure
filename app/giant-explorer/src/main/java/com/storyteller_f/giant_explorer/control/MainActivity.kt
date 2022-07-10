@@ -144,6 +144,9 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             R.id.open_settings -> {
                 startActivity(Intent(this, SettingsActivity::class.java))
             }
+            R.id.open_root_access -> {
+                startActivity(Intent(this, RootAccessActivity::class.java))
+            }
 
         }
         return super.onOptionsItemSelected(item)
