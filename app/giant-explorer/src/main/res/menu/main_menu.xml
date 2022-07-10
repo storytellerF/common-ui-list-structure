@@ -10,4 +10,7 @@
     <item
         android:id="@+id/open_settings"
         android:title="settings" />
+    <item
+        android:id="@+id/open_root_access"
+        android:title="root access" />
 </menu>

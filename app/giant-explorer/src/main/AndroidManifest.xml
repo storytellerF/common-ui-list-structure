@@ -13,6 +13,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Common_ui_list_structure">
         <activity
+            android:name=".control.RootAccessActivity"
+            android:exported="false"
+            android:label="@string/title_activity_root_access"
+            android:theme="@style/Theme.MyApplication" />
+        <activity
             android:name=".control.SettingsActivity"
             android:exported="false"
             android:label="@string/title_activity_settings" />
