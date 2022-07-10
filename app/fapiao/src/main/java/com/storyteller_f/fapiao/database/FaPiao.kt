@@ -3,6 +3,7 @@ package com.storyteller_f.fapiao.database
 import android.content.Context
 import androidx.room.*
 import com.example.ext_func_definition.ExtFuncFlat
+import com.example.ext_func_definition.ExtFuncFlatType
 import com.storyteller_f.ui_list.database.DefaultTypeConverter
 import kotlinx.coroutines.flow.Flow
 import java.util.*
@@ -49,5 +50,5 @@ abstract class FaPiaoDatabase : RoomDatabase() {
     }
 }
 
-@ExtFuncFlat
-fun Context.requireDatabase() = FaPiaoDatabase.getInstance(this)
+@ExtFuncFlat(type = ExtFuncFlatType.v2)
+val Context.requireDatabase get() = FaPiaoDatabase.getInstance(this)

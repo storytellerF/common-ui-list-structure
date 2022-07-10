@@ -22,7 +22,7 @@ class SecondFragment : SimpleFragment<FragmentSecondBinding>(FragmentSecondBindi
             scope.launch {
                 val waitingDialog = waitingDialog()
                 try {
-                    requireDatabase().bigTimeDao().add(BigTimeTask(result.path, result.enable, result.workerName))
+                    requireDatabase.bigTimeDao().add(BigTimeTask(result.path, result.enable, result.workerName))
                     setFragmentResult(result)
                     findNavController().navigateUp()
                 } catch (e: Exception) {

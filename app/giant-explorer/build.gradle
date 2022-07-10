@@ -4,6 +4,7 @@ plugins {
     id 'kotlin-kapt'
     id 'kotlin-parcelize'
     id 'androidx.navigation.safeargs.kotlin'
+    id 'com.google.devtools.ksp'
 }
 
 android {
@@ -63,21 +64,24 @@ android {
 }
 
 dependencies {
+    ksp project(":ext-func-compiler")
     implementation(project(":ui-list"))
     implementation(project(":multi-core"))
-    implementation project(path: ':ui-list-annotation-definition')
-    implementation implementation(project(':composite-definition',))
+    implementation project(':ui-list-annotation-definition')
+    implementation(project(':composite-definition'))
     implementation(project(":common-ui"))
     implementation(project(":common-ktx"))
     implementation(project(":file-system"))
     implementation(project(":file-system-ktx"))
-    implementation 'androidx.navigation:navigation-fragment-ktx:2.4.2'
-    implementation 'androidx.navigation:navigation-ui-ktx:2.4.2'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.preference:preference:1.2.0'
-    kapt kapt(project(':ui-list-annotation-compiler',))
+    kapt kapt(project(':ui-list-annotation-compiler'))
     kapt(project(":composite-compiler"))
     implementation(project(":view-holder-compose"))
+
+    implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
+    implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+    implementation 'androidx.preference:preference:1.2.0'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
@@ -88,7 +92,6 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines"
 
-    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 
     // architecture components
     kapt 'androidx.room:room-compiler:2.4.2'
@@ -101,8 +104,8 @@ dependencies {
     implementation "com.squareup.okhttp3:logging-interceptor:$okhttpLoggingInterceptorVersion"
 
     //view model
-    implementation 'androidx.fragment:fragment-ktx:1.4.1'
-    implementation 'androidx.activity:activity-ktx:1.4.0'
+    implementation 'androidx.fragment:fragment-ktx:1.5.0'
+    implementation 'androidx.activity:activity-ktx:1.5.0'
 
     def multidex_version = "2.0.1"
     implementation "androidx.multidex:multidex:$multidex_version"
@@ -127,5 +130,15 @@ dependencies {
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.9.1'
 
     implementation 'com.github.osama-raddad:FireCrasher:2.0.0'
+
+}
+
+kotlin {
+    sourceSets {
+        debug.kotlin.srcDirs += 'build/generated/ksp/debug/kotlin'
+        testBebug.kotlin.srcDirs += 'build/generated/ksp/debugUnitTest/kotlin'
+        release.kotlin.srcDirs += 'build/generated/ksp/release/kotlin'
+        test.kotlin.srcDirs += 'build/generated/ksp/releaseUnitTest/kotlin'
+    }
 
 }

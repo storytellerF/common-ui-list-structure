@@ -4,9 +4,7 @@ import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
-import android.content.SharedPreferences
 import android.net.Uri
-import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -16,6 +14,8 @@ import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -26,6 +26,7 @@ import com.storyteller_f.common_ktx.mm
 import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.common_ui.dialog
 import com.storyteller_f.common_ui.fragment
+import com.storyteller_f.common_ui.owner
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system_ktx.isDirectory
@@ -55,7 +56,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         }
     }
 
-    private val data by search({ requireDatabase() to session.selected }, { (database, selected) ->
+    private val data by search({ requireDatabase to session.selected }, { (database, selected) ->
         SearchProducer(service(database)) { fileModel, _ ->
             FileItemHolder(fileModel, selected)
         }
@@ -82,39 +83,35 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         ) {
             (requireContext() as MainActivity).drawPath(it)
         }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.file_list_menu, menu)
-        return super.onCreateOptionsMenu(menu, inflater)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.add_file -> {
-                findNavController().navigate(R.id.action_fileListFragment_to_newNameDialog)
-                fragment(NewNameDialog.requestKey) { nameResult: NewNameDialog.NewNameResult ->
-                    session.fileInstance.value?.toChild(nameResult.name, true, true)
-                }
+        (requireActivity() as? MenuHost)?.addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.file_list_menu, menu)
             }
-            R.id.paste_file -> {
-                ContextCompat.getSystemService(requireContext(), ClipboardManager::class.java)?.let { manager ->
-                    manager.primaryClip?.let { data ->
-                        handleClipData(data)
-                    }
-                }
 
-            }
-            R.id.background_task -> {
-                startActivity(Intent(requireContext(), BackgroundTaskConfigActivity::class.java))
-            }
-        }
-        return super.onOptionsItemSelected(item)
+            override fun onMenuItemSelected(menuItem: MenuItem) = when (menuItem.itemId) {
+                 R.id.add_file -> {
+                     findNavController().navigate(R.id.action_fileListFragment_to_newNameDialog)
+                     fragment(NewNameDialog.requestKey) { nameResult: NewNameDialog.NewNameResult ->
+                         session.fileInstance.value?.toChild(nameResult.name, true, true)
+                     }
+                     true
+                 }
+                 R.id.paste_file -> {
+                     ContextCompat.getSystemService(requireContext(), ClipboardManager::class.java)?.let { manager ->
+                         manager.primaryClip?.let { data ->
+                             handleClipData(data)
+                         }
+                     }
+                     true
+
+                 }
+                 R.id.background_task -> {
+                     startActivity(Intent(requireContext(), BackgroundTaskConfigActivity::class.java))
+                     true
+                 }
+                 else -> false
+             }
+        }, owner)
     }
 
     fun handleClipData(data: ClipData, path: String? = null) {

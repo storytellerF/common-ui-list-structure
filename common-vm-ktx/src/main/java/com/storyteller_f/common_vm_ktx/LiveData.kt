@@ -5,6 +5,7 @@ package com.storyteller_f.common_vm_ktx
 import android.util.Log
 import androidx.annotation.MainThread
 import androidx.annotation.Nullable
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
 import java.util.*
@@ -248,4 +249,9 @@ fun <T> LiveData<T>.debounce(ms: Long): MediatorLiveData<T> {
         }
     }
     return mediatorLiveData
+}
+
+fun <T> LiveData<T>.withState(owner: LifecycleOwner, ob: Observer<in T>) {
+    val any = if (owner is Fragment) owner.viewLifecycleOwner else owner
+    observe(any, ob)
 }

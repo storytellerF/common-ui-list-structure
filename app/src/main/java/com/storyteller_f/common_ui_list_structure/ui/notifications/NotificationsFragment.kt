@@ -14,7 +14,7 @@ class NotificationsFragment : SimpleFragment<FragmentNotificationsBinding>(Fragm
         {
             requireReposService().searchRepos(1, 1).items.first()
         }, {
-            requireRepoDatabase().reposDao().select()
+            requireRepoDatabase.reposDao().select()
         }
     ))
     override fun onBindViewEvent(binding: FragmentNotificationsBinding) {

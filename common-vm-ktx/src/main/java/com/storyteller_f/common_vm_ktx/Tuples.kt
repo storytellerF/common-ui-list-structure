@@ -187,7 +187,3 @@ infix fun <A, B> MutableList<Pair<A, Any?>>.plus(that: Pair<A, B>): List<Pair<A,
         add(that)
     }
 
-
-fun getTuple(pair: Pair<String, Double>) {
-
-}

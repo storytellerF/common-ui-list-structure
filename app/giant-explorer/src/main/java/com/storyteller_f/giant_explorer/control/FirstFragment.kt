@@ -43,7 +43,7 @@ class FirstFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding:
         binding.content.manualUp(adapter)
         binding.content.flash(ListWithState.UIState.loading)
         scope.launch {
-            requireDatabase().bigTimeDao().fetch().map { list -> list.groupBy { it.workerName } }
+            requireDatabase.bigTimeDao().fetch().map { list -> list.groupBy { it.workerName } }
                 .flowWithLifecycle(viewLifecycleOwner.lifecycle)
                 .shareIn(scope, SharingStarted.WhileSubscribed())
                 .collect {
@@ -66,7 +66,7 @@ class FirstFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding:
             val waitingDialog = waitingDialog()
             try {
                 withContext(Dispatchers.IO) {
-                    requireDatabase().bigTimeDao().update(BigTimeTask(itemHolder.bigTimeWorker.absolutePath, !itemHolder.bigTimeWorker.enable, itemHolder.bigTimeWorker.workerName))
+                    requireDatabase.bigTimeDao().update(BigTimeTask(itemHolder.bigTimeWorker.absolutePath, !itemHolder.bigTimeWorker.enable, itemHolder.bigTimeWorker.workerName))
                 }
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), e.exceptionMessage, Toast.LENGTH_SHORT).show()

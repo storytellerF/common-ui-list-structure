@@ -28,7 +28,7 @@ class App : Application() {
         super.onCreate()
         Temp.add()
         MainScope().launch {
-            requireDatabase().bigTimeDao().fetchSuspend().groupBy {
+            requireDatabase.bigTimeDao().fetchSuspend().groupBy {
                 it.workerName
             }.forEach { entry ->
                 WorkManager.getInstance(this@App).enqueueUniqueWork(
@@ -100,7 +100,7 @@ class FolderWorker(context: Context, workerParams: WorkerParameters) :
     override suspend fun work(context: Context, path: String): WorkerResult {
         return try {
             val fileInstance = FileInstanceFactory.getFileInstance(path, context)
-            val record = context.requireDatabase().sizeDao().search(path)
+            val record = context.requireDatabase.sizeDao().search(path)
             if (record != null && record.lastUpdateTime > fileInstance.directory.lastModifiedTime) return WorkerResult.SizeWorker(
                 record.size
             )
@@ -129,7 +129,7 @@ class FolderWorker(context: Context, workerParams: WorkerParameters) :
                         if (isStopped) return WorkerResult.Stopped
                         acc + s
                     }
-            context.requireDatabase().sizeDao()
+            context.requireDatabase.sizeDao()
                 .save(FileSizeRecord(path, size, System.currentTimeMillis()))
             WorkerResult.SizeWorker(size)
         } catch (e: Exception) {
@@ -158,12 +158,12 @@ class MDWorker(context: Context, workerParams: WorkerParameters) :
             }
             listSafe.files.forEach {
                 if (isStopped) return WorkerResult.Stopped
-                val search = context.requireDatabase().mdDao().search(it.fullPath)
+                val search = context.requireDatabase.mdDao().search(it.fullPath)
                 if ((search?.lastUpdateTime ?: 0) <= it.lastModifiedTime) {
                     getFileMD5(
                         fileInstance.toChild(it.name, true, false), closeable
                     )?.let { data ->
-                        context.requireDatabase().mdDao()
+                        context.requireDatabase.mdDao()
                             .save(FileMDRecord(it.fullPath, data, System.currentTimeMillis()))
                     }
                 }
@@ -192,13 +192,13 @@ class TorrentWorker(context: Context, workerParams: WorkerParameters) :
             }
             listSafe.files.filterIsInstance<TorrentFileModel>().forEach {
                 if (isStopped) return WorkerResult.Stopped
-                val search = context.requireDatabase().torrentDao().search(it.fullPath)
+                val search = context.requireDatabase.torrentDao().search(it.fullPath)
                 if ((search?.lastUpdateTime ?: 0) <= it.lastModifiedTime) {
                     TorrentFile.getTorrentName(
                         fileInstance.toChild(it.name, true, false),
                         closeable
                     ).let { torrentName ->
-                        context.requireDatabase().torrentDao()
+                        context.requireDatabase.torrentDao()
                             .save(
                                 FileTorrentRecord(
                                     it.fullPath,
