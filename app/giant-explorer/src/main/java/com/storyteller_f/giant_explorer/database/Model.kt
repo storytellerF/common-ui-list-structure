@@ -4,6 +4,8 @@ import android.app.Activity
 import android.content.Context
 import androidx.fragment.app.Fragment
 import androidx.room.*
+import com.example.ext_func_definition.ExtFuncFlat
+import com.example.ext_func_definition.ExtFuncFlatType
 import kotlinx.coroutines.flow.Flow
 
 @Entity(tableName = "file-size-record")
@@ -114,8 +116,5 @@ abstract class FileSizeRecordDatabase : RoomDatabase() {
     }
 }
 
-fun Fragment.requireDatabase() = FileSizeRecordDatabase.getInstance(requireContext())
-
-fun Activity.requireDatabase() = FileSizeRecordDatabase.getInstance(this)
-
-fun Context.requireDatabase() = FileSizeRecordDatabase.getInstance(this)
+@ExtFuncFlat(type = ExtFuncFlatType.v2)
+val Context.requireDatabase get() = FileSizeRecordDatabase.getInstance(this)

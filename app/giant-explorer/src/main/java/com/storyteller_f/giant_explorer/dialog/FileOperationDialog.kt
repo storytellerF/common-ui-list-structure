@@ -68,16 +68,16 @@ class FileOperationDialog : SimpleDialogFragment<DialogFileOperationBinding>(Dia
                     else -> list.onVisible(binding.stateProgress)
                 }
             }
-            withState(progressVM.data) {
+            progressVM.data.withState(this) {
                 binding.progressBar.progress = it
             }
-            withState(stateVM.data) {
+            stateVM.data.withState(this) {
                 binding.textViewState.text = it
             }
-            withState(tipVM.data) {
+            tipVM.data.withState(this) {
                 binding.textViewDetail.text = it
             }
-            withState(leftVM.data) {
+            leftVM.data.withState(this) {
                 binding.textViewLeft.text = String.format("size: %d\nleft file:%d\nleft folder:%d", it.third, it.first, it.second)
             }
             val orPut = binder.fileOperationProgressListener.getOrPut(key) { mutableListOf() }

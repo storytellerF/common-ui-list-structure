@@ -36,8 +36,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.example.common_pr.dip
 import com.example.common_pr.dipToInt
-import com.example.dip
-import com.example.dipToInt
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ui.*
@@ -62,12 +60,12 @@ class MainActivity : AppCompatActivity() {
     private val editing = MutableLiveData(false)
     private val viewModel by source({ }, {
         SourceProducer(
-            { RepoComposite(requireRepoDatabase()) },
+            { RepoComposite(requireRepoDatabase) },
             { p, c ->
                 requireReposService.searchRepos(p, c)
             },
             {
-                requireRepoDatabase().reposDao().selectAll()
+                requireRepoDatabase.reposDao().selectAll()
             },
             { repo, _ -> RepoItemHolder(repo) },
             { before, after ->

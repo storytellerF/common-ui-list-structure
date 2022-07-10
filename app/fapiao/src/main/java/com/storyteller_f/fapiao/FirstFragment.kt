@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.Card
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -21,7 +22,6 @@ import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.fapiao.database.FaPiaoEntity
-import com.storyteller_f.fapiao.database.requireDatabase
 import com.storyteller_f.fapiao.databinding.FragmentFirstBinding
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
@@ -43,7 +43,7 @@ class FirstFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding:
         binding.content.manualUp(adapter, selected)
         binding.content.flash(ListWithState.UIState.loading)
         scope.launch {
-            requireDatabase().fapiaoDao().getAll()
+            requireDatabase.fapiaoDao().getAll()
                 .flowWithLifecycle(viewLifecycleOwner.lifecycle)
                 .shareIn(scope, SharingStarted.WhileSubscribed())
                 .collect {
@@ -81,6 +81,7 @@ class FaPiaoProvider : PreviewParameterProvider<FaPiaoItemHolder> {
         }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Preview
 @Composable
 fun FaPiaoItemCompose(@PreviewParameter(FaPiaoProvider::class) itemHolder: FaPiaoItemHolder, edComposeView: EdComposeViewEventEmitter = EdComposeViewEventEmitter.default) {
@@ -89,6 +90,9 @@ fun FaPiaoItemCompose(@PreviewParameter(FaPiaoProvider::class) itemHolder: FaPia
             .fillMaxWidth()
             .wrapContentHeight()
             .padding(10.dp),
+        onClick = {
+            edComposeView.notifyClickEvent("card")
+        }
     ) {
         Column(modifier = Modifier
             .padding(5.dp)

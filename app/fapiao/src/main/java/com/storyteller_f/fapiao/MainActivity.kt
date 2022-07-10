@@ -1,15 +1,15 @@
 package com.storyteller_f.fapiao
 
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-import android.view.Menu
-import android.view.MenuItem
-import android.widget.Toast
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui.waitingDialog
 import com.storyteller_f.fapiao.database.FaPiaoEntity
@@ -19,9 +19,6 @@ import com.storyteller_f.fapiao_reader.Reader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.OkHttp
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import java.io.File
 
 class MainActivity : AppCompatActivity() {
@@ -42,7 +39,7 @@ class MainActivity : AppCompatActivity() {
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
 
-        binding.fab.setOnClickListener { view ->
+        binding.fab.setOnClickListener {
 
             scope.launch {
                 val file = File(filesDir, "011002100711-54424884.pdf")
@@ -50,7 +47,7 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this@MainActivity, reader.toString(), Toast.LENGTH_SHORT).show()
                 waitingDialog {
                     withContext(Dispatchers.IO) {
-                        requireDatabase().fapiaoDao().insert(FaPiaoEntity(reader.code, reader.number, reader.time, reader.total))
+                        requireDatabase.fapiaoDao().insert(FaPiaoEntity(reader.code, reader.number, reader.time, reader.total))
                     }
                 }
             }

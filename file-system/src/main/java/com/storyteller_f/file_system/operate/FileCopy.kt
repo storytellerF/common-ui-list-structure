@@ -77,7 +77,7 @@ class FileCopy(
     }
 
     private fun copyFileFaster(f: FileInstance, t: FileInstance): Boolean {
-        return copyFileTest(f)
+//        return copyFileTest(f)
         try {
             val toChild = FileInstanceFactory.toChild(t, f.name, true, context, true)
             (f).fileInputStream.channel.use { int ->

@@ -4,6 +4,7 @@ plugins {
     id 'kotlin-android'
     id 'kotlin-parcelize'
     id 'kotlin-kapt'
+    id 'com.google.devtools.ksp'
 }
 
 android {
@@ -48,6 +49,7 @@ android {
 }
 
 dependencies {
+    ksp project(":ext-func-compiler")
     implementation(project(":common-pr"))
     implementation(project(":ui-list"))
     implementation project(path: ':ui-list-annotation-definition')
@@ -82,8 +84,8 @@ dependencies {
     implementation "com.squareup.okhttp3:logging-interceptor:$okhttpLoggingInterceptorVersion"
 
     //view model
-    implementation 'androidx.fragment:fragment-ktx:1.4.1'
-    implementation 'androidx.activity:activity-ktx:1.4.0'
+    implementation 'androidx.fragment:fragment-ktx:1.5.0'
+    implementation 'androidx.activity:activity-ktx:1.5.0'
 
     def multidex_version = "2.0.1"
     implementation "androidx.multidex:multidex:$multidex_version"
@@ -92,5 +94,15 @@ dependencies {
     implementation "androidx.compose.material:material:$compose_version"
     implementation "androidx.compose.ui:ui-tooling:$compose_version"
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.9.1'
+
+}
+
+kotlin {
+    sourceSets {
+        debug.kotlin.srcDirs += 'build/generated/ksp/debug/kotlin'
+        testBebug.kotlin.srcDirs += 'build/generated/ksp/debugUnitTest/kotlin'
+        release.kotlin.srcDirs += 'build/generated/ksp/release/kotlin'
+        test.kotlin.srcDirs += 'build/generated/ksp/releaseUnitTest/kotlin'
+    }
 
 }

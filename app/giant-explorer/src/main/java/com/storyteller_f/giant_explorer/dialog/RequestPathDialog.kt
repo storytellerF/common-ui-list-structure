@@ -45,7 +45,7 @@ class RequestPathDialog :
     @Parcelize
     class RequestPathResult(val path: String) : Parcelable
 
-    private val data by search({ requireDatabase() }, {
+    private val data by search({ requireDatabase }, {
         SearchProducer(service(it)) { fileModel, _ ->
             FileItemHolder(fileModel, MutableLiveData(mutableListOf()))
         }

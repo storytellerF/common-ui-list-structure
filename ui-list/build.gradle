@@ -81,8 +81,8 @@ dependencies {
     api "com.squareup.retrofit2:converter-gson:$retrofitVersion"
 
     //view model
-    implementation 'androidx.fragment:fragment-ktx:1.4.1'
-    implementation 'androidx.activity:activity-ktx:1.4.0'
+    implementation 'androidx.fragment:fragment-ktx:1.5.0'
+    implementation 'androidx.activity:activity-ktx:1.5.0'
     api project(':common-vm-ktx')
 
 }
