@@ -8,6 +8,7 @@
       <module name="common_ui_list_structure.app.b3" target="11" />
       <module name="common_ui_list_structure.app.fapiao" target="11" />
       <module name="common_ui_list_structure.app.giant-explorer" target="11" />
+      <module name="common_ui_list_structure.app.ping" target="11" />
       <module name="common_ui_list_structure.common-ktx" target="11" />
       <module name="common_ui_list_structure.common-pr" target="11" />
       <module name="common_ui_list_structure.common-ui" target="11" />
