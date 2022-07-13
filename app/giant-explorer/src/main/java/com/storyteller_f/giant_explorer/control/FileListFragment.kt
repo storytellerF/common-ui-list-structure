@@ -62,7 +62,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         }
     })
 
-    private val filterHiddenFile by asvm({}) { it, _ ->
+    private val filterHiddenFile by savm({}) { it, _ ->
         HasStateValueModel(it, filterHiddenFileKey, false)
     }
 
