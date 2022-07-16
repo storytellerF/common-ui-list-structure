@@ -61,19 +61,19 @@ fun <VM : ViewModel, T> T.keyedViewModels(
 inline fun <reified VM : ViewModel, T, ARG> T.kvm(
     keyPrefix: String,
     crossinline arg: () -> ARG,
-    crossinline vmProducer: (ARG) -> VM,
     noinline storeProducer: () -> ViewModelStore = { viewModelStore },
     noinline ownerProducer: () -> SavedStateRegistryOwner = { this },
+    crossinline vmProducer: (ARG) -> VM,
 ) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner, T : HasDefaultViewModelProviderFactory =
-    kvm({ keyPrefix }, arg, vmProducer, storeProducer, ownerProducer)
+    kvm({ keyPrefix }, arg, storeProducer, ownerProducer, vmProducer)
 
 @MainThread
 inline fun <reified VM : ViewModel, T, ARG> T.kvm(
     noinline keyPrefixProvider: () -> String,
     crossinline arg: () -> ARG,
-    crossinline vmProducer: (ARG) -> VM,
     noinline storeProducer: () -> ViewModelStore = { viewModelStore },
     noinline ownerProducer: () -> SavedStateRegistryOwner = { this },
+    crossinline vmProducer: (ARG) -> VM,
 ) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner, T : HasDefaultViewModelProviderFactory =
     keyedViewModels(keyPrefixProvider, VM::class, storeProducer, defaultFactory(arg, vmProducer, ownerProducer))
 
@@ -83,7 +83,7 @@ inline fun <reified VM : ViewModel, ARG> Fragment.kpvm(
     noinline keyPrefixProvider: () -> String,
     crossinline arg: () -> ARG,
     crossinline vmProducer: (ARG) -> VM,
-) = kvm(keyPrefixProvider, arg, vmProducer, { requireParentFragment().viewModelStore }, { requireParentFragment() })
+) = kvm(keyPrefixProvider, arg, { requireParentFragment().viewModelStore }, { requireParentFragment() }, vmProducer)
 
 
 @MainThread
@@ -91,7 +91,7 @@ inline fun <reified VM : ViewModel, ARG> Fragment.kavm(
     noinline keyPrefixProvider: () -> String,
     crossinline arg: () -> ARG,
     crossinline vmProducer: (ARG) -> VM,
-) = kvm(keyPrefixProvider, arg, vmProducer, { requireActivity().viewModelStore }, { requireActivity() })
+) = kvm(keyPrefixProvider, arg, { requireActivity().viewModelStore }, { requireActivity() }, vmProducer)
 
 inline fun <reified VM : ViewModel, T, ARG> T.defaultFactory(
     crossinline arg: () -> ARG,
@@ -124,9 +124,9 @@ inline fun <reified VM : ViewModel, T, ARG> T.stateDefaultFactory(
 @MainThread
 inline fun <reified VM : ViewModel, T, ARG> T.vm(
     crossinline arg: () -> ARG,
-    crossinline vmProducer: (ARG) -> VM,
     noinline storeProducer: () -> ViewModelStore = { viewModelStore },
     noinline ownerProducer: () -> SavedStateRegistryOwner = { this },
+    crossinline vmProducer: (ARG) -> VM,
 ) where T : ViewModelStoreOwner, T : SavedStateRegistryOwner =
     ViewModelLazy(VM::class, storeProducer, defaultFactory(arg, vmProducer, ownerProducer))
 
@@ -137,7 +137,7 @@ inline fun <reified VM : ViewModel, T, ARG> T.vm(
 inline fun <reified VM : ViewModel, ARG> Fragment.avm(
     crossinline arg: () -> ARG,
     crossinline vmProducer: (ARG) -> VM,
-) = vm(arg, vmProducer, { requireActivity().viewModelStore }, { requireActivity() })
+) = vm(arg, { requireActivity().viewModelStore }, { requireActivity() }, vmProducer)
 
 /**
  * 虽然是Fragment 的扩展函数，但是调用的parent fragment的
@@ -146,14 +146,14 @@ inline fun <reified VM : ViewModel, ARG> Fragment.avm(
 inline fun <reified VM : ViewModel, ARG> Fragment.pvm(
     crossinline arg: () -> ARG,
     crossinline vmProducer: (ARG) -> VM
-) = vm(arg, vmProducer, { requireParentFragment().viewModelStore }, { requireParentFragment() })
+) = vm(arg, { requireParentFragment().viewModelStore }, { requireParentFragment() }, vmProducer)
 
 
 inline fun <reified VM : ViewModel, T, ARG> T.svm(
     crossinline arg: () -> ARG,
-    crossinline vmProducer: (SavedStateHandle, ARG) -> VM,
     noinline storeProducer: () -> ViewModelStore = { viewModelStore },
     noinline ownerProducer: () -> SavedStateRegistryOwner = { this },
+    crossinline vmProducer: (SavedStateHandle, ARG) -> VM,
 ) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner =
     ViewModelLazy(VM::class, storeProducer, stateDefaultFactory(arg, vmProducer, ownerProducer))
 
@@ -161,13 +161,13 @@ inline fun <reified VM : ViewModel, T, ARG> T.svm(
 inline fun <reified VM : ViewModel, ARG> Fragment.savm(
     crossinline arg: () -> ARG,
     crossinline vmProducer: (SavedStateHandle, ARG) -> VM
-) = svm(arg, vmProducer, { requireActivity().viewModelStore }, { requireActivity() })
+) = svm(arg, { requireActivity().viewModelStore }, { requireActivity() }, vmProducer)
 
 @MainThread
 inline fun <reified VM : ViewModel, ARG> Fragment.spvm(
     crossinline arg: () -> ARG,
     crossinline vmProducer: (SavedStateHandle, ARG) -> VM
-) = svm(arg, vmProducer, { requireParentFragment().viewModelStore }, { requireParentFragment() })
+) = svm(arg, { requireParentFragment().viewModelStore }, { requireParentFragment() }, vmProducer)
 
 class GenericValueModel<T> : ViewModel() {
     val data = MutableLiveData<T>()
