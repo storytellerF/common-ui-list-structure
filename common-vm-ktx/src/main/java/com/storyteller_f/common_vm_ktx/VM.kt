@@ -10,6 +10,8 @@ import androidx.annotation.MainThread
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import androidx.savedstate.SavedStateRegistryOwner
+import com.example.ext_func_definition.ExtFuncFlat
+import com.example.ext_func_definition.ExtFuncFlatType
 import kotlin.reflect.KClass
 
 /**
@@ -121,6 +123,7 @@ inline fun <reified VM : ViewModel, T, ARG> T.stateDefaultFactory(
     }
 }
 
+@ExtFuncFlat(type = ExtFuncFlatType.v5)
 @MainThread
 inline fun <reified VM : ViewModel, T, ARG> T.vm(
     crossinline arg: () -> ARG,
@@ -130,25 +133,7 @@ inline fun <reified VM : ViewModel, T, ARG> T.vm(
 ) where T : ViewModelStoreOwner, T : SavedStateRegistryOwner =
     ViewModelLazy(VM::class, storeProducer, defaultFactory(arg, vmProducer, ownerProducer))
 
-/**
- * 虽然是Fragment 的扩展函数，但是调用的activity的
- */
-@MainThread
-inline fun <reified VM : ViewModel, ARG> Fragment.avm(
-    crossinline arg: () -> ARG,
-    crossinline vmProducer: (ARG) -> VM,
-) = vm(arg, { requireActivity().viewModelStore }, { requireActivity() }, vmProducer)
-
-/**
- * 虽然是Fragment 的扩展函数，但是调用的parent fragment的
- */
-@MainThread
-inline fun <reified VM : ViewModel, ARG> Fragment.pvm(
-    crossinline arg: () -> ARG,
-    crossinline vmProducer: (ARG) -> VM
-) = vm(arg, { requireParentFragment().viewModelStore }, { requireParentFragment() }, vmProducer)
-
-
+@ExtFuncFlat(type = ExtFuncFlatType.v5)
 inline fun <reified VM : ViewModel, T, ARG> T.svm(
     crossinline arg: () -> ARG,
     noinline storeProducer: () -> ViewModelStore = { viewModelStore },
@@ -156,18 +141,6 @@ inline fun <reified VM : ViewModel, T, ARG> T.svm(
     crossinline vmProducer: (SavedStateHandle, ARG) -> VM,
 ) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner =
     ViewModelLazy(VM::class, storeProducer, stateDefaultFactory(arg, vmProducer, ownerProducer))
-
-@MainThread
-inline fun <reified VM : ViewModel, ARG> Fragment.savm(
-    crossinline arg: () -> ARG,
-    crossinline vmProducer: (SavedStateHandle, ARG) -> VM
-) = svm(arg, { requireActivity().viewModelStore }, { requireActivity() }, vmProducer)
-
-@MainThread
-inline fun <reified VM : ViewModel, ARG> Fragment.spvm(
-    crossinline arg: () -> ARG,
-    crossinline vmProducer: (SavedStateHandle, ARG) -> VM
-) = svm(arg, { requireParentFragment().viewModelStore }, { requireParentFragment() }, vmProducer)
 
 class GenericValueModel<T> : ViewModel() {
     val data = MutableLiveData<T>()
