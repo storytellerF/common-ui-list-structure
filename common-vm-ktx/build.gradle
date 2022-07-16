@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
+    id 'com.google.devtools.ksp'
 }
 
 android {
@@ -31,6 +32,8 @@ android {
 }
 
 dependencies {
+    implementation(project(":ext-func-definition"))
+    ksp project(":ext-func-compiler")
 
     implementation 'androidx.appcompat:appcompat:1.4.2'
     testImplementation 'junit:junit:4.13.2'
@@ -39,5 +42,15 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.0'
+
+}
+
+kotlin {
+    sourceSets {
+        debug.kotlin.srcDirs += 'build/generated/ksp/debug/kotlin'
+        testBebug.kotlin.srcDirs += 'build/generated/ksp/debugUnitTest/kotlin'
+        release.kotlin.srcDirs += 'build/generated/ksp/release/kotlin'
+        test.kotlin.srcDirs += 'build/generated/ksp/releaseUnitTest/kotlin'
+    }
 
 }
