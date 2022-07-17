@@ -5,6 +5,7 @@ plugins {
     id 'kotlin-parcelize'
     id 'kotlin-kapt'
     id 'com.google.devtools.ksp'
+    id 'com.storyteller_f.sml'
 }
 
 android {
@@ -105,4 +106,20 @@ kotlin {
         test.kotlin.srcDirs += 'build/generated/ksp/releaseUnitTest/kotlin'
     }
 
+}
+
+def myColor = project.objects.mapProperty(String, String)
+myColor.put("color1", "#ff000e")
+myColor.put("color2", "#fe99ee")
+def myDimen = project.objects.mapProperty(String, String)
+myDimen.put("smallTextSize", "12dp")
+sml {
+    color = myColor
+    dimen = myDimen
+    shapes {
+        regularButton {
+            solidColor = "#ffffff"
+            radius = 12
+        }
+    }
 }

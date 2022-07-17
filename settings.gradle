@@ -1,13 +1,16 @@
+import org.gradle.api.initialization.resolve.RepositoriesMode
+
 pluginManagement {
     repositories {
         gradlePluginPortal()
         google()
         mavenCentral()
         maven { url 'https://jitpack.io' }
+        maven { url 'repo'}
     }
 }
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
     repositories {
         google()
         mavenCentral()
@@ -37,3 +40,4 @@ include ':common-pr'
 include ':ext-func-compiler'
 include ':ext-func-definition'
 include ':app:ping'
+include ':sml'

@@ -20,6 +20,9 @@
       <module name="common_ui_list_structure.file-system" target="11" />
       <module name="common_ui_list_structure.file-system-ktx" target="11" />
       <module name="common_ui_list_structure.mass-common-ktx" target="11" />
+      <module name="common_ui_list_structure.sml" target="11" />
+      <module name="common_ui_list_structure.sml.main" target="11" />
+      <module name="common_ui_list_structure.sml.test" target="11" />
       <module name="common_ui_list_structure.ui-list" target="11" />
       <module name="common_ui_list_structure.ui-list-annotation-compiler" target="11" />
       <module name="common_ui_list_structure.ui-list-annotation-compiler.main" target="11" />

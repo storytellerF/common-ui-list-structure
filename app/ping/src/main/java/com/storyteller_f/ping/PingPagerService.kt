@@ -13,6 +13,7 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.WindowInsets
+import androidx.core.content.ContextCompat
 import com.storyteller_f.ping.shader.GLES20WallpaperRenderer
 import com.storyteller_f.ping.shader.GLES30WallpaperRenderer
 import com.storyteller_f.ping.shader.GLWallpaperRenderer
@@ -48,8 +49,8 @@ class PingPagerService : WallpaperService() {
                 .build()
             player?.setDataSource(this@PingPagerService, uri)
             player?.isLooping = true
+            val systemService = ContextCompat.getSystemService(this@PingPagerService, ActivityManager::class.java) ?: throw Exception("无法获得activity manager")
 
-            val systemService = getSystemService(ActivityManager::class.java)
             val deviceConfigurationInfo = systemService.deviceConfigurationInfo
             val (ver, glWallpaperRenderer) = when {
                 deviceConfigurationInfo.reqGlEsVersion >= 0x30000 -> {

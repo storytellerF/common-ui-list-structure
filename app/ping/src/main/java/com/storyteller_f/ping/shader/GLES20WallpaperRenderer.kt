@@ -169,11 +169,9 @@ internal class GLES20WallpaperRenderer(context: Context) : GLWallpaperRenderer(c
     }
 
     override fun onDrawFrame(gl10: GL10) {
-        if (surfaceTexture == null) {
-            return
-        }
+        val local = surfaceTexture ?: return
         if (renderedFrame < updatedFrame) {
-            surfaceTexture!!.updateTexImage()
+            local.updateTexImage()
             ++renderedFrame
         }
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
@@ -284,15 +282,13 @@ internal class GLES20WallpaperRenderer(context: Context) : GLWallpaperRenderer(c
     }
 
     private fun createSurfaceTexture() {
-        if (surfaceTexture != null) {
-            surfaceTexture!!.release()
-            surfaceTexture = null
-        }
+        surfaceTexture?.release()
         updatedFrame = 0
         renderedFrame = 0
-        surfaceTexture = SurfaceTexture(textures[0])
-        surfaceTexture!!.setDefaultBufferSize(videoWidth, videoHeight)
-        surfaceTexture!!.setOnFrameAvailableListener { surfaceTexture: SurfaceTexture? -> ++updatedFrame }
+        surfaceTexture = SurfaceTexture(textures[0]).apply {
+            setDefaultBufferSize(videoWidth, videoHeight)
+            setOnFrameAvailableListener { ++updatedFrame }
+        }
     }
 
     private fun updateMatrix() {
