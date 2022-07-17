@@ -182,7 +182,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         }
     }
 
-    @BindLongClickEvent(FileItemHolder::class)
+    @BindClickEvent(FileItemHolder::class, "fileIcon")
     fun test(view: View, itemHolder: FileItemHolder) {
         PopupMenu(requireContext(), view).apply {
             inflate(R.menu.item_context_menu)
