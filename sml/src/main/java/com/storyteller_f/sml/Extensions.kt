@@ -1,8 +1,7 @@
-package extensions
+package com.storyteller_f.sml
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.FeatureExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.BaseVariant
 import org.gradle.api.DomainObjectSet
@@ -23,10 +22,6 @@ fun BaseExtension.variants(): DomainObjectSet<out BaseVariant> {
     return when (this) {
         is AppExtension -> {
             applicationVariants
-        }
-
-        is FeatureExtension -> {
-            featureVariants
         }
 
         is LibraryExtension -> {

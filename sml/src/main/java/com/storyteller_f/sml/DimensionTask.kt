@@ -1,6 +1,5 @@
 package com.storyteller_f.sml
 
-import extensions.writeXlmWithTags
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
