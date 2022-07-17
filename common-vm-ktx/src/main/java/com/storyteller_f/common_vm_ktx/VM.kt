@@ -9,10 +9,40 @@ package com.storyteller_f.common_vm_ktx
 import androidx.annotation.MainThread
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
+import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.savedstate.SavedStateRegistryOwner
 import com.example.ext_func_definition.ExtFuncFlat
 import com.example.ext_func_definition.ExtFuncFlatType
 import kotlin.reflect.KClass
+
+class ViewModelLazy<VM : ViewModel> @JvmOverloads constructor(
+    val viewModelClass: KClass<VM>,
+    val storeProducer: () -> ViewModelStore,
+    val factoryProducer: () -> ViewModelProvider.Factory,
+    val extrasProducer: () -> CreationExtras = { CreationExtras.Empty }
+) : Lazy<VM> {
+    private var cached: VM? = null
+
+    override val value: VM
+        get() {
+            val viewModel = cached
+            return if (viewModel == null) {
+                val factory = factoryProducer()
+                val store = storeProducer()
+                ViewModelProvider(
+                    store,
+                    factory,
+                    extrasProducer()
+                )[viewModelClass.java].also {
+                    cached = it
+                }
+            } else {
+                viewModel
+            }
+        }
+
+    override fun isInitialized(): Boolean = cached != null
+}
 
 /**
  * 带有关键字的vm
@@ -21,7 +51,8 @@ class KeyedViewModelLazy<VM : ViewModel>(
     private val keyPrefixProvider: () -> String,
     private val viewModelClass: KClass<VM>,
     private val storeProducer: () -> ViewModelStore,
-    private val factoryProducer: () -> ViewModelProvider.Factory
+    private val factoryProducer: () -> ViewModelProvider.Factory,
+    val extrasProducer: () -> CreationExtras = { CreationExtras.Empty }
 ) : Lazy<VM> {
     private var cached: VM? = null
 
@@ -35,7 +66,7 @@ class KeyedViewModelLazy<VM : ViewModel>(
                     ?: throw IllegalArgumentException("Local and anonymous classes can not be ViewModels")
 
                 val key = "${keyPrefixProvider()} : $canonicalName"
-                ViewModelProvider(store, factory)[key, viewModelClass.java].also {
+                ViewModelProvider(store, factory, extrasProducer())[key, viewModelClass.java].also {
                     cached = it
                 }
             } else {
@@ -47,53 +78,16 @@ class KeyedViewModelLazy<VM : ViewModel>(
 }
 
 @MainThread
-fun <VM : ViewModel, T> T.keyedViewModels(
-    keyPrefixProvider: () -> String,
-    viewModelClass: KClass<VM>,
-    storeProducer: () -> ViewModelStore,
-    factoryProducer: (() -> ViewModelProvider.Factory)? = null
-): Lazy<VM> where T : SavedStateRegistryOwner, T : ViewModelStoreOwner, T : HasDefaultViewModelProviderFactory {
-    val factoryPromise = factoryProducer ?: {
-        defaultViewModelProviderFactory
-    }
-    return KeyedViewModelLazy(keyPrefixProvider, viewModelClass, storeProducer, factoryPromise)
-}
-
-@MainThread
-inline fun <reified VM : ViewModel, T, ARG> T.kvm(
-    keyPrefix: String,
-    crossinline arg: () -> ARG,
-    noinline storeProducer: () -> ViewModelStore = { viewModelStore },
-    noinline ownerProducer: () -> SavedStateRegistryOwner = { this },
-    crossinline vmProducer: (ARG) -> VM,
-) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner, T : HasDefaultViewModelProviderFactory =
-    kvm({ keyPrefix }, arg, storeProducer, ownerProducer, vmProducer)
-
-@MainThread
-inline fun <reified VM : ViewModel, T, ARG> T.kvm(
+inline fun <reified VM : ViewModel> Fragment.keyPrefix(
     noinline keyPrefixProvider: () -> String,
-    crossinline arg: () -> ARG,
-    noinline storeProducer: () -> ViewModelStore = { viewModelStore },
-    noinline ownerProducer: () -> SavedStateRegistryOwner = { this },
-    crossinline vmProducer: (ARG) -> VM,
-) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner, T : HasDefaultViewModelProviderFactory =
-    keyedViewModels(keyPrefixProvider, VM::class, storeProducer, defaultFactory(arg, vmProducer, ownerProducer))
-
+    lazy: ViewModelLazy<VM>
+) = KeyedViewModelLazy(keyPrefixProvider, lazy.viewModelClass, lazy.storeProducer, lazy.factoryProducer, lazy.extrasProducer)
 
 @MainThread
-inline fun <reified VM : ViewModel, ARG> Fragment.kpvm(
-    noinline keyPrefixProvider: () -> String,
-    crossinline arg: () -> ARG,
-    crossinline vmProducer: (ARG) -> VM,
-) = kvm(keyPrefixProvider, arg, { requireParentFragment().viewModelStore }, { requireParentFragment() }, vmProducer)
-
-
-@MainThread
-inline fun <reified VM : ViewModel, ARG> Fragment.kavm(
-    noinline keyPrefixProvider: () -> String,
-    crossinline arg: () -> ARG,
-    crossinline vmProducer: (ARG) -> VM,
-) = kvm(keyPrefixProvider, arg, { requireActivity().viewModelStore }, { requireActivity() }, vmProducer)
+inline fun <reified VM : ViewModel> Fragment.keyPrefix(
+    keyPrefixProvider: String,
+    lazy: ViewModelLazy<VM>
+) = KeyedViewModelLazy({ keyPrefixProvider }, lazy.viewModelClass, lazy.storeProducer, lazy.factoryProducer, lazy.extrasProducer)
 
 inline fun <reified VM : ViewModel, T, ARG> T.defaultFactory(
     crossinline arg: () -> ARG,

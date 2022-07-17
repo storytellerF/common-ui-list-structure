@@ -17,23 +17,31 @@ import java.util.*
 
 class FileOperationDialog : SimpleDialogFragment<DialogFileOperationBinding>(DialogFileOperationBinding::inflate) {
     lateinit var binder: FileOperateBinder
-    private val progressVM by kvm("progress", {}) {
-        GenericValueModel<Int>()
-    }
-    private val leftVM by kvm("left", {}) {
-        GenericValueModel<Triple<Int, Int, Long>>()
-    }
-    private val stateVM by kvm("state", {}) {
+
+    //    private val progressVM by kvm("progress", {}) {
+//        GenericValueModel<Int>()
+//    }
+    private val progressVM by keyPrefix({ "progresss" }, vm({}) {
+            GenericValueModel<Int>()
+        }
+    )
+    private val leftVM by keyPrefix("left", vm({}) {
+        GenericValueModel<Triple<Int, Int, Long>>().apply {
+            data.value = -1 to -1 to -1
+        }
+    })
+    private val stateVM by keyPrefix("state", vm({}) {
         GenericValueModel<String>()
-    }
-    private val tipVM by kvm("tip", {}) {
+    })
+    private val tipVM by keyPrefix("tip", vm({}) {
         GenericValueModel<String>()
-    }
-    private val uuid by kavm({ "uuid" }, {}) {
+    })
+    private val uuid by keyPrefix({ "uuid" }, avm({}) {
         GenericValueModel<String>().apply {
+            Log.i(TAG, "uuid: new")
             data.value = UUID.randomUUID().toString()
         }
-    }
+    })
 
     override fun onBindViewEvent(binding: DialogFileOperationBinding) {
         binding.lifecycleOwner = owner
@@ -53,7 +61,7 @@ class FileOperationDialog : SimpleDialogFragment<DialogFileOperationBinding>(Dia
                     FileOperateBinder.state_running -> {
                         val task = binder.map[key]?.taskEquivalent
                         list.onVisible(binding.stateRunning)
-                        Log.i(TAG, "onBindViewEvent: $key $task")
+                        Log.i(TAG, "onBindViewEvent: $key $task ${binder.map.keys}")
                         binding.textViewTask.text = String.format("total size: %d\ntotal file:%d\ntotal folder:%d", task?.size, task?.fileCount, task?.folderCount)
                     }
                     FileOperateBinder.state_end -> {
@@ -78,7 +86,8 @@ class FileOperationDialog : SimpleDialogFragment<DialogFileOperationBinding>(Dia
                 binding.textViewDetail.text = it
             }
             leftVM.data.withState(this) {
-                binding.textViewLeft.text = String.format("size: %d\nleft file:%d\nleft folder:%d", it.third, it.first, it.second)
+                Log.i(TAG, "onBindViewEvent: leftVM: $it")
+                binding.textViewLeft.text = presentTaskSnapshot(it)
             }
             val orPut = binder.fileOperationProgressListener.getOrPut(key) { mutableListOf() }
             orPut.add(object : LocalFileOperateWorker.DefaultProgressListener() {
@@ -90,8 +99,10 @@ class FileOperationDialog : SimpleDialogFragment<DialogFileOperationBinding>(Dia
 
                 override fun onLeft(fileCount: Int, folderCount: Int, size: Long, key: String) = leftVM.data.postValue(fileCount to folderCount to size)
 
-                override fun onComplete(dest: String?, isSuccess: Boolean, key: String) = binding.closeWhenError.pp {
-                    it.isVisible = true
+                override fun onComplete(dest: String?, isSuccess: Boolean, key: String) {
+                    binding.closeWhenError.pp {
+                        it.isVisible = true
+                    }
                 }
 
             })
@@ -114,6 +125,8 @@ class FileOperationDialog : SimpleDialogFragment<DialogFileOperationBinding>(Dia
             }
         } else dismiss()
     }
+
+    private fun presentTaskSnapshot(it: Triple<Int, Int, Long>) = String.format("size: %d\nleft file:%d\nleft folder:%d", it.third, it.first, it.second)
 
     override fun onDestroyView() {
         super.onDestroyView()

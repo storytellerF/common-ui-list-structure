@@ -10,127 +10,131 @@
             name="handler"
             type="Handler" />
     </data>
-
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <ProgressBar
-            android:id="@+id/state_progress"
-            style="?android:attr/progressBarStyle"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:layout_gravity="center" />
-
-        <LinearLayout
-            android:id="@+id/state_running"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minWidth="200dp"
-            android:minHeight="200dp"
-            android:orientation="vertical">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:paddingStart="21dp"
-                android:paddingEnd="21dp">
-
-                <TextView
-                    android:layout_marginEnd="20dp"
-                    android:id="@+id/textView_task"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    tools:text="大小：11111\n文件夹：1\n文件：1" />
-
-                <TextView
-                    android:id="@+id/textView_left"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    tools:text="大小：11111\n文件夹：1\n文件：1" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/textView_state"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingStart="21dp"
-                android:paddingTop="1dp"
-                android:paddingEnd="21dp"
-                android:paddingBottom="1dp"
-                android:singleLine="true" />
-
-            <TextView
-                android:id="@+id/textView_tip"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingStart="21dp"
-                android:paddingTop="1dp"
-                android:paddingEnd="21dp"
-                android:paddingBottom="1dp"
-                android:singleLine="true" />
+        <FrameLayout
+            android:layout_width="350dp"
+            android:layout_height="350dp">
 
             <ProgressBar
-                android:id="@+id/progressBar"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="21dp"
-                android:layout_marginEnd="21dp" />
+                android:id="@+id/state_progress"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_gravity="center" />
 
-            <ScrollView
+            <LinearLayout
+                android:id="@+id/state_running"
                 android:layout_width="match_parent"
-                android:layout_height="200dp">
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
-                <FrameLayout
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingStart="21dp"
+                    android:paddingEnd="21dp">
 
                     <TextView
-                        android:id="@+id/textView_detail"
-                        android:layout_width="match_parent"
+                        android:id="@+id/textView_task"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:paddingStart="21dp"
-                        android:paddingTop="1dp"
-                        android:paddingEnd="21dp"
-                        android:paddingBottom="1dp" />
-                </FrameLayout>
-            </ScrollView>
+                        android:layout_marginEnd="20dp"
+                        android:layout_weight="1"
+                        tools:text="大小：11111\n文件夹：1\n文件：1" />
 
-            <Button
-                android:id="@+id/close_when_error"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClickListener="@{()->handler.close()}"
-                android:text="close"
-                android:visibility="gone" />
+                    <TextView
+                        android:id="@+id/textView_left"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        tools:text="大小：11111\n文件夹：1\n文件：1" />
+                </LinearLayout>
 
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/textView_state"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="21dp"
+                    android:paddingTop="1dp"
+                    android:paddingEnd="21dp"
+                    android:paddingBottom="1dp"
+                    android:singleLine="true" />
 
-        <FrameLayout
-            android:id="@+id/state_done"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+                <TextView
+                    android:id="@+id/textView_tip"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="21dp"
+                    android:paddingTop="1dp"
+                    android:paddingEnd="21dp"
+                    android:paddingBottom="1dp"
+                    android:singleLine="true" />
 
-            <TextView
-                android:id="@+id/done_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_margin="50dp"
-                android:text="done"
-                android:textSize="30sp" />
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="21dp"
+                    android:layout_marginEnd="21dp" />
 
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
-                android:layout_marginEnd="5dp"
-                android:onClickListener="@{()->handler.close()}"
-                android:text="close" />
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_weight="1"
+                    android:layout_height="0dp">
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/textView_detail"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingStart="21dp"
+                            android:paddingTop="1dp"
+                            android:paddingEnd="21dp"
+                            android:paddingBottom="1dp" />
+                    </FrameLayout>
+                </ScrollView>
+
+                <Button
+                    android:id="@+id/close_when_error"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:onClickListener="@{()->handler.close()}"
+                    android:text="close"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+            </LinearLayout>
+
+            <FrameLayout
+                android:id="@+id/state_done"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/done_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_margin="50dp"
+                    android:text="done"
+                    android:textSize="30sp" />
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|end"
+                    android:layout_marginEnd="5dp"
+                    android:onClickListener="@{()->handler.close()}"
+                    android:text="close" />
+            </FrameLayout>
         </FrameLayout>
     </FrameLayout>
 </layout>
