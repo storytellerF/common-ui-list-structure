@@ -3,6 +3,7 @@ package com.storyteller_f.giant_explorer.service
 import android.content.Context
 import android.net.Uri
 import android.os.Binder
+import android.util.Log
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.MutableLiveData
 import com.storyteller_f.common_ktx.exceptionMessage
@@ -97,8 +98,7 @@ class FileOperateBinder(val context: Context) : Binder() {
     ) {
         state.postValue(state_compute)
         val computeSize = TaskCompute(selected, context, dest).compute()
-        state.postValue(state_running)
-        map[key] = TaskSession(computeSize, null)
+        taskStarted(key, computeSize)
         if (CopyImpl(context, selected, computeSize, focused, deleteOrigin, dest, key).let {
                 it.fileOperationProgressListener = progressListenerLocal
                 it.call()
@@ -106,6 +106,11 @@ class FileOperateBinder(val context: Context) : Binder() {
             whenEnd(key)
             fileOperateResultContainer.get()?.onSuccess(dest.path, focused.fullPath)
         }
+    }
+
+    private fun taskStarted(key: String, computeSize: TaskEquivalent) {
+        map[key] = TaskSession(computeSize, null)
+        state.postValue(state_running)
     }
 
 
@@ -148,7 +153,7 @@ class FileOperateBinder(val context: Context) : Binder() {
     }
 
     private fun startCompoundTask(linkedList: LinkedList<DetectorTask>, dest: FileInstance, key: String) {
-        state.postValue(state_running)
+        state.postValue(state_compute)
         val filterIsInstance = linkedList.filterIsInstance<LocalTask>().map {
             getFileInstance(it.path, context).fileSystemItem
         }
@@ -163,6 +168,7 @@ class FileOperateBinder(val context: Context) : Binder() {
                 return
             }
         } else TaskEquivalent(0, 0, 0)
+        taskStarted(key, compute)
         if (CompoundImpl(linkedList, dest, context, count + compute.fileCount, compute.folderCount, compute.size, key).let {
                 it.fileOperationProgressListener = progressListenerLocal
                 it.call()
@@ -173,6 +179,7 @@ class FileOperateBinder(val context: Context) : Binder() {
     }
 
     private fun whenEnd(key: String) {
+        Log.d(TAG, "whenEnd() called with: key = $key")
         state.postValue(state_end)
         map.remove(key)
     }

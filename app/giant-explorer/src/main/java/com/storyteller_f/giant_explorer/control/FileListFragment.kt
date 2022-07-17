@@ -5,6 +5,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -50,11 +51,11 @@ class TempVM : ViewModel() {
 class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileListBinding::inflate) {
     private val fileOperateBinder
         get() = (requireContext() as MainActivity).fileOperateBinder
-    private val uuid by kavm({ "uuid" }, {}) {
+    private val uuid by keyPrefix({ "uuid" }, avm({}) {
         GenericValueModel<String>().apply {
             data.value = UUID.randomUUID().toString()
         }
-    }
+    })
 
     private val data by search({ requireDatabase to session.selected }, { (database, selected) ->
         SearchProducer(service(database)) { fileModel, _ ->
@@ -62,7 +63,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         }
     })
 
-    private val filterHiddenFile by savm({}) { it, _ ->
+    private val filterHiddenFile by asvm({}) { it, _ ->
         HasStateValueModel(it, filterHiddenFileKey, false)
     }
 
@@ -71,9 +72,9 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     private val session by vm({ args.path }) {
         FileExplorerSession(requireActivity().application, it)
     }
-    private val temp by kpvm({ "temp" }, {}) {
+    private val temp by keyPrefix({ "temp" }, pvm({}) {
         TempVM()
-    }
+    })
 
     override fun onBindViewEvent(binding: FragmentFileListBinding) {
         val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
@@ -89,33 +90,34 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             }
 
             override fun onMenuItemSelected(menuItem: MenuItem) = when (menuItem.itemId) {
-                 R.id.add_file -> {
-                     findNavController().navigate(R.id.action_fileListFragment_to_newNameDialog)
-                     fragment(NewNameDialog.requestKey) { nameResult: NewNameDialog.NewNameResult ->
-                         session.fileInstance.value?.toChild(nameResult.name, true, true)
-                     }
-                     true
-                 }
-                 R.id.paste_file -> {
-                     ContextCompat.getSystemService(requireContext(), ClipboardManager::class.java)?.let { manager ->
-                         manager.primaryClip?.let { data ->
-                             handleClipData(data)
-                         }
-                     }
-                     true
+                R.id.add_file -> {
+                    findNavController().navigate(R.id.action_fileListFragment_to_newNameDialog)
+                    fragment(NewNameDialog.requestKey) { nameResult: NewNameDialog.NewNameResult ->
+                        session.fileInstance.value?.toChild(nameResult.name, true, true)
+                    }
+                    true
+                }
+                R.id.paste_file -> {
+                    ContextCompat.getSystemService(requireContext(), ClipboardManager::class.java)?.let { manager ->
+                        manager.primaryClip?.let { data ->
+                            handleClipData(data)
+                        }
+                    }
+                    true
 
-                 }
-                 R.id.background_task -> {
-                     startActivity(Intent(requireContext(), BackgroundTaskConfigActivity::class.java))
-                     true
-                 }
-                 else -> false
-             }
+                }
+                R.id.background_task -> {
+                    startActivity(Intent(requireContext(), BackgroundTaskConfigActivity::class.java))
+                    true
+                }
+                else -> false
+            }
         }, owner)
     }
 
     fun handleClipData(data: ClipData, path: String? = null) {
         val key = uuid.data.value ?: return
+        Log.i(TAG, "handleClipData: key $key")
         viewLifecycleOwner.lifecycleScope.launch {
             val dest = path?.let {
                 FileInstanceFactory.getFileInstance(it, requireContext())
@@ -223,6 +225,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             }.mm { dest ->
                 val key = uuid.data.value ?: return@mm
                 val detectSelected = detectSelected(itemHolder)
+                Log.i(TAG, "moveOrCopy: uuid: $key")
                 fileOperateBinder?.moveOrCopy(dest, detectSelected, itemHolder.file.item, move, key)
             }
         }
@@ -231,6 +234,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     companion object {
         const val filterHiddenFileKey = "filter-hidden-file"
         const val clipDataKey = "file explorer"
+        private const val TAG = "FileListFragment"
     }
 
     private fun detectSelected(itemHolder: FileItemHolder) =
