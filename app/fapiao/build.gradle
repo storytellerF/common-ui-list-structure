@@ -55,12 +55,12 @@ dependencies {
     implementation(project(":fapiao-reader"))
     implementation(project(":ui-list"))
     implementation project(':ui-list-annotation-definition')
-    implementation implementation(project(':composite-definition'))
+    implementation(project(':composite-definition'))
     implementation(project(":common-ui"))
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    kapt kapt(project(':ui-list-annotation-compiler',))
+    kapt(project(':ui-list-annotation-compiler',))
     kapt(project(":composite-compiler"))
     implementation(project(":view-holder-compose"))
 

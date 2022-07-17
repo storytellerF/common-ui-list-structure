@@ -73,7 +73,7 @@ dependencies {
     implementation(project(":common-ktx"))
     implementation(project(":file-system"))
     implementation(project(":file-system-ktx"))
-    kapt kapt(project(':ui-list-annotation-compiler'))
+    kapt(project(':ui-list-annotation-compiler'))
     kapt(project(":composite-compiler"))
     implementation(project(":view-holder-compose"))
 

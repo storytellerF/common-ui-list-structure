@@ -60,7 +60,7 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion"
-    kapt kapt(project(':ui-list-annotation-compiler',))
+    kapt(project(':ui-list-annotation-compiler',))
     kapt(project(":composite-compiler"))
     implementation(project(":view-holder-compose"))
 

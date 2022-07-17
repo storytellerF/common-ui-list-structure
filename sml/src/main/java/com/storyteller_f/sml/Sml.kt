@@ -3,8 +3,6 @@
 package com.storyteller_f.sml
 
 import com.android.build.gradle.api.BaseVariant
-import extensions.android
-import extensions.variants
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project

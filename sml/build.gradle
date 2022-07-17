@@ -30,5 +30,5 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
     // Android gradle plugin will allow us to access Android specific features
-    implementation "com.android.tools.build:gradle:3.5.3"
+    implementation "com.android.tools.build:gradle:7.2.0"
 }
