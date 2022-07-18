@@ -2,8 +2,8 @@ package com.storyteller_f.fapiao.database
 
 import android.content.Context
 import androidx.room.*
-import com.example.ext_func_definition.ExtFuncFlat
-import com.example.ext_func_definition.ExtFuncFlatType
+import com.storyteller_f.ext_func_definition.ExtFuncFlat
+import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 import com.storyteller_f.ui_list.database.DefaultTypeConverter
 import kotlinx.coroutines.flow.Flow
 import java.util.*

@@ -1,12 +1,10 @@
 package com.storyteller_f.common_ui_list_structure.db
 
-import android.app.Activity
 import android.content.Context
-import androidx.fragment.app.Fragment
 import androidx.paging.PagingSource
 import androidx.room.*
-import com.example.ext_func_definition.ExtFuncFlat
-import com.example.ext_func_definition.ExtFuncFlatType
+import com.storyteller_f.ext_func_definition.ExtFuncFlat
+import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 import com.storyteller_f.common_ui_list_structure.model.Repo
 import com.storyteller_f.common_ui_list_structure.model.RepoRemoteKey
 import com.storyteller_f.composite_defination.Composite

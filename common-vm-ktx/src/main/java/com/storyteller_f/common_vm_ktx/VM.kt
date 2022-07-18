@@ -11,8 +11,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.savedstate.SavedStateRegistryOwner
-import com.example.ext_func_definition.ExtFuncFlat
-import com.example.ext_func_definition.ExtFuncFlatType
+import com.storyteller_f.ext_func_definition.ExtFuncFlat
+import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 import kotlin.reflect.KClass
 
 class ViewModelLazy<VM : ViewModel> @JvmOverloads constructor(

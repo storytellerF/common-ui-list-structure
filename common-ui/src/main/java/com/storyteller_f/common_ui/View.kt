@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
-import com.example.ext_func_definition.ExtFuncFlat
+import com.storyteller_f.ext_func_definition.ExtFuncFlat
 
 fun <T : View> T.setOnClick(block: (T) -> Unit) {
     setOnClickListener {

@@ -1,4 +1,4 @@
-package com.example.ext_func_definition
+package com.storyteller_f.ext_func_definition
 
 enum class ExtFuncFlatType {
     v2,//fragment view
