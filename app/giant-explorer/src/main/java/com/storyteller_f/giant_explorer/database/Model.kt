@@ -1,11 +1,9 @@
 package com.storyteller_f.giant_explorer.database
 
-import android.app.Activity
 import android.content.Context
-import androidx.fragment.app.Fragment
 import androidx.room.*
-import com.example.ext_func_definition.ExtFuncFlat
-import com.example.ext_func_definition.ExtFuncFlatType
+import com.storyteller_f.ext_func_definition.ExtFuncFlat
+import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 import kotlinx.coroutines.flow.Flow
 
 @Entity(tableName = "file-size-record")

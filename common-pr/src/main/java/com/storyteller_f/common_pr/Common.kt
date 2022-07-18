@@ -1,14 +1,13 @@
-package com.example.common_pr
+package com.storyteller_f.common_pr
 
 import android.content.Context
 import android.util.TypedValue
-import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
-import com.example.ext_func_definition.ExtFuncFlat
-import com.example.ext_func_definition.ExtFuncFlatType
+import com.storyteller_f.ext_func_definition.ExtFuncFlat
+import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 
 context(LifecycleOwner)
 fun <T> LiveData<T>.withState(ob: Observer<in T>) {

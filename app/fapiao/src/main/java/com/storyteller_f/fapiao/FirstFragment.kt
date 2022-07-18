@@ -17,7 +17,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.flowWithLifecycle
-import com.example.common_pr.withState
+import com.storyteller_f.common_pr.withState
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.common_ui.scope

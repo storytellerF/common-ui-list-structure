@@ -1,4 +1,4 @@
-package com.example.common_pr
+package com.storyteller_f.mass_common_ktx
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.example.common_pr.test", appContext.packageName)
+        assertEquals("com.storyteller_f.mass_common_ktx.test", appContext.packageName)
     }
 }

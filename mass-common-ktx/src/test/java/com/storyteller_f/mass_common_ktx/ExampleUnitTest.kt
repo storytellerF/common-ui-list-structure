@@ -1,4 +1,4 @@
-package com.example.mass_common_ktx
+package com.storyteller_f.mass_common_ktx
 
 import org.junit.Test
 

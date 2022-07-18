@@ -1,4 +1,4 @@
-package com.example.common_pr
+package com.storyteller_f.common_pr
 
 import org.junit.Test
 
