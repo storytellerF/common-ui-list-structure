@@ -41,7 +41,7 @@ class SimpleSourceViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteK
     var content: Flow<PagingData<DataItemHolder>>? = null
 
     /**
-     * 如果你想要使用 interceptor factory ，那应observe content2
+     * 如果你想要使用 interceptor factory ，那应observe content
      */
     var content2: Flow<PagingData<Holder>>? = null
     private var last: D? = null
@@ -65,10 +65,6 @@ class SimpleSourceViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteK
             content2 = map.cachedIn(viewModelScope)
         }
     }
-
-    override fun onCleared() {
-        super.onCleared()
-    }
 }
 
 class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey>(
@@ -80,7 +76,7 @@ class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey
     val content: MediatorLiveData<DataHook<D, Holder, RK>> = liveData {
         val asLiveData = sourceRepository.request().asLiveData(Dispatchers.Main)
         val source = asLiveData.map {
-            DataHook<D, Holder, RK>(this@SimpleDataViewModel, it.map { repo ->
+            DataHook(this@SimpleDataViewModel, it.map { repo ->
                 val holder = processFactory(repo, last)
                 last = repo
                 holder
@@ -111,12 +107,12 @@ class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey
         }
     }
 
-    fun <IH> reset(last: MutableList<IH>) {
+    fun reset(last: MutableList<Holder>) {
         content.value = DataHook(this, last as List<Holder>)
     }
 
     class DataHook<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey>(
-        val viewModel: SimpleDataViewModel<*, *, *>,
+        val viewModel: SimpleDataViewModel<D, Holder, RK>,
         val list: List<Holder>
     ) {
         fun swap(from: Int, to: Int) {
