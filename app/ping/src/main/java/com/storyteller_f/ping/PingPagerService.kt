@@ -7,7 +7,6 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
 import android.opengl.GLSurfaceView
-import android.os.Bundle
 import android.service.wallpaper.WallpaperService
 import android.util.Log
 import android.view.MotionEvent
@@ -27,12 +26,12 @@ class PingPagerService : WallpaperService() {
     }
 
     inner class PingEngine : WallpaperService.Engine() {
-        var player: MediaPlayer? = null
-        var render: GLWallpaperRenderer? = null
+        private var player: MediaPlayer? = null
+        private var render: GLWallpaperRenderer? = null
         private val surfaceView: GLPingSurfaceView = GLPingSurfaceView(this@PingPagerService)
 
         inner class GLPingSurfaceView(context: Context) : GLSurfaceView(context) {
-            override fun getHolder() = surfaceHolder
+            override fun getHolder(): SurfaceHolder = surfaceHolder
             fun destroy() {
                 super.onDetachedFromWindow()
             }
@@ -68,7 +67,7 @@ class PingPagerService : WallpaperService() {
             surfaceView.setRenderer(render)
             surfaceView.renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
             player?.prepareAsync()
-            player?.setOnVideoSizeChangedListener { mp, width, height ->
+            player?.setOnVideoSizeChangedListener { _, width, height ->
                 Log.i(TAG, "onSurfaceCreated: width $width height $height")
                 render?.setVideoSizeAndRotation(width, height, 0)
             }
