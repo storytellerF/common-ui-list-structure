@@ -31,7 +31,7 @@ class RootAccessActivity : AppCompatActivity() {
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
 
-        binding.fab.setOnClickListener { view ->
+        binding.fab.setOnClickListener {
             try {
                 val exec = Runtime.getRuntime().exec("su --version")
                 val waitFor = exec.waitFor()
