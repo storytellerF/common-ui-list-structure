@@ -41,7 +41,7 @@ android {
 }
 
 dependencies {
-    implementation implementation(project(':ui-list-annotation-compiler',))
+    implementation(project(':ui-list-annotation-compiler'))
     implementation fileTree(dir: 'libs')
 
     //test
@@ -67,11 +67,11 @@ dependencies {
     api "androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycleVersion"
 
     // room
-    api 'androidx.room:room-runtime:2.4.2'
-    api 'androidx.room:room-ktx:2.4.2'
-    api 'androidx.room:room-paging:2.4.2'
+    api "androidx.room:room-runtime:$roomVersion"
+    api "androidx.room:room-ktx:$roomVersion"
+    api "androidx.room:room-paging:$roomVersion"
     api "androidx.paging:paging-runtime-ktx:$pagingVersion"
-    kapt 'androidx.room:room-compiler:2.4.2'
+    kapt "androidx.room:room-compiler:$roomVersion"
 
 
     kapt 'androidx.databinding:databinding-compiler-common:7.2.1'

@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import android.widget.FrameLayout
+import androidx.annotation.IntDef
 import androidx.core.view.*
 import androidx.databinding.BindingAdapter
 
@@ -110,3 +111,6 @@ class Direction(val start: Int, val top: Int, val end: Int, val bottom: Int) {
     }
 
 }
+
+@IntDef(flag = true, value = [InsetBlockDirection.top, InsetBlockDirection.start, InsetBlockDirection.end, InsetBlockDirection.bottom])
+internal annotation class InsetBlockFlag
