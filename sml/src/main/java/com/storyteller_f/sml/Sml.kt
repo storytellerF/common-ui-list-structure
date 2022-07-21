@@ -46,9 +46,10 @@ class Sml : Plugin<Project> {
             }
             project.tasks.register(taskName(variant, "Shapes"), ShapeTask::class.java) { it ->
                 it.group = "sml"
-                it.outputDirectory = File(outputDirectory, "drawable").absolutePath
+                val path = File(outputDirectory, "drawable")
+                it.outputDirectory = path.absolutePath
                 it.outputFile = extension.shapes.map { shapeDomain ->
-                    File("drawable/${shapeDomain.name}.xml")
+                    File(path, "${shapeDomain.name}.xml")
                 }.toTypedArray()
                 it.shapeDomain = extension.shapes.toTypedArray()
                 variant.registerGeneratedResFolders(project.files(outputDirectory).builtBy(it))
