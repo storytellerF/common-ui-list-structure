@@ -27,7 +27,12 @@ internal open class ShapeTask : DefaultTask() {
     <solid android:color="${it.solidColor.get()}"/>
     <corners android:radius="${it.radius.get()}dp"/>
 </shape>""".trim()
-            Files.writeString(File(outputDirectory, "${it.name}.xml").toPath(), content)
+            val file = File(outputDirectory, "${it.name}.xml")
+            if (file.createNewFile()) {
+                Files.writeString(file.toPath(), content)
+            } else {
+                println("sml：create file${file.absolutePath} failure")
+            }
         }
 
     }
