@@ -35,7 +35,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion compose_version
+        kotlinCompilerExtensionVersion compose_compiler_version
     }
     namespace 'com.storyteller_f.common_ui'
 }
@@ -46,7 +46,7 @@ dependencies {
     implementation(project(":common-ktx"))
     api 'androidx.core:core-ktx:1.8.0'
     api 'androidx.appcompat:appcompat:1.4.2'
-    api 'com.google.android.material:material:1.6.1'
+    api "com.google.android.material:material:$materialVersion"
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
