@@ -14,15 +14,7 @@ import java.util.*
 interface SmlExtension {
     val color: MapProperty<String, String>
     val dimen: MapProperty<String, String>
-    val shapes: NamedDomainObjectContainer<ShapeDomain>
-}
-
-interface ShapeDomain {
-    // Type must have a read-only 'name' property
-    val name: String?
-
-    val solidColor: Property<String>
-    val radius: Property<Int>
+    val drawables: NamedDomainObjectContainer<DrawableDomain>
 }
 
 class Sml : Plugin<Project> {
@@ -48,10 +40,10 @@ class Sml : Plugin<Project> {
                 it.group = "sml"
                 val path = File(outputDirectory, "drawable")
                 it.outputDirectory = path.absolutePath
-                it.outputFile = extension.shapes.map { shapeDomain ->
+                it.outputFile = extension.drawables.map { shapeDomain ->
                     File(path, "${shapeDomain.name}.xml")
                 }.toTypedArray()
-                it.shapeDomain = extension.shapes.toTypedArray()
+                it.drawableDomain = extension.drawables.toTypedArray()
                 variant.registerGeneratedResFolders(project.files(outputDirectory).builtBy(it))
             }
 
