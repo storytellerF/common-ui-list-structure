@@ -1,3 +1,5 @@
+import com.storyteller_f.sml.Rectangle
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -51,10 +53,12 @@ dependencies {
 sml {
     color.set(mutableMapOf("test" to "#ff0000"))
     dimen.set(mutableMapOf("test1" to "12"))
-    shapes {
+    drawables {
         register("hello") {
-            solidColor.set("#00ff00")
-            radius.set(12)
+            Rectangle {
+                solid("#00ff00")
+                corners("12dp")
+            }
         }
     }
 }
