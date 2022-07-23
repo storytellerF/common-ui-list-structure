@@ -11,6 +11,7 @@ import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.TorrentFileModel
 import com.storyteller_f.giant_explorer.control.adapter_produce.Temp
 import com.storyteller_f.giant_explorer.database.FileMDRecord
@@ -160,12 +161,7 @@ class MDWorker(context: Context, workerParams: WorkerParameters) :
                 if (isStopped) return WorkerResult.Stopped
                 val search = context.requireDatabase.mdDao().search(it.fullPath)
                 if ((search?.lastUpdateTime ?: 0) <= it.lastModifiedTime) {
-                    getFileMD5(
-                        fileInstance.toChild(it.name, true, false), closeable
-                    )?.let { data ->
-                        context.requireDatabase.mdDao()
-                            .save(FileMDRecord(it.fullPath, data, System.currentTimeMillis()))
-                    }
+                    processAndSave(fileInstance, it, context)
                 }
             }
             WorkerResult.Success
@@ -173,6 +169,15 @@ class MDWorker(context: Context, workerParams: WorkerParameters) :
             WorkerResult.Failure(e)
         }
 
+    }
+
+    private suspend fun processAndSave(fileInstance: FileInstance, it: FileItemModel, context: Context) {
+        getFileMD5(
+            fileInstance.toChild(it.name, true, false), closeable
+        )?.let { data ->
+            context.requireDatabase.mdDao()
+                .save(FileMDRecord(it.fullPath, data, System.currentTimeMillis()))
+        }
     }
 
     companion object
@@ -194,19 +199,7 @@ class TorrentWorker(context: Context, workerParams: WorkerParameters) :
                 if (isStopped) return WorkerResult.Stopped
                 val search = context.requireDatabase.torrentDao().search(it.fullPath)
                 if ((search?.lastUpdateTime ?: 0) <= it.lastModifiedTime) {
-                    TorrentFile.getTorrentName(
-                        fileInstance.toChild(it.name, true, false),
-                        closeable
-                    ).let { torrentName ->
-                        context.requireDatabase.torrentDao()
-                            .save(
-                                FileTorrentRecord(
-                                    it.fullPath,
-                                    torrentName,
-                                    System.currentTimeMillis()
-                                )
-                            )
-                    }
+                    processAndSave(fileInstance, it, context)
                 }
             }
             WorkerResult.Success
@@ -215,6 +208,22 @@ class TorrentWorker(context: Context, workerParams: WorkerParameters) :
             WorkerResult.Failure(e)
         }
 
+    }
+
+    private suspend fun processAndSave(fileInstance: FileInstance, it: TorrentFileModel, context: Context) {
+        TorrentFile.getTorrentName(
+            fileInstance.toChild(it.name, true, false),
+            closeable
+        ).takeIf { it.isNotEmpty() }?.let { torrentName ->
+            context.requireDatabase.torrentDao()
+                .save(
+                    FileTorrentRecord(
+                        it.fullPath,
+                        torrentName,
+                        System.currentTimeMillis()
+                    )
+                )
+        }
     }
 
     companion object {
@@ -249,8 +258,10 @@ inline fun <T, R> List<T>.mapNullNull(
     return if (hasNull) null else destination
 }
 
+const val pc_end_on = 1024
+
 fun getFileMD5(fileInstance: FileInstance, mdWorker: StoppableTask): String? {
-    val buffer = ByteArray(1024)
+    val buffer = ByteArray(pc_end_on)
     return try {
         var len: Int
         val digest = MessageDigest.getInstance("MD5")
@@ -265,6 +276,10 @@ fun getFileMD5(fileInstance: FileInstance, mdWorker: StoppableTask): String? {
     } catch (e: Exception) {
         null
     }
+}
+
+class WorkerStoppableTask(private val worker: ListenableWorker) : StoppableTask {
+    override fun needStop() = worker.isStopped
 }
 
 val ListenableWorker.closeable get() = WorkerStoppableTask(this)

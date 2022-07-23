@@ -117,7 +117,7 @@ inline fun <reified VM : ViewModel, T, ARG> T.stateDefaultFactory(
     }
 }
 
-@ExtFuncFlat(type = ExtFuncFlatType.v5)
+@ExtFuncFlat(type = ExtFuncFlatType.V5)
 @MainThread
 inline fun <reified VM : ViewModel, T, ARG> T.vm(
     crossinline arg: () -> ARG,
@@ -127,7 +127,7 @@ inline fun <reified VM : ViewModel, T, ARG> T.vm(
 ) where T : ViewModelStoreOwner, T : SavedStateRegistryOwner =
     ViewModelLazy(VM::class, storeProducer, defaultFactory(arg, vmProducer, ownerProducer))
 
-@ExtFuncFlat(type = ExtFuncFlatType.v5)
+@ExtFuncFlat(type = ExtFuncFlatType.V5)
 inline fun <reified VM : ViewModel, T, ARG> T.svm(
     crossinline arg: () -> ARG,
     noinline storeProducer: () -> ViewModelStore = { viewModelStore },

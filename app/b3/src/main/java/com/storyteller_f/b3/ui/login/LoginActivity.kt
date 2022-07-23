@@ -74,7 +74,7 @@ class LoginActivity : AppCompatActivity() {
                     Log.d(TAG, "onButtonClick() called")
                     requestTask = lifecycleScope.launch {
                         try {
-                            val geetest = Common.create().requestGee().data?.geetest
+                            val geetest = Common.create().requestGee().dataSaved?.geetest
                             println("button click geetest $geetest")
                             this@apply.api1Json = JSONObject(requireGson().toJson(geetest))
                             gtu.getGeetest()

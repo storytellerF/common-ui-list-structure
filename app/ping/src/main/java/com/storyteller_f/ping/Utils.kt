@@ -65,7 +65,7 @@ object Utils {
         // Scale down the bitmap if it's too large.
         val width = bitmap.width
         val height = bitmap.height
-        val max = Math.max(width, height)
+        val max = width.coerceAtLeast(height)
         if (max > 512) {
             val scale = 512f / max
             val w = (scale * width).roundToInt()

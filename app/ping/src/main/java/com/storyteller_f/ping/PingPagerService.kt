@@ -58,7 +58,7 @@ class PingPagerService : WallpaperService() {
                 deviceConfigurationInfo.reqGlEsVersion >= 0x20000 -> {
                     2 to GLES20WallpaperRenderer(this@PingPagerService)
                 }
-                else -> throw Exception("can not get gl version")
+                else -> throw RuntimeException("can not get gl version")
             }
             Log.i(TAG, "onCreate: version: $ver")
             surfaceView.setEGLContextClientVersion(ver)

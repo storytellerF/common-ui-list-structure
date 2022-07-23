@@ -1,7 +1,6 @@
 package com.storyteller_f.file_system
 
 import android.Manifest
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -16,7 +15,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LifecycleOwner
 import com.storyteller_f.common_ktx.context
 import com.storyteller_f.file_system.instance.local.document.ExternalDocumentLocalFileInstance
 import com.storyteller_f.file_system.instance.local.document.MountedLocalFileInstance
@@ -55,83 +53,87 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         val fromBundle = fromBundle(intent)
         when (fromBundle.first!!) {
-            REQUEST_EMULATED -> {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                    REQUEST_CODE_EMULATED
-                )
-            }
-            REQUEST_SAF_EMULATED -> {
-                registerForActivityResult(
-                    ActivityResultContracts.StartActivityForResult()
-                ) {
-                    if (it.resultCode == Activity.RESULT_OK) {
-                        val uri = it.data
-                        if (uri != null) {
-                            val sharedPreferences = getSharedPreferences(
-                                ExternalDocumentLocalFileInstance.Name,
-                                Context.MODE_PRIVATE
-                            )
-                            sharedPreferences.edit()
-                                .putString(
-                                    ExternalDocumentLocalFileInstance.STORAGE_URI,
-                                    uri.toString()
-                                )
-                                .apply()
-                            toast()
-                            return@registerForActivityResult
-                        }
-                    }
-                    failure()
-                }.launch(
-                    FileUtility.produceRequestSaf(
-                        FileInstanceFactory.getPrefix(fromBundle.second!!, this),
-                        this
-                    )
-                )
-            }
-            REQUEST_SAF_SDCARD -> {
-                registerForActivityResult(
-                    ActivityResultContracts.StartActivityForResult()
-                ) {
-                    if (it.resultCode == Activity.RESULT_OK) {
-                        val uri = it.data
-                        if (uri != null) {
-                            val sharedPreferences =
-                                getSharedPreferences(
-                                    MountedLocalFileInstance.Name,
-                                    Context.MODE_PRIVATE
-                                )
-                            sharedPreferences.edit()
-                                .putString(MountedLocalFileInstance.ROOT_URI, uri.toString())
-                                .apply()
-                            toast()
-                            return@registerForActivityResult
-                        }
-                    }
-                    failure()
-                }.launch(
-                    FileUtility.produceRequestSaf(
-                        FileInstanceFactory.getPrefix(fromBundle.second!!, this),
-                        this
-                    )
-                )
-            }
-            REQUEST_MANAGE -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    registerForActivityResult(
-                        ActivityResultContracts.StartActivityForResult()
-                    ) { result: ActivityResult ->
-                        val ok = result.resultCode == Activity.RESULT_OK
-                        //boolean is=Environment.isExternalStorageManager();
-                        if (ok) {
-                            toast()
-                        } else failure()
-                    }.launch(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
-                } else throw Exception("错误使用request manage！")
-            }
+            REQUEST_EMULATED -> ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                REQUEST_CODE_EMULATED
+            )
+            REQUEST_SAF_EMULATED -> requestForEmulatedSAF(fromBundle)
+            REQUEST_SAF_SDCARD -> requestForSdcard(fromBundle)
+            REQUEST_MANAGE -> requestForManageFile()
         }
+    }
+
+    private fun requestForManageFile() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            registerForActivityResult(
+                ActivityResultContracts.StartActivityForResult()
+            ) { result: ActivityResult ->
+                val ok = result.resultCode == RESULT_OK
+                //boolean is=Environment.isExternalStorageManager();
+                if (ok) {
+                    toast()
+                } else failure()
+            }.launch(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
+        } else throw Exception("错误使用request manage！")
+    }
+
+    private fun requestForSdcard(fromBundle: Pair<String?, String?>) {
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) {
+            if (it.resultCode == RESULT_OK) {
+                val uri = it.data
+                if (uri != null) {
+                    val sharedPreferences =
+                        getSharedPreferences(
+                            MountedLocalFileInstance.Name,
+                            MODE_PRIVATE
+                        )
+                    sharedPreferences.edit()
+                        .putString(MountedLocalFileInstance.ROOT_URI, uri.toString())
+                        .apply()
+                    toast()
+                    return@registerForActivityResult
+                }
+            }
+            failure()
+        }.launch(
+            FileUtility.produceRequestSaf(
+                FileInstanceFactory.getPrefix(fromBundle.second!!, this),
+                this
+            )
+        )
+    }
+
+    private fun requestForEmulatedSAF(fromBundle: Pair<String?, String?>) {
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) {
+            if (it.resultCode == RESULT_OK) {
+                val uri = it.data
+                if (uri != null) {
+                    val sharedPreferences = getSharedPreferences(
+                        ExternalDocumentLocalFileInstance.Name,
+                        MODE_PRIVATE
+                    )
+                    sharedPreferences.edit()
+                        .putString(
+                            ExternalDocumentLocalFileInstance.STORAGE_URI,
+                            uri.toString()
+                        )
+                        .apply()
+                    toast()
+                    return@registerForActivityResult
+                }
+            }
+            failure()
+        }.launch(
+            FileUtility.produceRequestSaf(
+                FileInstanceFactory.getPrefix(fromBundle.second!!, this),
+                this
+            )
+        )
     }
 
     private fun failure() {

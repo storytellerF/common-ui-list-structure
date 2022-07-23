@@ -18,7 +18,7 @@ class TorrentFile {
         @Throws(Exception::class)
         fun getTorrentName(fileInstance: FileInstance, worker: StoppableTask): String {
             val bEncodedDictionary = Decode.bDecode(fileInstance.bufferedInputSteam, worker)
-            val encodedDictionary: BEncodedDictionary =
+            val encodedDictionary =
                 bEncodedDictionary.get("info") as BEncodedDictionary
             return String(
                 encodedDictionary.get("name").toString().toByteArray(StandardCharsets.ISO_8859_1),

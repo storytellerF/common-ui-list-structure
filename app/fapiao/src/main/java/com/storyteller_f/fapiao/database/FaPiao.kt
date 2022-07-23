@@ -8,7 +8,7 @@ import com.storyteller_f.ui_list.database.DefaultTypeConverter
 import kotlinx.coroutines.flow.Flow
 import java.util.*
 
-@Entity(tableName = "fapiao", primaryKeys = arrayOf("code", "number"))
+@Entity(tableName = "fapiao", primaryKeys = ["code", "number"])
 class FaPiaoEntity(val code: String, val number: String, val created: Date, val total: Float)
 
 @Dao
@@ -50,5 +50,5 @@ abstract class FaPiaoDatabase : RoomDatabase() {
     }
 }
 
-@ExtFuncFlat(type = ExtFuncFlatType.v2)
+@ExtFuncFlat(type = ExtFuncFlatType.V2)
 val Context.requireDatabase get() = FaPiaoDatabase.getInstance(this)

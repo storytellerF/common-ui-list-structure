@@ -23,9 +23,7 @@ class Entry(
     val itemHolderFullName: String,
     val viewHolders: MutableMap<String, Holder>,
     val origin: Element
-) {
-
-}
+)
 
 class Event(
     val receiver: String,
@@ -58,7 +56,10 @@ class AdapterProcessor : AbstractProcessor() {
         roundEnvironment: RoundEnvironment?
     ): Boolean {
         count++
-        println("binding event map ${clickEventMapTemp.size} ${longClickEventMapTemp.size} ${set?.size} ${holderEntryTemp.size} ${roundEnvironment?.errorRaised()} ${roundEnvironment?.processingOver()} count $count")
+        println(
+            "binding event map ${clickEventMapTemp.size} ${longClickEventMapTemp.size} ${set?.size} ${holderEntryTemp.size} " +
+                    "${roundEnvironment?.errorRaised()} ${roundEnvironment?.processingOver()} count $count"
+        )
 
         set?.forEach { typeElement ->
             val name = typeElement.simpleName.toString()
