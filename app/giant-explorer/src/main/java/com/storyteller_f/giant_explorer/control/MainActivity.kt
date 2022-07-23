@@ -35,6 +35,7 @@ import com.storyteller_f.giant_explorer.databinding.ActivityMainBinding
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileBinding
 import com.storyteller_f.giant_explorer.dialog.FileOperationDialog
 import com.storyteller_f.giant_explorer.model.FileModel
+import com.storyteller_f.giant_explorer.pc_end_on
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
 import com.storyteller_f.giant_explorer.service.FileOperateService
 import com.storyteller_f.ui_list.core.*
@@ -323,11 +324,11 @@ fun format1024(args: Long): String {
     val flags = arrayOf("B.", "KB", "MB", "GB", "TB")
     var flag = 0
     var size = args.toDouble()
-    while (size >= 1024) {
+    while (size >= pc_end_on) {
         if (Thread.currentThread().isInterrupted) {
             return "stopped"
         }
-        size /= 1024.0
+        size /= pc_end_on
         flag += 1
     }
     assert(flag < flags.size) {

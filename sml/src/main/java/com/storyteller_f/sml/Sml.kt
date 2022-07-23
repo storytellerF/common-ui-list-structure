@@ -44,7 +44,7 @@ class Sml : Plugin<Project> {
                 it.dimensMap = extension.dimen.get()
                 variant.registerGeneratedResFolders(project.files(outputDirectory).builtBy(it))
             }
-            project.tasks.register(taskName(variant, "Shapes"), ShapeTask::class.java) { it ->
+            project.tasks.register(taskName(variant, "Shapes"), ShapeTask::class.java) {
                 it.group = "sml"
                 val path = File(outputDirectory, "drawable")
                 it.outputDirectory = path.absolutePath

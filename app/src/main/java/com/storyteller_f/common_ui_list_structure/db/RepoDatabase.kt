@@ -78,6 +78,6 @@ abstract class RepoDatabase : RoomDatabase() {
     }
 }
 
-@ExtFuncFlat(type = ExtFuncFlatType.v2)
+@ExtFuncFlat(type = ExtFuncFlatType.V2)
 val Context.requireRepoDatabase
     get() = RepoDatabase.getInstance(this)

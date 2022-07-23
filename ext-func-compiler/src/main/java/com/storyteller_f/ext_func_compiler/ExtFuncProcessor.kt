@@ -105,16 +105,16 @@ get() = toFloat().dipToInt"""
                 val name = it.name
                 val type = it.annotation
                 when (type.type) {
-                    ExtFuncFlatType.v2 -> {
+                    ExtFuncFlatType.V2 -> {
                         libraryForContext to generatePropertyV2(name)
                     }
-                    ExtFuncFlatType.v3 -> {
+                    ExtFuncFlatType.V3 -> {
                         libraryForContext + "androidx.viewbinding.ViewBinding" to generatePropertyV3(name)
                     }
-                    ExtFuncFlatType.v4 -> {
+                    ExtFuncFlatType.V4 -> {
                         setOf("android.content.Context") to generatePropertyV4(name, type)
                     }
-                    ExtFuncFlatType.v5 -> {
+                    ExtFuncFlatType.V5 -> {
                         generatePropertyV5(it)
                     }
                     else -> setOf<String>() to ""

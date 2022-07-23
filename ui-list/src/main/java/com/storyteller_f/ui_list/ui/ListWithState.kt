@@ -234,9 +234,6 @@ class ListWithState @JvmOverloads constructor(
                     }
             }
 
-            override fun onDrawOver(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
-                super.onDrawOver(c, parent, state)
-            }
         }
         binding.list.addItemDecoration(value)
     }
