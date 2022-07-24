@@ -46,6 +46,10 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion compose_compiler_version
     }
+    dependenciesInfo {
+        includeInBundle false
+        includeInApk false
+    }
 }
 
 dependencies {

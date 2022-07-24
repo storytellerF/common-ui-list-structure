@@ -46,6 +46,10 @@ android {
         kotlinCompilerExtensionVersion compose_compiler_version
     }
     namespace 'com.storyteller_f.common_ui_list_structure'
+    dependenciesInfo {
+        includeInBundle false
+        includeInApk false
+    }
 }
 
 dependencies {

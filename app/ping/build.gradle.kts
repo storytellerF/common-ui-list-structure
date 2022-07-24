@@ -1,3 +1,4 @@
+import com.storyteller_f.sml.Oval
 import com.storyteller_f.sml.Rectangle
 
 plugins {
@@ -34,6 +35,10 @@ android {
     buildFeatures {
         viewBinding = true
     }
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
 }
 
 dependencies {
@@ -58,6 +63,11 @@ sml {
             Rectangle {
                 solid("#00ff00")
                 corners("12dp")
+            }
+        }
+        register("test") {
+            Oval {
+                solid("#ff0000")
             }
         }
     }

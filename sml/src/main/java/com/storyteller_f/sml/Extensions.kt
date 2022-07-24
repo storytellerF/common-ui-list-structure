@@ -3,6 +3,7 @@ package com.storyteller_f.sml
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
+import com.android.build.gradle.TestExtension
 import com.android.build.gradle.api.BaseVariant
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.GradleException
@@ -20,14 +21,11 @@ fun Project.android(): BaseExtension {
 
 fun BaseExtension.variants(): DomainObjectSet<out BaseVariant> {
     return when (this) {
-        is AppExtension -> {
-            applicationVariants
-        }
+        is AppExtension -> applicationVariants
 
-        is LibraryExtension -> {
-            libraryVariants
-        }
+        is LibraryExtension -> libraryVariants
 
+        is TestExtension -> applicationVariants
         else -> throw GradleException("Unsupported BaseExtension type!")
     }
 }

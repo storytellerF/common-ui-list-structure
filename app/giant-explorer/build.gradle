@@ -61,6 +61,10 @@ android {
                 "File_PROVIDER_AUTHORITY",
                 "\"${fileProvider}\""
     }
+    dependenciesInfo {
+        includeInBundle false
+        includeInApk false
+    }
 }
 
 dependencies {

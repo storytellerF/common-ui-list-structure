@@ -7,7 +7,6 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.provider.MapProperty
-import org.gradle.api.provider.Property
 import java.io.File
 import java.util.*
 
@@ -20,35 +19,41 @@ interface SmlExtension {
 class Sml : Plugin<Project> {
     override fun apply(project: Project) {
         val extension = project.extensions.create("sml", SmlExtension::class.java)
-        val outputPath = "${project.buildDir}/generated/res"
+        val rootPath = "${project.buildDir}/generated"
         project.android().variants().all { variant ->
-            val outputDirectory =
-                File("$outputPath/${variant.dirName}").apply { mkdir() }
+            val subPath = variant.dirName
+            val colorsOutputDirectory =
+                File(File(rootPath, "sml_res_colors"), subPath).apply { mkdirs() }
+            val dimensOutputDirectory =
+                File(File(rootPath, "sml_res_dimens"), subPath).apply { mkdirs() }
+            val drawablesOutputDirectory =
+                File(File(rootPath, "sml_res_drawables"), subPath).apply { mkdirs() }
             project.tasks.register(taskName(variant, "Colors"), ColorTask::class.java) {
                 it.group = "sml"
-                it.outputFile = File(outputDirectory, "values/generated_colors.xml")
+                it.outputFile = File(colorsOutputDirectory, "values/generated_colors.xml")
                 it.colorsMap = extension.color.get()
-                variant.registerGeneratedResFolders(project.files(outputDirectory).builtBy(it))
+                variant.registerGeneratedResFolders(project.files(colorsOutputDirectory).builtBy(it))
             }
+
             project.tasks.register(taskName(variant, "Dimens"), DimensionTask::class.java) {
                 it.group = "sml"
-                it.outputFile = File(outputDirectory, "values/generated_dimens.xml")
+                it.outputFile = File(dimensOutputDirectory, "values/generated_dimens.xml")
                 it.dimensMap = extension.dimen.get()
-                variant.registerGeneratedResFolders(project.files(outputDirectory).builtBy(it))
+                variant.registerGeneratedResFolders(project.files(dimensOutputDirectory).builtBy(it))
             }
+
             project.tasks.register(taskName(variant, "Shapes"), ShapeTask::class.java) {
                 it.group = "sml"
-                val path = File(outputDirectory, "drawable")
+                val path = File(drawablesOutputDirectory, "drawable")
                 it.outputDirectory = path.absolutePath
                 it.outputFile = extension.drawables.map { shapeDomain ->
                     File(path, "${shapeDomain.name}.xml")
                 }.toTypedArray()
                 it.drawableDomain = extension.drawables.toTypedArray()
-                variant.registerGeneratedResFolders(project.files(outputDirectory).builtBy(it))
+                variant.registerGeneratedResFolders(project.files(drawablesOutputDirectory).builtBy(it))
             }
 
         }
-
 
     }
 
