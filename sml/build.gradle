@@ -27,6 +27,7 @@ publishing {
 }
 
 dependencies {
+    testImplementation 'junit:junit:4.13.2'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
     // Android gradle plugin will allow us to access Android specific features

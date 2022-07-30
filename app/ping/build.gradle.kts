@@ -1,5 +1,7 @@
+import com.storyteller_f.sml.Line
 import com.storyteller_f.sml.Oval
 import com.storyteller_f.sml.Rectangle
+import com.storyteller_f.sml.Ring
 
 plugins {
     id("com.android.application")
@@ -68,6 +70,16 @@ sml {
         register("test") {
             Oval {
                 solid("#ff0000")
+            }
+        }
+        register("test1") {
+            Ring("10dp", "1dp") {
+                ring("#ffff00", "10dp")
+            }
+        }
+        register("test2") {
+            Line {
+                line("#ff0000", "10dp")
             }
         }
     }

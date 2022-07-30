@@ -45,7 +45,7 @@ class Sml : Plugin<Project> {
             project.tasks.register(taskName(variant, "Shapes"), ShapeTask::class.java) {
                 it.group = "sml"
                 val path = File(drawablesOutputDirectory, "drawable")
-                it.outputDirectory = path.absolutePath
+                it.outputDirectory = path
                 it.outputFile = extension.drawables.map { shapeDomain ->
                     File(path, "${shapeDomain.name}.xml")
                 }.toTypedArray()
