@@ -98,8 +98,8 @@ dependencies {
 
 
     // architecture components
-    kapt 'androidx.room:room-compiler:2.4.2'
-    kapt 'androidx.databinding:databinding-compiler-common:7.2.1'
+    kapt 'androidx.room:room-compiler:2.4.3'
+    kapt 'androidx.databinding:databinding-compiler-common:7.2.2'
 
 
     // retrofit
@@ -108,8 +108,8 @@ dependencies {
     implementation "com.squareup.okhttp3:logging-interceptor:$okhttpLoggingInterceptorVersion"
 
     //view model
-    implementation 'androidx.fragment:fragment-ktx:1.5.0'
-    implementation 'androidx.activity:activity-ktx:1.5.0'
+    implementation 'androidx.fragment:fragment-ktx:1.5.1'
+    implementation 'androidx.activity:activity-ktx:1.5.1'
 
     def multidex_version = "2.0.1"
     implementation "androidx.multidex:multidex:$multidex_version"

@@ -100,7 +100,7 @@ fun FaPiaoItemCompose(@PreviewParameter(FaPiaoProvider::class) itemHolder: FaPia
             .background(Color.Transparent)) {
             Text(itemHolder.item.code)
             Text(itemHolder.item.number)
-            Text(text = itemHolder.item.created.toInstant().toString())
+            Text(text = itemHolder.item.created.toString())
             Text(text = itemHolder.item.total.toString())
         }
     }
