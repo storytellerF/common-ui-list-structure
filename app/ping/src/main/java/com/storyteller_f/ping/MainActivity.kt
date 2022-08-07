@@ -1,15 +1,21 @@
 package com.storyteller_f.ping
 
+import android.app.WallpaperManager
+import android.content.ComponentName
+import android.content.Intent
 import android.os.Bundle
-import com.google.android.material.snackbar.Snackbar
+import android.view.Menu
+import android.view.MenuItem
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.view.WindowCompat
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-import android.view.Menu
-import android.view.MenuItem
+import com.google.android.material.snackbar.Snackbar
 import com.storyteller_f.ping.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -29,11 +35,18 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
-
-        binding.fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+        val registerForActivityResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            Snackbar.make(binding.root, it.data.toString(), Snackbar.LENGTH_LONG)
                 .setAnchorView(R.id.fab)
                 .setAction("Action", null).show()
+        }
+        binding.fab.setOnClickListener {
+            val intent = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
+            intent.putExtra(
+                WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
+                ComponentName(this, PingPagerService::class.java)
+            )
+            registerForActivityResult.launch(intent)
         }
     }
 
