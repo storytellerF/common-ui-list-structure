@@ -17,3 +17,4 @@ local.properties
 /.idea/deploymentTargetDropDown.xml
 /.idea/.name
 /repo/
+/buildSrc/build

@@ -179,8 +179,9 @@ class MainActivity : AppCompatActivity() {
         ) {
             Button(
                 onClick = {
-                    adapter.type = "linear"
-                    adapter.notifyDataSetChanged()
+                    editing.value = true
+//                    adapter.type = "linear"
+//                    adapter.notifyDataSetChanged()
                 },
             ) {
                 Text(text = "edit")
