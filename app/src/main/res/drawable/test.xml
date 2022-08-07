@@ -3,5 +3,4 @@
     android:radius="12dp"
     android:effectColor="@color/white"
     xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:bottom="10dp" android:height=""  android:gravity=""/>
 </ripple>
