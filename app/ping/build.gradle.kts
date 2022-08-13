@@ -9,6 +9,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.storyteller_f.sml")
+    id ("com.google.devtools.ksp")
 }
 android {
     compileSdk = 32
@@ -46,7 +47,9 @@ android {
 }
 
 dependencies {
-
+    implementation(project(":ui-list-annotation-definition"))
+    ksp(project(":ui-list-annotation-compiler-ksp"))
+    implementation(project(":ui-list"))
     implementation("androidx.core:core-ktx:1.8.0")
     implementation("androidx.appcompat:appcompat:1.4.2")
     implementation("com.google.android.material:material:1.6.1")

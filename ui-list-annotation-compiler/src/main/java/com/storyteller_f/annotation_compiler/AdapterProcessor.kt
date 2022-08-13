@@ -1,8 +1,10 @@
 package com.storyteller_f.annotation_compiler
 
-import com.storyteller_f.annotation_defination.BindClickEvent
-import com.storyteller_f.annotation_defination.BindItemHolder
-import com.storyteller_f.annotation_defination.BindLongClickEvent
+import com.example.ui_list_annotation_common.Entry
+import com.example.ui_list_annotation_common.Event
+import com.example.ui_list_annotation_common.Holder
+import com.example.ui_list_annotation_common.UIListHolderZoom
+import com.storyteller_f.annotation_defination.*
 import java.rmi.activation.UnknownObjectException
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
@@ -11,44 +13,14 @@ import javax.lang.model.element.Element
 import javax.lang.model.element.PackageElement
 import javax.lang.model.element.TypeElement
 
-class Holder(
-    val bindingName: String,
-    val bindingFullName: String,
-    val viewHolderName: String,
-    val viewHolderFullName: String
-)
-
-class Entry(
-    val itemHolderName: String,
-    val itemHolderFullName: String,
-    val viewHolders: MutableMap<String, Holder>,
-    val origin: Element
-)
-
-class Event(
-    val receiver: String,
-    val receiverFullName: String,
-    val functionName: String,
-    val parameterList: String,
-    val key: String,
-    val origin: Element
-) {
-    override fun toString(): String {
-        return "Event(receiver='$receiver', functionName='$functionName', parameterCount=$parameterList)"
-    }
-}
-
 class AdapterProcessor : AbstractProcessor() {
 
     companion object {
         const val className = "Temp"
     }
 
-    private val setTemp = mutableMapOf<TypeElement, PackageElement>()
-    private val holderEntryTemp = mutableListOf<Entry>()
-    private val clickEventMapTemp = mutableMapOf<String?, Map<String, List<Event>>>()
-    private val longClickEventMapTemp = mutableMapOf<String?, Map<String, List<Event>>>()
     private var count = 0
+    private val zoom = UIListHolderZoom<Element>()
 
     @Suppress("NewApi")
     override fun process(
@@ -57,7 +29,7 @@ class AdapterProcessor : AbstractProcessor() {
     ): Boolean {
         count++
         println(
-            "binding event map ${clickEventMapTemp.size} ${longClickEventMapTemp.size} ${set?.size} ${holderEntryTemp.size} " +
+            "binding event map  ${zoom.debugState()}" +
                     "${roundEnvironment?.errorRaised()} ${roundEnvironment?.processingOver()} count $count"
         )
 
@@ -67,9 +39,7 @@ class AdapterProcessor : AbstractProcessor() {
             when (name) {
                 "BindItemHolder" -> {
                     getHolder(roundEnvironment, typeElement)?.let { list ->
-                        holderEntryTemp.addAll(
-                            list
-                        )
+                        zoom.addHolderEntry(list)
                     }
                     roundEnvironment?.getElementsAnnotatedWithAny(
                         typeElement
@@ -79,52 +49,38 @@ class AdapterProcessor : AbstractProcessor() {
                         }?.let {
                             typeElement to it
                         }
-                    }?.let { it1 -> setTemp.put(it1.first, it1.second) }
+                    }?.let { (first, second) -> zoom.logPackageInfo(first, second) }
                 }
                 "BindClickEvent" -> {
                     getEvent(
                         roundEnvironment,
                         BindClickEvent::class.java
-                    )?.let { map -> clickEventMapTemp.putAll(map) }
+                    )?.let { map -> zoom.addClickEvent(map) }
                 }
                 "BindLongClickEvent" -> {
                     getEvent(
                         roundEnvironment,
                         BindLongClickEvent::class.java
-                    )?.let { map -> longClickEventMapTemp.putAll(map) }
+                    )?.let { map -> zoom.addLongClick(map) }
                 }
             }
         }
 
         roundEnvironment?.let { environment ->
             if (environment.processingOver()) {
-                println("binding event map process: ${this.clickEventMapTemp.size} ${this.longClickEventMapTemp.size} ${holderEntryTemp.size} ${setTemp.size}")
-                this.setTemp.forEach { (_, packageElement) ->
-                    val groupBy = this.holderEntryTemp.groupBy {
-                        it.itemHolderFullName
-                    }.map { entry ->
-                        val first = entry.value.first()
-                        entry.value.subList(1, entry.value.size).map {
-                            first.viewHolders.putAll(it.viewHolders)
-                        }
-                        first
-                    }
+                println("binding event map process: ${zoom.debugState()}")
+                zoom.setTemp.forEach { (_, packageElement) ->
                     val content =
                         createClassFileContent(
                             packageElement,
-                            groupBy,
-                            this.clickEventMapTemp,
-                            this.longClickEventMapTemp
+                            zoom.holderEntryTemp,
+                            zoom
                         )
-                    val flatMap = clickEventMapTemp.flatMap { entry ->
-                        entry.value.flatMap { it.value }.map { it.origin }
-                    }.plus(longClickEventMapTemp.flatMap { entry ->
-                        entry.value.flatMap { it.value }.map { it.origin }
-                    }).plus(holderEntryTemp.map { it.origin })
+                    val sources = zoom.getAllSource()
                     val classFile =
                         processingEnv.filer.createSourceFile(
                             "${packageElement}.adapter_produce.$className",
-                            *flatMap.toTypedArray()
+                            *sources.toTypedArray()
                         )
                     classFile.openWriter().use {
                         it.write(content)
@@ -136,7 +92,7 @@ class AdapterProcessor : AbstractProcessor() {
         return true
     }
 
-    private fun createMultiViewHolder(entry: Entry, eventMapClick: Map<String, List<Event>>, eventMapLongClick: Map<String, List<Event>>): String {
+    private fun createMultiViewHolder(entry: Entry<Element>, eventMapClick: Map<String, List<Event<Element>>>, eventMapLongClick: Map<String, List<Event<Element>>>): String {
         val viewHolderBuilderContent = entry.viewHolders.map {
             val viewHolderContent = if (it.value.bindingName.endsWith("Binding"))
                 buildViewHolder(it.value, eventMapClick, eventMapLongClick)
@@ -155,21 +111,16 @@ ${viewHolderBuilderContent.prependIndent()}
 
     private fun createClassFileContent(
         packageOf: PackageElement,
-        holderEntry: List<Entry>?,
-        singleClickEventMap: Map<String?, Map<String, List<Event>>>?,
-        longClickEventMap: Map<String?, Map<String, List<Event>>>?
+        holderEntry: List<Entry<Element>>,
+        zoom: UIListHolderZoom<Element>
     ): String {
-        val importBindingClass = importBindingClass(holderEntry ?: listOf())
-        val importReceiverClass = importReceiverClass(singleClickEventMap, longClickEventMap)
-        val buildAddFunction = buildAddFunction(holderEntry ?: listOf())
-        val hasComposeView = holderEntry?.any { entry ->
-            entry.viewHolders.any {
-                !it.value.bindingName.endsWith("Binding")
-            }
-        } ?: true
-        val buildViewHolder = holderEntry?.joinToString("\n") {
-            val eventMapClick = singleClickEventMap?.get(it.itemHolderFullName) ?: mapOf()
-            val eventMapLongClick = longClickEventMap?.get(it.itemHolderFullName) ?: mapOf()
+        val importBindingClass = zoom.importBindingClass()
+        val importReceiverClass = zoom.importReceiverClass()
+        val buildAddFunction = buildAddFunction(holderEntry)
+        val hasComposeView = zoom.hasComposeView
+        val buildViewHolder = holderEntry.joinToString("\n") {
+            val eventMapClick = zoom.clickEventMapTemp[it.itemHolderFullName] ?: mapOf()
+            val eventMapLongClick = zoom.longClickEventMapTemp[it.itemHolderFullName] ?: mapOf()
             createMultiViewHolder(it, eventMapClick, eventMapLongClick)
         }
 
@@ -199,7 +150,7 @@ $importComposeRelatedLibrary
  * @author storyteller_f
  */
 public class $className {
-${buildViewHolder?.prependIndent()}
+${buildViewHolder.prependIndent()}
 ${buildAddFunction.prependIndent()}
 }
 """
@@ -208,7 +159,7 @@ ${buildAddFunction.prependIndent()}
     private fun getEvent(
         roundEnvironment: RoundEnvironment?,
         clazz: Class<out Annotation>
-    ): Map<String?, Map<String, List<Event>>>? {
+    ): Map<String?, Map<String, List<Event<Element>>>>? {
         val eventAnnotations =
             roundEnvironment?.getElementsAnnotatedWith(clazz)
         val eventMap = eventAnnotations?.splitKeyGroupBy({ element ->
@@ -260,7 +211,7 @@ ${buildAddFunction.prependIndent()}
     private fun getHolder(
         roundEnvironment: RoundEnvironment?,
         typeElement: TypeElement
-    ): List<Entry>? {
+    ): List<Entry<Element>>? {
         val holderAnnotations = roundEnvironment?.getElementsAnnotatedWithAny(typeElement)
         val holderEntry = holderAnnotations?.mapNotNull { element ->
             val type = element.getAnnotation(BindItemHolder::class.java).type
@@ -284,26 +235,10 @@ ${buildAddFunction.prependIndent()}
         return holderEntry
     }
 
-    private fun importReceiverClass(
-        eventMap: Map<String?, Map<String, List<Event>>>?,
-        longClickEvent: Map<String?, Map<String, List<Event>>>?
-    ): String {
-        val flatMap = receiverList(eventMap)
-        val flatMap2 = receiverList(longClickEvent)
-        return flatMap.plus(flatMap2).joinToString("\n") {
-            "import $it;\n"
-        }
-    }
-
-    private fun receiverList(longClickEvent: Map<String?, Map<String, List<Event>>>?) =
-        longClickEvent?.flatMap { it.value.flatMap { entry -> entry.value } }
-            ?.map { it.receiverFullName }
-            ?.distinct() ?: listOf()
-
     private fun buildComposeViewHolder(
         it: Holder,
-        eventList: Map<String, List<Event>>,
-        eventList2: Map<String, List<Event>>
+        eventList: Map<String, List<Event<Element>>>,
+        eventList2: Map<String, List<Event<Element>>>
     ): String {
         return """Context context = view.getContext();
 EDComposeView composeView = new EDComposeView(context);
@@ -341,8 +276,8 @@ return viewHolder;
 
     private fun buildViewHolder(
         entry: Holder,
-        eventMapClick: Map<String, List<Event>>,
-        eventMapLongClick: Map<String, List<Event>>
+        eventMapClick: Map<String, List<Event<Element>>>,
+        eventMapLongClick: Map<String, List<Event<Element>>>
     ): String {
         val buildClickListener = buildClickListener(eventMapClick, eventMapLongClick)
         return """Context context = view.getContext();
@@ -354,7 +289,7 @@ return viewHolder;
 """
     }
 
-    private fun buildComposeClickListener(event: Map<String, List<Event>>) = event.map {
+    private fun buildComposeClickListener(event: Map<String, List<Event<Element>>>) = event.map {
         val clickBlock = it.value.joinToString("\n") { e ->
             val parameterList = parameterList(e.parameterList)
             if (e.receiver.contains("Activity"))
@@ -376,7 +311,7 @@ ${clickBlock.prependIndent()}
 """
     }.joinToString("\n")
 
-    private fun buildClickListener(event: Map<String, List<Event>>, event2: Map<String, List<Event>>): String {
+    private fun buildClickListener(event: Map<String, List<Event<Element>>>, event2: Map<String, List<Event<Element>>>): String {
         val singleClickListener = event.map {
             """inflate.${it.key}.setOnClickListener((v) -> {
 ${buildClickListener(it.value).prependIndent()}
@@ -393,7 +328,7 @@ ${buildClickListener(it.value).prependIndent()}
         return singleClickListener + longClickListener
     }
 
-    private fun buildClickListener(events: List<Event>): String {
+    private fun buildClickListener(events: List<Event<Element>>): String {
         return events.joinToString("\n") { event ->
             val parameterList = parameterList(
                 event.parameterList
@@ -416,17 +351,7 @@ ${buildClickListener(it.value).prependIndent()}
         return parameterCount
     }
 
-    private fun importBindingClass(entries: List<Entry>): String {
-        return entries.joinToString("\n") { entry ->
-            val allViewHolderModel = entry.viewHolders.map {
-                """import ${it.value.bindingFullName};
-import ${it.value.viewHolderFullName};"""
-            }.joinToString("\n")
-            allViewHolderModel + "\nimport ${entry.itemHolderFullName};"
-        }
-    }
-
-    private fun buildAddFunction(entry: List<Entry>): String {
+    private fun buildAddFunction(entry: List<Entry<Element>>): String {
         var index = 0
         val addFunctions = entry.joinToString("\n") {
             """getRegisterCenter().put(${it.itemHolderName}.class, ${index++});

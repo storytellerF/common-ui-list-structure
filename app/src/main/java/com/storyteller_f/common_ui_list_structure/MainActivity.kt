@@ -198,7 +198,7 @@ class MainActivity : AppCompatActivity() {
 
 }
 
-class RepoItemHolder(val repo: Repo) : DataItemHolder() {
+class RepoItemHolder(val repo: Repo) : DataItemHolder {
     override fun areItemsTheSame(other: DataItemHolder): Boolean {
         return repo.id == (other as RepoItemHolder).repo.id
     }
@@ -269,7 +269,7 @@ class Repo2ViewHolder2(private val binding: RepoViewItemBinding) :
 }
 
 
-class SeparatorItemHolder(val info: String) : DataItemHolder() {
+class SeparatorItemHolder(val info: String) : DataItemHolder {
     override fun areItemsTheSame(other: DataItemHolder): Boolean {
         return (other as SeparatorItemHolder).info == info
     }

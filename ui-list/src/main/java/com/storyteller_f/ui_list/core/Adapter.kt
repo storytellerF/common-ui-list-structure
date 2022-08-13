@@ -18,11 +18,11 @@ val list = mutableListOf<(ViewGroup, String) -> AbstractViewHolder<out DataItemH
 
 val registerCenter = mutableMapOf<Class<out DataItemHolder>, Int>()
 
-abstract class DataItemHolder {
+interface DataItemHolder {
     /**
      * 可以直接进行强制类型转换，无需判断
      */
-    abstract fun areItemsTheSame(other: DataItemHolder): Boolean
+    fun areItemsTheSame(other: DataItemHolder): Boolean
     fun areContentsTheSame(other: DataItemHolder): Boolean = this == other
 }
 

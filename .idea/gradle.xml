@@ -32,7 +32,9 @@
             <option value="$PROJECT_DIR$/multi-core" />
             <option value="$PROJECT_DIR$/sml" />
             <option value="$PROJECT_DIR$/ui-list" />
+            <option value="$PROJECT_DIR$/ui-list-annotation-common" />
             <option value="$PROJECT_DIR$/ui-list-annotation-compiler" />
+            <option value="$PROJECT_DIR$/ui-list-annotation-compiler-ksp" />
             <option value="$PROJECT_DIR$/ui-list-annotation-definition" />
             <option value="$PROJECT_DIR$/view-holder-compose" />
           </set>

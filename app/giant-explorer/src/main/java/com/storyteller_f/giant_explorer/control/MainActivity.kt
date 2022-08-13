@@ -249,7 +249,7 @@ fun LifecycleOwner.supportDirectoryContent(
 class FileItemHolder(
     val file: FileModel,
     val selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>
-) : DataItemHolder() {
+) : DataItemHolder {
     override fun areItemsTheSame(other: DataItemHolder) =
         (other as FileItemHolder).file.fullPath == file.fullPath
 

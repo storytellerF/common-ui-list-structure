@@ -61,7 +61,7 @@ class FirstFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding:
     }
 }
 
-class FaPiaoItemHolder(val item: FaPiaoEntity, val selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>) : DataItemHolder() {
+class FaPiaoItemHolder(val item: FaPiaoEntity, val selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>) : DataItemHolder {
     override fun areItemsTheSame(other: DataItemHolder) = (other as FaPiaoItemHolder).item.code == item.code
 }
 
