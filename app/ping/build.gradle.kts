@@ -2,6 +2,8 @@ import com.storyteller_f.sml.Line
 import com.storyteller_f.sml.Oval
 import com.storyteller_f.sml.Rectangle
 import com.storyteller_f.sml.Ring
+import common_ui_list_structure_preset.navigationSupport
+import common_ui_list_structure_preset.unitTestSupport
 
 plugins {
     id("com.android.application")
@@ -49,12 +51,9 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.4.2")
     implementation("com.google.android.material:material:1.6.1")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation("androidx.navigation:navigation-fragment-ktx:2.5.1")
-    implementation("androidx.navigation:navigation-ui-ktx:2.5.1")
+    navigationSupport()
     implementation("com.google.android.exoplayer:exoplayer-core:2.18.1")
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.3")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
+    unitTestSupport()
 }
 
 sml {

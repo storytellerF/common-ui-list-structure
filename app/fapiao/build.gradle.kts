@@ -13,7 +13,7 @@ android {
     compileSdk = Versions.compileSdkVersion
 
     defaultConfig {
-        applicationId = "com.storyteller_f.common_ui_list_structure"
+        applicationId = "com.storyteller_f.fapiao"
         minSdk = 21
         targetSdk = Versions.targetSdkVersion
         versionCode = 1
@@ -36,6 +36,7 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
         freeCompilerArgs = listOf("-opt-in=kotlin.RequiresOptIn", "-Xcontext-receivers")
+
     }
 
     buildFeatures {
@@ -45,7 +46,6 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = Versions.composeCompilerVersion
     }
-    namespace = "com.storyteller_f.common_ui_list_structure"
     dependenciesInfo {
         includeInBundle = false
         includeInApk = false
@@ -54,10 +54,12 @@ android {
 
 dependencies {
     implementation(fileTree("libs"))
-
+    implementation(project(":fapiao-reader"))
     generic()
     dipToPx()
     networkSupport()
+
+    implementation("com.tom-roush:pdfbox-android:2.0.25.0")
 }
 
 dataBinding()
