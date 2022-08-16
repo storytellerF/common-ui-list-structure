@@ -2,8 +2,8 @@ import com.storyteller_f.sml.Line
 import com.storyteller_f.sml.Oval
 import com.storyteller_f.sml.Rectangle
 import com.storyteller_f.sml.Ring
-import common_ui_list_structure_preset.navigationSupport
-import common_ui_list_structure_preset.unitTestSupport
+import common_ui_list_structure_preset.*
+import org.gradle.kotlin.dsl.android
 
 plugins {
     id("com.android.application")
@@ -12,52 +12,21 @@ plugins {
     id ("com.google.devtools.ksp")
 }
 android {
-    compileSdk = 32
 
     defaultConfig {
         applicationId = "com.storyteller_f.ping"
-        minSdkPreview = "21"
-        targetSdkPreview = "32"
-        versionCode = 1
-        versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-    buildFeatures {
-        viewBinding = true
-    }
-    dependenciesInfo {
-        includeInApk = false
-        includeInBundle = false
     }
 }
 
 dependencies {
-    implementation(project(":ui-list-annotation-definition"))
-    ksp(project(":ui-list-annotation-compiler-ksp"))
-    implementation(project(":ui-list"))
-    implementation("androidx.core:core-ktx:1.8.0")
-    implementation("androidx.appcompat:appcompat:1.4.2")
-    implementation("com.google.android.material:material:1.6.1")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    navigationSupport()
+    navigationDependency()
+    unitTestDependency()
     implementation("com.google.android.exoplayer:exoplayer-core:2.18.1")
-    unitTestSupport()
 }
+baseApp()
+setupGeneric()
+setupDataBinding()
+setupDipToPx()
 
 sml {
     color.set(mutableMapOf("test" to "#ff0000"))
