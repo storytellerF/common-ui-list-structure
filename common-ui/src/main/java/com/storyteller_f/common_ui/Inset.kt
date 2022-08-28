@@ -24,10 +24,10 @@ class InsetLayout @JvmOverloads constructor(
 }
 
 object InsetBlockDirection {
-    const val top = 4
-    const val start = 8
-    const val end = 16
-    const val bottom = 32
+    const val top = 1 shl 2
+    const val start = 1 shl 3
+    const val end = 1 shl 4
+    const val bottom = 1 shl 5
 }
 
 class InsetBlock(val padding: Direction, val margin: Direction)

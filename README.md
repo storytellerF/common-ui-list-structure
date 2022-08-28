@@ -8,6 +8,37 @@ ui-list,ui-list-annotation-compiler，ui-list-annotation-definition: 封装jetpa
 
 sml 自动生成color， drawable的xml 文件
 
+使用的代码类似：
+```kotlin
+sml {
+    color.set(mutableMapOf("test" to "#ff0000"))
+    dimen.set(mutableMapOf("test1" to "12"))
+    drawables {
+        register("hello") {
+            Rectangle {
+                solid("#00ff00")
+                corners("12dp")
+            }
+        }
+        register("test") {
+            Oval {
+                solid("#ff0000")
+            }
+        }
+        register("test1") {
+            Ring("10dp", "1dp") {
+                ring("#ffff00", "10dp")
+            }
+        }
+        register("test2") {
+            Line {
+                line("#ff0000", "10dp")
+            }
+        }
+    }
+}
+```
+
 示例模块
 
 giant-explorer 文件管理器
@@ -15,3 +46,8 @@ giant-explorer 文件管理器
 ping 动态壁纸
 
 fapiao 发票管理
+
+## 代码规范
+
+1. 禁止使用DataBinding 进行数据绑定和逻辑代码。xml 本身就有很高的冗余，在xml 中写“代码”只会增加维护成本。
+2. DataItemHolder 应该继承自添加了`ItemHolder` 注解的接口。未来会通过ksp 严格限制。
