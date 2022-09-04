@@ -1,15 +1,45 @@
 package com.storyteller_f.sml
 
+interface Dimension
+
+class Dp(private val value: Float) : Dimension {
+    override fun toString() = "${value}dp"
+}
+
+class Px(private val value: Int) : Dimension {
+    override fun toString() = "${value}px"
+}
+
+class Sp(private val value: Float) : Dimension {
+    override fun toString() = "${value}sp"
+}
+
+class In(private val value: Int) : Dimension {
+    override fun toString() = "${value}in"
+}
+
+class Mm(private val value: Int) : Dimension {
+    override fun toString() = "${value}mm"
+}
+
+class Pt(private val value: Int) : Dimension {
+    override fun toString() = "${value}pt"
+}
+
+class DimensionReference(private val referenceName: String) : Dimension {
+    override fun toString() = "@dimen/$referenceName"
+}
+
+class OptionalInset(val left: Dimension?, val top: Dimension?, val right: Dimension?, val bottom: Dimension?)
+
+class Tint(val tint: String? = null, val tintMode: String? = null)
+
 class RectangleShapeDrawable(
     dither: Boolean = false,
     visible: Boolean = true,
-    tint: String? = null,
-    tintMode: String? = null,
-    optionalInsetLeft: String? = null,
-    optionalInsetTop: String? = null,
-    optionalInsetRight: String? = null,
-    optionalInsetBottom: String? = null
-) : ShapeDrawable("rectangle", dither, visible, tint, tintMode, optionalInsetLeft, optionalInsetTop, optionalInsetRight, optionalInsetBottom), IStroke by Stroke(), IAppearance by Appearance(),
+    tint: Tint? = null,
+    optionalInset: OptionalInset? = null,
+) : ShapeDrawable("rectangle", dither, visible, tint, optionalInset), IStroke by Stroke(), IAppearance by Appearance(),
     IRound by Round() {
     init {
         indirectForAppearance(content)
@@ -21,13 +51,9 @@ class RectangleShapeDrawable(
 class OvalShapeDrawable(
     dither: Boolean = false,
     visible: Boolean = true,
-    tint: String? = null,
-    tintMode: String? = null,
-    optionalInsetLeft: String? = null,
-    optionalInsetTop: String? = null,
-    optionalInsetRight: String? = null,
-    optionalInsetBottom: String? = null
-) : ShapeDrawable("oval", dither, visible, tint, tintMode, optionalInsetLeft, optionalInsetTop, optionalInsetRight, optionalInsetBottom), IAppearance by Appearance() {
+    tint: Tint? = null,
+    optionalInset: OptionalInset? = null,
+) : ShapeDrawable("oval", dither, visible, tint, optionalInset), IAppearance by Appearance() {
     init {
         indirectForAppearance(content)
     }
@@ -39,13 +65,9 @@ class RingShapeDrawable(
     private val isRatio: Boolean,
     dither: Boolean = false,
     visible: Boolean = true,
-    tint: String? = null,
-    tintMode: String? = null,
-    optionalInsetLeft: String? = null,
-    optionalInsetTop: String? = null,
-    optionalInsetRight: String? = null,
-    optionalInsetBottom: String? = null
-) : ShapeDrawable("ring", dither, visible, tint, tintMode, optionalInsetLeft, optionalInsetTop, optionalInsetRight, optionalInsetBottom), IStroke by Stroke() {
+    tint: Tint? = null,
+    optionalInset: OptionalInset? = null,
+) : ShapeDrawable("ring", dither, visible, tint, optionalInset), IStroke by Stroke() {
 
     init {
         indirectForStroke(content)
@@ -65,13 +87,13 @@ class RingShapeDrawable(
 }
 
 interface IStroke {
-    fun stroke(color: String, width: String)
+    fun stroke(color: String, width: Dimension)
     fun indirectForStroke(stringBuilder: StringBuilder)
 }
 
 interface IRound {
-    fun corners(radius: String)
-    fun corners(leftTop: String, leftBottom: String, rightTop: String, rightBottom: String)
+    fun corners(radius: Dimension)
+    fun corners(leftTop: Dimension, leftBottom: Dimension, rightTop: Dimension, rightBottom: Dimension)
     fun indirectForRound(stringBuilder: StringBuilder)
 }
 
@@ -81,8 +103,8 @@ interface IAppearance {
     fun linearGradient(startColor: String, endColor: String, centerColor: String, centerX: Float = 0.5f, centerY: Float = 0.5f, angle: Float = 0F, useLevel: String = "false")
     fun radialGradient(startColor: String, endColor: String, centerColor: String, gradientRadius: String, useLevel: String = "false")
     fun sweepGradient(startColor: String, endColor: String, centerColor: String, useLevel: String = "false")
-    fun padding(left: String, top: String, right: String, bottom: String)
-    fun size(width: String, height: String)
+    fun padding(left: Dimension, top: Dimension, right: Dimension, bottom: Dimension)
+    fun size(width: Dimension, height: Dimension)
 
     fun indirectForAppearance(stringBuilder: StringBuilder)
 }
@@ -146,13 +168,13 @@ class Appearance : IAppearance {
     }
 
 
-    override fun padding(left: String, top: String, right: String, bottom: String) {
+    override fun padding(left: Dimension, top: Dimension, right: Dimension, bottom: Dimension) {
         content?.appendLine(
             """<padding android:top="$top" android:right="$right" android:left="$left" android:bottom="$bottom"/>""".prependIndent()
         )
     }
 
-    override fun size(width: String, height: String) {
+    override fun size(width: Dimension, height: Dimension) {
         content?.appendLine("""<size android:width="$width" android:height="$height"/>""".prependIndent())
     }
 
@@ -164,7 +186,7 @@ class Appearance : IAppearance {
 
 class Stroke : IStroke {
     private var content: StringBuilder? = null
-    override fun stroke(color: String, width: String) {
+    override fun stroke(color: String, width: Dimension) {
         content?.appendLine(
             """<stroke android:color="$color" android:width="$width"/>""".prependIndent()
         )
@@ -178,11 +200,11 @@ class Stroke : IStroke {
 class Round : IRound {
     private var content: StringBuilder? = null
 
-    override fun corners(radius: String) {
+    override fun corners(radius: Dimension) {
         content?.appendLine("""<corners android:radius="$radius"/>""".prependIndent())
     }
 
-    override fun corners(leftTop: String, leftBottom: String, rightTop: String, rightBottom: String) {
+    override fun corners(leftTop: Dimension, leftBottom: Dimension, rightTop: Dimension, rightBottom: Dimension) {
         content?.appendLine(
             """<corners android:bottomLeftRadius="$leftBottom" android:topRightRadius="$rightTop" 
                 android:bottomRightRadius="$rightBottom" android:topLeftRadius="$leftTop"/>""".prependIndent()
@@ -198,13 +220,9 @@ class Round : IRound {
 class LineShapeDrawable(
     dither: Boolean = false,
     visible: Boolean = true,
-    tint: String? = null,
-    tintMode: String? = null,
-    optionalInsetLeft: String? = null,
-    optionalInsetTop: String? = null,
-    optionalInsetRight: String? = null,
-    optionalInsetBottom: String? = null
-) : ShapeDrawable("line", dither, visible, tint, tintMode, optionalInsetLeft, optionalInsetTop, optionalInsetRight, optionalInsetBottom), IStroke by Stroke() {
+    tint: Tint? = null,
+    optionalInset: OptionalInset? = null,
+) : ShapeDrawable("line", dither, visible, tint, optionalInset), IStroke by Stroke() {
     init {
         indirectForStroke(content)
     }
@@ -212,40 +230,26 @@ class LineShapeDrawable(
     val line get() = ::stroke
 }
 
-class RichRect(val left: String, val top: String, val right: String, val bottom: String) {
-    fun print(prefix: String = "") {
-        val inset = StringBuilder()
-        inset.appendLine("""${prefix}Left=$left""")
-        inset.appendLine("""${prefix}Top=$top""")
-        inset.appendLine("""${prefix}Right=$right""")
-        inset.appendLine("""${prefix}Bottom=$bottom""")
-    }
-}
-
 abstract class ShapeDrawable(
     private val shape: String,
     private val dither: Boolean = false,
     private val visible: Boolean = true,
-    private val tint: String? = null,
-    private val tintMode: String? = null,
-    private val optionalInsetLeft: String? = null,
-    private val optionalInsetTop: String? = null,
-    private val optionalInsetRight: String? = null,
-    private val optionalInsetBottom: String? = null
+    private val tint: Tint? = null,
+    private val optionalInset:OptionalInset?,
 ) : Drawable() {
 
     fun start() {
         val tintBuilder = StringBuilder()
-        if (tint != null) {
-            tintBuilder.appendLine("tint=\"$tint\"")
-            if (tintMode != null)
-                tintBuilder.appendLine("tintMode=\"$tintMode\"")
+        if (tint?.tint != null) {
+            tintBuilder.appendLine("tint=\"${tint.tint}\"")
+            if (tint.tintMode != null)
+                tintBuilder.appendLine("tintMode=\"${tint.tintMode}\"")
         }
         val inset = StringBuilder()
-        if (optionalInsetLeft != null) inset.appendLine("optionalInsetLeft=\"$optionalInsetLeft\"")
-        if (optionalInsetTop != null) inset.appendLine("optionalInsetTop=\"$optionalInsetTop\"")
-        if (optionalInsetRight != null) inset.appendLine("optionalInsetRight=\"$optionalInsetRight\"")
-        if (optionalInsetBottom != null) inset.appendLine("optionalInsetRight=\"$optionalInsetBottom\"")
+        if (optionalInset?.left != null) inset.appendLine("optionalInsetLeft=\"${optionalInset.left}\"")
+        if (optionalInset?.top != null) inset.appendLine("optionalInsetTop=\"${optionalInset.top}\"")
+        if (optionalInset?.right != null) inset.appendLine("optionalInsetRight=\"${optionalInset.right}\"")
+        if (optionalInset?.bottom != null) inset.appendLine("optionalInsetRight=\"${optionalInset.bottom}\"")
         content.appendLine(
             """
 <shape android:shape="$shape"

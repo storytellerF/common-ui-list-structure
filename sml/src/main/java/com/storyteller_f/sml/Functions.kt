@@ -1,3 +1,11 @@
+package com.storyteller_f.sml
+
+import kotlin.reflect.KClass
+import kotlin.reflect.KProperty
+import kotlin.reflect.KProperty1
+import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.full.primaryConstructor
+
 //import java.util.*
 //import java.util.regex.Pattern
 //
@@ -63,3 +71,22 @@
 //
 //    return getFileLocations(variantDirname)
 //}
+
+fun <T : Any> KClass<T>.dimens(): MutableMap<String, String> {
+    val call = primaryConstructor?.call() ?: return mutableMapOf()
+    val m = mutableMapOf<String, String>()
+    declaredMemberProperties.forEach {
+        m[it.name] = it.get(call).toString()
+    }
+    return m
+}
+//interface DD {
+//    val rectRadius: Dimension
+//}
+//
+//class Test : DD {
+//    override val rectRadius: Dimension
+//        get() = Dp(12f)
+//}
+fun KProperty1<out Any, Dimension>.reference() = DimensionReference(name)
+
