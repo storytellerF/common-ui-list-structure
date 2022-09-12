@@ -3,6 +3,10 @@
 package com.storyteller_f.sml
 
 import com.android.build.gradle.api.BaseVariant
+import com.storyteller_f.sml.tasks.ColorTask
+import com.storyteller_f.sml.tasks.DimensionTask
+import com.storyteller_f.sml.tasks.DrawableDomain
+import com.storyteller_f.sml.tasks.ShapeTask
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project

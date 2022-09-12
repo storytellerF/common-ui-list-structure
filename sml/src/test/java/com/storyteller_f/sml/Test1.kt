@@ -1,5 +1,8 @@
 package com.storyteller_f.sml
 
+import com.storyteller_f.sml.config.RectangleShapeDrawable
+import com.storyteller_f.sml.config.RingShapeDrawable
+import com.storyteller_f.sml.tasks.RipperDrawable
 import org.junit.Test
 
 class Test1 {

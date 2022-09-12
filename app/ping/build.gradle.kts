@@ -1,7 +1,6 @@
 import com.storyteller_f.sml.*
+import com.storyteller_f.sml.config.*
 import common_ui_list_structure_preset.*
-import org.gradle.kotlin.dsl.android
-import kotlin.reflect.full.declaredMemberProperties
 
 plugins {
     id("com.android.application")
@@ -41,23 +40,23 @@ sml {
     drawables {
         register("hello") {
             Rectangle {
-                solid("#00ff00")
+                solid(RgbColor("#00ff00"))
                 corners(Test::rectRadius.reference())
             }
         }
         register("test") {
             Oval {
-                solid("#ff0000")
+                solid(RgbColor("#00ff00"))
             }
         }
         register("test1") {
             Ring("10dp", "1dp") {
-                ring("#ffff00", Dp(10f))
+                ring(RgbColor("#00ff00"), Dp(10f))
             }
         }
         register("test2") {
             Line {
-                line("#ff0000", Dp(10f))
+                line(RgbColor("#00ff00"), Dp(10f))
             }
         }
     }

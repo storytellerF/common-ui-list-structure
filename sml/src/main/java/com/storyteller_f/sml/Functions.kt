@@ -1,7 +1,7 @@
 package com.storyteller_f.sml
 
+import com.storyteller_f.sml.config.*
 import kotlin.reflect.KClass
-import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.primaryConstructor
@@ -80,6 +80,14 @@ fun <T : Any> KClass<T>.dimens(): MutableMap<String, String> {
     }
     return m
 }
+fun <T : Any> KClass<T>.colors(): MutableMap<String, String> {
+    val call = primaryConstructor?.call() ?: return mutableMapOf()
+    val m = mutableMapOf<String, String>()
+    declaredMemberProperties.forEach {
+        m[it.name] = it.get(call).toString()
+    }
+    return m
+}
 //interface DD {
 //    val rectRadius: Dimension
 //}
@@ -89,4 +97,6 @@ fun <T : Any> KClass<T>.dimens(): MutableMap<String, String> {
 //        get() = Dp(12f)
 //}
 fun KProperty1<out Any, Dimension>.reference() = DimensionReference(name)
+fun KProperty1<out Any, Drawables>.reference() = DrawableReference(name)
+fun KProperty1<out Any, Color>.reference() = ColorReference(name)
 
