@@ -1,0 +1,35 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm'
+    id 'java-gradle-plugin'
+    id 'maven-publish'
+}
+
+gradlePlugin {
+    plugins {
+        // 声明插件信息，这里的 hello 名字随意
+        hello {
+            version('0.0.1')
+            // 插件ID
+            id = 'com.storyteller_f.sml'
+            // 插件的实现类
+            implementationClass = 'com.storyteller_f.sml.Sml'
+        }
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            // $rootDir 表示你项目的根目录
+            url = "$rootDir/../repo"
+        }
+    }
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.7.10"
+
+    // Android gradle plugin will allow us to access Android specific features
+    implementation 'com.android.tools.build:gradle:7.2.1'
+}
