@@ -11,6 +11,7 @@ android {
     defaultConfig {
         applicationId = "com.storyteller_f.fapiao"
     }
+    namespace = "com.storyteller_f.fapiao"
 }
 
 dependencies {

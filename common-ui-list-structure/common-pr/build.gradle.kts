@@ -15,6 +15,7 @@ android {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xcontext-receivers")
     }
+    namespace = "com.storyteller_f.common_pr"
 }
 baseLibrary()
 setupExtFuncSupport()

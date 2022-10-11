@@ -12,6 +12,7 @@ android {
     defaultConfig {
         minSdk = 21
     }
+    namespace = "com.storyteller_f.fapiao_reader"
 }
 baseLibrary()
 dependencies {

@@ -13,6 +13,7 @@ android {
     defaultConfig {
         applicationId = "com.storyteller_f.ping"
     }
+    namespace = "com.storyteller_f.ping"
 }
 
 dependencies {
