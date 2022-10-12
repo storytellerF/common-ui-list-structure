@@ -82,11 +82,10 @@ fun Project.setupExtFuncSupport() {
         "ksp"(project(":ext-func-compiler"))
     }
     kotlin {
-        sourceSets.main {
-            kotlin.srcDir("build/generated/ksp/main/kotlin")
-        }
-        sourceSets.test {
-            kotlin.srcDir("build/generated/ksp/test/kotlin")
+        sourceSets {
+            getByName("debug") {
+                kotlin.srcDir("build/generated/ksp/debug/kotlin")
+            }
         }
     }
 }
