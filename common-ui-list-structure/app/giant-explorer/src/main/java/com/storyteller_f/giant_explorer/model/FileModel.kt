@@ -13,6 +13,6 @@ data class FileModel(
     val isHidden: Boolean,
     val item: FileSystemItemModel
 ) : Model {
-    override fun commonDatumId() = fullPath
+    override fun commonId() = fullPath
 }
 

@@ -8,6 +8,10 @@ interface Datum<RK : RemoteKey> : Model {
 }
 
 interface Model {
-    fun commonDatumId(): String
-    fun uniqueIdInOP() = commonDatumId()
+    fun commonId(): String
+
+    /**
+     * 用于object pool的标识
+     */
+    fun uniqueIdInOP() = commonId()
 }

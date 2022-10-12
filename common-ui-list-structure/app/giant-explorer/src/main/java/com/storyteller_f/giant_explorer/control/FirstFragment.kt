@@ -30,6 +30,7 @@ import com.storyteller_f.view_holder_compose.EDComposeView
 import com.storyteller_f.view_holder_compose.EdComposeViewEventEmitter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
@@ -46,7 +47,7 @@ class FirstFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding:
             requireDatabase.bigTimeDao().fetch().map { list -> list.groupBy { it.workerName } }
                 .flowWithLifecycle(viewLifecycleOwner.lifecycle)
                 .shareIn(scope, SharingStarted.WhileSubscribed())
-                .collect {
+                .collectLatest {
                     binding.content.flash(ListWithState.UIState(false, it.isNotEmpty(), empty = false, progress = false, null, null))
                     val list = mutableListOf<DataItemHolder>()
                     it.forEach { (workName, result) ->

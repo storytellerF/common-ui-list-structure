@@ -6,17 +6,20 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.view.WindowCompat
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.google.android.material.snackbar.Snackbar
+import com.storyteller_f.common_ui.scope
+import com.storyteller_f.ping.database.Wallpaper
+import com.storyteller_f.ping.database.requireRepoDatabase
 import com.storyteller_f.ping.databinding.ActivityMainBinding
+import kotlinx.coroutines.launch
+import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
 
@@ -35,18 +38,14 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
-        val registerForActivityResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            Snackbar.make(binding.root, it.data.toString(), Snackbar.LENGTH_LONG)
-                .setAnchorView(R.id.fab)
-                .setAction("Action", null).show()
+
+        val pickFile = registerForActivityResult(ActivityResultContracts.OpenDocument()) {
+            scope.launch {
+                requireRepoDatabase.reposDao().insertAll(listOf(Wallpaper(it.toString(), "test", Calendar.getInstance().time)))
+            }
         }
         binding.fab.setOnClickListener {
-            val intent = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
-            intent.putExtra(
-                WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
-                ComponentName(this, PingPagerService::class.java)
-            )
-            registerForActivityResult.launch(intent)
+            pickFile.launch(arrayOf("video/*"))
         }
     }
 

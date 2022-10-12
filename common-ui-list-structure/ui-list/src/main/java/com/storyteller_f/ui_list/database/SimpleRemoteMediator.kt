@@ -102,7 +102,7 @@ class SimpleRemoteMediator<D : Datum<RK>, RK : RemoteKey, DT : RoomDatabase>(
         }
     }
 
-    private fun getSpecialId(d: D) = d.commonDatumId()
+    private fun getSpecialId(d: D) = d.commonId()
 
     companion object {
         private const val TAG = "SimpleRemoteMediator"

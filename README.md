@@ -2,11 +2,44 @@
 
 整合了jetpack paging，view Model，navigation，compose
 
-特殊模块
-file-system：封装android 文件系统，无视不同安卓版本。待解决document provider，root access
-ui-list,ui-list-annotation-compiler，ui-list-annotation-definition: 封装jetpack paging ，paging adapter
+## 特殊模块
 
-sml 自动生成color， drawable的xml 文件
+1. `file-system`：封装android 文件系统，无视不同安卓版本。待解决document provider，root access
+
+2. `ui-list`,`ui-list-annotation-compiler`，`ui-list-annotation-definition`: 封装jetpack paging ，paging adapter
+
+如果需要从网络获取数据，推荐使用带本地缓存的
+
+```kotlin
+@Entity(tableName = "repos")
+data class Repo(
+    @PrimaryKey @field:SerializedName("id") val id: Long,
+    @field:SerializedName("name") val name: String,
+    @field:SerializedName("full_name") val fullName: String,
+    @field:SerializedName("description") val description: String?,
+    @field:SerializedName("html_url") val url: String,
+    @field:SerializedName("stargazers_count") val stars: Int,
+    @field:SerializedName("forks_count") val forks: Int,
+    @field:SerializedName("language") val language: String?
+) : Datum<RepoRemoteKey> {
+    override fun commonDatumId() = id.toString()
+    override fun produceRemoteKey(prevKey: Int?, nextKey: Int?) =
+        RepoRemoteKey(commonDatumId(), prevKey, nextKey)
+
+    override fun remoteKeyId(): String = commonDatumId()
+}
+
+@Entity(tableName = "repo_remote_keys")
+class RepoRemoteKey(
+    itemId: String,
+    prevKey: Int?,
+    nextKey: Int?
+) : RemoteKey(itemId, prevKey, nextKey)
+```
+
+如果是本地的数据，不必继承自 `Datum`，可以直接继承自 `Model`
+
+3. sml 自动生成color， drawable的xml 文件
 
 使用的代码类似：
 ```kotlin
@@ -39,7 +72,13 @@ sml {
 }
 ```
 
-示例模块
+还需要添加plugin
+
+```kotlin
+id("com.storyteller_f.sml")
+```
+
+## 示例模块
 
 giant-explorer 文件管理器
 
@@ -89,4 +128,6 @@ baseApp()
 setupGeneric()
 setupDataBinding()
 setupDipToPx()
+//根据需要添加
+setupExtFuncSupport()
 ```

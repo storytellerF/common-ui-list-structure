@@ -1,44 +1,81 @@
 package com.storyteller_f.ping
 
+import android.app.WallpaperManager
+import android.content.ComponentName
+import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import androidx.navigation.fragment.findNavController
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.flowWithLifecycle
+import com.google.android.material.snackbar.Snackbar
+import com.storyteller_f.annotation_defination.BindClickEvent
+import com.storyteller_f.annotation_defination.BindItemHolder
+import com.storyteller_f.common_ui.SimpleFragment
+import com.storyteller_f.common_ui.cycle
+import com.storyteller_f.common_ui.scope
+import com.storyteller_f.ping.database.Wallpaper
+import com.storyteller_f.ping.database.requireRepoDatabase
 import com.storyteller_f.ping.databinding.FragmentFirstBinding
+import com.storyteller_f.ping.databinding.ViewHolderTestBinding
+import com.storyteller_f.ui_list.core.AbstractViewHolder
+import com.storyteller_f.ui_list.core.AdapterViewHolder
+import com.storyteller_f.ui_list.core.DataItemHolder
+import com.storyteller_f.ui_list.core.ManualAdapter
+import com.storyteller_f.ui_list.ui.ListWithState
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.launch
 
-/**
- * A simple [Fragment] subclass as the default destination in the navigation.
- */
-class FirstFragment : Fragment() {
+class FirstFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding::inflate) {
+    private val adapter = ManualAdapter<DataItemHolder, AbstractViewHolder<DataItemHolder>>()
 
-    private var _binding: FragmentFirstBinding? = null
+    override fun onBindViewEvent(binding: FragmentFirstBinding) {
 
-    // This property is only valid between onCreateView and
-    // onDestroyView.
-    private val binding get() = _binding!!
+    }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-
-        _binding = FragmentFirstBinding.inflate(inflater, container, false)
-        return binding.root
-
+    private val registerForActivityResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        Snackbar.make(binding.root, it.data.toString(), Snackbar.LENGTH_LONG)
+            .setAnchorView(R.id.fab)
+            .setAction("Action", null).show()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        binding.buttonFirst.setOnClickListener {
-            findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
+        binding.content.manualUp(adapter)
+        binding.content.flash(ListWithState.UIState.loading)
+        scope.launch {
+            requireRepoDatabase.reposDao().selectAll().flowWithLifecycle(cycle).shareIn(scope, SharingStarted.WhileSubscribed()).collectLatest { wallpaperList ->
+                binding.content.flash(ListWithState.UIState(false, wallpaperList.isNotEmpty(), empty = false, progress = false, null, null))
+                val map = wallpaperList.map {
+                    WallpaperHolder(it)
+                }
+                adapter.submitList(map)
+            }
         }
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+    @BindClickEvent(WallpaperHolder::class)
+    fun clickWallpaper(itemHolder: WallpaperHolder) {
+        val intent = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
+        intent.putExtra(
+            WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
+            ComponentName(requireActivity(), PingPagerService::class.java)
+        )
+        registerForActivityResult.launch(intent)
     }
+}
+
+class WallpaperHolder(val wallpaper: Wallpaper) : DataItemHolder {
+    override fun areItemsTheSame(other: DataItemHolder): Boolean {
+        return (other as WallpaperHolder).wallpaper == wallpaper
+    }
+}
+
+@BindItemHolder(WallpaperHolder::class)
+class WallpaperViewHolder(private val binding: ViewHolderTestBinding) : AdapterViewHolder<WallpaperHolder>(binding) {
+    override fun bindData(itemHolder: WallpaperHolder) {
+        binding.info.text = itemHolder.wallpaper.uri
+    }
+
 }

@@ -147,7 +147,7 @@ class ManualAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val key: S
 
     override fun getItemViewType(position: Int): Int {
         val item = getItem(position) ?: return super.getItemViewType(position)
-        return registerCenter[item::class.java]!!
+        return registerCenter[item::class.java] ?: throw Exception("${item::class.java.canonicalName} not found.registerCenter count: ${registerCenter.size}")
     }
 
     override fun onBindViewHolder(holder: VH, position: Int) =

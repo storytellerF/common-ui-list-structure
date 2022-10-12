@@ -67,6 +67,9 @@ class SimpleSourceViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteK
     }
 }
 
+/**
+ * 与 SimpleSourceViewModel 类似，不过支持排序
+ */
 class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey>(
     private val sourceRepository: SimpleDataRepository<D, RK>,
     processFactory: (D, D?) -> Holder,

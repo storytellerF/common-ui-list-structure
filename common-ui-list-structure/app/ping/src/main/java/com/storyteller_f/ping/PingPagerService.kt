@@ -4,6 +4,7 @@ import android.app.ActivityManager
 import android.app.WallpaperColors
 import android.content.ContentResolver
 import android.content.Context
+import android.content.Intent
 import android.media.MediaPlayer
 import android.net.Uri
 import android.opengl.GLSurfaceView
@@ -13,9 +14,15 @@ import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.WindowInsets
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
+import com.storyteller_f.ping.database.requireRepoDatabase
 import com.storyteller_f.ping.shader.GLES20WallpaperRenderer
 import com.storyteller_f.ping.shader.GLES30WallpaperRenderer
 import com.storyteller_f.ping.shader.GLWallpaperRenderer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.FileDescriptor
 import java.io.PrintWriter
 
@@ -40,14 +47,15 @@ class PingPagerService : WallpaperService() {
         override fun onCreate(surfaceHolder: SurfaceHolder?) {
             Log.d(TAG, "onCreate() called with: surfaceHolder = $surfaceHolder")
             super.onCreate(surfaceHolder)
-            if (player == null) player = MediaPlayer()
+            if (player == null) player = MediaPlayer().apply {
+                isLooping = true
+            }
             val uri = Uri.Builder()
                 .scheme(ContentResolver.SCHEME_ANDROID_RESOURCE)
                 .authority(packageName)
                 .appendPath("${R.raw.vi}")
                 .build()
-            player?.setDataSource(this@PingPagerService, uri)
-            player?.isLooping = true
+
             val systemService = ContextCompat.getSystemService(this@PingPagerService, ActivityManager::class.java) ?: throw Exception("无法获得activity manager")
 
             val deviceConfigurationInfo = systemService.deviceConfigurationInfo
@@ -66,10 +74,16 @@ class PingPagerService : WallpaperService() {
             surfaceView.preserveEGLContextOnPause = true
             surfaceView.setRenderer(render)
             surfaceView.renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
-            player?.prepareAsync()
-            player?.setOnVideoSizeChangedListener { _, width, height ->
-                Log.i(TAG, "onSurfaceCreated: width $width height $height")
-                render?.setVideoSizeAndRotation(width, height, 0)
+            MainScope().launch {
+                val wallpaper = withContext(Dispatchers.IO) {
+                    requireRepoDatabase.reposDao().select()
+                }
+                player?.setDataSource(this@PingPagerService, wallpaper.uri.toUri())
+                player?.prepareAsync()
+                player?.setOnVideoSizeChangedListener { _, width, height ->
+                    Log.i(TAG, "onSurfaceCreated: width $width height $height")
+                    render?.setVideoSizeAndRotation(width, height, 0)
+                }
             }
         }
 

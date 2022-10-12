@@ -25,6 +25,7 @@ baseApp()
 setupGeneric()
 setupDataBinding()
 setupDipToPx()
+setupExtFuncSupport()
 
 interface DD {
     val rectRadius: Dimension

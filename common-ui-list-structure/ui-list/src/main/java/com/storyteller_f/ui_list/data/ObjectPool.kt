@@ -39,11 +39,11 @@ object ObjectPool {
             map[key] = mutableMapOf()
         }
         val objMap = map[key]?.toMutableMap()
-        if (!objMap!!.containsKey(model.commonDatumId())) {
-            objMap[model.commonDatumId()] =
+        if (!objMap!!.containsKey(model.commonId())) {
+            objMap[model.commonId()] =
                 Record<T>(isFullVersion, MutableLiveData(model), System.currentTimeMillis())
         } else {
-            objMap[model.commonDatumId()]?.let {
+            objMap[model.commonId()]?.let {
 
             }
         }
