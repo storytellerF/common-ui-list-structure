@@ -1,5 +1,6 @@
-import com.storyteller_f.sml.*
 import com.storyteller_f.sml.config.*
+import com.storyteller_f.sml.dimens
+import com.storyteller_f.sml.reference
 import common_ui_list_structure_preset.*
 
 plugins {
@@ -20,6 +21,7 @@ dependencies {
     navigationDependency()
     unitTestDependency()
     implementation("com.google.android.exoplayer:exoplayer-core:2.18.1")
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 }
 baseApp()
 setupGeneric()

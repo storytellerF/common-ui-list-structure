@@ -1,11 +1,13 @@
 package com.storyteller_f.ping
 
+import android.app.Activity
 import android.app.WallpaperManager
 import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.flowWithLifecycle
 import com.google.android.material.snackbar.Snackbar
 import com.storyteller_f.annotation_defination.BindClickEvent
@@ -22,10 +24,10 @@ import com.storyteller_f.ui_list.core.AdapterViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.core.ManualAdapter
 import com.storyteller_f.ui_list.ui.ListWithState
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class FirstFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding::inflate) {
     private val adapter = ManualAdapter<DataItemHolder, AbstractViewHolder<DataItemHolder>>()
@@ -34,10 +36,17 @@ class FirstFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding:
 
     }
 
-    private val registerForActivityResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        Snackbar.make(binding.root, it.data.toString(), Snackbar.LENGTH_LONG)
-            .setAnchorView(R.id.fab)
-            .setAction("Action", null).show()
+    private val setWallpaper = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            scope.launch {
+                val first = requireContext().dataStore.data.mapNotNull {
+                    it[preview]
+                }.first()
+                requireContext().dataStore.edit {
+                    it[selected] = first
+                }
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -57,12 +66,21 @@ class FirstFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding:
 
     @BindClickEvent(WallpaperHolder::class)
     fun clickWallpaper(itemHolder: WallpaperHolder) {
-        val intent = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
-        intent.putExtra(
-            WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
-            ComponentName(requireActivity(), PingPagerService::class.java)
-        )
-        registerForActivityResult.launch(intent)
+        scope.launch {
+            val wallpaper = withContext(Dispatchers.IO) {
+                requireRepoDatabase.reposDao().select()
+            }
+            requireContext().dataStore.edit {
+                it[preview] = wallpaper.uri
+            }
+            val intent = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
+            intent.putExtra(
+                WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
+                ComponentName(requireActivity(), PingPagerService::class.java)
+            )
+            setWallpaper.launch(intent)
+        }
+
     }
 }
 

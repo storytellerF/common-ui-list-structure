@@ -1,25 +1,29 @@
 package com.storyteller_f.ping
 
-import android.app.WallpaperManager
-import android.content.ComponentName
-import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toFile
 import androidx.core.view.WindowCompat
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-import com.google.android.material.snackbar.Snackbar
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.ping.database.Wallpaper
 import com.storyteller_f.ping.database.requireRepoDatabase
 import com.storyteller_f.ping.databinding.ActivityMainBinding
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.Calendar
+import kotlinx.coroutines.withContext
+import okio.Buffer
+import okio.buffer
+import okio.sink
+import okio.source
+import java.io.File
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -39,9 +43,19 @@ class MainActivity : AppCompatActivity() {
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
 
-        val pickFile = registerForActivityResult(ActivityResultContracts.OpenDocument()) {
+        val pickFile = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri ?: return@registerForActivityResult
             scope.launch {
-                requireRepoDatabase.reposDao().insertAll(listOf(Wallpaper(it.toString(), "test", Calendar.getInstance().time)))
+                val f = withContext(Dispatchers.IO) {
+                    val file = File(cacheDir, "${System.currentTimeMillis()}.mp4")
+                    file.outputStream().sink().buffer().use { writer ->
+                        contentResolver.openInputStream(uri)?.source()?.buffer()?.use {
+                            writer.writeAll(it)
+                        }
+                    }
+                    file
+                }
+                requireRepoDatabase.reposDao().insertAll(listOf(Wallpaper(f.absolutePath, "test", Calendar.getInstance().time)))
             }
         }
         binding.fab.setOnClickListener {

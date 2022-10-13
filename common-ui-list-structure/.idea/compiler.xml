@@ -4,6 +4,9 @@
     <bytecodeTargetLevel target="1.7">
       <module name="common_ui_list_structure.annotation-compiler.main" target="11" />
       <module name="common_ui_list_structure.annotation-compiler.test" target="11" />
+      <module name="common_ui_list_structure.sml" target="11" />
+      <module name="common_ui_list_structure.sml.main" target="11" />
+      <module name="common_ui_list_structure.sml.test" target="11" />
       <module name="common_ui_list_structure.ui-list-compiler.main" target="11" />
       <module name="common_ui_list_structure.ui-list-compiler.test" target="11" />
     </bytecodeTargetLevel>

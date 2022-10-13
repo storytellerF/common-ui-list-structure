@@ -2,11 +2,8 @@ package com.storyteller_f.ping
 
 import android.app.ActivityManager
 import android.app.WallpaperColors
-import android.content.ContentResolver
 import android.content.Context
-import android.content.Intent
 import android.media.MediaPlayer
-import android.net.Uri
 import android.opengl.GLSurfaceView
 import android.service.wallpaper.WallpaperService
 import android.util.Log
@@ -15,14 +12,13 @@ import android.view.SurfaceHolder
 import android.view.WindowInsets
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import com.storyteller_f.ping.database.requireRepoDatabase
 import com.storyteller_f.ping.shader.GLES20WallpaperRenderer
 import com.storyteller_f.ping.shader.GLES30WallpaperRenderer
 import com.storyteller_f.ping.shader.GLWallpaperRenderer
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.FileDescriptor
 import java.io.PrintWriter
 
@@ -50,11 +46,6 @@ class PingPagerService : WallpaperService() {
             if (player == null) player = MediaPlayer().apply {
                 isLooping = true
             }
-            val uri = Uri.Builder()
-                .scheme(ContentResolver.SCHEME_ANDROID_RESOURCE)
-                .authority(packageName)
-                .appendPath("${R.raw.vi}")
-                .build()
 
             val systemService = ContextCompat.getSystemService(this@PingPagerService, ActivityManager::class.java) ?: throw Exception("无法获得activity manager")
 
@@ -75,13 +66,17 @@ class PingPagerService : WallpaperService() {
             surfaceView.setRenderer(render)
             surfaceView.renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
             MainScope().launch {
-                val wallpaper = withContext(Dispatchers.IO) {
-                    requireRepoDatabase.reposDao().select()
-                }
-                player?.setDataSource(this@PingPagerService, wallpaper.uri.toUri())
+                val exampleCounterFlow = this@PingPagerService.dataStore.data
+                    .mapNotNull { preferences ->
+                        // No type safety.
+                        preferences[preview] ?: ""
+                    }
+                val wallpaper = exampleCounterFlow.first().toUri()
+                Log.i(TAG, "onCreate: wallpaper $wallpaper")
+                player?.setDataSource(this@PingPagerService, wallpaper)
                 player?.prepareAsync()
                 player?.setOnVideoSizeChangedListener { _, width, height ->
-                    Log.i(TAG, "onSurfaceCreated: width $width height $height")
+                    Log.i(TAG, "onVideoSizeChangedListener: width $width height $height")
                     render?.setVideoSizeAndRotation(width, height, 0)
                 }
             }
@@ -123,7 +118,7 @@ class PingPagerService : WallpaperService() {
                 "onOffsetsChanged() called with: xOffset = $xOffset, yOffset = $yOffset, xOffsetStep = $xOffsetStep, yOffsetStep = $yOffsetStep, xPixelOffset = $xPixelOffset, yPixelOffset = $yPixelOffset"
             )
             super.onOffsetsChanged(xOffset, yOffset, xOffsetStep, yOffsetStep, xPixelOffset, yPixelOffset)
-            render?.setOffset(0.5f - xOffset, 0.5f - yOffset)
+            render?.setOffset(xOffset, yOffset)
         }
 
         override fun onSurfaceChanged(holder: SurfaceHolder?, format: Int, width: Int, height: Int) {
@@ -144,7 +139,7 @@ class PingPagerService : WallpaperService() {
             val height = holder.surfaceFrame.height()
             render?.setScreenSize(width, height)
             player?.setOnPreparedListener {
-                Log.i(TAG, "onCreate: OnPreparedListener")
+                Log.i(TAG, "onSurfaceCreated: OnPreparedListener")
                 render?.setSourcePlayer(player!!)
                 it.start()
             }
