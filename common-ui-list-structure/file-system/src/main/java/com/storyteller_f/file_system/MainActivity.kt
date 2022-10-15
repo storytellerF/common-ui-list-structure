@@ -163,51 +163,6 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-fun ImageView.fileIcon(fileSystemItemModel: FileSystemItemModel) {
-    if (fileSystemItemModel is FileItemModel) {
-        if (fileSystemItemModel.fullPath.startsWith("/data/app/")) {
-            setImageDrawable(context.packageManager.getApplicationIcon(fileSystemItemModel.name))
-            return
-        }
-        val extension = fileSystemItemModel.extension
-        if (extension != null) {
-            setImageResource(
-                when (extension) {
-                    "mp3", "wav", "flac" -> R.drawable.ic_music
-                    "zip", "7z", "rar" -> R.drawable.ic_archive
-                    "jpg", "jpeg", "png", "gif" -> R.drawable.ic_image
-                    "mp4", "rmvb", "ts", "avi", "mkv", "3gp", "mov", "flv", "m4s" -> R.drawable.ic_video
-                    "url" -> R.drawable.ic_url
-                    "txt", "c" -> R.drawable.ic_text
-                    "js" -> R.drawable.ic_js
-                    "pdf" -> R.drawable.ic_pdf
-                    "doc", "docx" -> R.drawable.ic_word
-                    "xls", "xlsx" -> R.drawable.ic_excel
-                    "ppt", "pptx" -> R.drawable.ic_ppt
-                    "iso" -> R.drawable.ic_disk
-                    "exe", "msi" -> R.drawable.ic_exe
-                    "psd" -> R.drawable.ic_psd
-                    "torrent" -> R.drawable.ic_torrent
-                    else -> R.drawable.ic_unknow
-                }
-            )
-        } else {
-            val absolutePath: String = fileSystemItemModel.fullPath
-            if (absolutePath.indexOf("/data/app/") == 0) {
-                try {
-                    val packageName = absolutePath.substring(10, absolutePath.indexOf("-"))
-                    setImageDrawable(context.packageManager.getApplicationIcon(packageName))
-                } catch (e: Exception) {
-                    setImageResource(R.drawable.ic_baseline_android_24)
-                    e.printStackTrace()
-                }
-            } else {
-                setImageResource(R.drawable.ic_binary)
-            }
-        }
-    } else setImageResource(R.drawable.ic_folder_explorer)
-}
-
 fun Fragment.checkPathPermission(dest: String) = context {
     checkPathPermission(dest)
 }

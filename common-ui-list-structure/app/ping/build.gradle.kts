@@ -22,6 +22,7 @@ dependencies {
     unitTestDependency()
     implementation("com.google.android.exoplayer:exoplayer-core:2.18.1")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("com.github.bumptech.glide:glide:4.14.2")
 }
 baseApp()
 setupGeneric()

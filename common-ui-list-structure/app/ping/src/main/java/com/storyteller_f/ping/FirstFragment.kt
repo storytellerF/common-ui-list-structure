@@ -9,7 +9,7 @@ import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.flowWithLifecycle
-import com.google.android.material.snackbar.Snackbar
+import com.bumptech.glide.Glide
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ui.SimpleFragment
@@ -18,7 +18,7 @@ import com.storyteller_f.common_ui.scope
 import com.storyteller_f.ping.database.Wallpaper
 import com.storyteller_f.ping.database.requireRepoDatabase
 import com.storyteller_f.ping.databinding.FragmentFirstBinding
-import com.storyteller_f.ping.databinding.ViewHolderTestBinding
+import com.storyteller_f.ping.databinding.ViewHolderWallpaperBinding
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.AdapterViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
@@ -67,11 +67,8 @@ class FirstFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding:
     @BindClickEvent(WallpaperHolder::class)
     fun clickWallpaper(itemHolder: WallpaperHolder) {
         scope.launch {
-            val wallpaper = withContext(Dispatchers.IO) {
-                requireRepoDatabase.reposDao().select()
-            }
             requireContext().dataStore.edit {
-                it[preview] = wallpaper.uri
+                it[preview] = itemHolder.wallpaper.uri
             }
             val intent = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
             intent.putExtra(
@@ -91,9 +88,11 @@ class WallpaperHolder(val wallpaper: Wallpaper) : DataItemHolder {
 }
 
 @BindItemHolder(WallpaperHolder::class)
-class WallpaperViewHolder(private val binding: ViewHolderTestBinding) : AdapterViewHolder<WallpaperHolder>(binding) {
+class WallpaperViewHolder(private val binding: ViewHolderWallpaperBinding) : AdapterViewHolder<WallpaperHolder>(binding) {
     override fun bindData(itemHolder: WallpaperHolder) {
-        binding.info.text = itemHolder.wallpaper.uri
+        binding.wallpaperUri.text = itemHolder.wallpaper.uri
+        binding.wallpaperName.text = itemHolder.wallpaper.name
+        Glide.with(binding.wallpaperPreview).load(itemHolder.wallpaper.uri).into(binding.wallpaperPreview)
     }
 
 }

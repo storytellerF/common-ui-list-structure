@@ -20,5 +20,6 @@ dependencies {
     implementation("androidx.core:core-ktx:${Versions.coreVersion}")
     implementation("androidx.appcompat:appcompat:${Versions.appcompatVersion}")
     implementation("com.google.android.material:material:${Versions.materialVersion}")
+    implementation ("com.j256.simplemagic:simplemagic:1.17")
     unitTestDependency()
 }

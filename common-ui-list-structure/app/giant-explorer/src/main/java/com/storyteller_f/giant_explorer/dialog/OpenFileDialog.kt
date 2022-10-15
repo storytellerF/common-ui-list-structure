@@ -73,12 +73,12 @@ class OpenFileDialog : SimpleDialogFragment<DialogOpenFileBinding>(DialogOpenFil
 
     }
 
-    private fun mixColor(mimeType: String?, contentInfo: ContentInfo?, t: String): Int {
-        val elements = (if (contentInfo?.contentType?.mimeType?.contains(t) == true) 1 else 2) + if (mimeType?.contains(t) == true) 4 else 8
+    private fun mixColor(mimeTypeFromExtension: String?, contentInfo: ContentInfo?, t: String): Int {
+        val elements = (if (contentInfo?.contentType?.mimeType?.contains(t) == true) 1 else 2) + if (mimeTypeFromExtension?.contains(t) == true) 4 else 8
         return elements.let {
             when (it) {
-                1, 9 -> Color.parseColor("#A25B32")
-                4, 6 -> Color.parseColor("#667DDA")
+                9 -> Color.parseColor("#A25B32")
+                6 -> Color.parseColor("#667DDA")
                 5 -> Color.parseColor("#D2D205")
                 else -> Color.GRAY
             }

@@ -274,10 +274,17 @@ class ListWithState @JvmOverloads constructor(
         setupSwapSupport(adapter)
     }
 
-    fun manualUp(adapter: ManualAdapter<*, *>, selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>? = null) {
+    fun manualUp(adapter: ManualAdapter<*, *>, selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>? = null, refresh: (() -> Unit)? = null) {
         recyclerView.adapter = adapter
         setupLinearLayoutManager()
         if (selected != null) setupSwipeSelectableSupport(selected)
+        binding.refreshLayout.isEnabled = refresh != null
+        binding.refreshLayout.setOnRefreshListener {
+            refresh?.invoke()
+        }
+        binding.retryButton.setOnClickListener {
+            refresh?.invoke()
+        }
     }
 
     val recyclerView get() = binding.list

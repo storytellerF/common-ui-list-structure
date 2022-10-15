@@ -21,13 +21,13 @@ import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
-import com.storyteller_f.file_system.fileIcon
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.model.FilesAndDirectories
 import com.storyteller_f.file_system.model.TorrentFileModel
 import com.storyteller_f.file_system.requestPermissionForSpecialPath
+import com.storyteller_f.file_system_ktx.fileIcon
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.FileSizeRecordDatabase
