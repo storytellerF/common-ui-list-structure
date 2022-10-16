@@ -4,6 +4,7 @@ import android.app.ActivityManager
 import android.app.WallpaperColors
 import android.content.Context
 import android.media.MediaPlayer
+import android.net.Uri
 import android.opengl.GLSurfaceView
 import android.service.wallpaper.WallpaperService
 import android.util.Log
@@ -15,17 +16,33 @@ import androidx.core.net.toUri
 import com.storyteller_f.ping.shader.GLES20WallpaperRenderer
 import com.storyteller_f.ping.shader.GLES30WallpaperRenderer
 import com.storyteller_f.ping.shader.GLWallpaperRenderer
-import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import java.io.FileDescriptor
 import java.io.PrintWriter
+import kotlin.coroutines.CoroutineContext
 
 class PingPagerService : WallpaperService() {
+    val job = Job()
+    val scope = object : CoroutineScope {
+        override val coroutineContext: CoroutineContext
+            get() = job + Dispatchers.Main
+
+    }
+
     override fun onCreateEngine(): Engine {
         Log.d(TAG, "onCreateEngine() called")
         return PingEngine()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        job.cancel()
+        Log.d(TAG, "onDestroy() called")
     }
 
     inner class PingEngine : WallpaperService.Engine() {
@@ -65,13 +82,8 @@ class PingPagerService : WallpaperService() {
             surfaceView.preserveEGLContextOnPause = true
             surfaceView.setRenderer(render)
             surfaceView.renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
-            MainScope().launch {
-                val exampleCounterFlow = this@PingPagerService.dataStore.data
-                    .mapNotNull { preferences ->
-                        // No type safety.
-                        preferences[preview] ?: ""
-                    }
-                val wallpaper = exampleCounterFlow.first().toUri()
+            scope.launch {
+                val wallpaper = wallpaperUri()
                 Log.i(TAG, "onCreate: wallpaper $wallpaper")
                 player?.setDataSource(this@PingPagerService, wallpaper)
                 player?.prepareAsync()
@@ -80,11 +92,22 @@ class PingPagerService : WallpaperService() {
                     render?.setVideoSizeAndRotation(width, height, 0)
                 }
             }
+
+        }
+
+        private suspend fun wallpaperUri(): Uri {
+            val exampleCounterFlow = this@PingPagerService.dataStore.data.mapNotNull { preferences ->
+                // No type safety.
+                (if (isPreview) preferences[preview]
+                else preferences[selected]) ?: ""
+            }
+            return exampleCounterFlow.first().toUri()
         }
 
         override fun onDestroy() {
             Log.d(TAG, "onDestroy() called")
             player?.release()
+            render = null
             surfaceView.destroy()
             super.onDestroy()
         }
@@ -96,8 +119,7 @@ class PingPagerService : WallpaperService() {
                     player?.start()
                 }
             } else {
-                if (player?.isPlaying == true)
-                    player?.pause()
+                if (player?.isPlaying == true) player?.pause()
             }
             super.onVisibilityChanged(visible)
         }

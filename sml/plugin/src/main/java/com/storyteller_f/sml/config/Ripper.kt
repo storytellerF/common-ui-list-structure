@@ -23,7 +23,7 @@ interface IItem {
     /**
      * start top end bottom 是padding
      */
-    fun addItem(start: String, top: String, end: String, bottom: String, width: String, height: String, drawable: String, gravity: String, id: String)
+    fun addItem(start: Dimension, top: Dimension, end: Dimension, bottom: Dimension, width: Dimension, height: Dimension, drawable: String, gravity: String, id: String)
 
     fun indirectForItem(stringBuilder: java.lang.StringBuilder)
 }
@@ -31,7 +31,7 @@ interface IItem {
 class Item : IItem {
     private var content: StringBuilder? = null
 
-    override fun addItem(start: String, top: String, end: String, bottom: String, width: String, height: String, drawable: String, gravity: String, id: String) {
+    override fun addItem(start: Dimension, top: Dimension, end: Dimension, bottom: Dimension, width: Dimension, height: Dimension, drawable: String, gravity: String, id: String) {
         content?.appendLine(
             """
                 <item android:start="$start" top="$top" end="$end" bottom="$bottom" width="$width" height="$height" drawable="$drawable" gravity="$gravity" id="$id"/>
@@ -45,7 +45,7 @@ class Item : IItem {
 
 }
 
-class RipperDrawable(color: Color, radius: Dimension) : Drawable(), IItem by Item() {
+class RippleDrawable(color: Color, radius: Dimension) : Drawable(), IItem by Item() {
     init {
         elements.appendLine(
             """
@@ -67,6 +67,6 @@ fun DrawableDomain.Clip(drawableReference: DrawableReference, gravity: String, o
     drawable.set(ClipDrawable(drawableReference, gravity, orientation).apply(block).output())
 }
 
-fun DrawableDomain.Ripper(color: Color, radius: Dimension, block: RipperDrawable.() -> Unit) {
-    drawable.set(RipperDrawable(color, radius).apply(block).output())
+fun DrawableDomain.Ripple(color: Color, radius: Dimension, block: RippleDrawable.() -> Unit) {
+    drawable.set(RippleDrawable(color, radius).apply(block).output())
 }
