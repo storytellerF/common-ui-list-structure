@@ -1,8 +1,8 @@
 package com.storyteller_f.view_holder_compose
 
+import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
-import com.storyteller_f.ui_list.core.SimpleSourceAdapter
 
 class ComposeSourceAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>> :
     SimpleSourceAdapter<IH, VH>() {

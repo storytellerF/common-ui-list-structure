@@ -21,9 +21,6 @@ fun DependencyHandlerScope.baseDependency() {
 
     "kapt"("androidx.room:room-compiler:${Versions.roomVersion}")
 
-//    "implementation"("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
-//    "implementation"("androidx.constraintlayout:constraintlayout:${Versions.constraintLayoutVersion}")
-
     "implementation"("androidx.fragment:fragment-ktx:${Versions.ktxVersion}")
     "implementation"("androidx.activity:activity-ktx:${Versions.ktxVersion}")
 

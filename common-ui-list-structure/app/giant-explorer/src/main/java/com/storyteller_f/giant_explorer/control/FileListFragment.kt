@@ -36,9 +36,9 @@ import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentFileListBinding
 import com.storyteller_f.giant_explorer.dialog.*
-import com.storyteller_f.ui_list.core.SearchProducer
-import com.storyteller_f.ui_list.core.SimpleSourceAdapter
-import com.storyteller_f.ui_list.core.search
+import com.storyteller_f.ui_list.source.SearchProducer
+import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
+import com.storyteller_f.ui_list.source.search
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*

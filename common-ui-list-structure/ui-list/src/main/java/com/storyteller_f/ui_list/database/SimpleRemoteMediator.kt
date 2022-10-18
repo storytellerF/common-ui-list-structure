@@ -6,7 +6,7 @@ import androidx.room.RoomDatabase
 import androidx.room.withTransaction
 import com.storyteller_f.ui_list.core.Datum
 import com.storyteller_f.ui_list.data.CommonResponse
-import com.storyteller_f.ui_list.data.STARTING_PAGE_INDEX
+import com.storyteller_f.ui_list.source.STARTING_PAGE_INDEX
 import retrofit2.HttpException
 import java.io.IOException
 

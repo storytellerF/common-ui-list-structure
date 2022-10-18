@@ -26,7 +26,7 @@ import com.storyteller_f.fapiao.database.requireDatabase
 import com.storyteller_f.fapiao.databinding.FragmentFirstBinding
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
-import com.storyteller_f.ui_list.core.ManualAdapter
+import com.storyteller_f.ui_list.adapter.ManualAdapter
 import com.storyteller_f.ui_list.ui.ListWithState
 import com.storyteller_f.view_holder_compose.ComposeViewHolder
 import com.storyteller_f.view_holder_compose.EDComposeView

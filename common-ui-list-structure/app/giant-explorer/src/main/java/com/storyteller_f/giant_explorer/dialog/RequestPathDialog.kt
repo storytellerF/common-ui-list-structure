@@ -21,10 +21,10 @@ import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.control.*
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.DialogRequestPathBinding
-import com.storyteller_f.ui_list.core.SearchProducer
-import com.storyteller_f.ui_list.core.SimpleSourceAdapter
-import com.storyteller_f.ui_list.core.observerInScope
-import com.storyteller_f.ui_list.core.search
+import com.storyteller_f.ui_list.source.SearchProducer
+import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
+import com.storyteller_f.ui_list.source.observerInScope
+import com.storyteller_f.ui_list.source.search
 import com.storyteller_f.ui_list.ui.ListWithState
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay

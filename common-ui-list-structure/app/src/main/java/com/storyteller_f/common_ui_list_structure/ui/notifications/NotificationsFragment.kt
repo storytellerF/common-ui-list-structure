@@ -5,8 +5,8 @@ import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.common_ui_list_structure.api.requireReposService
 import com.storyteller_f.common_ui_list_structure.databinding.FragmentNotificationsBinding
 import com.storyteller_f.common_ui_list_structure.db.requireRepoDatabase
-import com.storyteller_f.ui_list.core.DetailProducer
-import com.storyteller_f.ui_list.core.detail
+import com.storyteller_f.ui_list.source.DetailProducer
+import com.storyteller_f.ui_list.source.detail
 
 class NotificationsFragment : SimpleFragment<FragmentNotificationsBinding>(FragmentNotificationsBinding::inflate) {
 

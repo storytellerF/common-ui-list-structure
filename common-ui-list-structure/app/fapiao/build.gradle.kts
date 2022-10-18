@@ -17,9 +17,9 @@ android {
 dependencies {
     implementation(fileTree("libs"))
     implementation(project(":fapiao-reader"))
-    networkDependency()
-
     implementation("com.tom-roush:pdfbox-android:2.0.25.0")
+
+    networkDependency()
 }
 baseApp()
 setupGeneric()

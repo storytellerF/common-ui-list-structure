@@ -38,10 +38,13 @@ import com.storyteller_f.giant_explorer.model.FileModel
 import com.storyteller_f.giant_explorer.pc_end_on
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
 import com.storyteller_f.giant_explorer.service.FileOperateService
+import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import com.storyteller_f.ui_list.core.*
 import com.storyteller_f.ui_list.data.SimpleResponse
 import com.storyteller_f.ui_list.event.findActionReceiverOrNull
 import com.storyteller_f.ui_list.event.viewBinding
+import com.storyteller_f.ui_list.source.SimpleSearchViewModel
+import com.storyteller_f.ui_list.source.observerInScope
 import com.storyteller_f.ui_list.ui.ListWithState
 import com.storyteller_f.ui_list.ui.valueContains
 import kotlinx.coroutines.channels.awaitClose

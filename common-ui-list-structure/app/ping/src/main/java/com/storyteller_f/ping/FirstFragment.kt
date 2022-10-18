@@ -19,15 +19,13 @@ import com.storyteller_f.ping.database.Wallpaper
 import com.storyteller_f.ping.database.requireRepoDatabase
 import com.storyteller_f.ping.databinding.FragmentFirstBinding
 import com.storyteller_f.ping.databinding.ViewHolderWallpaperBinding
+import com.storyteller_f.ui_list.adapter.ManualAdapter
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.AdapterViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
-import com.storyteller_f.ui_list.core.ManualAdapter
 import com.storyteller_f.ui_list.ui.ListWithState
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class FirstFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding::inflate) {
     private val adapter = ManualAdapter<DataItemHolder, AbstractViewHolder<DataItemHolder>>()

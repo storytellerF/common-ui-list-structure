@@ -6,9 +6,9 @@ import com.storyteller_f.common_ui_list_structure.Repo2ViewHolder
 import com.storyteller_f.common_ui_list_structure.RepoItemHolder
 import com.storyteller_f.common_ui_list_structure.api.requireReposService
 import com.storyteller_f.common_ui_list_structure.databinding.FragmentHomeBinding
-import com.storyteller_f.ui_list.core.DataProducer
-import com.storyteller_f.ui_list.core.SimpleDataAdapter
-import com.storyteller_f.ui_list.core.data
+import com.storyteller_f.ui_list.adapter.SimpleDataAdapter
+import com.storyteller_f.ui_list.source.DataProducer
+import com.storyteller_f.ui_list.source.data
 
 class HomeFragment : RegularFragment<FragmentHomeBinding>(FragmentHomeBinding::inflate) {
 
