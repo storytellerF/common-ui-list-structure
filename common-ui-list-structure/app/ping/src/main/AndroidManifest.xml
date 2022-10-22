@@ -34,6 +34,16 @@
                 android:name="android.service.wallpaper"
                 android:resource="@xml/wallpager" />
         </service>
+        <provider
+            android:name=".StorageProvider"
+            android:authorities="com.storyteller_f.ping.documents"
+            android:grantUriPermissions="true"
+            android:exported="true"
+            android:permission="android.permission.MANAGE_DOCUMENTS">
+            <intent-filter>
+                <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
+            </intent-filter>
+        </provider>
     </application>
 
 </manifest>

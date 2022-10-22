@@ -4,7 +4,7 @@
 
 ## 特殊模块
 
-1. `file-system`：封装android 文件系统，无视不同安卓版本。待解决document provider，root access
+1. `file-system`：封装android 文件系统，无视不同安卓版本。待解决root access
 
 2. `ui-list`,`ui-list-annotation-compiler`，`ui-list-annotation-definition`: 封装jetpack paging ，paging adapter
 
