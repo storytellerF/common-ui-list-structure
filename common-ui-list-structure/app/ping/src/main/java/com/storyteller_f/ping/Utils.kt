@@ -76,53 +76,6 @@ object Utils {
     }
 
     @Throws(RuntimeException::class)
-    fun compileShaderResourceGLES30(
-        context: Context,
-        shaderType: Int,
-        shaderRes: Int
-    ): Int {
-        val shaderSource = context.resources.openRawResource(shaderRes).bufferedReader().use {
-            it.readText()
-        }
-        val shader = GLES30.glCreateShader(shaderType)
-        if (shader == 0) {
-            throw RuntimeException("Failed to create shader")
-        }
-        GLES30.glShaderSource(shader, shaderSource)
-        GLES30.glCompileShader(shader)
-        val status = IntArray(1)
-        GLES30.glGetShaderiv(shader, GLES30.GL_COMPILE_STATUS, status, 0)
-        if (status[0] == 0) {
-            val log = GLES30.glGetShaderInfoLog(shader)
-            GLES30.glDeleteShader(shader)
-            throw RuntimeException(log)
-        }
-        return shader
-    }
-
-    @Throws(RuntimeException::class)
-    fun linkProgramGLES30(
-        vertShader: Int,
-        fragShader: Int
-    ): Int {
-        val program = GLES30.glCreateProgram()
-        if (program == 0) {
-            throw RuntimeException("Failed to create program")
-        }
-        GLES30.glAttachShader(program, vertShader)
-        GLES30.glAttachShader(program, fragShader)
-        GLES30.glLinkProgram(program)
-        val status = IntArray(1)
-        GLES30.glGetProgramiv(program, GLES30.GL_LINK_STATUS, status, 0)
-        if (status[0] == 0) {
-            val log = GLES30.glGetProgramInfoLog(program)
-            GLES30.glDeleteProgram(program)
-            throw RuntimeException(log)
-        }
-        return program
-    }
-
-    @Throws(RuntimeException::class)
     fun compileShaderResourceGLES20(
         context: Context,
         shaderType: Int,

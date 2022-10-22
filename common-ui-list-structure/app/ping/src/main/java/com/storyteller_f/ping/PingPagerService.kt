@@ -83,7 +83,7 @@ class PingPagerService : WallpaperService() {
             surfaceView.setRenderer(render)
             surfaceView.renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
             scope.launch {
-                val wallpaper = wallpaperUri()
+                val wallpaper = wallpaperUri() ?: return@launch
                 Log.i(TAG, "onCreate: wallpaper $wallpaper")
                 player?.setDataSource(this@PingPagerService, wallpaper)
                 player?.prepareAsync()
@@ -95,13 +95,13 @@ class PingPagerService : WallpaperService() {
 
         }
 
-        private suspend fun wallpaperUri(): Uri {
+        private suspend fun wallpaperUri(): Uri? {
             val exampleCounterFlow = this@PingPagerService.dataStore.data.mapNotNull { preferences ->
                 // No type safety.
                 (if (isPreview) preferences[preview]
-                else preferences[selected]) ?: ""
+                else preferences[selected]) ?: preferences[preview]
             }
-            return exampleCounterFlow.first().toUri()
+            return exampleCounterFlow.first().takeIf { it.isNotEmpty() }?.toUri()
         }
 
         override fun onDestroy() {
@@ -130,7 +130,6 @@ class PingPagerService : WallpaperService() {
         }
 
         override fun onTouchEvent(event: MotionEvent?) {
-            Log.d(TAG, "onTouchEvent() called with: event = $event")
             super.onTouchEvent(event)
         }
 
@@ -162,7 +161,7 @@ class PingPagerService : WallpaperService() {
             render?.setScreenSize(width, height)
             player?.setOnPreparedListener {
                 Log.i(TAG, "onSurfaceCreated: OnPreparedListener")
-                render?.setSourcePlayer(player!!)
+                render?.setSourcePlayer(it)
                 it.start()
             }
         }
