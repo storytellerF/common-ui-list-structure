@@ -18,12 +18,11 @@ package com.storyteller_f.ping.shader
 import android.content.Context
 import android.graphics.SurfaceTexture
 import android.media.MediaPlayer
-import javax.microedition.khronos.opengles.GL10
-import android.opengl.GLES30
 import android.opengl.GLES11Ext
-import com.google.android.exoplayer2.ExoPlayer
+import android.opengl.GLES30
 import android.opengl.Matrix
 import android.view.Surface
+import com.google.android.exoplayer2.ExoPlayer
 import com.storyteller_f.ping.R
 import com.storyteller_f.ping.Utils
 import java.nio.ByteBuffer
@@ -32,6 +31,7 @@ import java.nio.FloatBuffer
 import java.nio.IntBuffer
 import java.util.*
 import javax.microedition.khronos.egl.EGLConfig
+import javax.microedition.khronos.opengles.GL10
 
 internal class GLES30WallpaperRenderer(context: Context) : GLWallpaperRenderer(context) {
     private val vertices: FloatBuffer
@@ -259,20 +259,9 @@ internal class GLES30WallpaperRenderer(context: Context) : GLWallpaperRenderer(c
     }
 
     override fun setOffset(xOffset: Float, yOffset: Float) {
-        var xOffsetTemp = xOffset
-        var yOffsetTemp = yOffset
-        if (xOffsetTemp > maxXOffset) {
-            xOffsetTemp = maxXOffset
-        }
-        if (xOffsetTemp < -maxXOffset) {
-            xOffsetTemp = -maxXOffset
-        }
-        if (yOffsetTemp > maxYOffset) {
-            yOffsetTemp = maxYOffset
-        }
-        if (yOffsetTemp < -maxXOffset) {
-            yOffsetTemp = -maxYOffset
-        }
+        if (maxXOffset.equals(Float.NaN) || maxYOffset.equals(Float.NaN)) return
+        val xOffsetTemp = xOffset.coerceIn(-maxXOffset..maxXOffset)
+        val yOffsetTemp = yOffset.coerceIn(-maxYOffset..maxYOffset)
         if (this.xOffset != xOffsetTemp || this.yOffset != yOffsetTemp) {
             this.xOffset = xOffsetTemp
             this.yOffset = yOffsetTemp
@@ -286,15 +275,14 @@ internal class GLES30WallpaperRenderer(context: Context) : GLWallpaperRenderer(c
     }
 
     private fun createSurfaceTexture() {
-        if (surfaceTexture != null) {
-            surfaceTexture!!.release()
-            surfaceTexture = null
-        }
+        surfaceTexture?.release()
         updatedFrame = 0
         renderedFrame = 0
-        surfaceTexture = SurfaceTexture(textures[0])
-        surfaceTexture!!.setDefaultBufferSize(videoWidth, videoHeight)
-        surfaceTexture!!.setOnFrameAvailableListener { ++updatedFrame }
+        surfaceTexture = SurfaceTexture(textures[0]).apply {
+            setDefaultBufferSize(videoWidth, videoHeight)
+            setOnFrameAvailableListener { ++updatedFrame }
+        }
+
     }
 
     private fun updateMatrix() {

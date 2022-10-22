@@ -81,20 +81,9 @@ object Utils {
         shaderType: Int,
         shaderRes: Int
     ): Int {
-        val inputStream = context.resources.openRawResource(shaderRes)
-        val bufferedReader = BufferedReader(InputStreamReader(inputStream))
-        var line: String?
-        val stringBuilder = StringBuilder()
-        try {
-            while (bufferedReader.readLine().also { line = it } != null) {
-                stringBuilder.append(line)
-                stringBuilder.append('\n')
-            }
-        } catch (e: IOException) {
-            e.printStackTrace()
-            return 0
+        val shaderSource = context.resources.openRawResource(shaderRes).bufferedReader().use {
+            it.readText()
         }
-        val shaderSource = stringBuilder.toString()
         val shader = GLES30.glCreateShader(shaderType)
         if (shader == 0) {
             throw RuntimeException("Failed to create shader")
@@ -139,20 +128,9 @@ object Utils {
         shaderType: Int,
         shaderRes: Int
     ): Int {
-        val inputStream = context.resources.openRawResource(shaderRes)
-        val bufferedReader = BufferedReader(InputStreamReader(inputStream))
-        var line: String?
-        val stringBuilder = StringBuilder()
-        try {
-            while (bufferedReader.readLine().also { line = it } != null) {
-                stringBuilder.append(line)
-                stringBuilder.append('\n')
-            }
-        } catch (e: IOException) {
-            e.printStackTrace()
-            return 0
+        val shaderSource = context.resources.openRawResource(shaderRes).bufferedReader().use {
+            it.readText()
         }
-        val shaderSource = stringBuilder.toString()
         val shader = GLES20.glCreateShader(shaderType)
         if (shader == 0) {
             throw RuntimeException("Failed to create shader")
