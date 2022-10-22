@@ -8,6 +8,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.storyteller_f.sml")
     id("com.google.devtools.ksp")
+    id("androidx.navigation.safeargs.kotlin")
 }
 android {
 

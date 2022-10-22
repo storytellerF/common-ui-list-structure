@@ -12,7 +12,7 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.ping.database.Wallpaper
-import com.storyteller_f.ping.database.requireRepoDatabase
+import com.storyteller_f.ping.database.requireMainDatabase
 import com.storyteller_f.ping.databinding.ActivityMainBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     file
                 }
-                requireRepoDatabase.reposDao().insertAll(listOf(Wallpaper(f.absolutePath, "test", Calendar.getInstance().time)))
+                requireMainDatabase.dao().insertAll(listOf(Wallpaper(f.absolutePath, "test", Calendar.getInstance().time)))
             }
         }
         binding.fab.setOnClickListener {

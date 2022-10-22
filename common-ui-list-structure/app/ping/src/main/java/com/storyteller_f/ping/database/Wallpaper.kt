@@ -1,9 +1,7 @@
 package com.storyteller_f.ping.database
 
 import android.content.Context
-import androidx.paging.PagingSource
 import androidx.room.*
-import com.storyteller_f.composite_defination.Composite
 import com.storyteller_f.ext_func_definition.ExtFuncFlat
 import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 import com.storyteller_f.ui_list.core.Model
@@ -17,12 +15,15 @@ data class Wallpaper(@PrimaryKey val uri: String, val name: String, val createdT
 }
 
 @Dao
-interface RepoDao {
+interface MainDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(all: List<Wallpaper>)
 
     @Query("SELECT * FROM wallpaper ORDER BY createdTime DESC")
     fun selectAll(): Flow<List<Wallpaper>>
+
+    @Query("SELECT * FROM wallpaper where uri = :uri ORDER BY createdTime DESC")
+    fun select(uri: String): Flow<Wallpaper>
 
     @Query("select * from wallpaper")
     suspend fun select(): Wallpaper
@@ -35,6 +36,7 @@ interface RepoDao {
 
     @Query("Delete From wallpaper where uri = :uri")
     suspend fun delete(uri: String)
+
 }
 
 @Database(
@@ -43,16 +45,16 @@ interface RepoDao {
     exportSchema = false
 )
 @TypeConverters(DefaultTypeConverter::class)
-abstract class RepoDatabase : RoomDatabase() {
+abstract class MainDatabase : RoomDatabase() {
 
-    abstract fun reposDao(): RepoDao
+    abstract fun dao(): MainDao
 
     companion object {
 
         @Volatile
-        private var INSTANCE: RepoDatabase? = null
+        private var INSTANCE: MainDatabase? = null
 
-        fun getInstance(context: Context): RepoDatabase =
+        fun getInstance(context: Context): MainDatabase =
             INSTANCE ?: synchronized(this) {
                 INSTANCE ?: buildDatabase(context).also { INSTANCE = it }
             }
@@ -60,7 +62,7 @@ abstract class RepoDatabase : RoomDatabase() {
         private fun buildDatabase(context: Context) =
             Room.databaseBuilder(
                 context.applicationContext,
-                RepoDatabase::class.java, "wallpapers.db"
+                MainDatabase::class.java, "wallpapers.db"
             )
                 .fallbackToDestructiveMigration()
                 .build()
@@ -68,5 +70,5 @@ abstract class RepoDatabase : RoomDatabase() {
 }
 
 @ExtFuncFlat(type = ExtFuncFlatType.V2)
-val Context.requireRepoDatabase
-    get() = RepoDatabase.getInstance(this)
+val Context.requireMainDatabase
+    get() = MainDatabase.getInstance(this)

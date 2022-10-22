@@ -5,18 +5,26 @@ import android.app.WallpaperManager
 import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
+import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.flowWithLifecycle
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
+import com.storyteller_f.annotation_defination.BindLongClickEvent
 import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.common_ui.cycle
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.ping.database.Wallpaper
-import com.storyteller_f.ping.database.requireRepoDatabase
+import com.storyteller_f.ping.database.requireMainDatabase
 import com.storyteller_f.ping.databinding.FragmentWallpaperListBinding
 import com.storyteller_f.ping.databinding.ViewHolderWallpaperBinding
 import com.storyteller_f.ui_list.adapter.ManualAdapter
@@ -52,7 +60,7 @@ class WallpaperListFragment : SimpleFragment<FragmentWallpaperListBinding>(Fragm
         binding.content.manualUp(adapter)
         binding.content.flash(ListWithState.UIState.loading)
         scope.launch {
-            requireRepoDatabase.reposDao().selectAll().flowWithLifecycle(cycle).shareIn(scope, SharingStarted.WhileSubscribed()).collectLatest { wallpaperList ->
+            requireMainDatabase.dao().selectAll().flowWithLifecycle(cycle).shareIn(scope, SharingStarted.WhileSubscribed()).collectLatest { wallpaperList ->
                 binding.content.flash(ListWithState.UIState(false, wallpaperList.isNotEmpty(), empty = false, progress = false, null, null))
                 val map = wallpaperList.map {
                     WallpaperHolder(it)
@@ -77,6 +85,12 @@ class WallpaperListFragment : SimpleFragment<FragmentWallpaperListBinding>(Fragm
         }
 
     }
+
+    @BindLongClickEvent(WallpaperHolder::class)
+    fun longClickWallpaper(sender: View, itemHolder: WallpaperHolder) {
+        sender.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+        sender.findNavController().navigate(R.id.action_WallpaperListFragment_to_WallpaperInfoFragment, WallpaperInfoFragmentArgs(itemHolder.wallpaper.uri).toBundle())
+    }
 }
 
 class WallpaperHolder(val wallpaper: Wallpaper) : DataItemHolder {
@@ -88,9 +102,13 @@ class WallpaperHolder(val wallpaper: Wallpaper) : DataItemHolder {
 @BindItemHolder(WallpaperHolder::class)
 class WallpaperViewHolder(private val binding: ViewHolderWallpaperBinding) : AdapterViewHolder<WallpaperHolder>(binding) {
     override fun bindData(itemHolder: WallpaperHolder) {
-        binding.wallpaperUri.text = itemHolder.wallpaper.uri
-        binding.wallpaperName.text = itemHolder.wallpaper.name
-        Glide.with(binding.wallpaperPreview).load(itemHolder.wallpaper.uri).into(binding.wallpaperPreview)
+        binding.flash(itemHolder.wallpaper)
     }
 
+}
+
+fun ViewHolderWallpaperBinding.flash(wallpaper: Wallpaper) {
+    wallpaperUri.text = wallpaper.uri
+    wallpaperName.text = wallpaper.name
+    Glide.with(wallpaperPreview).load(wallpaper.uri).into(wallpaperPreview)
 }
