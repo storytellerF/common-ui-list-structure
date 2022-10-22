@@ -3,16 +3,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/FirstFragment">
+    app:startDestination="@id/WallpaperListFragment">
 
     <fragment
-        android:id="@+id/FirstFragment"
-        android:name="com.storyteller_f.ping.FirstFragment"
-        android:label="@string/first_fragment_label"
-        tools:layout="@layout/fragment_first">
+        android:id="@+id/WallpaperListFragment"
+        android:name="com.storyteller_f.ping.WallpaperListFragment"
+        android:label="@string/wallpaper_fragment_label"
+        tools:layout="@layout/fragment_wallpaper_list">
 
         <action
-            android:id="@+id/action_FirstFragment_to_SecondFragment"
+            android:id="@+id/action_WallpaperListFragment_to_SecondFragment"
             app:destination="@id/SecondFragment" />
     </fragment>
     <fragment
@@ -23,6 +23,6 @@
 
         <action
             android:id="@+id/action_SecondFragment_to_FirstFragment"
-            app:destination="@id/FirstFragment" />
+            app:destination="@id/WallpaperListFragment" />
     </fragment>
 </navigation>

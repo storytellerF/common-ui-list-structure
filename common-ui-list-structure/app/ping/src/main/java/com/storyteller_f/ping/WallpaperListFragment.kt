@@ -17,7 +17,7 @@ import com.storyteller_f.common_ui.cycle
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.ping.database.Wallpaper
 import com.storyteller_f.ping.database.requireRepoDatabase
-import com.storyteller_f.ping.databinding.FragmentFirstBinding
+import com.storyteller_f.ping.databinding.FragmentWallpaperListBinding
 import com.storyteller_f.ping.databinding.ViewHolderWallpaperBinding
 import com.storyteller_f.ui_list.adapter.ManualAdapter
 import com.storyteller_f.ui_list.core.AbstractViewHolder
@@ -27,10 +27,10 @@ import com.storyteller_f.ui_list.ui.ListWithState
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class FirstFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding::inflate) {
+class WallpaperListFragment : SimpleFragment<FragmentWallpaperListBinding>(FragmentWallpaperListBinding::inflate) {
     private val adapter = ManualAdapter<DataItemHolder, AbstractViewHolder<DataItemHolder>>()
 
-    override fun onBindViewEvent(binding: FragmentFirstBinding) {
+    override fun onBindViewEvent(binding: FragmentWallpaperListBinding) {
 
     }
 
