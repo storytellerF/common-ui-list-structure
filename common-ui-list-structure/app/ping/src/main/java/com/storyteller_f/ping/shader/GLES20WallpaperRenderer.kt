@@ -27,7 +27,7 @@ internal class GLES20WallpaperRenderer(context: Context) : GLWallpaperRenderer(c
     private var texCoordinationLocation = 0
 
     override fun onSurfaceCreated(gl10: GL10, eglConfig: EGLConfig) {
-        surfaceCreatedPrepare()
+        surfacePreProcess()
         positionLocation = GLES20.glGetAttribLocation(program, "in_position")
         texCoordinationLocation = GLES20.glGetAttribLocation(program, "in_tex_coord")
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)

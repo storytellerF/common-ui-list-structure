@@ -16,7 +16,6 @@
 package com.storyteller_f.ping.shader
 
 import android.content.Context
-import android.opengl.GLES11Ext
 import android.opengl.GLES30
 import com.storyteller_f.ping.R
 import com.storyteller_f.ping.Utils
@@ -29,7 +28,7 @@ internal class GLES30WallpaperRenderer(context: Context) : GLWallpaperRenderer(c
     private val vertexArrays = IntArray(1)
 
     override fun onSurfaceCreated(gl10: GL10, eglConfig: EGLConfig) {
-        surfaceCreatedPrepare()
+        surfacePreProcess()
         // Locations are set in shader sources.
         GLES30.glGenVertexArrays(vertexArrays.size, vertexArrays, 0)
         GLES30.glBindVertexArray(vertexArrays[0])

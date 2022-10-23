@@ -78,7 +78,7 @@ abstract class GLWallpaperRenderer(protected val context: Context) : GLSurfaceVi
             vertexArray.size * BYTES_PER_FLOAT
         ).order(ByteOrder.nativeOrder()).asFloatBuffer()
         vertices.put(vertexArray).position(0)
-        val texCoordArray = floatArrayOf( // u, v
+        val texCoordinationArray = floatArrayOf( // u, v
             // bottom left
             0.0f, 1.0f,  // top left
             0.0f, 0.0f,  // bottom right
@@ -86,12 +86,10 @@ abstract class GLWallpaperRenderer(protected val context: Context) : GLSurfaceVi
             1.0f, 0.0f
         )
         texCoordinationBuffer = ByteBuffer.allocateDirect(
-            texCoordArray.size * BYTES_PER_FLOAT
+            texCoordinationArray.size * BYTES_PER_FLOAT
         ).order(ByteOrder.nativeOrder()).asFloatBuffer()
-        texCoordinationBuffer.put(texCoordArray).position(0)
-        val indexArray = intArrayOf(
-            0, 1, 2, 3, 2, 1
-        )
+        texCoordinationBuffer.put(texCoordinationArray).position(0)
+        val indexArray = intArrayOf(0, 1, 2, 3, 2, 1)
         indices = ByteBuffer.allocateDirect(
             indexArray.size * BYTES_PER_INT
         ).order(ByteOrder.nativeOrder()).asIntBuffer()
@@ -120,13 +118,9 @@ abstract class GLWallpaperRenderer(protected val context: Context) : GLSurfaceVi
     override fun setVideoSizeAndRotation(width: Int, height: Int, rotation: Int) {
         // MediaMetadataRetriever always give us raw width and height and won't rotate them.
         // So we rotate them by ourselves.
-        var widthTemp = width
-        var heightTemp = height
-        if (rotation % 180 != 0) {
-            val swap = widthTemp
-            widthTemp = heightTemp
-            heightTemp = swap
-        }
+        val (widthTemp, heightTemp) = if (rotation % 180 != 0) {
+            height to width
+        } else width to height
         if (videoWidth != widthTemp || videoHeight != heightTemp || videoRotation != rotation) {
             videoWidth = widthTemp
             videoHeight = heightTemp
@@ -237,7 +231,7 @@ abstract class GLWallpaperRenderer(protected val context: Context) : GLSurfaceVi
 
     abstract fun buildProgram(): Int
 
-    protected fun surfaceCreatedPrepare() {
+    protected fun surfacePreProcess() {
         // No depth test for 2D video.
         GLES20.glDisable(GLES20.GL_DEPTH_TEST)
         GLES20.glDepthMask(false)

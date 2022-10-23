@@ -2,6 +2,7 @@ package com.storyteller_f.ping
 
 import android.database.Cursor
 import android.database.MatrixCursor
+import android.os.Build
 import android.os.CancellationSignal
 import android.os.Handler
 import android.os.ParcelFileDescriptor
@@ -53,7 +54,7 @@ class StorageProvider : DocumentsProvider() {
                 add(DocumentsContract.Root.COLUMN_MIME_TYPES, DocumentsContract.Document.MIME_TYPE_DIR)
                 add(DocumentsContract.Root.COLUMN_FLAGS, flags)
                 add(DocumentsContract.Root.COLUMN_ICON, R.drawable.ic_launcher_foreground)
-                add(DocumentsContract.Root.COLUMN_TITLE, "ping")
+                add(DocumentsContract.Root.COLUMN_TITLE, context?.getString(R.string.app_name))
                 add(DocumentsContract.Root.COLUMN_SUMMARY, "your data")
                 add(DocumentsContract.Root.COLUMN_DOCUMENT_ID, "/")
             }
@@ -63,25 +64,38 @@ class StorageProvider : DocumentsProvider() {
     override fun queryDocument(documentId: String?, projection: Array<out String>?): Cursor {
         Log.d(TAG, "queryDocument() called with: documentId = $documentId, projection = $projection")
         return MatrixCursor(projection ?: DEFAULT_DOCUMENT_PROJECTION).apply {
-            handleChild(documentId, false)
+            val root = context?.filesDir?.parentFile ?: return@apply
+            newRow().apply {
+                add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, "/")
+                add(DocumentsContract.Document.COLUMN_MIME_TYPE, DocumentsContract.Document.MIME_TYPE_DIR)
+                val flags = 0
+                add(DocumentsContract.Document.COLUMN_FLAGS, flags)
+                add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, root.name)
+                add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, root.lastModified())
+                add(DocumentsContract.Document.COLUMN_SIZE, 0)
+            }
         }
     }
 
-    private fun MatrixCursor.handleChild(documentId: String?, isChild: Boolean) {
+    private fun MatrixCursor.handleChild(documentId: String?) {
         if (documentId != null) {
             context?.let {
                 val root = it.filesDir.parentFile ?: return@let
                 File(root, documentId).listFiles()?.forEach {
                     newRow().apply {
                         val subDocumentId = it.absolutePath.substring(root.absolutePath.length)
-                        add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, if (isChild) subDocumentId else documentId)
+                        add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, subDocumentId)
                         val type = if (it.isFile) {
                             MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
                         } else {
                             DocumentsContract.Document.MIME_TYPE_DIR
                         }
                         add(DocumentsContract.Document.COLUMN_MIME_TYPE, type)
-                        val flags = 0
+                        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            DocumentsContract.Document.FLAG_SUPPORTS_COPY
+                        } else {
+                            0
+                        }
                         add(DocumentsContract.Document.COLUMN_FLAGS, flags)
                         add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, it.name)
                         add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, it.lastModified())
@@ -99,7 +113,7 @@ class StorageProvider : DocumentsProvider() {
         Log.d(TAG, "queryChildDocuments() called with: parentDocumentId = $parentDocumentId, projection = $projection, sortOrder = $sortOrder")
 
         return MatrixCursor(projection ?: DEFAULT_DOCUMENT_PROJECTION).apply {
-            handleChild(parentDocumentId, true)
+            handleChild(parentDocumentId)
         }
     }
 
