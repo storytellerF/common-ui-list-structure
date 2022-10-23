@@ -1,6 +1,7 @@
 import com.storyteller_f.sml.config.*
 import com.storyteller_f.sml.dimens
 import com.storyteller_f.sml.reference
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -9,12 +10,12 @@ plugins {
 
 android {
     namespace = "com.storyteller_f.sml"
-    compileSdk = 32
+    compileSdk = 33
 
     defaultConfig {
         applicationId = "com.storyteller_f.sml"
         minSdk = 21
-        targetSdk = 32
+        targetSdk = 33
         versionCode = 1
         versionName = "1.0"
 
@@ -41,9 +42,9 @@ android {
 
 dependencies {
 
-    implementation("androidx.core:core-ktx:1.7.0")
+    implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.appcompat:appcompat:1.5.1")
-    implementation("com.google.android.material:material:1.5.0-alpha04")
+    implementation("com.google.android.material:material:1.8.0-alpha01")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.navigation:navigation-fragment-ktx:2.5.2")
     implementation("androidx.navigation:navigation-ui-ktx:2.5.2")
