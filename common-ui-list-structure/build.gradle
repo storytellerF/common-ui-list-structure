@@ -3,6 +3,7 @@ buildscript {
     dependencies {
         def nav_version = "2.4.2"
         classpath "androidx.navigation:navigation-safe-args-gradle-plugin:$nav_version"
+        classpath 'app.cash.licensee:licensee-gradle-plugin:1.5.0'
     }
 }
 
@@ -26,8 +27,6 @@ def kotlinFiles = "**/*.kt"
 def resourceFiles = "**/resources/**"
 def buildFiles = "**/build/**"
 
-
-
 tasks.register("detektAll", io.gitlab.arturbosch.detekt.Detekt) {
     def autoFix = project.hasProperty('detektAutoFix')
 
@@ -50,8 +49,4 @@ tasks.register("detektAll", io.gitlab.arturbosch.detekt.Detekt) {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
-}
-
-ext {
-    kotlin_version = '1.7.10'
 }

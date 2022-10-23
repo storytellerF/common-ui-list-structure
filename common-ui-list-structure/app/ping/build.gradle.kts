@@ -1,6 +1,3 @@
-import com.storyteller_f.sml.config.*
-import com.storyteller_f.sml.dimens
-import com.storyteller_f.sml.reference
 import common_ui_list_structure_preset.*
 
 plugins {
@@ -9,9 +6,9 @@ plugins {
     id("com.storyteller_f.sml")
     id("com.google.devtools.ksp")
     id("androidx.navigation.safeargs.kotlin")
+    id("app.cash.licensee")
 }
 android {
-
     defaultConfig {
         applicationId = "com.storyteller_f.ping"
     }
@@ -29,39 +26,7 @@ setupGeneric()
 setupDataBinding()
 setupDipToPx()
 
-interface DD {
-    val rectRadius: Dimension
-}
-
-class Test : DD {
-    override val rectRadius: Dimension
-        get() = Dp(12f)
-}
-
-sml {
-    color.set(mutableMapOf("test" to "#ff0000"))
-    dimen.set(Test::class.dimens())
-    drawables {
-        register("hello") {
-            Rectangle {
-                solid(RgbColor("#00ff00"))
-                corners(Test::rectRadius.reference())
-            }
-        }
-        register("test") {
-            Oval {
-                solid(RgbColor("#00ff00"))
-            }
-        }
-        register("test1") {
-            Ring("10dp", "1dp") {
-                ring(RgbColor("#00ff00"), Dp(10f))
-            }
-        }
-        register("test2") {
-            Line {
-                line(RgbColor("#00ff00"), Dp(10f))
-            }
-        }
-    }
+licensee {
+    allow("Apache-2.0")
+    allow("MIT")
 }
