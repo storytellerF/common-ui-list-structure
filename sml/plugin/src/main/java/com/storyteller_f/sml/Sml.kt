@@ -26,21 +26,22 @@ class Sml : Plugin<Project> {
         val rootPath = "${project.buildDir}/generated"
         project.android().variants().all { variant ->
             val subPath = variant.dirName
-            val colorsOutputDirectory =
-                File(File(rootPath, "sml_res_colors"), subPath).apply { mkdirs() }
-            val dimensOutputDirectory =
-                File(File(rootPath, "sml_res_dimens"), subPath).apply { mkdirs() }
-            val drawablesOutputDirectory =
-                File(File(rootPath, "sml_res_drawables"), subPath).apply { mkdirs() }
+
             project.tasks.register(taskName(variant, "Colors"), ColorTask::class.java) {
+                val colorsOutputDirectory =
+                    File(File(rootPath, "sml_res_colors"), subPath).apply { mkdirs() }
                 config(it, colorsOutputDirectory, extension, variant, project)
             }
 
             project.tasks.register(taskName(variant, "Dimens"), DimensionTask::class.java) {
+                val dimensOutputDirectory =
+                    File(File(rootPath, "sml_res_dimens"), subPath).apply { mkdirs() }
                 config(it, dimensOutputDirectory, extension, variant, project)
             }
 
             project.tasks.register(taskName(variant, "Shapes"), ShapeTask::class.java) {
+                val drawablesOutputDirectory =
+                    File(File(rootPath, "sml_res_drawables"), subPath).apply { mkdirs() }
                 config(it, drawablesOutputDirectory, extension, variant, project)
             }
 
