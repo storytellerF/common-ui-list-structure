@@ -20,111 +20,91 @@ import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.opengl.GLES20
-import android.opengl.GLES30
-import android.util.Log
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
 import kotlin.math.roundToInt
 
-object Utils {
-    private const val TAG = "Utils"
-
-    /**
-     * createVideoThumbnailFromUri
-     * @param context Activity context or application context.
-     * @param uri Video uri.
-     * @return Bitmap thumbnail
-     *
-     * Hacked from ThumbnailUtils.createVideoThumbnail()'s code.
-     */
-    fun createVideoThumbnailFromUri(
-        context: Context,
-        uri: Uri
-    ): Bitmap? {
-        var bitmap: Bitmap? = null
-        val retriever = MediaMetadataRetriever()
+/**
+ * createVideoThumbnailFromUri
+ * @param context Activity context or application context.
+ * @param uri Video uri.
+ * @return Bitmap thumbnail
+ *
+ * Hacked from ThumbnailUtils.createVideoThumbnail()'s code.
+ */
+fun createVideoThumbnailFromUri(
+    context: Context,
+    uri: Uri
+): Bitmap? {
+    val retriever = MediaMetadataRetriever()
+    val bitmap = try {
+        retriever.setDataSource(context, uri)
+        retriever.getFrameAtTime(-1)
+    } catch (e: RuntimeException) {
+        e.printStackTrace()
+        null
+    } finally {
         try {
-            retriever.setDataSource(context, uri)
-            bitmap = retriever.getFrameAtTime(-1)
+            retriever.release()
         } catch (e: RuntimeException) {
-            // Assume this is a corrupt video file
+            // Ignore failures while cleaning up.
             e.printStackTrace()
-        } // Assume this is a corrupt video file.
-        finally {
-            try {
-                retriever.release()
-            } catch (e: RuntimeException) {
-                // Ignore failures while cleaning up.
-                e.printStackTrace()
-            }
         }
-        if (bitmap == null) {
-            return null
-        }
-        // Scale down the bitmap if it's too large.
-        val width = bitmap.width
-        val height = bitmap.height
-        val max = width.coerceAtLeast(height)
-        if (max > 512) {
-            val scale = 512f / max
-            val w = (scale * width).roundToInt()
-            val h = (scale * height).roundToInt()
-            bitmap = Bitmap.createScaledBitmap(bitmap, w, h, true)
-        }
-        return bitmap
-    }
+    } ?: return null
+    // Scale down the bitmap if it's too large.
+    val width = bitmap.width
+    val height = bitmap.height
+    val max = width.coerceAtLeast(height)
+    return if (max > 512) {
+        val scale = 512f / max
+        val w = (scale * width).roundToInt()
+        val h = (scale * height).roundToInt()
+        Bitmap.createScaledBitmap(bitmap, w, h, true)
+    } else
+        bitmap
+}
 
-    @Throws(RuntimeException::class)
-    fun compileShaderResourceGLES20(
-        context: Context,
-        shaderType: Int,
-        shaderRes: Int
-    ): Int {
-        val shaderSource = context.resources.openRawResource(shaderRes).bufferedReader().use {
-            it.readText()
-        }
-        val shader = GLES20.glCreateShader(shaderType)
-        if (shader == 0) {
-            throw RuntimeException("Failed to create shader")
-        }
-        GLES20.glShaderSource(shader, shaderSource)
-        GLES20.glCompileShader(shader)
-        val status = IntArray(1)
-        GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, status, 0)
-        if (status[0] == 0) {
-            val log = GLES20.glGetShaderInfoLog(shader)
-            GLES20.glDeleteShader(shader)
-            throw RuntimeException(log)
-        }
-        return shader
+@Throws(RuntimeException::class)
+fun compileShaderResourceGLES20(
+    context: Context,
+    shaderType: Int,
+    shaderRes: Int
+): Int {
+    val shaderSource = context.resources.openRawResource(shaderRes).bufferedReader().use {
+        it.readText()
     }
+    val shader = GLES20.glCreateShader(shaderType)
+    if (shader == 0) {
+        throw RuntimeException("Failed to create shader")
+    }
+    GLES20.glShaderSource(shader, shaderSource)
+    GLES20.glCompileShader(shader)
+    val status = IntArray(1)
+    GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, status, 0)
+    if (status[0] == 0) {
+        val log = GLES20.glGetShaderInfoLog(shader)
+        GLES20.glDeleteShader(shader)
+        throw RuntimeException(log)
+    }
+    return shader
+}
 
-    @Throws(RuntimeException::class)
-    fun linkProgramGLES20(
-        vertShader: Int,
-        fragShader: Int
-    ): Int {
-        val program = GLES20.glCreateProgram()
-        if (program == 0) {
-            throw RuntimeException("Failed to create program")
-        }
-        GLES20.glAttachShader(program, vertShader)
-        GLES20.glAttachShader(program, fragShader)
-        GLES20.glLinkProgram(program)
-        val status = IntArray(1)
-        GLES20.glGetProgramiv(program, GLES20.GL_LINK_STATUS, status, 0)
-        if (status[0] == 0) {
-            val log = GLES20.glGetProgramInfoLog(program)
-            GLES20.glDeleteProgram(program)
-            throw RuntimeException(log)
-        }
-        return program
+@Throws(RuntimeException::class)
+fun linkProgramGLES20(
+    vertShader: Int,
+    fragShader: Int
+): Int {
+    val program = GLES20.glCreateProgram()
+    if (program == 0) {
+        throw RuntimeException("Failed to create program")
     }
-
-    fun debug(tag: String, message: String) {
-        if (BuildConfig.DEBUG) {
-            Log.d(tag, message)
-        }
+    GLES20.glAttachShader(program, vertShader)
+    GLES20.glAttachShader(program, fragShader)
+    GLES20.glLinkProgram(program)
+    val status = IntArray(1)
+    GLES20.glGetProgramiv(program, GLES20.GL_LINK_STATUS, status, 0)
+    if (status[0] == 0) {
+        val log = GLES20.glGetProgramInfoLog(program)
+        GLES20.glDeleteProgram(program)
+        throw RuntimeException(log)
     }
+    return program
 }

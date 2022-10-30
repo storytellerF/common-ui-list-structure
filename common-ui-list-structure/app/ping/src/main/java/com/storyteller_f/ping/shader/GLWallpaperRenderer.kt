@@ -25,7 +25,6 @@ import android.opengl.Matrix
 import android.util.Log
 import android.view.Surface
 import com.google.android.exoplayer2.ExoPlayer
-import com.storyteller_f.ping.Utils
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -102,20 +101,18 @@ abstract class GLWallpaperRenderer(protected val context: Context) : GLSurfaceVi
     }
 
     override fun setScreenSize(width: Int, height: Int) {
+        Log.d(TAG, "setScreenSize() called with: width = $width, height = $height")
         if (screenWidth != width || screenHeight != height) {
             screenWidth = width
             screenHeight = height
-            Utils.debug(
-                TAG, String.format(
-                    Locale.US, "Set screen size to %dx%d", screenWidth, screenHeight
-                )
-            )
+            Log.i(TAG, "setScreenSize: success")
             updateOffset()
             updateMatrix()
         }
     }
 
     override fun setVideoSizeAndRotation(width: Int, height: Int, rotation: Int) {
+        Log.d(TAG, "setVideoSizeAndRotation() called with: width = $width, height = $height, rotation = $rotation")
         // MediaMetadataRetriever always give us raw width and height and won't rotate them.
         // So we rotate them by ourselves.
         val (widthTemp, heightTemp) = if (rotation % 180 != 0) {
@@ -125,16 +122,6 @@ abstract class GLWallpaperRenderer(protected val context: Context) : GLSurfaceVi
             videoWidth = widthTemp
             videoHeight = heightTemp
             videoRotation = rotation
-            Utils.debug(
-                TAG, String.format(
-                    Locale.US, "Set video size to %dx%d", videoWidth, videoHeight
-                )
-            )
-            Utils.debug(
-                TAG, String.format(
-                    Locale.US, "Set video rotation to %d", videoRotation
-                )
-            )
             updateOffset()
             updateMatrix()
         }
@@ -157,11 +144,6 @@ abstract class GLWallpaperRenderer(protected val context: Context) : GLSurfaceVi
         if (this.xOffset != xOffsetTemp || this.yOffset != yOffsetTemp) {
             this.xOffset = xOffsetTemp
             this.yOffset = yOffsetTemp
-            Utils.debug(
-                TAG, String.format(
-                    Locale.US, "Set offset to %fx%f", this.xOffset, this.yOffset
-                )
-            )
             updateMatrix()
         }
     }
@@ -202,7 +184,7 @@ abstract class GLWallpaperRenderer(protected val context: Context) : GLSurfaceVi
         val videoRatio = videoWidth.toFloat() / videoHeight
         val screenRatio = screenWidth.toFloat() / screenHeight
         if (videoRatio >= screenRatio) {
-            Utils.debug(TAG, "X-cropping")
+            Log.d(TAG, "updateMatrix: x crop")
             // Treat video and screen width as 1, and compare width to scale.
             val newVideoWidth = screenWidth.toFloat() * videoHeight / screenHeight
             val widthRatio = videoWidth / newVideoWidth
@@ -214,7 +196,7 @@ abstract class GLWallpaperRenderer(protected val context: Context) : GLSurfaceVi
             }
             Matrix.translateM(mvp, 0, xOffset, 0f, 0f)
         } else {
-            Utils.debug(TAG, "Y-cropping")
+            Log.d(TAG, "updateMatrix: y crop")
             // Treat video and screen height as 1, and compare height to scale.
             val newVideoHeight = screenHeight.toFloat() * videoWidth / screenWidth
             val heightRatio = videoHeight / newVideoHeight

@@ -5,17 +5,13 @@ import android.app.WallpaperManager
 import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
+import android.util.Log
 import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.flowWithLifecycle
 import androidx.navigation.findNavController
-import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
@@ -43,6 +39,7 @@ class WallpaperListFragment : SimpleFragment<FragmentWallpaperListBinding>(Fragm
     }
 
     private val setWallpaper = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        Log.i(TAG, "choose: result ${result.resultCode}")
         if (result.resultCode == Activity.RESULT_OK) {
             scope.launch {
                 val first = requireContext().dataStore.data.mapNotNull {
@@ -50,6 +47,7 @@ class WallpaperListFragment : SimpleFragment<FragmentWallpaperListBinding>(Fragm
                 }.first()
                 requireContext().dataStore.edit {
                     it[selected] = first
+                    it[preview] = ""
                 }
             }
         }
@@ -90,6 +88,10 @@ class WallpaperListFragment : SimpleFragment<FragmentWallpaperListBinding>(Fragm
     fun longClickWallpaper(sender: View, itemHolder: WallpaperHolder) {
         sender.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
         sender.findNavController().navigate(R.id.action_WallpaperListFragment_to_WallpaperInfoFragment, WallpaperInfoFragmentArgs(itemHolder.wallpaper.uri).toBundle())
+    }
+
+    companion object {
+        private const val TAG = "WallpaperListFragment"
     }
 }
 
