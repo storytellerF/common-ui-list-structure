@@ -33,6 +33,39 @@ class AdapterProcessor : AbstractProcessor() {
                     "${roundEnvironment?.errorRaised()} ${roundEnvironment?.processingOver()} count $count"
         )
 
+        processAnnotation(set, roundEnvironment)
+
+        writeFile(roundEnvironment)
+        return true
+    }
+
+    private fun writeFile(roundEnvironment: RoundEnvironment?) {
+        roundEnvironment?.let { environment ->
+            if (environment.processingOver()) {
+                println("binding event map process: ${zoom.debugState()}")
+                zoom.setTemp.forEach { (_, packageElement) ->
+                    val content =
+                        createClassFileContent(
+                            packageElement,
+                            zoom.holderEntryTemp,
+                            zoom
+                        )
+                    val sources = zoom.getAllSource()
+                    val classFile =
+                        processingEnv.filer.createSourceFile(
+                            "${packageElement}.adapter_produce.$className",
+                            *sources.toTypedArray()
+                        )
+                    classFile.openWriter().use {
+                        it.write(content)
+                        it.flush()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun processAnnotation(set: MutableSet<out TypeElement>?, roundEnvironment: RoundEnvironment?) {
         set?.forEach { typeElement ->
             val name = typeElement.simpleName.toString()
             println(name)
@@ -65,31 +98,6 @@ class AdapterProcessor : AbstractProcessor() {
                 }
             }
         }
-
-        roundEnvironment?.let { environment ->
-            if (environment.processingOver()) {
-                println("binding event map process: ${zoom.debugState()}")
-                zoom.setTemp.forEach { (_, packageElement) ->
-                    val content =
-                        createClassFileContent(
-                            packageElement,
-                            zoom.holderEntryTemp,
-                            zoom
-                        )
-                    val sources = zoom.getAllSource()
-                    val classFile =
-                        processingEnv.filer.createSourceFile(
-                            "${packageElement}.adapter_produce.$className",
-                            *sources.toTypedArray()
-                        )
-                    classFile.openWriter().use {
-                        it.write(content)
-                        it.flush()
-                    }
-                }
-            }
-        }
-        return true
     }
 
     private fun createMultiViewHolder(entry: Entry<Element>, eventMapClick: Map<String, List<Event<Element>>>, eventMapLongClick: Map<String, List<Event<Element>>>): String {

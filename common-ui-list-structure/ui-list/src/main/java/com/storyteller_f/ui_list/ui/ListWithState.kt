@@ -133,8 +133,7 @@ class ListWithState @JvmOverloads constructor(
                 return true
             }
 
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-            }
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) = Unit
 
             override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
                 super.onSelectedChanged(viewHolder, actionState)
@@ -168,8 +167,7 @@ class ListWithState @JvmOverloads constructor(
                 target: RecyclerView.ViewHolder
             ) = false
 
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-            }
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) = Unit
 
             override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
                 super.onSelectedChanged(viewHolder, actionState)

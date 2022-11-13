@@ -123,25 +123,17 @@ abstract class LocalFileOperateWorker(
     }
 
     open class DefaultProgressListener : FileOperationProgressListener {
-        override fun onProgress(progress: Int, key: String) {
+        override fun onProgress(progress: Int, key: String) = Unit
 
-        }
+        override fun onState(state: String?, key: String) = Unit
 
-        override fun onState(state: String?, key: String) {
-        }
+        override fun onTip(tip: String?, key: String) = Unit
 
-        override fun onTip(tip: String?, key: String) {
-        }
+        override fun onDetail(detail: String?, level: Int, key: String) = Unit
 
-        override fun onDetail(detail: String?, level: Int, key: String) {
-        }
+        override fun onLeft(fileCount: Int, folderCount: Int, size: Long, key: String) = Unit
 
-        override fun onLeft(fileCount: Int, folderCount: Int, size: Long, key: String) {
-        }
-
-        override fun onComplete(dest: String?, isSuccess: Boolean, key: String) {
-        }
-
+        override fun onComplete(dest: String?, isSuccess: Boolean, key: String) = Unit
 
     }
 

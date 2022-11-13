@@ -90,3 +90,9 @@ sml {
         }
     }
 }
+
+androidComponents {
+    onVariants {
+
+    }
+}

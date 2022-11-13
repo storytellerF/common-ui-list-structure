@@ -1,6 +1,7 @@
 package com.storyteller_f.giant_explorer.dialog
 
 import android.util.Log
+import android.view.View
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.distinctUntilChanged
@@ -56,74 +57,82 @@ class FileOperationDialog : SimpleDialogFragment<DialogFileOperationBinding>(Dia
             Log.i(TAG, "onBindViewEvent: state ${binder.state.value}")
             val key = uuid.data.value ?: return
             if (!binder.map.containsKey(key)) dismiss()
-            binder.state.debounce(500).distinctUntilChanged().observe(owner) {
-                when (it) {
-                    FileOperateBinder.state_running -> {
-                        val task = binder.map[key]?.taskEquivalent
-                        list.onVisible(binding.stateRunning)
-                        Log.i(TAG, "onBindViewEvent: $key $task ${binder.map.keys}")
-                        binding.textViewTask.text = String.format("total size: %d\ntotal file:%d\ntotal folder:%d", task?.size, task?.fileCount, task?.folderCount)
-                    }
-                    FileOperateBinder.state_end -> {
-                        binding.doneText.text = "done"
-                        list.onVisible(binding.stateDone)
-                    }
-                    FileOperateBinder.state_error -> {
-                        val task = binder.map[key]
-                        binding.doneText.text = task?.message
-                        list.onVisible(binding.stateDone)
-                    }
-                    else -> list.onVisible(binding.stateProgress)
-                }
-            }
-            progressVM.data.withState(this) {
-                binding.progressBar.progress = it
-            }
-            stateVM.data.withState(this) {
-                binding.textViewState.text = it
-            }
-            tipVM.data.withState(this) {
-                binding.textViewDetail.text = it
-            }
-            leftVM.data.withState(this) {
-                Log.i(TAG, "onBindViewEvent: leftVM: $it")
-                binding.textViewLeft.text = presentTaskSnapshot(it)
-            }
-            val orPut = binder.fileOperationProgressListener.getOrPut(key) { mutableListOf() }
-            orPut.add(object : LocalFileOperateWorker.DefaultProgressListener() {
-                override fun onProgress(progress: Int, key: String) = progressVM.data.postValue(progress)
-
-                override fun onState(state: String?, key: String) = stateVM.data.postValue(state)
-
-                override fun onTip(tip: String?, key: String) = tipVM.data.postValue(tip)
-
-                override fun onLeft(fileCount: Int, folderCount: Int, size: Long, key: String) = leftVM.data.postValue(fileCount to folderCount to size)
-
-                override fun onComplete(dest: String?, isSuccess: Boolean, key: String) {
-                    binding.closeWhenError.pp {
-                        it.isVisible = true
-                    }
-                }
-
-            })
-            val callbackFlow = callbackFlow {
-                val element = object : LocalFileOperateWorker.DefaultProgressListener() {
-                    override fun onDetail(detail: String?, level: Int, key: String) {
-                        trySend(detail ?: "null")
-                    }
-                }
-                orPut.add(element)
-                awaitClose { orPut.remove(element) }
-            }
-            val detail = binding.textViewDetail
-            scope.launch {
-                owner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    callbackFlow.collect {
-                        detail.append(it)
-                    }
-                }
-            }
+            bindUi(key, list, binding)
+            bindListenter(key, binding)
         } else dismiss()
+    }
+
+    private fun bindListenter(key: String, binding: DialogFileOperationBinding) {
+        val orPut = binder.fileOperationProgressListener.getOrPut(key) { mutableListOf() }
+        orPut.add(object : LocalFileOperateWorker.DefaultProgressListener() {
+            override fun onProgress(progress: Int, key: String) = progressVM.data.postValue(progress)
+
+            override fun onState(state: String?, key: String) = stateVM.data.postValue(state)
+
+            override fun onTip(tip: String?, key: String) = tipVM.data.postValue(tip)
+
+            override fun onLeft(fileCount: Int, folderCount: Int, size: Long, key: String) = leftVM.data.postValue(fileCount to folderCount to size)
+
+            override fun onComplete(dest: String?, isSuccess: Boolean, key: String) {
+                binding.closeWhenError.pp {
+                    it.isVisible = true
+                }
+            }
+
+        })
+        val callbackFlow = callbackFlow {
+            val defaultProgressListener = object : LocalFileOperateWorker.DefaultProgressListener() {
+                override fun onDetail(detail: String?, level: Int, key: String) {
+                    trySend(detail ?: "null")
+                }
+            }
+            orPut.add(defaultProgressListener)
+            awaitClose { orPut.remove(defaultProgressListener) }
+        }
+        val detail = binding.textViewDetail
+        scope.launch {
+            owner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                callbackFlow.collect {
+                    detail.append(it)
+                }
+            }
+        }
+    }
+
+    private fun bindUi(key: String, list: List<View>, binding: DialogFileOperationBinding) {
+        binder.state.debounce(500).distinctUntilChanged().observe(owner) {
+            when (it) {
+                FileOperateBinder.state_running -> {
+                    val task = binder.map[key]?.taskEquivalent
+                    list.onVisible(binding.stateRunning)
+                    Log.i(TAG, "onBindViewEvent: $key $task ${binder.map.keys}")
+                    binding.textViewTask.text = String.format("total size: %d\ntotal file:%d\ntotal folder:%d", task?.size, task?.fileCount, task?.folderCount)
+                }
+                FileOperateBinder.state_end -> {
+                    binding.doneText.text = "done"
+                    list.onVisible(binding.stateDone)
+                }
+                FileOperateBinder.state_error -> {
+                    val task = binder.map[key]
+                    binding.doneText.text = task?.message
+                    list.onVisible(binding.stateDone)
+                }
+                else -> list.onVisible(binding.stateProgress)
+            }
+        }
+        progressVM.data.withState(this) {
+            binding.progressBar.progress = it
+        }
+        stateVM.data.withState(this) {
+            binding.textViewState.text = it
+        }
+        tipVM.data.withState(this) {
+            binding.textViewDetail.text = it
+        }
+        leftVM.data.withState(this) {
+            Log.i(TAG, "onBindViewEvent: leftVM: $it")
+            binding.textViewLeft.text = presentTaskSnapshot(it)
+        }
     }
 
     private fun presentTaskSnapshot(it: Triple<Int, Int, Long>) = String.format("size: %d\nleft file:%d\nleft folder:%d", it.third, it.first, it.second)

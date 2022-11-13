@@ -28,6 +28,4 @@ object Versions {
 
 }
 
-object Libraries {
-
-}
+object Libraries

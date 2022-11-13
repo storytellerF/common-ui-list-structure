@@ -18,7 +18,8 @@ package com.storyteller_f.ping.shader
 import android.content.Context
 import android.opengl.GLES20
 import com.storyteller_f.ping.R
-import com.storyteller_f.ping.Utils
+import com.storyteller_f.ping.compileShaderResourceGLES20
+import com.storyteller_f.ping.linkProgramGLES20
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
@@ -32,11 +33,12 @@ internal class GLES20WallpaperRenderer(context: Context) : GLWallpaperRenderer(c
         texCoordinationLocation = GLES20.glGetAttribLocation(program, "in_tex_coord")
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
     }
-    override fun buildProgram() = Utils.linkProgramGLES20(
-        Utils.compileShaderResourceGLES20(
+
+    override fun buildProgram() = linkProgramGLES20(
+        compileShaderResourceGLES20(
             context, GLES20.GL_VERTEX_SHADER, R.raw.vertex_20
         ),
-        Utils.compileShaderResourceGLES20(
+        compileShaderResourceGLES20(
             context, GLES20.GL_FRAGMENT_SHADER, R.raw.fragment_20
         )
     )

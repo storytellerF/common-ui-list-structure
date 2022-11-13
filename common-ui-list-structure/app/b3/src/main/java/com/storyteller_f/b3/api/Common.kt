@@ -70,8 +70,7 @@ private class MyX509TrustManager : X509TrustManager {
     }
 
     @Throws(CertificateException::class)
-    override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {
-    }
+    override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) = Unit
 
     override fun getAcceptedIssuers(): Array<X509Certificate> {
         return arrayOf()

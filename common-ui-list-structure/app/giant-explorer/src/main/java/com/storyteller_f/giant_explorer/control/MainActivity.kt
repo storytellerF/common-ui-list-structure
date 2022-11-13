@@ -95,7 +95,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         //连接服务
         try {
             bindService(Intent(this, FileOperateService::class.java), connection, BIND_AUTO_CREATE)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             bindService(Intent(this, FileOperateService::class.java), connection, 0)
         }
 

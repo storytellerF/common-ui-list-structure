@@ -1,6 +1,7 @@
 package com.storyteller_f.file_system.operate
 
 import android.content.Context
+import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.message.Message
@@ -136,7 +137,7 @@ class FileMove(
         try {
             fileInstance?.deleteFileOrEmptyDirectory()
         } catch (e: Exception) {
-            fileOperateListener?.onError(Message("delete ${fileInstance?.name} failed"), 0)
+            fileOperateListener?.onError(Message("delete ${fileInstance?.name} failed ${e.exceptionMessage}"), 0)
         }
     }
 
@@ -222,7 +223,7 @@ class FileDelete(
             }
             fileInstance.deleteFileOrEmptyDirectory()
             return true
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return false
         }
 

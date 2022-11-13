@@ -1,10 +1,12 @@
 package com.storyteller_f.sml
 
+import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.TestExtension
 import com.android.build.gradle.api.BaseVariant
+import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.GradleException
 import org.gradle.api.Project
@@ -18,6 +20,9 @@ fun Project.android(): BaseExtension {
         throw GradleException("Project $name is not an Android project")
     }
 }
+
+fun Project.androidComponents(configure: Action<ApplicationAndroidComponentsExtension>): Unit =
+    (this as org.gradle.api.plugins.ExtensionAware).extensions.configure("androidComponents", configure)
 
 fun BaseExtension.variants(): DomainObjectSet<out BaseVariant> {
     return when (this) {

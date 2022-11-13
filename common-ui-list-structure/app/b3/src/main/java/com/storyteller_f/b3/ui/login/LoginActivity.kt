@@ -63,7 +63,7 @@ class LoginActivity : AppCompatActivity() {
                             } else {
                                 gtu.showFailedDialog()
                             }
-                        } catch (e: Exception) {
+                        } catch (_: Exception) {
 
                         }
 
@@ -78,7 +78,7 @@ class LoginActivity : AppCompatActivity() {
                             println("button click geetest $geetest")
                             this@apply.api1Json = JSONObject(requireGson().toJson(geetest))
                             gtu.getGeetest()
-                        } catch (e: Exception) {
+                        } catch (_: Exception) {
 
                         }
 
