@@ -53,17 +53,19 @@ internal class GLES20WallpaperRenderer(context: Context) : GLWallpaperRenderer(c
             local.updateTexImage()
             ++renderedFrame
         }
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
-        GLES20.glUseProgram(program)
-        GLES20.glUniformMatrix4fv(mvpLocation, 1, false, mvp, 0)
+        drawFramePrepare()
         // No vertex array in OpenGL ES 2.
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[0])
+        //启动in_position
         GLES20.glEnableVertexAttribArray(positionLocation)
+        //指定in_position 的顶点数据
         GLES20.glVertexAttribPointer(
             positionLocation, 2, GLES20.GL_FLOAT, false, 2 * BYTES_PER_FLOAT, 0
         )
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[1])
+        //启动tex
         GLES20.glEnableVertexAttribArray(texCoordinationLocation)
+        //指定tex 的顶点数据
         GLES20.glVertexAttribPointer(
             texCoordinationLocation, 2, GLES20.GL_FLOAT, false, 2 * BYTES_PER_FLOAT, 0
         )

@@ -67,9 +67,7 @@ internal class GLES30WallpaperRenderer(context: Context) : GLWallpaperRenderer(c
             local.updateTexImage()
             ++renderedFrame
         }
-        GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT)
-        GLES30.glUseProgram(program)
-        GLES30.glUniformMatrix4fv(mvpLocation, 1, false, mvp, 0)
+        drawFramePrepare()
 
         GLES30.glBindVertexArray(vertexArrays[0])
         GLES30.glDrawElements(GLES30.GL_TRIANGLES, 6, GLES30.GL_UNSIGNED_INT, 0)

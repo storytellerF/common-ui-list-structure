@@ -50,14 +50,14 @@ abstract class GLWallpaperRenderer(protected val context: Context) : GLSurfaceVi
     private var yOffset = 0f
     private var maxXOffset = 0f
     private var maxYOffset = 0f
-    protected val vertices: FloatBuffer
-    protected val texCoordinationBuffer: FloatBuffer
-    protected val indices: IntBuffer
-    protected val textures: IntArray
+    private val vertices: FloatBuffer
+    private val texCoordinationBuffer: FloatBuffer
+    private val indices: IntBuffer
+    private val textures: IntArray
     protected val buffers: IntArray
-    protected val mvp: FloatArray
+    private val mvp: FloatArray
     protected var program = 0
-    protected var mvpLocation = 0
+    private var mvpLocation = 0
     protected var surfaceTexture: SurfaceTexture? = null
 
     // Fix bug like https://stackoverflow.com/questions/14185661/surfacetexture-onframeavailablelistener-stops-being-called
@@ -264,6 +264,12 @@ abstract class GLWallpaperRenderer(protected val context: Context) : GLSurfaceVi
             indices, GLES20.GL_STATIC_DRAW
         )
         GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0)
+    }
+
+    fun drawFramePrepare() {
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
+        GLES20.glUseProgram(program)
+        GLES20.glUniformMatrix4fv(mvpLocation, 1, false, mvp, 0)
     }
 
     companion object {
