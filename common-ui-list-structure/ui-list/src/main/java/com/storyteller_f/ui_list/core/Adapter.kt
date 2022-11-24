@@ -41,7 +41,7 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(val view: View) :
 abstract class AdapterViewHolder<IH : DataItemHolder>(binding: ViewBinding) :
     AbstractViewHolder<IH>(binding.root)
 
-class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val key: String? = null) : RecyclerView.Adapter<VH>() {
+open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val key: String? = null) : RecyclerView.Adapter<VH>() {
     var target: RecyclerView.Adapter<VH>? = null
     var type = ""
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = (list[viewType].invoke(parent, type) as VH).apply {
@@ -52,10 +52,10 @@ class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val key: 
         holder.onBind(getItemAbstract(position) as IH)
     }
 
-    private fun getItemAbstract(position: Int): IH? {
+    protected open fun getItemAbstract(position: Int): IH? {
         return if (target is ListAdapter<*, *>) {
-            (target as ListAdapter<IH, VH>).currentList.get(position) as IH
-        } else null
+            (target as ListAdapter<IH, VH>).currentList[position] as IH
+        } else throw NotImplementedError("无法获取对应item holder")
     }
 
     override fun getItemCount() = 0

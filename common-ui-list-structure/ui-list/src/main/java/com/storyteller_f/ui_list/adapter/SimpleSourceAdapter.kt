@@ -11,21 +11,23 @@ open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>
     PagingDataAdapter<IH, VH>(
         common_diff_util as DiffUtil.ItemCallback<IH>
     ) {
-    val d = DefaultAdapter<IH, VH>(key).apply {
+    private val proxy = object : DefaultAdapter<IH, VH>(key) {
+        override fun getItemAbstract(position: Int) = getItem(position)
+    }.apply {
         target = this@SimpleSourceAdapter
     }
 
     var type: String
-        get() = d.type
+        get() = proxy.type
         set(value) {
-            d.type = value
+            proxy.type = value
         }
 
-    override fun onBindViewHolder(holder: VH, position: Int) = d.onBindViewHolder(holder, position)
+    override fun onBindViewHolder(holder: VH, position: Int) = proxy.onBindViewHolder(holder, position)
 
-    override fun getItemViewType(position: Int) = d.getItemViewType(position)
+    override fun getItemViewType(position: Int) = proxy.getItemViewType(position)
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = d.onCreateViewHolder(parent, viewType)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = proxy.onCreateViewHolder(parent, viewType)
 
     companion object {
         val common_diff_util = object : DiffUtil.ItemCallback<DataItemHolder>() {
