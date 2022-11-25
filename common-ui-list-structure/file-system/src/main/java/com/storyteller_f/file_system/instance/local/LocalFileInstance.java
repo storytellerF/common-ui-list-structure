@@ -4,13 +4,12 @@ import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.WorkerThread;
 
-
 import com.storyteller_f.file_system.Filter;
 import com.storyteller_f.file_system.instance.BaseContextFileInstance;
-import com.storyteller_f.file_system.instance.FileInstance;
 import com.storyteller_f.file_system.model.DirectoryItemModel;
 import com.storyteller_f.file_system.model.FileItemModel;
 import com.storyteller_f.file_system.model.FileSystemItemModel;
@@ -53,6 +52,7 @@ public abstract class LocalFileInstance extends BaseContextFileInstance {
         super(context);
     }
 
+    @NonNull
     @WorkerThread
     public FilesAndDirectories listSafe() {
         try {

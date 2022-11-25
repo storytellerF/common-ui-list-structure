@@ -63,7 +63,7 @@ class FileExplorerSession(application: Application, path: String) : AndroidViewM
 
     init {
         viewModelScope.launch {
-            suspendCancellableCoroutine<FileInstance> {
+            suspendCancellableCoroutine {
                 thread {
                     val result = Result.success(FileInstanceFactory.getFileInstance(path, application.applicationContext))
                     it.resumeWith(result)

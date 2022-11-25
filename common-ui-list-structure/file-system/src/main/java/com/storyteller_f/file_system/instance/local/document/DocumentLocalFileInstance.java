@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.documentfile.provider.DocumentFile;
 
 
@@ -285,10 +286,17 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
 
     protected abstract DocumentLocalFileInstance getInstance();
 
+    @NonNull
+    @Override
+    public FilesAndDirectories listSafe() {
+        return list();
+    }
+
+    @NonNull
     @Override
     public FilesAndDirectories list() {
         if (current == null) {
-            return null;
+            return FilesAndDirectories.Companion.empty();
         }
         DocumentFile[] documentFiles = current.listFiles();
         ArrayList<FileItemModel> files = new ArrayList<>();

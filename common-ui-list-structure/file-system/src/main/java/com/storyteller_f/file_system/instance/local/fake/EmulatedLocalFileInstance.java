@@ -3,6 +3,8 @@ package com.storyteller_f.file_system.instance.local.fake;
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.storyteller_f.file_system.FileInstanceFactory;
 import com.storyteller_f.file_system.Filter;
 import com.storyteller_f.file_system.instance.local.LocalFileInstance;
@@ -77,11 +79,13 @@ public class EmulatedLocalFileInstance extends LocalFileInstance {
         return null;
     }
 
+    @NonNull
     @Override
     public FilesAndDirectories listSafe() {
         return list();
     }
 
+    @NonNull
     @Override
     public FilesAndDirectories list() {
         List<DirectoryItemModel> directoryItemModels = new ArrayList<>();

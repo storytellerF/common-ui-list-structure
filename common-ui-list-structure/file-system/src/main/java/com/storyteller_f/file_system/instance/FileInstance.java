@@ -1,6 +1,7 @@
 package com.storyteller_f.file_system.instance;
 
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 import androidx.core.util.ObjectsCompat;
@@ -26,7 +27,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Objects;
 
 /**
  * notice 如果需要给name 设置值，那就需要提供path。或者自行处理
@@ -150,6 +150,7 @@ public abstract class FileInstance {
      * @return 返回所有的文件和目录
      */
     @WorkerThread
+    @NonNull
     public abstract FilesAndDirectories list();
 
     /**
@@ -160,8 +161,7 @@ public abstract class FileInstance {
     public abstract boolean isFile() throws Exception;
 
     protected boolean needStop() {
-        if (task != null)
-            return task.needStop();
+        if (task != null) return task.needStop();
         else return false;
     }
 
@@ -258,6 +258,7 @@ public abstract class FileInstance {
     public abstract String getParent();
 
     @WorkerThread
+    @NonNull
     public abstract FilesAndDirectories listSafe();
 
     public void destroy() {

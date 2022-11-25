@@ -5,6 +5,7 @@ import android.os.Build;
 import android.util.Log;
 
 
+import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
 import com.storyteller_f.file_system.Filter;
@@ -312,6 +313,7 @@ public class RegularLocalFileInstance extends LocalFileInstance {
     }
 
 
+    @NonNull
     @Override
     @WorkerThread
     public FilesAndDirectories list() {
