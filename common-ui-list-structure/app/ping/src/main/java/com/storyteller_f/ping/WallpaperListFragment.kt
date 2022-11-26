@@ -9,9 +9,11 @@ import android.util.Log
 import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.ViewCompat
 import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.flowWithLifecycle
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.FragmentNavigatorExtras
 import com.bumptech.glide.Glide
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
@@ -85,9 +87,11 @@ class WallpaperListFragment : SimpleFragment<FragmentWallpaperListBinding>(Fragm
     }
 
     @BindLongClickEvent(WallpaperHolder::class)
-    fun longClickWallpaper(sender: View, itemHolder: WallpaperHolder) {
-        sender.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-        sender.findNavController().navigate(R.id.action_WallpaperListFragment_to_WallpaperInfoFragment, WallpaperInfoFragmentArgs(itemHolder.wallpaper.uri).toBundle())
+    fun longClickWallpaper(holderView: View, itemHolder: WallpaperHolder) {
+        holderView.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+        val bind = ViewHolderWallpaperBinding.bind(holderView)
+        val fragmentNavigatorExtras = FragmentNavigatorExtras(bind.wallpaperPreview to "wallpaper-preview")
+        holderView.findNavController().navigate(R.id.action_WallpaperListFragment_to_WallpaperInfoFragment, WallpaperInfoFragmentArgs(itemHolder.wallpaper.uri).toBundle(), null, navigatorExtras = fragmentNavigatorExtras )
     }
 
     companion object {
@@ -105,6 +109,7 @@ class WallpaperHolder(val wallpaper: Wallpaper) : DataItemHolder {
 class WallpaperViewHolder(private val binding: ViewHolderWallpaperBinding) : AdapterViewHolder<WallpaperHolder>(binding) {
     override fun bindData(itemHolder: WallpaperHolder) {
         binding.flash(itemHolder.wallpaper)
+        ViewCompat.setTransitionName(binding.wallpaperPreview, "wallpaper-${itemHolder.wallpaper.uri}")
     }
 
 }
