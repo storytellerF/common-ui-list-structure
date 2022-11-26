@@ -74,15 +74,7 @@ class AdapterProcessor : AbstractProcessor() {
                     getHolder(roundEnvironment, typeElement)?.let { list ->
                         zoom.addHolderEntry(list)
                     }
-                    roundEnvironment?.getElementsAnnotatedWithAny(
-                        typeElement
-                    )?.let { element ->
-                        element.map { processingEnv.elementUtils.getPackageOf(it) }.minByOrNull {
-                            it.toString()
-                        }?.let {
-                            typeElement to it
-                        }
-                    }?.let { (first, second) -> zoom.logPackageInfo(first, second) }
+                    processPackageInfo(roundEnvironment, typeElement)
                 }
                 "BindClickEvent" -> {
                     getEvent(
@@ -98,6 +90,18 @@ class AdapterProcessor : AbstractProcessor() {
                 }
             }
         }
+    }
+
+    private fun processPackageInfo(roundEnvironment: RoundEnvironment?, typeElement: TypeElement) {
+        roundEnvironment?.getElementsAnnotatedWithAny(
+            typeElement
+        )?.let { element ->
+            element.map { processingEnv.elementUtils.getPackageOf(it) }.minByOrNull {
+                it.toString()
+            }?.let {
+                typeElement to it
+            }
+        }?.let { (first, second) -> zoom.logPackageInfo(first, second) }
     }
 
     private fun createMultiViewHolder(entry: Entry<Element>, eventMapClick: Map<String, List<Event<Element>>>, eventMapLongClick: Map<String, List<Event<Element>>>): String {
@@ -191,8 +195,11 @@ ${buildAddFunction.prependIndent()}
                     it.contains("android.view.View") -> {
                         "v"
                     }
-                    it.contains("Holder") -> {
+                    it.contains("Holder") && !it.contains("Binding") -> {
                         "viewHolder.getItemHolder()"
+                    }
+                    it.contains("Binding") -> {
+                        "inflate"
                     }
                     else -> {
                         throw UnknownObjectException(it)

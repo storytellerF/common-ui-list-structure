@@ -87,10 +87,9 @@ class WallpaperListFragment : SimpleFragment<FragmentWallpaperListBinding>(Fragm
     }
 
     @BindLongClickEvent(WallpaperHolder::class)
-    fun longClickWallpaper(holderView: View, itemHolder: WallpaperHolder) {
+    fun longClickWallpaper(holderView: View, itemHolder: WallpaperHolder, binding: ViewHolderWallpaperBinding) {
         holderView.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-        val bind = ViewHolderWallpaperBinding.bind(holderView)
-        val fragmentNavigatorExtras = FragmentNavigatorExtras(bind.wallpaperPreview to "wallpaper-preview")
+        val fragmentNavigatorExtras = FragmentNavigatorExtras(binding.wallpaperPreview to "wallpaper-preview")
         holderView.findNavController().navigate(R.id.action_WallpaperListFragment_to_WallpaperInfoFragment, WallpaperInfoFragmentArgs(itemHolder.wallpaper.uri).toBundle(), null, navigatorExtras = fragmentNavigatorExtras )
     }
 
