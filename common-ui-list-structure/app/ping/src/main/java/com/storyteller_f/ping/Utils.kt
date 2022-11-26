@@ -31,8 +31,7 @@ import kotlin.math.roundToInt
  * Hacked from ThumbnailUtils.createVideoThumbnail()'s code.
  */
 fun createVideoThumbnailFromUri(
-    context: Context,
-    uri: Uri
+    context: Context, uri: Uri
 ): Bitmap? {
     val retriever = MediaMetadataRetriever()
     val bitmap = try {
@@ -58,15 +57,12 @@ fun createVideoThumbnailFromUri(
         val w = (scale * width).roundToInt()
         val h = (scale * height).roundToInt()
         Bitmap.createScaledBitmap(bitmap, w, h, true)
-    } else
-        bitmap
+    } else bitmap
 }
 
 @Throws(RuntimeException::class)
 fun compileShaderResourceGLES20(
-    context: Context,
-    shaderType: Int,
-    shaderRes: Int
+    context: Context, shaderType: Int, shaderRes: Int
 ): Int {
     val shaderSource = context.resources.openRawResource(shaderRes).bufferedReader().use {
         it.readText()
@@ -89,8 +85,7 @@ fun compileShaderResourceGLES20(
 
 @Throws(RuntimeException::class)
 fun linkProgramGLES20(
-    vertShader: Int,
-    fragShader: Int
+    vertShader: Int, fragShader: Int
 ): Int {
     val program = GLES20.glCreateProgram()
     if (program == 0) {

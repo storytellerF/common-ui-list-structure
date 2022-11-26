@@ -29,7 +29,6 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
-import java.util.*
 import kotlin.math.abs
 
 interface GLWallpaperRender {
@@ -222,24 +221,16 @@ abstract class GLWallpaperRenderer(protected val context: Context) : GLSurfaceVi
         GLES20.glGenTextures(textures.size, textures, 0)
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, textures[0])
         GLES20.glTexParameteri(
-            GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-            GLES20.GL_TEXTURE_MIN_FILTER,
-            GLES20.GL_LINEAR
+            GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR
         )
         GLES20.glTexParameteri(
-            GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-            GLES20.GL_TEXTURE_MAG_FILTER,
-            GLES20.GL_LINEAR
+            GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR
         )
         GLES20.glTexParameteri(
-            GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-            GLES20.GL_TEXTURE_WRAP_S,
-            GLES20.GL_CLAMP_TO_EDGE
+            GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE
         )
         GLES20.glTexParameteri(
-            GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-            GLES20.GL_TEXTURE_WRAP_T,
-            GLES20.GL_CLAMP_TO_EDGE
+            GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE
         )
         program = buildProgram()
         mvpLocation = GLES20.glGetUniformLocation(program, "mvp")
@@ -248,20 +239,17 @@ abstract class GLWallpaperRenderer(protected val context: Context) : GLSurfaceVi
         GLES20.glGenBuffers(buffers.size, buffers, 0)
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[0])
         GLES20.glBufferData(
-            GLES20.GL_ARRAY_BUFFER, vertices.capacity() * BYTES_PER_FLOAT,
-            vertices, GLES20.GL_STATIC_DRAW
+            GLES20.GL_ARRAY_BUFFER, vertices.capacity() * BYTES_PER_FLOAT, vertices, GLES20.GL_STATIC_DRAW
         )
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[1])
         GLES20.glBufferData(
-            GLES20.GL_ARRAY_BUFFER, texCoordinationBuffer.capacity() * BYTES_PER_FLOAT,
-            texCoordinationBuffer, GLES20.GL_STATIC_DRAW
+            GLES20.GL_ARRAY_BUFFER, texCoordinationBuffer.capacity() * BYTES_PER_FLOAT, texCoordinationBuffer, GLES20.GL_STATIC_DRAW
         )
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
         GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, buffers[2])
         GLES20.glBufferData(
-            GLES20.GL_ELEMENT_ARRAY_BUFFER, indices.capacity() * BYTES_PER_INT,
-            indices, GLES20.GL_STATIC_DRAW
+            GLES20.GL_ELEMENT_ARRAY_BUFFER, indices.capacity() * BYTES_PER_INT, indices, GLES20.GL_STATIC_DRAW
         )
         GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0)
     }

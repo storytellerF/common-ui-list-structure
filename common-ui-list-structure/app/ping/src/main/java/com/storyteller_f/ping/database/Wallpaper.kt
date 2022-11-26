@@ -40,9 +40,7 @@ interface MainDao {
 }
 
 @Database(
-    entities = [Wallpaper::class],
-    version = 1,
-    exportSchema = false
+    entities = [Wallpaper::class], version = 1, exportSchema = false
 )
 @TypeConverters(DefaultTypeConverter::class)
 abstract class MainDatabase : RoomDatabase() {
@@ -54,18 +52,13 @@ abstract class MainDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: MainDatabase? = null
 
-        fun getInstance(context: Context): MainDatabase =
-            INSTANCE ?: synchronized(this) {
-                INSTANCE ?: buildDatabase(context).also { INSTANCE = it }
-            }
+        fun getInstance(context: Context): MainDatabase = INSTANCE ?: synchronized(this) {
+            INSTANCE ?: buildDatabase(context).also { INSTANCE = it }
+        }
 
-        private fun buildDatabase(context: Context) =
-            Room.databaseBuilder(
-                context.applicationContext,
-                MainDatabase::class.java, "wallpapers.db"
-            )
-                .fallbackToDestructiveMigration()
-                .build()
+        private fun buildDatabase(context: Context) = Room.databaseBuilder(
+            context.applicationContext, MainDatabase::class.java, "wallpapers.db"
+        ).fallbackToDestructiveMigration().build()
     }
 }
 

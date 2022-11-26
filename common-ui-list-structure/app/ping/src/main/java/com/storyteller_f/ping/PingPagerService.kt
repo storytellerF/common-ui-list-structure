@@ -1,7 +1,6 @@
 package com.storyteller_f.ping
 
 import android.app.ActivityManager
-import android.app.WallpaperColors
 import android.content.Context
 import android.content.Intent
 import android.media.MediaPlayer
@@ -10,9 +9,7 @@ import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.service.wallpaper.WallpaperService
 import android.util.Log
-import android.view.MotionEvent
 import android.view.SurfaceHolder
-import android.view.WindowInsets
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.storyteller_f.ping.shader.GLES20WallpaperRenderer
@@ -24,8 +21,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
-import java.io.FileDescriptor
-import java.io.PrintWriter
 import kotlin.coroutines.CoroutineContext
 
 class PingPagerService : WallpaperService() {

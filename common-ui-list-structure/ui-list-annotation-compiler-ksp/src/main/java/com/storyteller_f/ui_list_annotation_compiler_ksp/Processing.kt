@@ -1,8 +1,6 @@
 package com.storyteller_f.ui_list_annotation_compiler_ksp
 
-import com.example.ui_list_annotation_common.Holder
 import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
@@ -10,10 +8,10 @@ import com.google.devtools.ksp.visitor.KSDefaultVisitor
 import com.storyteller_f.annotation_defination.BindItemHolder
 import java.io.BufferedWriter
 import java.io.OutputStreamWriter
-import java.lang.StringBuilder
 
 class Processing(val environment: SymbolProcessorEnvironment) : SymbolProcessor {
     var count = 1
+
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
         count++

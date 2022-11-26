@@ -51,8 +51,7 @@ internal class GLES30WallpaperRenderer(context: Context) : GLWallpaperRenderer(c
     override fun buildProgram() = linkProgramGLES20(
         compileShaderResourceGLES20(
             context, GLES30.GL_VERTEX_SHADER, R.raw.vertex_30
-        ),
-        compileShaderResourceGLES20(
+        ), compileShaderResourceGLES20(
             context, GLES30.GL_FRAGMENT_SHADER, R.raw.fragment_30
         )
     )
