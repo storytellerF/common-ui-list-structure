@@ -80,7 +80,7 @@ class FakeDirectoryLocalFileInstance(path: String, val context: Context) :
         TODO("Not yet implemented")
     }
 
-    override fun isHide() = false
+    override fun isHidden() = false
 
     override fun toChild(name: String?, isFile: Boolean, reCreate: Boolean): FileInstance {
         return if (!isFile) {

@@ -286,7 +286,7 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
             it.text = item.formattedLastModifiedTime
         }
 
-        binding.detail.text = item.detail
+        binding.detail.text = item.permissions
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             val listener = { view: View, _: DragStartHelper ->
                 val clipData = ClipData.newPlainText(FileListFragment.clipDataKey, itemHolder.file.fullPath)

@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 
-
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
@@ -67,7 +66,7 @@ public class RegularLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
-    public boolean isHide() {
+    public boolean isHidden() {
         return file.isHidden();
     }
 
@@ -92,22 +91,21 @@ public class RegularLocalFileInstance extends LocalFileInstance {
                         throw new Exception("当前文件已经存在，并且类型不符合：" + file.isFile() + " " + isFile);
                     }
                 } else {
-                    if (reCreate)
-                        if (isFile) {
-                            boolean newFile = file.createNewFile();
-                            if (newFile) {
-                                return internalFileInstance;
-                            } else {
-                                throw new Exception("新建文件失败");
-                            }
+                    if (reCreate) if (isFile) {
+                        boolean newFile = file.createNewFile();
+                        if (newFile) {
+                            return internalFileInstance;
                         } else {
-                            boolean mkdirs = file.mkdirs();
-                            if (mkdirs) {
-                                return internalFileInstance;
-                            } else {
-                                throw new Exception("新建文件失败");
-                            }
+                            throw new Exception("新建文件失败");
                         }
+                    } else {
+                        boolean mkdirs = file.mkdirs();
+                        if (mkdirs) {
+                            return internalFileInstance;
+                        } else {
+                            throw new Exception("新建文件失败");
+                        }
+                    }
                 }
             }
         }
@@ -135,26 +133,25 @@ public class RegularLocalFileInstance extends LocalFileInstance {
                         throw new Exception("当前文件已经存在，并且类型不符合：" + file.isFile() + " " + isFile);
                     }
                 } else {
-                    if (reCreate)
-                        if (isFile) {
-                            boolean newFile = file.createNewFile();
-                            if (newFile) {
-                                this.path = this.path + name;
-                                this.file = file;
-                                return;
-                            } else {
-                                throw new Exception("新建文件失败");
-                            }
+                    if (reCreate) if (isFile) {
+                        boolean newFile = file.createNewFile();
+                        if (newFile) {
+                            this.path = this.path + name;
+                            this.file = file;
+                            return;
                         } else {
-                            boolean mkdirs = file.mkdirs();
-                            if (mkdirs) {
-                                this.file = file;
-                                this.path = this.path + name + "/";
-                                return;
-                            } else {
-                                throw new Exception("新建文件失败");
-                            }
+                            throw new Exception("新建文件失败");
                         }
+                    } else {
+                        boolean mkdirs = file.mkdirs();
+                        if (mkdirs) {
+                            this.file = file;
+                            this.path = this.path + name + "/";
+                            return;
+                        } else {
+                            throw new Exception("新建文件失败");
+                        }
+                    }
                 }
             }
         }
@@ -225,22 +222,22 @@ public class RegularLocalFileInstance extends LocalFileInstance {
             if (needStop()) break;
             String detailString;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                detailString = FileUtility.getDetailString(fileItemModel);
+                detailString = FileUtility.getPermissionString(fileItemModel);
             } else {
-                detailString = FileUtility.getDetailStringByFile(fileItemModel);
+                detailString = FileUtility.getPermissionStringByFile(fileItemModel);
             }
-            fileItemModel.setDetail(detailString);
+            fileItemModel.setPermissions(detailString);
         }
         for (FileSystemItemModel fileItemModel : d) {
             if (needStop()) break;
             String detailString;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                detailString = FileUtility.getDetailString(fileItemModel);
+                detailString = FileUtility.getPermissionString(fileItemModel);
             } else {
-                detailString = FileUtility.getDetailStringByFile(fileItemModel);
+                detailString = FileUtility.getPermissionStringByFile(fileItemModel);
             }
 
-            fileItemModel.setDetail(detailString);
+            fileItemModel.setPermissions(detailString);
         }
         return filesAndDirectories;
     }

@@ -108,7 +108,7 @@ public abstract class LocalFileInstance extends BaseContextFileInstance {
                     boolean r = childFile.canRead();
                     boolean x = childFile.canExecute();
                     String detail = String.format(Locale.CHINA, "%c%c%c%c", (childFile.isFile() ? '-' : 'd'), (r ? 'r' : '-'), (w ? 'w' : '-'), (x ? 'e' : '-'));
-                    fileSystemItemModel.setDetail(detail);
+                    fileSystemItemModel.setPermissions(detail);
                 }
                 return FileVisitResult.CONTINUE;
             }

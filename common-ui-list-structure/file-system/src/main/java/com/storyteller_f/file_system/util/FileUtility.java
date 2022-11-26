@@ -23,7 +23,7 @@ import java.util.Locale;
 public class FileUtility {
     private static final String TAG = "FileUtility";
 
-    public static String getDetailStringByFile(FileSystemItemModel fileItemModel) {
+    public static String getPermissionStringByFile(FileSystemItemModel fileItemModel) {
         File file = new File(fileItemModel.getFullPath());
         boolean w = file.canWrite();
         boolean e = file.canExecute();
@@ -32,7 +32,7 @@ public class FileUtility {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public static String getDetailString(FileSystemItemModel fileItemModel) {
+    public static String getPermissionString(FileSystemItemModel fileItemModel) {
         Path path = new File(fileItemModel.getFullPath()).toPath();
         boolean w = Files.isWritable(path);
         boolean e = Files.isExecutable(path);

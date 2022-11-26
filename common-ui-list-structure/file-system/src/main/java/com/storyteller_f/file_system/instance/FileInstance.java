@@ -215,7 +215,7 @@ public abstract class FileInstance {
 
     public abstract boolean createFile() throws IOException;
 
-    public abstract boolean isHide();
+    public abstract boolean isHidden();
 
     public abstract boolean createDirectory() throws IOException;
 
@@ -282,23 +282,23 @@ public abstract class FileInstance {
     /**
      * 添加普通文件，判断过滤监听事件
      *
-     * @param files        填充目的地
-     * @param parent       父文件夹
-     * @param hidden       是否是隐藏文件
-     * @param name         文件名
-     * @param absolutePath 绝对路径
-     * @param time         上次访问时间
-     * @param extension    文件扩展
+     * @param files            填充目的地
+     * @param parent           父文件夹
+     * @param hidden           是否是隐藏文件
+     * @param name             文件名
+     * @param absolutePath     绝对路径
+     * @param lastModifiedTime 上次访问时间
+     * @param extension        文件扩展
      * @return 返回添加的文件
      */
-    protected FileItemModel addFile(ArrayList<FileItemModel> files, String parent, boolean hidden, String name, String absolutePath, long time, String extension) {
+    protected FileItemModel addFile(ArrayList<FileItemModel> files, String parent, boolean hidden, String name, String absolutePath, long lastModifiedTime, String extension) {
         if (checkWhenAdd(parent, absolutePath, true)) {
             if ("torrent".equals(extension)) {
-                TorrentFileModel torrentFileModel = new TorrentFileModel(name, absolutePath, hidden, time);
+                TorrentFileModel torrentFileModel = new TorrentFileModel(name, absolutePath, hidden, lastModifiedTime);
                 files.add(torrentFileModel);
                 return torrentFileModel;
             }
-            FileItemModel e = new FileItemModel(name, absolutePath, hidden, time, extension);
+            FileItemModel e = new FileItemModel(name, absolutePath, hidden, lastModifiedTime, extension);
             files.add(e);
             return e;
         }
@@ -312,22 +312,22 @@ public abstract class FileInstance {
     /**
      * 添加detail 类型的file
      *
-     * @param files     填充目的地
-     * @param parent    父文件夹
-     * @param chileFile 当前文件夹下的子文件
-     * @param detail    详情
-     * @param hidden    是否是隐藏文件
+     * @param files        填充目的地
+     * @param parent       父文件夹
+     * @param chileFile    当前文件夹下的子文件
+     * @param permissions  详情
+     * @param isHiddenFile 是否是隐藏文件
      */
-    protected void addDetailFileByCmd(ArrayList<FileItemModel> files, String parent, File chileFile, String detail, boolean hidden) {
+    protected void addDetailFileByCmd(ArrayList<FileItemModel> files, String parent, File chileFile, String permissions, boolean isHiddenFile) {
         if (checkWhenAdd(parent, chileFile.getAbsolutePath(), true)) {
             String extension = getExtension(chileFile.getName());
             long time = chileFile.lastModified();
             if ("torrent".equals(extension)) {
-                files.add(new TorrentFileModel(chileFile.getName(), chileFile.getAbsolutePath(), hidden, time));
+                files.add(new TorrentFileModel(chileFile.getName(), chileFile.getAbsolutePath(), isHiddenFile, time));
                 return;
             }
-            FileItemModel fileItemModel = new FileItemModel(chileFile, hidden, extension);
-            fileItemModel.setDetail(detail);
+            FileItemModel fileItemModel = new FileItemModel(chileFile, isHiddenFile, extension);
+            fileItemModel.setPermissions(permissions);
             files.add(fileItemModel);
         }
     }
@@ -335,17 +335,17 @@ public abstract class FileInstance {
     /**
      * 添加普通目录，判断过滤监听事件
      *
-     * @param directories  填充目的地
-     * @param parent       父文件夹
-     * @param hidden       是否是隐藏文件
-     * @param name         文件夹名
-     * @param absolutePath 绝对路径
-     * @param time         上次访问时间
+     * @param directories      填充目的地
+     * @param parentDirectory  父文件夹
+     * @param isHiddenFile     是否是隐藏文件
+     * @param directoryName    文件夹名
+     * @param absolutePath     绝对路径
+     * @param lastModifiedTime 上次访问时间
      * @return 如果客户端不允许添加，返回null
      */
-    protected FileSystemItemModel addDirectory(ArrayList<DirectoryItemModel> directories, String parent, boolean hidden, String name, String absolutePath, long time) {
-        if (checkWhenAdd(parent, absolutePath, false)) {
-            DirectoryItemModel e = new DirectoryItemModel(name, absolutePath, hidden, time);
+    protected FileSystemItemModel addDirectory(ArrayList<DirectoryItemModel> directories, String parentDirectory, boolean isHiddenFile, String directoryName, String absolutePath, long lastModifiedTime) {
+        if (checkWhenAdd(parentDirectory, absolutePath, false)) {
+            DirectoryItemModel e = new DirectoryItemModel(directoryName, absolutePath, isHiddenFile, lastModifiedTime);
             directories.add(e);
             return e;
         }
@@ -355,16 +355,16 @@ public abstract class FileInstance {
     /**
      * 添加detail 类型的文件夹
      *
-     * @param directories 填充位置
-     * @param parent      父文件夹
-     * @param sub         当前文件夹下的文件
-     * @param detail      详情
-     * @param hidden      是否是隐藏文件
+     * @param directories     填充位置
+     * @param parentDirectory 父文件夹
+     * @param childFile       当前文件夹下的文件
+     * @param detail          详情
+     * @param hidden          是否是隐藏文件
      */
-    protected void addDetailDirectoryByCmd(ArrayList<DirectoryItemModel> directories, String parent, File sub, String detail, boolean hidden) {
-        if (checkWhenAdd(parent, sub.getAbsolutePath(), false)) {
-            DirectoryItemModel fileItemModel = new DirectoryItemModel(sub.getName(), sub.getAbsolutePath(), hidden, sub.lastModified());
-            fileItemModel.setDetail(detail);
+    protected void addDetailDirectoryByCmd(ArrayList<DirectoryItemModel> directories, String parentDirectory, File childFile, String detail, boolean hidden) {
+        if (checkWhenAdd(parentDirectory, childFile.getAbsolutePath(), false)) {
+            DirectoryItemModel fileItemModel = new DirectoryItemModel(childFile.getName(), childFile.getAbsolutePath(), hidden, childFile.lastModified());
+            fileItemModel.setPermissions(detail);
             directories.add(fileItemModel);
         }
     }

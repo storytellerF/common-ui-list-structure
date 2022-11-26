@@ -8,9 +8,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.documentfile.provider.DocumentFile;
 
-
-import com.storyteller_f.file_system.FileSystemUriSaver;
 import com.storyteller_f.file_system.FileInstanceFactory;
+import com.storyteller_f.file_system.FileSystemUriSaver;
 import com.storyteller_f.file_system.Filter;
 import com.storyteller_f.file_system.instance.local.LocalFileInstance;
 import com.storyteller_f.file_system.model.DirectoryItemModel;
@@ -98,6 +97,7 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
 
     /**
      * 获取指定目录的document file
+     *
      * @param destination         目标地址
      * @param createDirectoryFlag 决定在没有文件夹的时候是否创建文件夹
      * @return 返回目标文件
@@ -171,8 +171,7 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
             return false;
         }
         current = getSpecialDocumentFile(path, false);
-        if (current == null)
-            Log.e(TAG, "initCurrentFile: 初始化失败" + path);
+        if (current == null) Log.e(TAG, "initCurrentFile: 初始化失败" + path);
         return current != null;
     }
 
@@ -321,8 +320,7 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
             } else {
                 fileSystemItemModel = addDirectory(directories, path, documentFileName.startsWith("."), documentFileName, absp, time);
             }
-            if (fileSystemItemModel != null)
-                fileSystemItemModel.setDetail(getDetailString(documentFile));
+            if (fileSystemItemModel != null) fileSystemItemModel.setPermissions(getDetailString(documentFile));
         }
         return new FilesAndDirectories(files, directories);
     }
@@ -438,7 +436,7 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
-    public boolean isHide() {
+    public boolean isHidden() {
         return false;
     }
 
@@ -451,11 +449,13 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
     public BufferedWriter getBufferedWriter() throws FileNotFoundException {
         return new BufferedWriter(new OutputStreamWriter(getOutputStream()));
     }
+
     @Override
     public FileInputStream getFileInputStream() throws FileNotFoundException {
         ParcelFileDescriptor r = context.getContentResolver().openFileDescriptor(current.getUri(), "r");
         return new FileInputStream(r.getFileDescriptor());
     }
+
     @Override
     public FileOutputStream getFileOutputStream() throws FileNotFoundException {
         return new FileOutputStream(context.getContentResolver().openFileDescriptor(current.getUri(), "w").getFileDescriptor());

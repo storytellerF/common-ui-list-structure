@@ -139,7 +139,7 @@ public class EmulatedLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
-    public boolean isHide() {
+    public boolean isHidden() {
         return false;
     }
 

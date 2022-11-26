@@ -15,7 +15,7 @@ open class FileSystemItemModel(
     var createdTime: Long = 0
     var size: Long = 0
     var formattedSize: String? = null
-    var detail: String? = null
+    var permissions: String? = null
     private fun getTime(time: Long): String {
         return simpleDateFormat.format(Date(time))
     }
@@ -27,7 +27,7 @@ open class FileSystemItemModel(
                 ", isHidden=" + isHidden +
                 ", size=" + size +
                 ", lastAccessTime='" + lastModifiedTime + '\'' +
-                ", detail='" + detail + '\'' +
+                ", permissions='" + permissions + '\'' +
                 '}'
     }
 

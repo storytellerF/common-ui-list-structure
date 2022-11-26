@@ -16,7 +16,7 @@ class StorageLocalFileInstance(val context: Context) :
     ForbidChangeDirectoryLocalFileInstance(FileInstanceFactory.storagePath) {
 
     override fun getDirectory(): DirectoryItemModel =
-        DirectoryItemModel("storage", path, isHide, File(FileInstanceFactory.storagePath).lastModified())
+        DirectoryItemModel("storage", path, isHidden, File(FileInstanceFactory.storagePath).lastModified())
 
     override fun getFileInputStream(): FileInputStream {
         TODO("Not yet implemented")
@@ -61,7 +61,7 @@ class StorageLocalFileInstance(val context: Context) :
 
     override fun getDirectorySize() = -1L
 
-    override fun isHide() = false
+    override fun isHidden() = false
 
     override fun toChild(name: String?, isFile: Boolean, reCreate: Boolean): FileInstance {
         TODO("Not yet implemented")

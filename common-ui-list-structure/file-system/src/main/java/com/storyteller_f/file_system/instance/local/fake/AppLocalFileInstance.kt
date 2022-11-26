@@ -66,7 +66,7 @@ class AppLocalFileInstance(context: Context, path: String) : BaseContextFileInst
         TODO("Not yet implemented")
     }
 
-    override fun isHide(): Boolean {
+    override fun isHidden(): Boolean {
         TODO("Not yet implemented")
     }
 
