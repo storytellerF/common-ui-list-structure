@@ -21,6 +21,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
+import java.io.File
 import kotlin.coroutines.CoroutineContext
 
 class PingPagerService : WallpaperService() {
@@ -109,7 +110,7 @@ class PingPagerService : WallpaperService() {
             scope.launch {
                 val wallpaper = wallpaperUri() ?: return@launch
                 Log.i(TAG, "flash: wallpaper $wallpaper")
-                player?.setDataSource(inContext, wallpaper)
+                player?.setDataSource(inContext, Uri.fromFile(File(wallpaper)))
                 player?.prepareAsync()
                 player?.setOnVideoSizeChangedListener { _, width, height ->
                     Log.i(TAG, "flash onVideoSizeChangedListener: width $width height $height")
@@ -123,12 +124,12 @@ class PingPagerService : WallpaperService() {
             }
         }
 
-        private suspend fun wallpaperUri(): Uri? {
+        private suspend fun wallpaperUri(): String? {
             val exampleCounterFlow = inContext.dataStore.data.mapNotNull { preferences ->
                 // No type safety.
                 preferences[preview].takeIf { it?.isNotEmpty() == true } ?: preferences[selected]
             }
-            return exampleCounterFlow.first().takeIf { it.isNotEmpty() }?.toUri()
+            return exampleCounterFlow.first().takeIf { it.isNotEmpty() }
         }
 
         override fun onDestroy() {
