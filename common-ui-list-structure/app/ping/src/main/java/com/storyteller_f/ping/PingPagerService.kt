@@ -1,17 +1,20 @@
 package com.storyteller_f.ping
 
 import android.app.ActivityManager
+import android.app.WallpaperColors
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.media.MediaPlayer
 import android.net.Uri
 import android.opengl.GLSurfaceView
+import android.os.Build
 import android.os.Bundle
 import android.service.wallpaper.WallpaperService
 import android.util.Log
 import android.view.SurfaceHolder
 import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import com.storyteller_f.ping.shader.GLES20WallpaperRenderer
 import com.storyteller_f.ping.shader.GLES30WallpaperRenderer
 import com.storyteller_f.ping.shader.GLWallpaperRenderer
@@ -47,7 +50,8 @@ class PingPagerService : WallpaperService() {
         Log.d(TAG, "onDestroy() called")
     }
 
-    inner class PingEngine(val inContext: Context) : WallpaperService.Engine() {
+    inner class PingEngine(private val inContext: Context) : WallpaperService.Engine() {
+        private var currentThumbnail: Bitmap? = null
         private var player: MediaPlayer? = null
         private var render: GLWallpaperRenderer? = null
         private val surfaceView: GLPingSurfaceView = GLPingSurfaceView(inContext)
@@ -109,8 +113,14 @@ class PingPagerService : WallpaperService() {
         private fun flash() {
             scope.launch {
                 val wallpaper = wallpaperUri() ?: return@launch
-                Log.i(TAG, "flash: wallpaper $wallpaper")
-                player?.setDataSource(inContext, Uri.fromFile(File(wallpaper)))
+                val file = File(wallpaper)
+                val thumbnail = File(file.parentFile, "thumbnail.jpg")
+                Log.i(TAG, "flash: wallpaper $wallpaper thumb${thumbnail.absolutePath} ${thumbnail.exists()}")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                    currentThumbnail = BitmapFactory.decodeFile(thumbnail.absolutePath)
+                    notifyColorsChanged()
+                }
+                player?.setDataSource(inContext, Uri.fromFile(file))
                 player?.prepareAsync()
                 player?.setOnVideoSizeChangedListener { _, width, height ->
                     Log.i(TAG, "flash onVideoSizeChangedListener: width $width height $height")
@@ -183,6 +193,16 @@ class PingPagerService : WallpaperService() {
         override fun onSurfaceDestroyed(holder: SurfaceHolder?) {
             Log.d(TAG, "onSurfaceDestroyed() called with: holder = $holder")
             super.onSurfaceDestroyed(holder)
+        }
+
+        override fun onComputeColors(): WallpaperColors? {
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                currentThumbnail?.let {
+                    WallpaperColors.fromBitmap(it).apply {
+                        Log.i(TAG, "onComputeColors: ${this.primaryColor}")
+                    }
+                }
+            } else null
         }
     }
 
