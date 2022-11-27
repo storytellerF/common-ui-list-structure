@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import java.util.*
 
 @Entity(tableName = "wallpaper")
-data class Wallpaper(@PrimaryKey val uri: String, val name: String, val createdTime: Date) : Model {
+data class Wallpaper(@PrimaryKey val uri: String, val name: String, val createdTime: Date, val thumbnail: String) : Model {
     override fun commonId() = uri
 }
 

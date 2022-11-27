@@ -117,5 +117,5 @@ class WallpaperViewHolder(private val binding: ViewHolderWallpaperBinding) : Ada
 fun ViewHolderWallpaperBinding.flash(wallpaper: Wallpaper) {
     wallpaperUri.text = wallpaper.uri
     wallpaperName.text = wallpaper.name
-    Glide.with(wallpaperPreview).load(wallpaper.uri).into(wallpaperPreview)
+    Glide.with(wallpaperPreview).load(wallpaper.thumbnail).into(wallpaperPreview)
 }
