@@ -13,6 +13,7 @@
         android:theme="@style/Theme.Common_ui_list_structure">
         <activity
             android:name=".MainActivity3"
+            android:configChanges="keyboard|keyboardHidden"
             android:exported="true"
             android:label="@string/title_activity_main3"
             android:theme="@style/Theme.Common_ui_list_structure.NoActionBar">
@@ -21,10 +22,12 @@
 
         <activity
             android:name=".MainActivity2"
+            android:configChanges="keyboard|keyboardHidden"
             android:exported="false"
             android:label="@string/title_activity_main2" />
         <activity
             android:name=".MainActivity"
+            android:configChanges="keyboard|keyboardHidden"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -5,6 +5,8 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
 import android.net.Uri
+import android.text.TextPaint
+import android.text.TextUtils
 import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
@@ -176,7 +178,8 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                     setDataAndType(uriForFile, r.mimeType)
                     flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 }.let {
-                    startActivity(Intent.createChooser(it, "open by"))
+                    val ellipsizedText = TextUtils.ellipsize(itemHolder.file.name, TextPaint(), 100f, TextUtils.TruncateAt.MIDDLE)
+                    startActivity(Intent.createChooser(it, "open $ellipsizedText by"))
                 }
             }
         }
