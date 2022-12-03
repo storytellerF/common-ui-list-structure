@@ -1,22 +1,20 @@
 package com.storyteller_f.giant_explorer.service
 
-import android.os.IBinder
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FilesAndDirectories
-import com.storyteller_f.giant_explorer.model.FileModel
 import com.topjohnwu.superuser.nio.ExtendedFile
 import com.topjohnwu.superuser.nio.FileSystemManager
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.util.*
 
-class RootAccessFileInstance(path: String, private val extendedFile: ExtendedFile, binder1: IBinder) : FileInstance(path) {
-    init {
-        FileSystemManager.getLocal()
-    }
+class RootAccessFileInstance(path: String, remote: FileSystemManager) : FileInstance(path) {
+
+    private val extendedFile = remote.getFile(path)
 
     override fun getBufferedReader(): BufferedReader = extendedFile.bufferedReader()
 
@@ -27,17 +25,27 @@ class RootAccessFileInstance(path: String, private val extendedFile: ExtendedFil
     override fun getFileOutputStream(): FileOutputStream = extendedFile.outputStream()
 
     override fun list(): FilesAndDirectories {
-        val listFiles = extendedFile.listFiles() ?: return FilesAndDirectories.empty()
+        val listFiles = extendedFile.listFiles()
         val files = mutableListOf<FileItemModel>()
         val directories = mutableListOf<DirectoryItemModel>()
-        listFiles.forEach {
-            if (it.isFile) {
-                addFile(files, extendedFile.absolutePath, it.isHidden, it.name, it.absolutePath, it.lastModified(), it.extension)
+        listFiles?.forEach {
+            (if (it.isFile) {
+                addFile(files, extendedFile.absolutePath, it)
             } else if (it.isDirectory) {
-                addDirectoryByFileObject(directories, extendedFile.absolutePath, it)
+                addDirectory(directories, extendedFile.absolutePath, it)
+            } else null)?.let { model ->
+                val format = it.permissions()
+                model.permissions = format
             }
         }
         return FilesAndDirectories(files, directories)
+    }
+
+    private fun ExtendedFile.permissions(): String {
+        val w = canWrite()
+        val e = canExecute()
+        val r = canRead()
+        return String.format(Locale.CHINA, "%c%c%c%c", if (isFile) '-' else 'd', if (r) 'r' else '-', if (w) 'w' else '-', if (e) 'e' else '-')
     }
 
     override fun isFile(): Boolean = extendedFile.isFile

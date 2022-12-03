@@ -11,7 +11,7 @@ import com.storyteller_f.file_system.model.DirectoryItemModel;
 import com.storyteller_f.file_system.model.FileItemModel;
 import com.storyteller_f.file_system.model.FileSystemItemModel;
 import com.storyteller_f.file_system.model.FilesAndDirectories;
-import com.storyteller_f.file_system.model.TorrentFileModel;
+import com.storyteller_f.file_system.model.TorrentFileItemModel;
 import com.storyteller_f.multi_core.StoppableTask;
 
 import java.io.BufferedInputStream;
@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -284,10 +283,25 @@ public abstract class FileInstance {
      *
      * @param directories 填充目的地
      * @param parent      父文件夹
-     * @param directory   当前目录下的子文件夹
+     * @param childDirectory   当前目录下的子文件夹
      */
-    protected FileSystemItemModel addDirectoryByFileObject(Collection<DirectoryItemModel> directories, String parent, File directory) {
-        return addDirectory(directories, parent, directory.isHidden(), directory.getName(), directory.getAbsolutePath(), directory.lastModified());
+    protected FileSystemItemModel addDirectory(Collection<DirectoryItemModel> directories, String parent, File childDirectory) {
+        return addDirectory(directories, parent, childDirectory.isHidden(), childDirectory.getName(), childDirectory.getAbsolutePath(), childDirectory.lastModified());
+    }
+
+    /**
+     * 添加普通目录，判断过滤监听事件
+     *
+     * @param directories 填充目的地
+     * @param parent      父文件夹
+     * @param childFile   当前目录下的子文件夹
+     */
+    protected FileSystemItemModel addFile(Collection<FileItemModel> directories, String parent, File childFile) {
+        return addFile(directories, parent, childFile.isHidden(), childFile.getName(), childFile.getAbsolutePath(), childFile.lastModified(), getExtension(childFile.getName()));
+    }
+
+    private boolean checkWhenAdd(String parent, String absolutePath, boolean isFile) {
+        return filter == null || filter.onPath(parent, absolutePath, isFile);
     }
 
     /**
@@ -305,42 +319,15 @@ public abstract class FileInstance {
     protected FileItemModel addFile(Collection<FileItemModel> files, String parent, boolean hidden, String name, String absolutePath, long lastModifiedTime, String extension) {
         if (checkWhenAdd(parent, absolutePath, true)) {
             if ("torrent".equals(extension)) {
-                TorrentFileModel torrentFileModel = new TorrentFileModel(name, absolutePath, hidden, lastModifiedTime);
-                files.add(torrentFileModel);
-                return torrentFileModel;
+                TorrentFileItemModel torrentFileItemModel = new TorrentFileItemModel(name, absolutePath, hidden, lastModifiedTime);
+                files.add(torrentFileItemModel);
+                return torrentFileItemModel;
             }
             FileItemModel e = new FileItemModel(name, absolutePath, hidden, lastModifiedTime, extension);
             files.add(e);
             return e;
         }
         return null;
-    }
-
-    private boolean checkWhenAdd(String parent, String absolutePath, boolean isFile) {
-        return filter == null || filter.onPath(parent, absolutePath, isFile);
-    }
-
-    /**
-     * 添加detail 类型的file
-     *
-     * @param files        填充目的地
-     * @param parent       父文件夹
-     * @param chileFile    当前文件夹下的子文件
-     * @param permissions  详情
-     * @param isHiddenFile 是否是隐藏文件
-     */
-    protected void addDetailFileByCmd(Collection<FileItemModel> files, String parent, File chileFile, String permissions, boolean isHiddenFile) {
-        if (checkWhenAdd(parent, chileFile.getAbsolutePath(), true)) {
-            String extension = getExtension(chileFile.getName());
-            long time = chileFile.lastModified();
-            if ("torrent".equals(extension)) {
-                files.add(new TorrentFileModel(chileFile.getName(), chileFile.getAbsolutePath(), isHiddenFile, time));
-                return;
-            }
-            FileItemModel fileItemModel = new FileItemModel(chileFile, isHiddenFile, extension);
-            fileItemModel.setPermissions(permissions);
-            files.add(fileItemModel);
-        }
     }
 
     /**
@@ -363,20 +350,4 @@ public abstract class FileInstance {
         return null;
     }
 
-    /**
-     * 添加detail 类型的文件夹
-     *
-     * @param directories     填充位置
-     * @param parentDirectory 父文件夹
-     * @param childFile       当前文件夹下的文件
-     * @param detail          详情
-     * @param hidden          是否是隐藏文件
-     */
-    protected void addDetailDirectoryByCmd(Collection<DirectoryItemModel> directories, String parentDirectory, File childFile, String detail, boolean hidden) {
-        if (checkWhenAdd(parentDirectory, childFile.getAbsolutePath(), false)) {
-            DirectoryItemModel fileItemModel = new DirectoryItemModel(childFile.getName(), childFile.getAbsolutePath(), hidden, childFile.lastModified());
-            fileItemModel.setPermissions(detail);
-            directories.add(fileItemModel);
-        }
-    }
 }

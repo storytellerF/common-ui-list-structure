@@ -12,7 +12,7 @@ import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.model.TorrentFileModel
+import com.storyteller_f.file_system.model.TorrentFileItemModel
 import com.storyteller_f.giant_explorer.control.adapter_produce.Temp
 import com.storyteller_f.giant_explorer.database.FileMDRecord
 import com.storyteller_f.giant_explorer.database.FileSizeRecord
@@ -195,7 +195,7 @@ class TorrentWorker(context: Context, workerParams: WorkerParameters) :
                 if (isStopped) return WorkerResult.Stopped
                 work(context, it.fullPath)
             }
-            listSafe.files.filterIsInstance<TorrentFileModel>().forEach {
+            listSafe.files.filterIsInstance<TorrentFileItemModel>().forEach {
                 if (isStopped) return WorkerResult.Stopped
                 val search = context.requireDatabase.torrentDao().search(it.fullPath)
                 if ((search?.lastUpdateTime ?: 0) <= it.lastModifiedTime) {
@@ -210,7 +210,7 @@ class TorrentWorker(context: Context, workerParams: WorkerParameters) :
 
     }
 
-    private suspend fun processAndSave(fileInstance: FileInstance, it: TorrentFileModel, context: Context) {
+    private suspend fun processAndSave(fileInstance: FileInstance, it: TorrentFileItemModel, context: Context) {
         TorrentFile.getTorrentName(
             fileInstance.toChild(it.name, true, false),
             closeable

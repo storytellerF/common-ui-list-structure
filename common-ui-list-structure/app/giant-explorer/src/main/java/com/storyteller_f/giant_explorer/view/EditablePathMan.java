@@ -3,15 +3,12 @@ package com.storyteller_f.giant_explorer.view;
 import static com.storyteller_f.giant_explorer.control.MainActivityKt.getFileInstance;
 
 import android.content.Context;
-import android.os.Build;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import androidx.annotation.RequiresApi;
-
-import com.storyteller_f.file_system.FileInstanceFactory;
 import com.storyteller_f.file_system.instance.FileInstance;
 
 public class EditablePathMan extends PathMan {
@@ -56,20 +53,25 @@ public class EditablePathMan extends PathMan {
         });
         editText.setOnKeyListener((v, keyCode, event) -> {
             if (keyCode == KeyEvent.KEYCODE_ENTER) {
-                String path = editText.getText().toString().trim();
-                //todo 简化文件路径
-                if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
-                FileInstance fileInstance = getFileInstance(path, v.getContext());
-                if (fileInstance.exists()) {
-                    if (pathChangeListener != null) pathChangeListener.onSkipOnPathMan(path);
-                    drawPath(path);
-                } else {
-                    Toast.makeText(getContext(), "输入的路径不存在", Toast.LENGTH_SHORT).show();
-                }
+                redirect(v, editText.getText().toString().trim());
             }
             return false;
         });
 
         getLinearLayout().addView(editText);
+    }
+
+    private void redirect(View v, String input) {
+        String path = input;
+        //如果用户输入了错误的路径，进行裁切
+        int length = path.length();
+        if (path.endsWith("/") && length != 1) path = path.substring(0, length - 1);
+        FileInstance fileInstance = getFileInstance(path, v.getContext());
+        if (fileInstance.exists()) {
+            if (pathChangeListener != null) pathChangeListener.onSkipOnPathMan(path);
+            drawPath(path);
+        } else {
+            Toast.makeText(getContext(), "输入的路径不存在", Toast.LENGTH_SHORT).show();
+        }
     }
 }

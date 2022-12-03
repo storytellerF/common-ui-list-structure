@@ -86,7 +86,7 @@ public abstract class LocalFileInstance extends BaseContextFileInstance {
                         fileSystemItemModel1.setSize(childFile.length());
                     fileSystemItemModel = fileSystemItemModel1;
                 } else {
-                    fileSystemItemModel = addDirectoryByFileObject(directories, path, childFile);
+                    fileSystemItemModel = addDirectory(directories, path, childFile);
                 }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     BasicFileAttributes basicFileAttributes = null;

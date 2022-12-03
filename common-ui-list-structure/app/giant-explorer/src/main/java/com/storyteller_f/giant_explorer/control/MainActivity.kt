@@ -24,7 +24,7 @@ import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
-import com.storyteller_f.file_system.model.TorrentFileModel
+import com.storyteller_f.file_system.model.TorrentFileItemModel
 import com.storyteller_f.file_system.requestPermissionForSpecialPath
 import com.storyteller_f.file_system_ktx.fileIcon
 import com.storyteller_f.file_system_ktx.isDirectory
@@ -80,14 +80,13 @@ class FileExplorerSession(application: Application, path: String) : AndroidViewM
 }
 
 fun getFileInstance(path: String, context: Context): FileInstance {
-    val binder1 = binder
-    return if (binder1 != null) {
-        val remote = FileSystemManager.getRemote(binder1)
-        RootAccessFileInstance(path, remote.getFile(path), binder1)
+    val fileSystemManager = remote
+    return if (fileSystemManager != null) {
+        RootAccessFileInstance(FileInstanceFactory.simplyPath(path), fileSystemManager)
     } else FileInstanceFactory.getFileInstance(path, context)
 }
 
-var binder: IBinder? = null
+var remote: FileSystemManager? = null
 
 class MainActivity : CommonActivity(), FileOperateService.FileOperateResultContainer {
 
@@ -208,11 +207,13 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
 
     private val fileConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            binder = service
+            service?.let {
+                remote = FileSystemManager.getRemote(service)
+            }
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
-            binder = null
+            remote = null
         }
     }
 
@@ -311,7 +312,7 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
             it.text = i.md
         }
 
-        binding.torrentName.setVisible(item, { it: TorrentFileModel -> it.torrentName.valid() }) { it, i ->
+        binding.torrentName.setVisible(item, { it: TorrentFileItemModel -> it.torrentName.valid() }) { it, i ->
             it.text = i.torrentName
         }
 
@@ -405,7 +406,7 @@ fun fileServiceBuilder(
                         database.mdDao().search(model.fullPath)?.let {
                             if (it.lastUpdateTime > model.lastModifiedTime) model.md = it.data
                         }
-                        if (model is TorrentFileModel)
+                        if (model is TorrentFileItemModel)
                             database.torrentDao().search(model.fullPath)?.let {
                                 if (it.lastUpdateTime > model.lastModifiedTime) model.torrentName = it.torrent
                             }

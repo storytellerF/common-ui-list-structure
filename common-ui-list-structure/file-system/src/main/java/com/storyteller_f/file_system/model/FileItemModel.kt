@@ -12,8 +12,8 @@ open class FileItemModel : FileSystemItemModel {
 
     constructor(
         file: File,
-        isHide: Boolean,
-        extension: String? = null
+        isHide: Boolean = file.isHidden,
+        extension: String = file.extension
     ) : super(file.name, file.absolutePath, isHide, file.lastModified()) {
         this.extension = extension
     }
