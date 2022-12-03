@@ -159,7 +159,7 @@ object FileInstanceFactory {
     }
 
     @JvmStatic
-    public fun simplyPath(path: String): String {
+    fun simplyPath(path: String): String {
         assert(path[0] == '/') {
             "$path is not valid"
         }

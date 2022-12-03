@@ -24,7 +24,6 @@ import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
-import com.storyteller_f.file_system.model.FilesAndDirectories
 import com.storyteller_f.file_system.model.TorrentFileModel
 import com.storyteller_f.file_system.requestPermissionForSpecialPath
 import com.storyteller_f.file_system_ktx.fileIcon
@@ -38,6 +37,8 @@ import com.storyteller_f.giant_explorer.model.FileModel
 import com.storyteller_f.giant_explorer.pc_end_on
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
 import com.storyteller_f.giant_explorer.service.FileOperateService
+import com.storyteller_f.giant_explorer.service.FileService
+import com.storyteller_f.giant_explorer.service.RootAccessFileInstance
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import com.storyteller_f.ui_list.core.*
 import com.storyteller_f.ui_list.data.SimpleResponse
@@ -47,6 +48,9 @@ import com.storyteller_f.ui_list.source.SimpleSearchViewModel
 import com.storyteller_f.ui_list.source.observerInScope
 import com.storyteller_f.ui_list.ui.ListWithState
 import com.storyteller_f.ui_list.ui.valueContains
+import com.topjohnwu.superuser.Shell
+import com.topjohnwu.superuser.ipc.RootService
+import com.topjohnwu.superuser.nio.FileSystemManager
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -65,7 +69,7 @@ class FileExplorerSession(application: Application, path: String) : AndroidViewM
         viewModelScope.launch {
             suspendCancellableCoroutine {
                 thread {
-                    val result = Result.success(FileInstanceFactory.getFileInstance(path, application.applicationContext))
+                    val result = Result.success(getFileInstance(path, application.applicationContext))
                     it.resumeWith(result)
                 }
             }.let {
@@ -74,6 +78,16 @@ class FileExplorerSession(application: Application, path: String) : AndroidViewM
         }
     }
 }
+
+fun getFileInstance(path: String, context: Context): FileInstance {
+    val binder1 = binder
+    return if (binder1 != null) {
+        val remote = FileSystemManager.getRemote(binder1)
+        RootAccessFileInstance(path, remote.getFile(path), binder1)
+    } else FileInstanceFactory.getFileInstance(path, context)
+}
+
+var binder: IBinder? = null
 
 class MainActivity : CommonActivity(), FileOperateService.FileOperateResultContainer {
 
@@ -93,11 +107,21 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         setSupportActionBar(binding.toolbar)
         supportNavigatorBarImmersive(binding.root)
         //连接服务
+        val intent1 = Intent(this, FileOperateService::class.java)
         try {
-            bindService(Intent(this, FileOperateService::class.java), connection, BIND_AUTO_CREATE)
+            bindService(intent1, connection, BIND_AUTO_CREATE)
         } catch (_: Exception) {
-            bindService(Intent(this, FileOperateService::class.java), connection, 0)
+            bindService(intent1, connection, 0)
         }
+        Shell.getShell {
+            if (it.isRoot) {
+                val intent = Intent(this, FileService::class.java)
+                //连接服务
+                RootService.bind(intent, fileConnection)
+            }
+
+        }
+
 
         scope.launch {
             callbackFlow {
@@ -108,9 +132,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
                     binding.pathMan.setPathChangeListener(null)
                 }
             }.flowWithLifecycle(lifecycle).collectLatest {
-                findNavController(R.id.nav_host_fragment_main).navigate(R.id.fileListFragment, Bundle().apply {
-                    putString("path", it)
-                })
+                findNavController(R.id.nav_host_fragment_main).navigate(R.id.fileListFragment, FileListFragmentArgs(it).toBundle())
             }
         }
         findNavController(R.id.nav_host_fragment_main).setGraph(R.navigation.nav_main, FileListFragmentArgs(FileInstanceFactory.rootUserEmulatedPath).toBundle())
@@ -179,7 +201,18 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
+            fileOperateBinder = null
             Toast.makeText(this@MainActivity, "服务已关闭", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private val fileConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            binder = service
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            binder = null
         }
     }
 

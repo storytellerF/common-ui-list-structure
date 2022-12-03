@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * notice 如果需要给name 设置值，那就需要提供path。或者自行处理
@@ -88,9 +89,13 @@ public abstract class FileInstance {
     }
 
 
-    public abstract FileItemModel getFile();
+    public FileItemModel getFile() {
+        return new FileItemModel(name, path, file.isHidden(), file.lastModified(), getExtension(name));
+    }
 
-    public abstract DirectoryItemModel getDirectory();
+    public DirectoryItemModel getDirectory() {
+        return new DirectoryItemModel(name, path, file.isHidden(), file.lastModified());
+    }
 
     public FileSystemItemModel getFileSystemItem() throws Exception {
         if (isFile()) return getFile();
@@ -111,11 +116,17 @@ public abstract class FileInstance {
      *
      * @return 文件字节长度
      */
-    public abstract long getFileLength();
+    public long getFileLength() {
+        return file.length();
+    }
 
-    public abstract BufferedOutputStream getBufferedOutputStream() throws Exception;
+    public BufferedOutputStream getBufferedOutputStream() throws Exception {
+        return new BufferedOutputStream(getFileOutputStream());
+    }
 
-    public abstract BufferedInputStream getBufferedInputSteam() throws Exception;
+    public BufferedInputStream getBufferedInputSteam() throws Exception {
+        return new BufferedInputStream(new FileInputStream(path));
+    }
 
     /**
      * 应该仅用于文件，可以使用readLine 方法
@@ -275,7 +286,7 @@ public abstract class FileInstance {
      * @param parent      父文件夹
      * @param directory   当前目录下的子文件夹
      */
-    protected FileSystemItemModel addDirectoryByFileObject(ArrayList<DirectoryItemModel> directories, String parent, File directory) {
+    protected FileSystemItemModel addDirectoryByFileObject(Collection<DirectoryItemModel> directories, String parent, File directory) {
         return addDirectory(directories, parent, directory.isHidden(), directory.getName(), directory.getAbsolutePath(), directory.lastModified());
     }
 
@@ -291,7 +302,7 @@ public abstract class FileInstance {
      * @param extension        文件扩展
      * @return 返回添加的文件
      */
-    protected FileItemModel addFile(ArrayList<FileItemModel> files, String parent, boolean hidden, String name, String absolutePath, long lastModifiedTime, String extension) {
+    protected FileItemModel addFile(Collection<FileItemModel> files, String parent, boolean hidden, String name, String absolutePath, long lastModifiedTime, String extension) {
         if (checkWhenAdd(parent, absolutePath, true)) {
             if ("torrent".equals(extension)) {
                 TorrentFileModel torrentFileModel = new TorrentFileModel(name, absolutePath, hidden, lastModifiedTime);
@@ -318,7 +329,7 @@ public abstract class FileInstance {
      * @param permissions  详情
      * @param isHiddenFile 是否是隐藏文件
      */
-    protected void addDetailFileByCmd(ArrayList<FileItemModel> files, String parent, File chileFile, String permissions, boolean isHiddenFile) {
+    protected void addDetailFileByCmd(Collection<FileItemModel> files, String parent, File chileFile, String permissions, boolean isHiddenFile) {
         if (checkWhenAdd(parent, chileFile.getAbsolutePath(), true)) {
             String extension = getExtension(chileFile.getName());
             long time = chileFile.lastModified();
@@ -343,7 +354,7 @@ public abstract class FileInstance {
      * @param lastModifiedTime 上次访问时间
      * @return 如果客户端不允许添加，返回null
      */
-    protected FileSystemItemModel addDirectory(ArrayList<DirectoryItemModel> directories, String parentDirectory, boolean isHiddenFile, String directoryName, String absolutePath, long lastModifiedTime) {
+    protected FileSystemItemModel addDirectory(Collection<DirectoryItemModel> directories, String parentDirectory, boolean isHiddenFile, String directoryName, String absolutePath, long lastModifiedTime) {
         if (checkWhenAdd(parentDirectory, absolutePath, false)) {
             DirectoryItemModel e = new DirectoryItemModel(directoryName, absolutePath, isHiddenFile, lastModifiedTime);
             directories.add(e);
@@ -361,7 +372,7 @@ public abstract class FileInstance {
      * @param detail          详情
      * @param hidden          是否是隐藏文件
      */
-    protected void addDetailDirectoryByCmd(ArrayList<DirectoryItemModel> directories, String parentDirectory, File childFile, String detail, boolean hidden) {
+    protected void addDetailDirectoryByCmd(Collection<DirectoryItemModel> directories, String parentDirectory, File childFile, String detail, boolean hidden) {
         if (checkWhenAdd(parentDirectory, childFile.getAbsolutePath(), false)) {
             DirectoryItemModel fileItemModel = new DirectoryItemModel(childFile.getName(), childFile.getAbsolutePath(), hidden, childFile.lastModified());
             fileItemModel.setPermissions(detail);

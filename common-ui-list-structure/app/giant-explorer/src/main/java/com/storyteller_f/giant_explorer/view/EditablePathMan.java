@@ -1,5 +1,7 @@
 package com.storyteller_f.giant_explorer.view;
 
+import static com.storyteller_f.giant_explorer.control.MainActivityKt.getFileInstance;
+
 import android.content.Context;
 import android.os.Build;
 import android.util.AttributeSet;
@@ -57,7 +59,7 @@ public class EditablePathMan extends PathMan {
                 String path = editText.getText().toString().trim();
                 //todo 简化文件路径
                 if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
-                FileInstance fileInstance = FileInstanceFactory.getFileInstance(path, v.getContext());
+                FileInstance fileInstance = getFileInstance(path, v.getContext());
                 if (fileInstance.exists()) {
                     if (pathChangeListener != null) pathChangeListener.onSkipOnPathMan(path);
                     drawPath(path);

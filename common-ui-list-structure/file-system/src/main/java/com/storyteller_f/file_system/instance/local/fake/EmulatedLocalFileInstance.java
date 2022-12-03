@@ -1,7 +1,6 @@
 package com.storyteller_f.file_system.instance.local.fake;
 
 import android.content.Context;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 

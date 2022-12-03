@@ -1,4 +1,4 @@
-package com.storyteller_f.file_system.instance.local
+package com.storyteller_f.file_system.instance.local.fake
 
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FilesAndDirectories

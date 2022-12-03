@@ -46,21 +46,6 @@ public class RegularLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
-    public FileItemModel getFile() {
-        return new FileItemModel(name, path, file.isHidden(), file.lastModified(), getExtension(name));
-    }
-
-    @Override
-    public DirectoryItemModel getDirectory() {
-        return new DirectoryItemModel(name, path, file.isHidden(), file.lastModified());
-    }
-
-    @Override
-    public long getFileLength() {
-        return file.length();
-    }
-
-    @Override
     public boolean createFile() throws IOException {
         return new File(getPath()).createNewFile();
     }
@@ -181,16 +166,6 @@ public class RegularLocalFileInstance extends LocalFileInstance {
      */
     protected FileSystemItemModel addFileBySystemFileObject(ArrayList<FileItemModel> files, File parent, File sub) {
         return addFile(files, parent.getAbsolutePath(), sub.isHidden(), sub.getName(), sub.getAbsolutePath(), sub.lastModified(), getExtension(sub.getName()));
-    }
-
-    @Override
-    public BufferedOutputStream getBufferedOutputStream() throws FileNotFoundException {
-        return new BufferedOutputStream(getFileOutputStream());
-    }
-
-    @Override
-    public BufferedInputStream getBufferedInputSteam() throws FileNotFoundException {
-        return new BufferedInputStream(new FileInputStream(path));
     }
 
     @Override

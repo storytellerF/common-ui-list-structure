@@ -1,4 +1,6 @@
-package com.storyteller_f.file_system.instance.local
+package com.storyteller_f.file_system.instance.local.fake
+
+import com.storyteller_f.file_system.instance.local.fake.DirectoryLocalFileInstance
 
 /**
  * 禁止修改操作

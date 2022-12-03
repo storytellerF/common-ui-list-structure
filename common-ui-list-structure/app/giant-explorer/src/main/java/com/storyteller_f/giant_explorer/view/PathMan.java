@@ -41,6 +41,7 @@ public class PathMan extends HorizontalScrollView {
 
     @NonNull
     String getPath(int index) {
+        if (index == 0) return "/";
         String[] split = pathBuilder.toString().split("/");
         StringBuilder path = new StringBuilder();
         for (int i = 1; i <= index; i++) {
