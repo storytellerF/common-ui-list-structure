@@ -33,7 +33,7 @@ class AddTaskFragment : SimpleFragment<FragmentSecondBinding>(FragmentSecondBind
             }
 
         }
-        binding.selectWorkerName.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, arrayOf("message digest", "torrent name", "folder size"))
+        binding.selectWorkerName.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, arrayOf("message digest", "torrent name", "folder size"))
         binding.selectPath.setOnClick {
             findNavController().navigate(R.id.action_SecondFragment_to_requestPathDialog)
             fragment(RequestPathDialog.requestKey) { r: RequestPathDialog.RequestPathResult ->
