@@ -9,7 +9,7 @@
         android:id="@+id/BackgroundTaskListFragment"
         android:name="com.storyteller_f.giant_explorer.control.BackgroundTaskListFragment"
         android:label="@string/first_fragment_label"
-        tools:layout="@layout/fragment_first">
+        tools:layout="@layout/fragment_task_list">
 
         <action
             android:id="@+id/action_FirstFragment_to_SecondFragment"
@@ -19,7 +19,7 @@
         android:id="@+id/AddTaskFragment"
         android:name="com.storyteller_f.giant_explorer.control.AddTaskFragment"
         android:label="@string/second_fragment_label"
-        tools:layout="@layout/fragment_second">
+        tools:layout="@layout/fragment_add_task">
         <action
             android:id="@+id/action_SecondFragment_to_requestPathDialog"
             app:destination="@id/requestPathDialog" />

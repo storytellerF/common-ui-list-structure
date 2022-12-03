@@ -9,14 +9,14 @@ import com.storyteller_f.common_ui.*
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.BigTimeTask
 import com.storyteller_f.giant_explorer.database.requireDatabase
-import com.storyteller_f.giant_explorer.databinding.FragmentSecondBinding
+import com.storyteller_f.giant_explorer.databinding.FragmentAddTaskBinding
 import com.storyteller_f.giant_explorer.dialog.RequestPathDialog
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 
-class AddTaskFragment : SimpleFragment<FragmentSecondBinding>(FragmentSecondBinding::inflate) {
+class AddTaskFragment : SimpleFragment<FragmentAddTaskBinding>(FragmentAddTaskBinding::inflate) {
 
-    override fun onBindViewEvent(binding: FragmentSecondBinding) {
+    override fun onBindViewEvent(binding: FragmentAddTaskBinding) {
         binding.button.setOnClickListener {
             val result = Result(binding.checkBox2.isChecked, binding.path.text.toString(), binding.selectWorkerName.selectedItem.toString())
             scope.launch {

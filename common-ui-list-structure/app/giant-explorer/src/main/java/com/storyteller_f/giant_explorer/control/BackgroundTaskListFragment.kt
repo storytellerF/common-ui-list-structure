@@ -20,10 +20,10 @@ import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.common_ui.*
 import com.storyteller_f.giant_explorer.database.BigTimeTask
 import com.storyteller_f.giant_explorer.database.requireDatabase
-import com.storyteller_f.giant_explorer.databinding.FragmentFirstBinding
+import com.storyteller_f.giant_explorer.databinding.FragmentTaskListBinding
+import com.storyteller_f.ui_list.adapter.ManualAdapter
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
-import com.storyteller_f.ui_list.adapter.ManualAdapter
 import com.storyteller_f.ui_list.ui.ListWithState
 import com.storyteller_f.view_holder_compose.ComposeViewHolder
 import com.storyteller_f.view_holder_compose.EDComposeView
@@ -35,12 +35,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.lang.Exception
 
-class BackgroundTaskListFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding::inflate) {
+class BackgroundTaskListFragment : SimpleFragment<FragmentTaskListBinding>(FragmentTaskListBinding::inflate) {
     private val adapter = ManualAdapter<DataItemHolder, AbstractViewHolder<DataItemHolder>>()
 
-    override fun onBindViewEvent(binding: FragmentFirstBinding) {
+    override fun onBindViewEvent(binding: FragmentTaskListBinding) {
         binding.content.manualUp(adapter)
         binding.content.flash(ListWithState.UIState.loading)
         scope.launch {
