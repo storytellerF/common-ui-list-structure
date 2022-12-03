@@ -1,9 +1,10 @@
 package com.storyteller_f.file_system.instance.local
 
 import com.storyteller_f.file_system.instance.FileInstance
-import com.storyteller_f.file_system.model.FileItemModel
-import java.io.BufferedInputStream
 
+/**
+ * 目录型，用于特殊类型
+ */
 abstract class DirectoryLocalFileInstance(path: String) : FileInstance(path) {
     override fun getFileLength(): Long = -1L
 

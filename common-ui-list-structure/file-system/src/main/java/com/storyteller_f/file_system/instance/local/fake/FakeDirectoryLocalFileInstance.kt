@@ -15,6 +15,9 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.attribute.BasicFileAttributes
 
+/**
+ * 预定义的用于无法访问的中间目录
+ */
 class FakeDirectoryLocalFileInstance(path: String, val context: Context) :
     ForbidChangeDirectoryLocalFileInstance(path) {
     private val dy: MutableMap<String, List<String>> = mutableMapOf(

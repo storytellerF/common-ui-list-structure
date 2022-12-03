@@ -1,5 +1,8 @@
 package com.storyteller_f.file_system.instance.local
 
+/**
+ * 禁止修改操作
+ */
 abstract class ForbidChangeDirectoryLocalFileInstance(path: String) :
     DirectoryLocalFileInstance(path) {
     override fun createDirectory() = false

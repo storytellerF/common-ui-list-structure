@@ -46,7 +46,7 @@ class RequestPathDialog :
     class RequestPathResult(val path: String) : Parcelable
 
     private val data by search({ requireDatabase }, {
-        SearchProducer(service(it)) { fileModel, _ ->
+        SearchProducer(fileServiceBuilder(it)) { fileModel, _ ->
             FileItemHolder(fileModel, MutableLiveData(mutableListOf()))
         }
     }

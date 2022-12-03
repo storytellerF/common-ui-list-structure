@@ -8,6 +8,9 @@ import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FilesAndDirectories
 import java.io.*
 
+/**
+ * 标识一个apk 文件
+ */
 class AppLocalFileInstance(context: Context, path: String) : BaseContextFileInstance(context, path) {
     override fun getFile() = FileItemModel(name, path, false, 0, "apk")
 
@@ -15,7 +18,7 @@ class AppLocalFileInstance(context: Context, path: String) : BaseContextFileInst
         TODO("Not yet implemented")
     }
 
-    val publicSourceDir = context.packageManager.getApplicationInfo(name, 0).publicSourceDir
+    private val publicSourceDir: String = context.packageManager.getApplicationInfo(name, 0).publicSourceDir
 
     override fun getFileLength() = File(publicSourceDir).length()
 

@@ -342,11 +342,11 @@ fun format1024(args: Long): String {
 
 class FileExplorerSearch(val path: FileInstance, val filterHiddenFile: Boolean)
 
-fun service(
+fun fileServiceBuilder(
     database: FileSizeRecordDatabase
 ): suspend (searchQuery: FileExplorerSearch, start: Int, count: Int) -> SimpleResponse<FileModel> {
     return { searchQuery: FileExplorerSearch, start: Int, count: Int ->
-        val listSafe = suspendCancellableCoroutine<FilesAndDirectories> {
+        val listSafe = suspendCancellableCoroutine {
             thread {
                 searchQuery.path.listSafe().run {
                     it.resumeWith(Result.success(this))

@@ -12,6 +12,9 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
+/**
+ * 标识特殊目录/storage/
+ */
 class StorageLocalFileInstance(val context: Context) :
     ForbidChangeDirectoryLocalFileInstance(FileInstanceFactory.storagePath) {
 

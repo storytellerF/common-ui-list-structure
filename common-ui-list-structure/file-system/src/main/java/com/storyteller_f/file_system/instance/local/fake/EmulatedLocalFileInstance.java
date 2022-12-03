@@ -23,6 +23,9 @@ import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 标识特殊目录/storage/emulated/
+ */
 public class EmulatedLocalFileInstance extends LocalFileInstance {
     private static final String TAG = "EmulatedLocalFileInstan";
 

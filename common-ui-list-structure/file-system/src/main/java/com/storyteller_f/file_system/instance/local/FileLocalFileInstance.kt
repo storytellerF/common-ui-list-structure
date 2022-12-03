@@ -1,5 +1,6 @@
-package com.storyteller_f.file_system.instance
+package com.storyteller_f.file_system.instance.local
 
+import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FilesAndDirectories
 
 abstract class FileLocalFileInstance : FileInstance() {
