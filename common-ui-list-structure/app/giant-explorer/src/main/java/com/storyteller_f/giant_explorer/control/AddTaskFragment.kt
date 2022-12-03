@@ -14,7 +14,7 @@ import com.storyteller_f.giant_explorer.dialog.RequestPathDialog
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 
-class SecondFragment : SimpleFragment<FragmentSecondBinding>(FragmentSecondBinding::inflate) {
+class AddTaskFragment : SimpleFragment<FragmentSecondBinding>(FragmentSecondBinding::inflate) {
 
     override fun onBindViewEvent(binding: FragmentSecondBinding) {
         binding.button.setOnClickListener {

@@ -27,7 +27,7 @@ class BackgroundTaskConfigActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
 
         binding.fab.setOnClickListener {
-            navController.navigate(R.id.SecondFragment)
+            navController.navigate(R.id.AddTaskFragment)
         }
     }
 

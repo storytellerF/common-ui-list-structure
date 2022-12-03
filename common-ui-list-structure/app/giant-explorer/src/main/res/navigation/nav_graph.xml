@@ -3,21 +3,21 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/FirstFragment">
+    app:startDestination="@id/BackgroundTaskListFragment">
 
     <fragment
-        android:id="@+id/FirstFragment"
-        android:name="com.storyteller_f.giant_explorer.control.FirstFragment"
+        android:id="@+id/BackgroundTaskListFragment"
+        android:name="com.storyteller_f.giant_explorer.control.BackgroundTaskListFragment"
         android:label="@string/first_fragment_label"
         tools:layout="@layout/fragment_first">
 
         <action
             android:id="@+id/action_FirstFragment_to_SecondFragment"
-            app:destination="@id/SecondFragment" />
+            app:destination="@id/AddTaskFragment" />
     </fragment>
     <fragment
-        android:id="@+id/SecondFragment"
-        android:name="com.storyteller_f.giant_explorer.control.SecondFragment"
+        android:id="@+id/AddTaskFragment"
+        android:name="com.storyteller_f.giant_explorer.control.AddTaskFragment"
         android:label="@string/second_fragment_label"
         tools:layout="@layout/fragment_second">
         <action

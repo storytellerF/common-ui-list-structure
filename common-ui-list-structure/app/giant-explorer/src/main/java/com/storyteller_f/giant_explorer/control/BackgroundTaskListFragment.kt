@@ -37,7 +37,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.lang.Exception
 
-class FirstFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding::inflate) {
+class BackgroundTaskListFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding::inflate) {
     private val adapter = ManualAdapter<DataItemHolder, AbstractViewHolder<DataItemHolder>>()
 
     override fun onBindViewEvent(binding: FragmentFirstBinding) {
