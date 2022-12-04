@@ -29,13 +29,11 @@ class RootAccessFileInstance(path: String, remote: FileSystemManager) : FileInst
         val files = mutableListOf<FileItemModel>()
         val directories = mutableListOf<DirectoryItemModel>()
         listFiles?.forEach {
-            (if (it.isFile) {
-                addFile(files, extendedFile.absolutePath, it)
+            val format = it.permissions()
+            if (it.isFile) {
+                addFile(files, extendedFile.absolutePath, it, format)
             } else if (it.isDirectory) {
-                addDirectory(directories, extendedFile.absolutePath, it)
-            } else null)?.let { model ->
-                val format = it.permissions()
-                model.permissions = format
+                addDirectory(directories, extendedFile.absolutePath, it, format)
             }
         }
         return FilesAndDirectories(files, directories)

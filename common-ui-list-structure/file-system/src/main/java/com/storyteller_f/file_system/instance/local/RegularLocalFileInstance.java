@@ -235,15 +235,9 @@ public class RegularLocalFileInstance extends LocalFileInstance {
         File childFile = new File(path, name);
         boolean hidden = childFile.isHidden();
         if (childFile.isFile()) {
-            FileSystemItemModel fileSystemItemModel = addFile(files, path, childFile);
-            if (fileSystemItemModel != null) {
-                fileSystemItemModel.setPermissions(permissions);
-            }
+            addFile(files, path, childFile, permissions);
         } else if (childFile.isDirectory()) {
-            FileSystemItemModel fileSystemItemModel = addDirectory(directories, path, childFile);
-            if (fileSystemItemModel != null) {
-                fileSystemItemModel.setPermissions(permissions);
-            }
+            addDirectory(directories, path, childFile, permissions);
         }
     }
 
@@ -258,15 +252,21 @@ public class RegularLocalFileInstance extends LocalFileInstance {
 
         if (listFiles != null) {
             for (File childFile : listFiles) {
+                String permissions;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    permissions = FileUtility.getPermissionString(childFile.isFile(), childFile.getAbsolutePath());
+                } else {
+                    permissions = FileUtility.getPermissionStringByFile(childFile.isFile(), childFile.getAbsolutePath());
+                }
                 FileSystemItemModel fileSystemItemModel = null;
                 // 判断是否为文件夹
                 if (childFile.isDirectory()) {
-                    fileSystemItemModel = addDirectory(directories, file.getAbsolutePath(), childFile);
+                    fileSystemItemModel = addDirectory(directories, file.getAbsolutePath(), childFile, permissions);
                     if (!fileSystemItemModel.getFullPath().endsWith("/")) {
                         Log.e(TAG, "list: 最后一个不是slash");
                     }
                 } else if (childFile.isFile()) {
-                    fileSystemItemModel = addFile(files, file.getAbsolutePath(), childFile);
+                    fileSystemItemModel = addFile(files, file.getAbsolutePath(), childFile, permissions);
                 }
                 if (fileSystemItemModel != null) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -278,13 +278,6 @@ public class RegularLocalFileInstance extends LocalFileInstance {
                             Log.w(TAG, "list: 获取BasicFileAttribute失败" + childFile.getAbsolutePath());
                         }
                     }
-                    String permissions;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        permissions = FileUtility.getPermissionString(fileSystemItemModel);
-                    } else {
-                        permissions = FileUtility.getPermissionStringByFile(fileSystemItemModel);
-                    }
-                    fileSystemItemModel.setPermissions(permissions);
                 }
 
             }

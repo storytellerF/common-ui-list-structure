@@ -11,9 +11,6 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
-import com.storyteller_f.file_system.model.FileItemModel;
-import com.storyteller_f.file_system.model.FileSystemItemModel;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,21 +20,21 @@ import java.util.Locale;
 public class FileUtility {
     private static final String TAG = "FileUtility";
 
-    public static String getPermissionStringByFile(FileSystemItemModel fileItemModel) {
-        File file = new File(fileItemModel.getFullPath());
+    public static String getPermissionStringByFile(boolean b, String fullPath) {
+        File file = new File(fullPath);
         boolean w = file.canWrite();
         boolean e = file.canExecute();
         boolean r = file.canRead();
-        return String.format(Locale.CHINA, "%c%c%c%c", (fileItemModel instanceof FileItemModel ? '-' : 'd'), (r ? 'r' : '-'), (w ? 'w' : '-'), (e ? 'e' : '-'));
+        return String.format(Locale.CHINA, "%c%c%c%c", (b ? '-' : 'd'), (r ? 'r' : '-'), (w ? 'w' : '-'), (e ? 'e' : '-'));
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public static String getPermissionString(FileSystemItemModel fileItemModel) {
-        Path path = new File(fileItemModel.getFullPath()).toPath();
+    public static String getPermissionString(boolean b, String fullPath) {
+        Path path = new File(fullPath).toPath();
         boolean w = Files.isWritable(path);
         boolean e = Files.isExecutable(path);
         boolean r = Files.isReadable(path);
-        return String.format(Locale.CHINA, "%c%c%c%c", (fileItemModel instanceof FileItemModel ? '-' : 'd'), (r ? 'r' : '-'), (w ? 'w' : '-'), (e ? 'e' : '-'));
+        return String.format(Locale.CHINA, "%c%c%c%c", (b ? '-' : 'd'), (r ? 'r' : '-'), (w ? 'w' : '-'), (e ? 'e' : '-'));
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)

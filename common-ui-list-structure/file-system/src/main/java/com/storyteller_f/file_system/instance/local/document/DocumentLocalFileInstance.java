@@ -14,7 +14,6 @@ import com.storyteller_f.file_system.Filter;
 import com.storyteller_f.file_system.instance.local.LocalFileInstance;
 import com.storyteller_f.file_system.model.DirectoryItemModel;
 import com.storyteller_f.file_system.model.FileItemModel;
-import com.storyteller_f.file_system.model.FileSystemItemModel;
 import com.storyteller_f.file_system.model.FilesAndDirectories;
 
 import java.io.BufferedInputStream;
@@ -307,22 +306,31 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
                 Log.e(TAG, "list: 出现一个错误");
                 continue;
             }
-            String abs = documentFile.getUri().getPath();
-            String absp = new File(path, documentFileName).getAbsolutePath();
-            Log.i(TAG, "list: directory abs:" + abs + " absp:" + absp);
-            long time = documentFile.lastModified();
-            FileSystemItemModel fileSystemItemModel;
+            String p = documentFile.getUri().getPath();
+            String fullPath = new File(path, documentFileName).getAbsolutePath();
+            Log.i(TAG, "list: directory documentFile.getUri().getPath():" + p + " fullPath:" + fullPath);
+            String detailString = getDetailString(documentFile);
             if (documentFile.isFile()) {
-                String extension = getExtension(documentFileName);
-                FileItemModel fileSystemItemModel1 = addFile(files, path, documentFileName.startsWith("."), documentFileName, absp, time, extension);
-                fileSystemItemModel1.setSize(documentFile.length());
-                fileSystemItemModel = fileSystemItemModel1;
+                addFile(files, fullPath, detailString, documentFile).setSize(documentFile.length());
             } else {
-                fileSystemItemModel = addDirectory(directories, path, documentFileName.startsWith("."), documentFileName, absp, time);
+                adDirectory(directories, fullPath, detailString, documentFile);
             }
-            if (fileSystemItemModel != null) fileSystemItemModel.setPermissions(getDetailString(documentFile));
         }
         return new FilesAndDirectories(files, directories);
+    }
+
+    private void adDirectory(ArrayList<DirectoryItemModel> directories, String absp, String detailString, DocumentFile documentFile) {
+        String name = documentFile.getName();
+        boolean isHiddenFile = name.startsWith(".");
+        addDirectory(directories, path, isHiddenFile, name, absp, documentFile.lastModified(), detailString);
+    }
+
+    private FileItemModel addFile(ArrayList<FileItemModel> files, String absp, String detailString, DocumentFile documentFile) {
+        String name = documentFile.getName();
+        boolean isHiddenFile = name.startsWith(".");
+        String extension = getExtension(name);
+
+        return addFile(files, path, isHiddenFile, name, absp, documentFile.lastModified(), extension, detailString);
     }
 
     InputStream getInputStream() throws FileNotFoundException {

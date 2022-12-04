@@ -80,13 +80,17 @@ public abstract class LocalFileInstance extends BaseContextFileInstance {
                 if (needStop()) return FileVisitResult.TERMINATE;
                 File childFile = file.toFile();
                 FileSystemItemModel fileSystemItemModel;
+                boolean w = childFile.canWrite();
+                boolean r = childFile.canRead();
+                boolean x = childFile.canExecute();
+                String detail = String.format(Locale.CHINA, "%c%c%c%c", (childFile.isFile() ? '-' : 'd'), (r ? 'r' : '-'), (w ? 'w' : '-'), (x ? 'e' : '-'));
                 if (childFile.isFile()) {
-                    FileItemModel fileSystemItemModel1 = addFile(files, path, childFile.isHidden(), childFile.getName(), childFile.getAbsolutePath(), childFile.lastModified(), getExtension(childFile.getName()));
+                    FileItemModel fileSystemItemModel1 = addFile(files, path, childFile.isHidden(), childFile.getName(), childFile.getAbsolutePath(), childFile.lastModified(), getExtension(childFile.getName()), detail);
                     if (fileSystemItemModel1 != null)
                         fileSystemItemModel1.setSize(childFile.length());
                     fileSystemItemModel = fileSystemItemModel1;
                 } else {
-                    fileSystemItemModel = addDirectory(directories, path, childFile);
+                    fileSystemItemModel = addDirectory(directories, path, childFile, detail);
                 }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     BasicFileAttributes basicFileAttributes = null;
@@ -102,13 +106,6 @@ public abstract class LocalFileInstance extends BaseContextFileInstance {
                         } else
                             e.printStackTrace();
                     }
-                }
-                if (fileSystemItemModel != null) {
-                    boolean w = childFile.canWrite();
-                    boolean r = childFile.canRead();
-                    boolean x = childFile.canExecute();
-                    String detail = String.format(Locale.CHINA, "%c%c%c%c", (childFile.isFile() ? '-' : 'd'), (r ? 'r' : '-'), (w ? 'w' : '-'), (x ? 'e' : '-'));
-                    fileSystemItemModel.setPermissions(detail);
                 }
                 return FileVisitResult.CONTINUE;
             }
