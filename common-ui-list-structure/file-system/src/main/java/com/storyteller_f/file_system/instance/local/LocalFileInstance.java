@@ -2,7 +2,6 @@ package com.storyteller_f.file_system.instance.local;
 
 import android.content.Context;
 import android.os.Build;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -17,7 +16,6 @@ import com.storyteller_f.file_system.model.FilesAndDirectories;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.AccessDeniedException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -85,28 +83,13 @@ public abstract class LocalFileInstance extends BaseContextFileInstance {
                 boolean x = childFile.canExecute();
                 String detail = String.format(Locale.CHINA, "%c%c%c%c", (childFile.isFile() ? '-' : 'd'), (r ? 'r' : '-'), (w ? 'w' : '-'), (x ? 'e' : '-'));
                 if (childFile.isFile()) {
-                    FileItemModel fileSystemItemModel1 = addFile(files, path, childFile.isHidden(), childFile.getName(), childFile.getAbsolutePath(), childFile.lastModified(), getExtension(childFile.getName()), detail);
-                    if (fileSystemItemModel1 != null)
-                        fileSystemItemModel1.setSize(childFile.length());
-                    fileSystemItemModel = fileSystemItemModel1;
+                    fileSystemItemModel = addFile(files, path, childFile.isHidden(), childFile.getName(), childFile.getAbsolutePath(), childFile.lastModified(), getExtension(childFile.getName()), detail);
+                    if (fileSystemItemModel != null)
+                        fileSystemItemModel.setSize(childFile.length());
                 } else {
                     fileSystemItemModel = addDirectory(directories, path, childFile, detail);
                 }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    BasicFileAttributes basicFileAttributes = null;
-                    try {
-                        basicFileAttributes = Files.readAttributes(file.toAbsolutePath(), BasicFileAttributes.class);
-                        if (fileSystemItemModel != null) {
-                            fileSystemItemModel.setCreatedTime(basicFileAttributes.creationTime().toMillis());
-                            fileSystemItemModel.setLastAccessTime(basicFileAttributes.lastAccessTime().toMillis());
-                        }
-                    } catch (IOException e) {
-                        if (e instanceof AccessDeniedException) {
-                            Log.e(TAG, "visitFile: " + e.getMessage());
-                        } else
-                            e.printStackTrace();
-                    }
-                }
+                editAccessTime(childFile, fileSystemItemModel);
                 return FileVisitResult.CONTINUE;
             }
 

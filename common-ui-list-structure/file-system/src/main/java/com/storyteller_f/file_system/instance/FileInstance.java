@@ -1,6 +1,9 @@
 package com.storyteller_f.file_system.instance;
 
 
+import android.os.Build;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
@@ -26,12 +29,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 
 /**
  * notice 如果需要给name 设置值，那就需要提供path。或者自行处理
  */
 public abstract class FileInstance {
+    private static final String TAG = "FileInstance";
     //在线程下执行才有意义
     protected String path;
     protected String name;
@@ -87,13 +93,30 @@ public abstract class FileInstance {
         return extension;
     }
 
+    protected void editAccessTime(File childFile, FileSystemItemModel fileSystemItemModel) {
+        if (fileSystemItemModel != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                try {
+                    BasicFileAttributes basicFileAttributes = Files.readAttributes(childFile.toPath(), BasicFileAttributes.class);
+                    fileSystemItemModel.setCreatedTime(basicFileAttributes.creationTime().toMillis());
+                    fileSystemItemModel.setLastAccessTime(basicFileAttributes.lastAccessTime().toMillis());
+                } catch (IOException e) {
+                    Log.w(TAG, "list: 获取BasicFileAttribute失败" + childFile.getAbsolutePath());
+                }
+            }
+        }
+    }
 
     public FileItemModel getFile() {
-        return new FileItemModel(name, path, file.isHidden(), file.lastModified(), getExtension(name));
+        FileItemModel fileItemModel = new FileItemModel(name, path, file.isHidden(), file.lastModified(), getExtension(name));
+        editAccessTime(file, fileItemModel);
+        return fileItemModel;
     }
 
     public DirectoryItemModel getDirectory() {
-        return new DirectoryItemModel(name, path, file.isHidden(), file.lastModified());
+        DirectoryItemModel directoryItemModel = new DirectoryItemModel(name, path, file.isHidden(), file.lastModified());
+        editAccessTime(file, directoryItemModel);
+        return directoryItemModel;
     }
 
     public FileSystemItemModel getFileSystemItem() throws Exception {
@@ -282,9 +305,9 @@ public abstract class FileInstance {
     /**
      * 添加普通目录，判断过滤监听事件
      *
-     * @param directories 填充目的地
-     * @param parent      父文件夹
-     * @param childDirectory   当前目录下的子文件夹
+     * @param directories    填充目的地
+     * @param parent         父文件夹
+     * @param childDirectory 当前目录下的子文件夹
      */
     protected FileSystemItemModel addDirectory(Collection<DirectoryItemModel> directories, String parent, File childDirectory, String permissions) {
         return addDirectory(directories, parent, childDirectory.isHidden(), childDirectory.getName(), childDirectory.getAbsolutePath(), childDirectory.lastModified(), permissions);

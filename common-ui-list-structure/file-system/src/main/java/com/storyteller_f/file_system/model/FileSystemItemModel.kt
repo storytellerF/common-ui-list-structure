@@ -11,8 +11,18 @@ open class FileSystemItemModel(
 ) : FileSystemItemModelLite(name, absolutePath) {
     private val simpleDateFormat = SimpleDateFormat("yyyy:MM:dd hh:mm:ss sss", Locale.CHINA)
     val formattedLastModifiedTime: String
+    var formattedLastAccessTime: String? = null
+    var formattedCreatedTime: String? = null
     var lastAccessTime: Long = 0
+        set(value) {
+            formattedLastAccessTime = getTime(value)
+            field = value
+        }
     var createdTime: Long = 0
+        set(value) {
+            formattedCreatedTime = getTime(value)
+            field = value
+        }
     var size: Long = 0
     var formattedSize: String? = null
     var permissions: String? = null

@@ -268,18 +268,7 @@ public class RegularLocalFileInstance extends LocalFileInstance {
                 } else if (childFile.isFile()) {
                     fileSystemItemModel = addFile(files, file.getAbsolutePath(), childFile, permissions);
                 }
-                if (fileSystemItemModel != null) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        try {
-                            BasicFileAttributes basicFileAttributes = Files.readAttributes(childFile.toPath(), BasicFileAttributes.class);
-                            fileSystemItemModel.setCreatedTime(basicFileAttributes.creationTime().toMillis());
-                            fileSystemItemModel.setLastAccessTime(basicFileAttributes.lastAccessTime().toMillis());
-                        } catch (IOException e) {
-                            Log.w(TAG, "list: 获取BasicFileAttribute失败" + childFile.getAbsolutePath());
-                        }
-                    }
-                }
-
+                editAccessTime(childFile, fileSystemItemModel);
             }
         } else {
             return FilesAndDirectories.Companion.empty();

@@ -47,9 +47,32 @@
                     tools:text="/sdcard/" />
 
                 <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="5dp"
+                    android:text="@{`access:` + model.item.formattedLastAccessTime}"
+                    tools:text="2022" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="5dp"
+                    android:text="@{`modified:` + model.item.formattedLastModifiedTime}"
+                    tools:text="2022" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="5dp"
+                    android:text="@{`created:` + model.item.formattedCreatedTime}"
+                    tools:text="2022" />
+
+                <TextView
                     android:id="@+id/video_info"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:background="@color/greyAlpha"
+                    android:padding="10dp" />
             </LinearLayout>
         </ScrollView>
     </androidx.constraintlayout.widget.ConstraintLayout>
