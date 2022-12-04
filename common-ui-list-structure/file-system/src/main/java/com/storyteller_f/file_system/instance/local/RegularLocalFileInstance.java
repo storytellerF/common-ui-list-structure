@@ -58,7 +58,7 @@ public class RegularLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
-    public LocalFileInstance toChild(String name, boolean isFile, boolean reCreate) throws Exception {
+    public LocalFileInstance toChild(@NonNull String name, boolean isFile, boolean reCreate) throws Exception {
         File file = new File(path, name);
         RegularLocalFileInstance internalFileInstance = new RegularLocalFileInstance(context, filter, file.getAbsolutePath());
         if (exists()) {
@@ -95,7 +95,7 @@ public class RegularLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
-    public void changeToChild(String name, boolean isFile, boolean reCreate) throws Exception {
+    public void changeToChild(@NonNull String name, boolean isFile, boolean reCreate) throws Exception {
         Log.d(TAG, "changeToChild() called with: name = [" + name + "], isFile = [" + isFile + "]");
         File file = new File(path, name);
         if (exists()) {
@@ -141,17 +141,12 @@ public class RegularLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
-    public void changeTo(String path) {
+    public void changeTo(@NonNull String path) {
         if (this.path.equals(path)) {
             return;
         }
         this.path = path;
         this.file = new File(path);
-    }
-
-    @Override
-    public String getParent() {
-        return file.getParent();
     }
 
     @Override

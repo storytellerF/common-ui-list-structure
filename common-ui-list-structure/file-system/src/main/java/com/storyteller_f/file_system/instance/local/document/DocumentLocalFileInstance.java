@@ -209,7 +209,7 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
-    public LocalFileInstance toChild(String name, boolean isFile, boolean reCreate) throws Exception {
+    public LocalFileInstance toChild(@NonNull String name, boolean isFile, boolean reCreate) throws Exception {
         if (!exists()) {
             Log.e(TAG, "toChild: 未经过初始化或者文件不存在：" + path);
             return null;
@@ -268,7 +268,7 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
-    public void changeToChild(String name, boolean isFile, boolean reCreate) throws Exception {
+    public void changeToChild(@NonNull String name, boolean isFile, boolean reCreate) throws Exception {
         if (isFile()) {
             throw new Exception("当前是一个文件，无法向下操作");
         } else {
@@ -417,7 +417,7 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
-    public void changeTo(String path) {
+    public void changeTo(@NonNull String path) {
         if (this.path.equals(path)) {
             return;
         }

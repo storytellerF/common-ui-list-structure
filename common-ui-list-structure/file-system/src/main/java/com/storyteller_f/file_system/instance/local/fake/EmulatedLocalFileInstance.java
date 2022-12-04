@@ -151,17 +151,17 @@ public class EmulatedLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
-    public LocalFileInstance toChild(String name, boolean isFile, boolean reCreate) {
+    public LocalFileInstance toChild(@NonNull String name, boolean isFile, boolean reCreate) {
         return null;
     }
 
     @Override
-    public void changeToChild(String name, boolean isFile, boolean reCreate) {
+    public void changeToChild(@NonNull String name, boolean isFile, boolean reCreate) {
 
     }
 
     @Override
-    public void changeTo(String path) {
+    public void changeTo(@NonNull String path) {
 
     }
 

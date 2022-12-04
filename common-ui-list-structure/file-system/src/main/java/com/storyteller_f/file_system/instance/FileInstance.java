@@ -263,17 +263,12 @@ public abstract class FileInstance {
      * @param reCreate 是否创建
      * @return 返回子对象
      */
-    public abstract FileInstance toChild(String name, boolean isFile, boolean reCreate) throws Exception;
+    public abstract FileInstance toChild(@NonNull String name, boolean isFile, boolean reCreate) throws Exception;
 
     /**
      * 不应该考虑能否转换成功
-     *
-     * @param name
-     * @param isFile
-     * @param reCreate
-     * @throws Exception
      */
-    public abstract void changeToChild(String name, boolean isFile, boolean reCreate) throws Exception;
+    public abstract void changeToChild(@NonNull String name, boolean isFile, boolean reCreate) throws Exception;
 
     /**
      * 基本上完成的工作是构造函数应该做的
@@ -282,14 +277,16 @@ public abstract class FileInstance {
      *
      * @param path 新的文件路径，路径的根应该和当前对象符合，如果需要跨根跳转，需要使用FileInstanceFactory完成
      */
-    public abstract void changeTo(String path);
+    public abstract void changeTo(@NonNull String path);
 
     /**
      * 获取父路径
      *
      * @return 父路径
      */
-    public abstract String getParent();
+    public String getParent() {
+        return file.getParent();
+    }
 
     @WorkerThread
     @NonNull

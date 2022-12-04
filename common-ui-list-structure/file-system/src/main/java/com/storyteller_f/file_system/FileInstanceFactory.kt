@@ -89,7 +89,6 @@ object FileInstanceFactory {
      */
     @JvmStatic
     fun getPrefix(unsafePath: String, context: Context): String {
-
         assert(!unsafePath.endsWith("/") || unsafePath.length == 1) {
             unsafePath
         }

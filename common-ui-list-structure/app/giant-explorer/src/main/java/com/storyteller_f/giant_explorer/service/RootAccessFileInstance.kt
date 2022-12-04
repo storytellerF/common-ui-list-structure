@@ -4,17 +4,15 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FilesAndDirectories
+import com.storyteller_f.giant_explorer.control.remote
 import com.topjohnwu.superuser.nio.ExtendedFile
 import com.topjohnwu.superuser.nio.FileSystemManager
-import java.io.BufferedReader
-import java.io.BufferedWriter
-import java.io.FileInputStream
-import java.io.FileOutputStream
+import java.io.*
 import java.util.*
 
 class RootAccessFileInstance(path: String, remote: FileSystemManager) : FileInstance(path) {
 
-    private val extendedFile = remote.getFile(path)
+    private var extendedFile = remote.getFile(path)
 
     override fun getBufferedReader(): BufferedReader = extendedFile.bufferedReader()
 
@@ -80,21 +78,29 @@ class RootAccessFileInstance(path: String, remote: FileSystemManager) : FileInst
         TODO("Not yet implemented")
     }
 
-    override fun toChild(name: String?, isFile: Boolean, reCreate: Boolean): FileInstance {
-        TODO("Not yet implemented")
+    override fun toChild(name: String, isFile: Boolean, reCreate: Boolean): FileInstance {
+        return RootAccessFileInstance(File(file, name).absolutePath, remote!!)
     }
 
-    override fun changeToChild(name: String?, isFile: Boolean, reCreate: Boolean) {
-        TODO("Not yet implemented")
+    override fun changeToChild(name: String, isFile: Boolean, reCreate: Boolean) {
+        val tempFile = File(file, name)
+        val childFile = remote?.getFile(file.absolutePath)
+        childFile?.let {
+            file = tempFile
+            extendedFile = childFile
+        }
     }
 
-    override fun changeTo(path: String?) {
-        TODO("Not yet implemented")
+    override fun changeTo(path: String) {
+        val tempFile = File(path)
+        val childFile = remote?.getFile(path)
+        childFile?.let {
+            file = tempFile
+            extendedFile = childFile
+        }
     }
 
-    override fun getParent(): String {
-        TODO("Not yet implemented")
-    }
+    override fun getParent(): String? = extendedFile.parent
 
     override fun listSafe() = list()
 }
