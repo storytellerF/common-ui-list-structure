@@ -46,16 +46,16 @@ class App : Application() {
                 )
             }
         }
-        FireCrasher.install(this, object : CrashListener() {
-
-            override fun onCrash(throwable: Throwable) {
-                Toast.makeText(this@App, throwable.exceptionMessage, Toast.LENGTH_LONG).show()
-                // start the recovering process
-                recover()
-                //you need to add your crash reporting tool here
-                //Ex: Crashlytics.logException(throwable);
-            }
-        })
+//        FireCrasher.install(this, object : CrashListener() {
+//
+//            override fun onCrash(throwable: Throwable) {
+//                Toast.makeText(this@App, throwable.exceptionMessage, Toast.LENGTH_LONG).show()
+//                // start the recovering process
+//                recover()
+//                //you need to add your crash reporting tool here
+//                //Ex: Crashlytics.logException(throwable);
+//            }
+//        })
 
     }
 }

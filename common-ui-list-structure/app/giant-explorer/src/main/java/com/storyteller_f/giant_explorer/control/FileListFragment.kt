@@ -185,7 +185,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     }
 
     @BindClickEvent(FileItemHolder::class, "fileIcon")
-    fun test(view: View, itemHolder: FileItemHolder) {
+    fun fileMenu(view: View, itemHolder: FileItemHolder) {
         PopupMenu(requireContext(), view).apply {
             inflate(R.menu.item_context_menu)
             setOnMenuItemClickListener { item ->
@@ -212,6 +212,9 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                             }
                             manager.setPrimaryClip(apply)
                         }
+                    }
+                    R.id.properties -> {
+                        findNavController().navigate(R.id.action_fileListFragment_to_propertiesDialog, PropertiesDialogArgs(itemHolder.file.fullPath).toBundle())
                     }
 
                 }

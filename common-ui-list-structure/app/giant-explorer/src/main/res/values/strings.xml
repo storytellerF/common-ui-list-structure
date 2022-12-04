@@ -50,4 +50,9 @@
         erat maximus, vitae volutpat diam dignissim.
     </string>
     <string name="add_background_task_description">add background task</string>
+    <string name="delete">delete</string>
+    <string name="move_to">move to</string>
+    <string name="copy_to">copy to</string>
+    <string name="copy_files">copy</string>
+    <string name="properties">properties</string>
 </resources>

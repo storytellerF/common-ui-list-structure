@@ -7,7 +7,7 @@
     <fragment
         android:id="@+id/fileListFragment"
         android:name="com.storyteller_f.giant_explorer.control.FileListFragment"
-        android:label="FileListFragment" >
+        android:label="FileListFragment">
         <action
             android:id="@+id/action_fileListFragment_to_newNameDialog"
             app:destination="@id/newNameDialog" />
@@ -24,6 +24,9 @@
         <argument
             android:name="path"
             app:argType="string" />
+        <action
+            android:id="@+id/action_fileListFragment_to_propertiesDialog"
+            app:destination="@id/propertiesDialog" />
     </fragment>
     <dialog
         android:id="@+id/newNameDialog"
@@ -32,7 +35,15 @@
     <dialog
         android:id="@+id/openFileDialog"
         android:name="com.storyteller_f.giant_explorer.dialog.OpenFileDialog"
-        android:label="OpenFileDialog" >
+        android:label="OpenFileDialog">
+        <argument
+            android:name="path"
+            app:argType="string" />
+    </dialog>
+    <dialog
+        android:id="@+id/propertiesDialog"
+        android:name="com.storyteller_f.giant_explorer.dialog.PropertiesDialog"
+        android:label="properties">
         <argument
             android:name="path"
             app:argType="string" />
