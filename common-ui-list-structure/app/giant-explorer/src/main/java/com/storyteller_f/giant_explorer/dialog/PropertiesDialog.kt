@@ -15,7 +15,6 @@ import com.storyteller_f.common_ui.setOnClick
 import com.storyteller_f.giant_explorer.control.getFileInstance
 import com.storyteller_f.giant_explorer.databinding.DialogFilePropertiesBinding
 import com.storyteller_f.giant_explorer.model.FileModel
-import kotlin.time.Duration
 
 class PropertiesDialog : SimpleDialogFragment<DialogFilePropertiesBinding>(DialogFilePropertiesBinding::inflate) {
     private val args by navArgs<PropertiesDialogArgs>()
@@ -44,17 +43,29 @@ class PropertiesDialog : SimpleDialogFragment<DialogFilePropertiesBinding>(Dialo
                 val width = filter.getInteger(MediaFormat.KEY_WIDTH)
                 val height = filter.getInteger(MediaFormat.KEY_HEIGHT)
                 val duration = filter.getLong(MediaFormat.KEY_DURATION)
+                val sampleRate = filter.getIntOrNull(MediaFormat.KEY_SAMPLE_RATE)
+                val frameRate = filter.getIntOrNull(MediaFormat.KEY_FRAME_RATE)
+                val colorFormat = filter.getIntOrNull(MediaFormat.KEY_COLOR_FORMAT)
                 binding.videoInfo.text = """
                     track count ${mediaExtractor.trackCount}
                     width $width
                     height $height
                     duration $duration ms
+                    sample rate: $sampleRate
+                    frame rate: $frameRate
+                    color format: $colorFormat
                 """.trimIndent()
 
                 mediaExtractor.release()
             }
         }
 
+    }
+
+    private fun MediaFormat.getIntOrNull(key: String) = try {
+        getInteger(key)
+    } catch (_: Exception) {
+        null
     }
 }
 
