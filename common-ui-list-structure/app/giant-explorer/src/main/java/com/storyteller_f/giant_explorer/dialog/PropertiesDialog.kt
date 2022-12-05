@@ -5,10 +5,12 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.media.MediaExtractor
 import android.media.MediaFormat
+import android.media.MediaMetadataRetriever
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.navigation.fragment.navArgs
 import com.storyteller_f.common_ui.SimpleDialogFragment
 import com.storyteller_f.common_ui.setOnClick
@@ -32,7 +34,12 @@ class PropertiesDialog : SimpleDialogFragment<DialogFilePropertiesBinding>(Dialo
         else 0
         binding.model = FileModel(fileInstance.name, fileInstance.path, length, fileInstance.isHidden, fileInstance.fileSystemItem)
         if (fileInstance.isFile) {
-            if (fileInstance.file.extension == "mp4") {
+            val b = fileInstance.file.extension == "mp4"
+            val b1 = fileInstance.file.extension == "mp3"
+
+            binding.videoInfo.isVisible = b
+            binding.audoInfo.isVisible = b1
+            if (b) {
                 val mediaExtractor = MediaExtractor()
                 mediaExtractor.setDataSource(fileInstance.path)
                 val filter = totalSequence(mediaExtractor.trackCount) {
@@ -57,6 +64,13 @@ class PropertiesDialog : SimpleDialogFragment<DialogFilePropertiesBinding>(Dialo
                 """.trimIndent()
 
                 mediaExtractor.release()
+            } else {
+                if (b1) {
+                    val mediaMetadataRetriever = MediaMetadataRetriever()
+                    mediaMetadataRetriever.setDataSource(fileInstance.path)
+                    val duration = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                    binding.audoInfo.text = "duration: $duration ms"
+                }
             }
         }
 
