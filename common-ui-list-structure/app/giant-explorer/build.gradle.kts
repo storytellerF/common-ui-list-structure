@@ -23,8 +23,18 @@ android {
         // Now we can use BuildConfig.DOCUMENTS_AUTHORITY in our code
         buildConfigField(
             "String",
-            "File_PROVIDER_AUTHORITY",
+            "FILE_PROVIDER_AUTHORITY",
             "\"${fileProvider}\""
+        )
+        val fileSystemProvider = "$applicationId.file-system-provider"
+
+        // Now we can use ${documentsAuthority} in our Manifest
+        manifestPlaceholders["fileSystemProviderAuthority"] = fileSystemProvider
+        // Now we can use BuildConfig.DOCUMENTS_AUTHORITY in our code
+        buildConfigField(
+            "String",
+            "FILE_SYSTEM_PROVIDER_AUTHORITY",
+            "\"${fileSystemProvider}\""
         )
     }
 }

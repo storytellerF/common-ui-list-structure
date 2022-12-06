@@ -12,10 +12,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Common_ui_list_structure">
-        <service
-            android:name=".FileService"
-            android:enabled="true"
-            android:exported="true"></service>
 
         <activity
             android:name=".control.RootAccessActivity"
@@ -60,6 +56,10 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file" />
         </provider>
+        <provider
+            android:name=".service.FileSystemProvider"
+            android:authorities="${fileSystemProviderAuthority}"
+            android:exported="true" />
     </application>
 
 </manifest>

@@ -175,7 +175,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                 Intent("android.intent.action.VIEW").apply {
                     addCategory("android.intent.category.DEFAULT")
                     val file = File(itemHolder.file.fullPath)
-                    val uriForFile = FileProvider.getUriForFile(requireContext(), BuildConfig.File_PROVIDER_AUTHORITY, file)
+                    val uriForFile = FileProvider.getUriForFile(requireContext(), BuildConfig.FILE_PROVIDER_AUTHORITY, file)
                     setDataAndType(uriForFile, r.mimeType)
                     flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 }.let {
@@ -194,7 +194,12 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                 val intent = Intent(Intent.ACTION_VIEW)
                 intent.addCategory("android.intent.category.DEFAULT")
                 val file = File(itemHolder.file.fullPath)
-                val uriForFile = FileProvider.getUriForFile(requireContext(), BuildConfig.File_PROVIDER_AUTHORITY, file)
+//                val uriForFile = FileProvider.getUriForFile(requireContext(), BuildConfig.FILE_PROVIDER_AUTHORITY, file)
+                val uriForFile = Uri.Builder()
+                    .scheme("content")
+                    .authority(BuildConfig.FILE_SYSTEM_PROVIDER_AUTHORITY)
+                    .path("/info/${file.absolutePath}")
+                    .build()
                 val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension)
                 intent.putExtra("path", itemHolder.file.fullPath)
                 intent.setDataAndType(uriForFile, mimeTypeFromExtension)
