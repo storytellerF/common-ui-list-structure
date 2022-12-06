@@ -11,7 +11,7 @@ import kotlinx.parcelize.Parcelize
 class TestDialog : SimpleDialogFragment<DialogTestBinding>(DialogTestBinding::inflate) {
     override fun onBindViewEvent(binding: DialogTestBinding) {
         binding.button.setOnClick {
-            setFragmentResult(Result("ok"))
+            setFragmentResult(Result("Test Dialog"))
             dismiss()
         }
     }
@@ -23,7 +23,7 @@ class TestDialog : SimpleDialogFragment<DialogTestBinding>(DialogTestBinding::in
 class TestDialog2 : SimpleDialogFragment<DialogTestBinding>(DialogTestBinding::inflate) {
     override fun onBindViewEvent(binding: DialogTestBinding) {
         binding.button.setOnClick {
-            setFragmentResult(Result("--------"))
+            setFragmentResult(Result("TestDialog 2"))
             dismiss()
         }
     }

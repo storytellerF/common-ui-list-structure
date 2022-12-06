@@ -16,7 +16,7 @@ class SecondFragment : SimpleFragment<FragmentSecondBinding>(FragmentSecondBindi
     override fun onBindViewEvent(binding: FragmentSecondBinding) {
         binding.buttonSecond.setOnClickListener {
 //            findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
-            setFragmentResult(Result("hello world!"))
+            setFragmentResult(Result("second fragment"))
             findNavController().navigateUp()
         }
     }

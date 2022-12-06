@@ -14,18 +14,18 @@ class FirstFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding:
         binding.buttonFirst.setOnClickListener {
             findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
             fragment(SecondFragment::class.java.toString()) { r: SecondFragment.Result ->
-                Toast.makeText(requireContext(), r.hh, Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "fragment ${r.hh}", Toast.LENGTH_SHORT).show()
             }
         }
         binding.textviewFirst.setOnClick {
             findNavController().navigate(R.id.action_FirstFragment_to_testDialog)
             fragment(TestDialog::class.java.toString()) { r: TestDialog.Result ->
-                Toast.makeText(requireContext(), r.test, Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "fragment-->dialog ${r.test}", Toast.LENGTH_SHORT).show()
             }
         }
         binding.button2.setOnClick {
             dialog(TestDialog2()) { r: TestDialog2.Result ->
-                Toast.makeText(requireContext(), r.test, Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "dialog ${r.test}", Toast.LENGTH_SHORT).show()
             }
         }
     }
