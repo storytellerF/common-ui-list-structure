@@ -307,7 +307,11 @@ public abstract class FileInstance {
      * @param childDirectory 当前目录下的子文件夹
      */
     protected FileSystemItemModel addDirectory(Collection<DirectoryItemModel> directories, String parent, File childDirectory, String permissions) {
-        return addDirectory(directories, parent, childDirectory.isHidden(), childDirectory.getName(), childDirectory.getAbsolutePath(), childDirectory.lastModified(), permissions);
+        boolean hidden = childDirectory.isHidden();
+        String absolutePath = childDirectory.getAbsolutePath();
+        String name = childDirectory.getName();
+        long lastModifiedTime = childDirectory.lastModified();
+        return addDirectory(directories, parent, hidden, name, absolutePath, lastModifiedTime, permissions);
     }
 
     /**
@@ -318,7 +322,13 @@ public abstract class FileInstance {
      * @param childFile   当前目录下的子文件夹
      */
     protected FileSystemItemModel addFile(Collection<FileItemModel> directories, String parent, File childFile, String permissions) {
-        return addFile(directories, parent, childFile.isHidden(), childFile.getName(), childFile.getAbsolutePath(), childFile.lastModified(), getExtension(childFile.getName()), permissions);
+        boolean hidden = childFile.isHidden();
+        String name = childFile.getName();
+        String absolutePath = childFile.getAbsolutePath();
+        long lastModifiedTime = childFile.lastModified();
+        String extension = getExtension(name);
+        long length = childFile.length();
+        return addFile(directories, parent, hidden, name, absolutePath, lastModifiedTime, extension, permissions, length);
     }
 
     private boolean checkWhenAdd(String parent, String absolutePath, boolean isFile) {
@@ -337,7 +347,7 @@ public abstract class FileInstance {
      * @param extension        文件扩展
      * @return 返回添加的文件
      */
-    protected FileItemModel addFile(Collection<FileItemModel> files, String parent, boolean hidden, String name, String absolutePath, long lastModifiedTime, String extension, String permission) {
+    protected FileItemModel addFile(Collection<FileItemModel> files, String parent, boolean hidden, String name, String absolutePath, long lastModifiedTime, String extension, String permission, long size) {
         if (checkWhenAdd(parent, absolutePath, true)) {
             FileItemModel fileItemModel;
             if ("torrent".equals(extension)) {
@@ -346,6 +356,7 @@ public abstract class FileInstance {
                 fileItemModel = new FileItemModel(name, absolutePath, hidden, lastModifiedTime, extension);
             }
             fileItemModel.setPermissions(permission);
+            fileItemModel.setSize(size);
             files.add(fileItemModel);
             return fileItemModel;
         }

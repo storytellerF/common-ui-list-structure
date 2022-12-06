@@ -319,18 +319,18 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
         return new FilesAndDirectories(files, directories);
     }
 
-    private void adDirectory(ArrayList<DirectoryItemModel> directories, String absp, String detailString, DocumentFile documentFile) {
+    private void adDirectory(ArrayList<DirectoryItemModel> directories, String absp, String permissions, DocumentFile documentFile) {
         String name = documentFile.getName();
         boolean isHiddenFile = name.startsWith(".");
-        addDirectory(directories, path, isHiddenFile, name, absp, documentFile.lastModified(), detailString);
+        addDirectory(directories, path, isHiddenFile, name, absp, documentFile.lastModified(), permissions);
     }
 
-    private FileItemModel addFile(ArrayList<FileItemModel> files, String absp, String detailString, DocumentFile documentFile) {
+    private FileItemModel addFile(ArrayList<FileItemModel> files, String absPath, String permissions, DocumentFile documentFile) {
         String name = documentFile.getName();
         boolean isHiddenFile = name.startsWith(".");
         String extension = getExtension(name);
 
-        return addFile(files, path, isHiddenFile, name, absp, documentFile.lastModified(), extension, detailString);
+        return addFile(files, path, isHiddenFile, name, absPath, documentFile.lastModified(), extension, permissions, documentFile.length());
     }
 
     InputStream getInputStream() throws FileNotFoundException {

@@ -83,9 +83,7 @@ public abstract class LocalFileInstance extends BaseContextFileInstance {
                 boolean x = childFile.canExecute();
                 String detail = String.format(Locale.CHINA, "%c%c%c%c", (childFile.isFile() ? '-' : 'd'), (r ? 'r' : '-'), (w ? 'w' : '-'), (x ? 'e' : '-'));
                 if (childFile.isFile()) {
-                    fileSystemItemModel = addFile(files, path, childFile.isHidden(), childFile.getName(), childFile.getAbsolutePath(), childFile.lastModified(), getExtension(childFile.getName()), detail);
-                    if (fileSystemItemModel != null)
-                        fileSystemItemModel.setSize(childFile.length());
+                    fileSystemItemModel = addFile(files, path, childFile, detail);
                 } else {
                     fileSystemItemModel = addDirectory(directories, path, childFile, detail);
                 }

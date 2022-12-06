@@ -402,25 +402,7 @@ fun fileServiceBuilder(
             val items = listFiles
                 .subList(startPosition, startPosition + min(count, total - startPosition))
                 .map { model ->
-                    val length = if (model is FileItemModel) {
-                        database.mdDao().search(model.fullPath)?.let {
-                            if (it.lastUpdateTime > model.lastModifiedTime) model.md = it.data
-                        }
-                        if (model is TorrentFileItemModel)
-                            database.torrentDao().search(model.fullPath)?.let {
-                                if (it.lastUpdateTime > model.lastModifiedTime) model.torrentName = it.torrent
-                            }
-                        model.size
-                    } else {
-                        //从数据库中查找
-                        val directory = database.sizeDao().search(model.fullPath)
-                        if (directory != null && directory.lastUpdateTime > model.lastModifiedTime) {
-                            directory.size
-                        } else -1
-                    }
-                    model.formattedSize = format1024(length)
-                    model.size = length
-                    FileModel(model.name, model.fullPath, length, model.isHidden, model)
+                    fileModelBuilder(model, database)
                 }
             SimpleResponse(
                 total = total,
@@ -431,4 +413,29 @@ fun fileServiceBuilder(
 
     }
 
+}
+
+private suspend fun fileModelBuilder(
+    model: FileSystemItemModel,
+    database: FileSizeRecordDatabase
+): FileModel {
+    val length = if (model is FileItemModel) {
+        database.mdDao().search(model.fullPath)?.let {
+            if (it.lastUpdateTime > model.lastModifiedTime) model.md = it.data
+        }
+        if (model is TorrentFileItemModel)
+            database.torrentDao().search(model.fullPath)?.let {
+                if (it.lastUpdateTime > model.lastModifiedTime) model.torrentName = it.torrent
+            }
+        model.size
+    } else {
+        //从数据库中查找
+        val directory = database.sizeDao().search(model.fullPath)
+        if (directory != null && directory.lastUpdateTime > model.lastModifiedTime) {
+            directory.size
+        } else -1
+    }
+    model.formattedSize = format1024(length)
+    model.size = length
+    return FileModel(model.name, model.fullPath, length, model.isHidden, model)
 }
