@@ -15,6 +15,7 @@
             <option value="$PROJECT_DIR$/app/b3" />
             <option value="$PROJECT_DIR$/app/fapiao" />
             <option value="$PROJECT_DIR$/app/giant-explorer" />
+            <option value="$PROJECT_DIR$/app/giant-explorer/plugin-core" />
             <option value="$PROJECT_DIR$/app/ping" />
             <option value="$PROJECT_DIR$/buildSrc" />
             <option value="$PROJECT_DIR$/common-ktx" />

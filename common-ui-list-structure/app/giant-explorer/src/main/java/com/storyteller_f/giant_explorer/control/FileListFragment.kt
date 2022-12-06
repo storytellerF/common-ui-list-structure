@@ -12,6 +12,7 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.webkit.MimeTypeMap
 import android.webkit.URLUtil
 import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
@@ -31,6 +32,7 @@ import com.storyteller_f.common_ui.fragment
 import com.storyteller_f.common_ui.owner
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
+import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.BuildConfig
 import com.storyteller_f.giant_explorer.R
@@ -188,6 +190,18 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     fun fileMenu(view: View, itemHolder: FileItemHolder) {
         PopupMenu(requireContext(), view).apply {
             inflate(R.menu.item_context_menu)
+            this.menu.add("yue").setOnMenuItemClickListener {
+                val intent = Intent(Intent.ACTION_VIEW)
+                intent.addCategory("android.intent.category.DEFAULT")
+                val file = File(itemHolder.file.fullPath)
+                val uriForFile = FileProvider.getUriForFile(requireContext(), BuildConfig.File_PROVIDER_AUTHORITY, file)
+                val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension)
+                intent.putExtra("path", itemHolder.file.fullPath)
+                intent.setDataAndType(uriForFile, mimeTypeFromExtension)
+                intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                startActivity(intent)
+                return@setOnMenuItemClickListener true
+            }
             setOnMenuItemClickListener { item ->
                 when (item.itemId) {
                     R.id.delete -> {
