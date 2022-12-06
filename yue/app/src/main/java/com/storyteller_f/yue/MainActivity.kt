@@ -7,7 +7,6 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.WindowManager
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -92,9 +91,7 @@ class MainActivity : AppCompatActivity() {
         val path = intent.getStringExtra("path") ?: return
         val uri = intent.data ?: return
         val navController = findNavController(R.id.nav_host_fragment_content_main)
-        if (!navController.clearBackStack(R.id.YueFragment)) {
-            Toast.makeText(this, "clear back stack failed", Toast.LENGTH_SHORT).show()
-        }
+        navController.popBackStack(R.id.FirstFragment, true)
         navController.navigate(R.id.YueFragment, YueFragmentArgs(path, uri).toBundle())
     }
 
