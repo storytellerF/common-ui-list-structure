@@ -58,6 +58,8 @@ dependencies {
 
     // Optional: Provides remote file system support
     implementation("com.github.topjohnwu.libsu:nio:${libsuVersion}")
+
+    implementation("com.github.bumptech.glide:glide:4.14.2")
 }
 baseApp()
 setupGeneric()

@@ -3,14 +3,17 @@
     <item
         android:id="@+id/filterHiddenFile"
         android:checkable="true"
-        android:title="过滤隐藏文件" />
+        android:title="@string/filter_hidden_file" />
     <item
         android:id="@+id/newWindow"
-        android:title="new window" />
+        android:title="@string/new_window" />
     <item
         android:id="@+id/open_settings"
-        android:title="settings" />
+        android:title="@string/settings" />
     <item
         android:id="@+id/open_root_access"
-        android:title="root access" />
+        android:title="@string/root_access" />
+    <item
+        android:id="@+id/about"
+        android:title="@string/about" />
 </menu>

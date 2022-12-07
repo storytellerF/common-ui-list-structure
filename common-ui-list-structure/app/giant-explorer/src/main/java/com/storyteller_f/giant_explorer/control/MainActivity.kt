@@ -173,6 +173,9 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             R.id.open_root_access -> {
                 startActivity(Intent(this, RootAccessActivity::class.java))
             }
+            R.id.about -> {
+                startActivity(Intent(this, AboutActivity::class.java))
+            }
 
         }
         return super.onOptionsItemSelected(item)
