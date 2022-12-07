@@ -29,7 +29,21 @@
                     android:mimeType="image/*"
                     android:scheme="content" />
             </intent-filter>
+            <intent-filter>
 
+                <action android:name="com.storyteller_f.action.giant_explorer.PLUGIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data
+                    android:mimeType="image/*"
+                    android:scheme="content" />
+            </intent-filter>
+
+            <meta-data
+                android:name="group"
+                android:value="view" />
+            <meta-data
+                android:name="title"
+                android:value="yue" />
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />

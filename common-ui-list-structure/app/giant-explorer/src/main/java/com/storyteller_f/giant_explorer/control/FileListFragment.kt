@@ -3,7 +3,9 @@ package com.storyteller_f.giant_explorer.control
 import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.ComponentName
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.text.TextPaint
 import android.text.TextUtils
@@ -32,7 +34,6 @@ import com.storyteller_f.common_ui.fragment
 import com.storyteller_f.common_ui.owner
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
-import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.BuildConfig
 import com.storyteller_f.giant_explorer.R
@@ -190,23 +191,10 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     fun fileMenu(view: View, itemHolder: FileItemHolder) {
         PopupMenu(requireContext(), view).apply {
             inflate(R.menu.item_context_menu)
-            this.menu.add("yue").setOnMenuItemClickListener {
-                val intent = Intent(Intent.ACTION_VIEW)
-                intent.addCategory("android.intent.category.DEFAULT")
-                val file = File(itemHolder.file.fullPath)
-//                val uriForFile = FileProvider.getUriForFile(requireContext(), BuildConfig.FILE_PROVIDER_AUTHORITY, file)
-                val uriForFile = Uri.Builder()
-                    .scheme("content")
-                    .authority(BuildConfig.FILE_SYSTEM_PROVIDER_AUTHORITY)
-                    .path("/info${file.absolutePath}")
-                    .build()
-                val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension)
-                intent.putExtra("path", itemHolder.file.fullPath)
-                intent.setDataAndType(uriForFile, mimeTypeFromExtension)
-                intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                startActivity(intent)
-                return@setOnMenuItemClickListener true
-            }
+            val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(File(itemHolder.file.fullPath).extension)
+
+            resolvePlugins(itemHolder, mimeTypeFromExtension)
+
             setOnMenuItemClickListener { item ->
                 when (item.itemId) {
                     R.id.delete -> {
@@ -242,6 +230,33 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         }.show()
     }
 
+    private fun PopupMenu.resolvePlugins(itemHolder: FileItemHolder, mimeTypeFromExtension: String?) {
+        val intent = Intent("com.storyteller_f.action.giant_explorer.PLUGIN")
+        intent.addCategory("android.intent.category.DEFAULT")
+        val uriForFile = Uri.Builder()
+            .scheme("content")
+            .authority(BuildConfig.FILE_SYSTEM_PROVIDER_AUTHORITY)
+            .path("/info${itemHolder.file.fullPath}")
+            .build()
+        intent.putExtra("path", itemHolder.file.fullPath)
+        intent.setDataAndType(uriForFile, mimeTypeFromExtension)
+        intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+
+        val activities = requireContext().packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY or PackageManager.GET_META_DATA)
+        Log.i(TAG, "resolvePlugins: activities ${activities.size}")
+        activities.forEach {
+            val activityInfo = it?.activityInfo ?: return@forEach
+            val groups = activityInfo.metaData?.getString("group")?.split("/") ?: return@forEach
+            val title = activityInfo.metaData?.getString("title") ?: return@forEach
+            this.menu.loopAdd(groups).add(title).setOnMenuItemClickListener {
+                intent.setPackage(requireContext().packageName).component = ComponentName(activityInfo.packageName, activityInfo.name)
+                startActivity(intent)
+                return@setOnMenuItemClickListener true
+            }
+        }
+
+    }
+
     private fun moveOrCopy(move: Boolean, itemHolder: FileItemHolder) {
         dialog(RequestPathDialog()) { result: RequestPathDialog.RequestPathResult ->
             result.path.mm {
@@ -266,4 +281,10 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
     override fun requestKey() = "file-list"
 
+}
+
+private fun Menu.loopAdd(strings: List<String>): Menu {
+    return strings.fold(this) { t, e ->
+        t.addSubMenu(e)
+    }
 }
