@@ -11,7 +11,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/yue-core" />
+            <option value="$PROJECT_DIR$/giant-explorer-plugin-core" />
             <option value="$PROJECT_DIR$/yue-plugin" />
           </set>
         </option>

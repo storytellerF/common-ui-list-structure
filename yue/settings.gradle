@@ -15,4 +15,4 @@ dependencyResolutionManagement {
 rootProject.name = "yue"
 include ':app'
 include ':yue-plugin'
-include ':yue-core'
+include ':giant-explorer-plugin-core'
