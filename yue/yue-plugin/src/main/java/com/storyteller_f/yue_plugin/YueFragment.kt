@@ -1,15 +1,15 @@
 package com.storyteller_f.yue_plugin
 
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
 import com.storyteller_f.plugin_core.GiantExplorerPlugin
 import com.storyteller_f.plugin_core.GiantExplorerPluginManager
 import java.io.File
@@ -44,11 +44,17 @@ class YueFragment : Fragment(), GiantExplorerPlugin {
         textView.text = path
 
         val u = uri ?: return
-        val parcelFileDescriptor = requireContext().contentResolver.openFileDescriptor(u, "r")
-        parcelFileDescriptor.use {
-            val fileDescriptor = parcelFileDescriptor?.fileDescriptor ?: return
-            val decodeStream = BitmapFactory.decodeFileDescriptor(fileDescriptor)
-            view.findViewById<ImageView>(R.id.image).setImageBitmap(decodeStream)
+
+        val viewPager2 = view.findViewById<ViewPager2>(R.id.image_gallery)
+        viewPager2.adapter = object : FragmentStateAdapter(childFragmentManager, lifecycle) {
+            override fun getItemCount(): Int {
+                return 1
+            }
+
+            override fun createFragment(position: Int): Fragment {
+                return ImageViewFragment.newInstance(u, 0)
+            }
+
         }
 
     }
