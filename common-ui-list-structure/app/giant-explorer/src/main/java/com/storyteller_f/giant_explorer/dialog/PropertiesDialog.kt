@@ -10,10 +10,11 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import androidx.core.view.isVisible
 import androidx.navigation.fragment.navArgs
 import com.storyteller_f.common_ui.SimpleDialogFragment
 import com.storyteller_f.common_ui.setOnClick
+import com.storyteller_f.common_ui.setVisible
+import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.giant_explorer.control.getFileInstance
 import com.storyteller_f.giant_explorer.databinding.DialogFilePropertiesBinding
 import com.storyteller_f.giant_explorer.model.FileModel
@@ -34,46 +35,45 @@ class PropertiesDialog : SimpleDialogFragment<DialogFilePropertiesBinding>(Dialo
         else 0
         binding.model = FileModel(fileInstance.name, fileInstance.path, length, fileInstance.isHidden, fileInstance.fileSystemItem)
         if (fileInstance.isFile) {
-            val b = fileInstance.file.extension == "mp4"
-            val b1 = fileInstance.file.extension == "mp3"
-
-            binding.videoInfo.isVisible = b
-            binding.audoInfo.isVisible = b1
-            if (b) {
-                val mediaExtractor = MediaExtractor()
-                mediaExtractor.setDataSource(fileInstance.path)
-                val filter = totalSequence(mediaExtractor.trackCount) {
-                    mediaExtractor.getTrackFormat(it)
-                }.filter {
-                    it.getString(MediaFormat.KEY_MIME)?.startsWith("video") == true
-                }.first()
-                val width = filter.getInteger(MediaFormat.KEY_WIDTH)
-                val height = filter.getInteger(MediaFormat.KEY_HEIGHT)
-                val duration = filter.getLong(MediaFormat.KEY_DURATION)
-                val sampleRate = filter.getIntOrNull(MediaFormat.KEY_SAMPLE_RATE)
-                val frameRate = filter.getIntOrNull(MediaFormat.KEY_FRAME_RATE)
-                val colorFormat = filter.getIntOrNull(MediaFormat.KEY_COLOR_FORMAT)
-                binding.videoInfo.text = """
-                    track count ${mediaExtractor.trackCount}
-                    width $width
-                    height $height
-                    duration $duration ms
-                    sample rate: $sampleRate
-                    frame rate: $frameRate
-                    color format: $colorFormat
-                """.trimIndent()
-
-                mediaExtractor.release()
-            } else {
-                if (b1) {
-                    val mediaMetadataRetriever = MediaMetadataRetriever()
-                    mediaMetadataRetriever.setDataSource(fileInstance.path)
-                    val duration = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-                    binding.audoInfo.text = "duration: $duration ms"
-                }
+            binding.videoInfo.setVisible(fileInstance.file.extension == "mp4") {
+                val trimIndent = videoInfo(fileInstance)
+                binding.videoInfo.text = trimIndent
+            }
+            binding.audoInfo.setVisible(fileInstance.file.extension == "mp3") {
+                val mediaMetadataRetriever = MediaMetadataRetriever()
+                mediaMetadataRetriever.setDataSource(fileInstance.path)
+                val duration = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                binding.audoInfo.text = "duration: $duration ms"
             }
         }
 
+    }
+
+    private fun videoInfo(fileInstance: FileInstance): String {
+        val mediaExtractor = MediaExtractor()
+        mediaExtractor.setDataSource(fileInstance.path)
+        val filter = totalSequence(mediaExtractor.trackCount) {
+            mediaExtractor.getTrackFormat(it)
+        }.filter {
+            it.getString(MediaFormat.KEY_MIME)?.startsWith("video") == true
+        }.first()
+        val width = filter.getInteger(MediaFormat.KEY_WIDTH)
+        val height = filter.getInteger(MediaFormat.KEY_HEIGHT)
+        val duration = filter.getLong(MediaFormat.KEY_DURATION)
+        val sampleRate = filter.getIntOrNull(MediaFormat.KEY_SAMPLE_RATE)
+        val frameRate = filter.getIntOrNull(MediaFormat.KEY_FRAME_RATE)
+        val colorFormat = filter.getIntOrNull(MediaFormat.KEY_COLOR_FORMAT)
+        val trimIndent = """
+                        track count ${mediaExtractor.trackCount}
+                        width $width
+                        height $height
+                        duration $duration ms
+                        sample rate: $sampleRate
+                        frame rate: $frameRate
+                        color format: $colorFormat
+                    """.trimIndent()
+        mediaExtractor.release()
+        return trimIndent
     }
 
     private fun MediaFormat.getIntOrNull(key: String) = try {

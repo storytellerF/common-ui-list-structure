@@ -8,6 +8,7 @@ import android.os.IBinder
 import android.util.Log
 import android.view.*
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.view.DragStartHelper
 import androidx.fragment.app.Fragment
@@ -322,32 +323,37 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
 
         binding.detail.text = item.permissions
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            val listener = { view: View, _: DragStartHelper ->
-                val clipData = ClipData.newPlainText(FileListFragment.clipDataKey, itemHolder.file.fullPath)
-                val flags = View.DRAG_FLAG_GLOBAL or View.DRAG_FLAG_GLOBAL_URI_READ
-                view.startDragAndDrop(clipData, View.DragShadowBuilder(view), null, flags)
-            }
-            DragStartHelper(binding.root, listener).apply {
-                attach()
-            }
-            if (itemHolder.file.item.isDirectory)
-                binding.root.setOnDragListener { v, event ->
-                    when (event.action) {
-                        DragEvent.ACTION_DRAG_STARTED -> {
-                            val clipDescription = event.clipDescription
-                            clipDescription.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)
-                                    && clipDescription.label == FileListFragment.clipDataKey
-                        }
-                        DragEvent.ACTION_DROP -> {
-                            v.findActionReceiverOrNull<FileListFragment>()?.handleClipData(event.clipData, itemHolder.file.fullPath)
-                            true
-                        }
-                        else -> true
-                    }
-                }
-            else binding.root.setOnDragListener(null)
+            drapSupport(itemHolder)
         }
 
+    }
+
+    @RequiresApi(Build.VERSION_CODES.N)
+    private fun drapSupport(itemHolder: FileItemHolder) {
+        val listener = { view: View, _: DragStartHelper ->
+            val clipData = ClipData.newPlainText(FileListFragment.clipDataKey, itemHolder.file.fullPath)
+            val flags = View.DRAG_FLAG_GLOBAL or View.DRAG_FLAG_GLOBAL_URI_READ
+            view.startDragAndDrop(clipData, View.DragShadowBuilder(view), null, flags)
+        }
+        DragStartHelper(binding.root, listener).apply {
+            attach()
+        }
+        if (itemHolder.file.item.isDirectory)
+            binding.root.setOnDragListener { v, event ->
+                when (event.action) {
+                    DragEvent.ACTION_DRAG_STARTED -> {
+                        val clipDescription = event.clipDescription
+                        clipDescription.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)
+                                && clipDescription.label == FileListFragment.clipDataKey
+                    }
+                    DragEvent.ACTION_DROP -> {
+                        v.findActionReceiverOrNull<FileListFragment>()?.handleClipData(event.clipData, itemHolder.file.fullPath)
+                        true
+                    }
+                    else -> true
+                }
+            }
+        else binding.root.setOnDragListener(null)
     }
 }
 
