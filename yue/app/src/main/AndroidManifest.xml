@@ -44,7 +44,7 @@
                 android:value="view" />
             <meta-data
                 android:name="title"
-                android:value="yue" />
+                android:value="@string/app_name" />
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />

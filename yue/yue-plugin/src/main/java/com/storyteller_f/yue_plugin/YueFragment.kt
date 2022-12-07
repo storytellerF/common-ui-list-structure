@@ -70,7 +70,7 @@ class YueFragment : Fragment(), GiantExplorerPlugin {
                 val build = Uri.Builder().scheme(u.scheme).authority(u.authority).path("/siblings$parent").build()
                 Log.i(TAG, "onViewCreated: build $build")
                 val query = requireContext().contentResolver.query(build, null, null, null, null)
-                query?.let {
+                query?.use {
                     while (it.moveToNext()) {
                         val name = query.getString(0)
                         val file = File(parent, name)
