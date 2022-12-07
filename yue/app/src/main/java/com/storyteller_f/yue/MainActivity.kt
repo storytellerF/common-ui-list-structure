@@ -88,7 +88,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun navigateToYue(intent: Intent?) {
         intent ?: return
-        val path = intent.getStringExtra("path") ?: return
+        println(intent)
+        val path = intent.getStringExtra("path") ?: "unknown path"
         val uri = intent.data ?: return
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         navController.popBackStack(R.id.FirstFragment, true)
