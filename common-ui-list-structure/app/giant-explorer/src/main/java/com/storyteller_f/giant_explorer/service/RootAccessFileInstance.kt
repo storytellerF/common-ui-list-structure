@@ -57,7 +57,7 @@ class RootAccessFileInstance(path: String, remote: FileSystemManager) : FileInst
     }
 
     override fun toParent(): FileInstance {
-        TODO("Not yet implemented")
+        return RootAccessFileInstance(File(file, name).parent!!, remote!!)
     }
 
     override fun changeToParent() {

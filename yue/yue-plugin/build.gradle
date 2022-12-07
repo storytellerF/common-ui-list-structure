@@ -39,6 +39,5 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.4'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
     api api(project(':giant-explorer-plugin-core',))
-
-//    api(fileTree(dir: "libs", includes: ["*.aar"]))
+    api("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
 }

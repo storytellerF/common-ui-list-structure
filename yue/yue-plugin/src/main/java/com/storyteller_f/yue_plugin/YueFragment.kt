@@ -3,15 +3,18 @@ package com.storyteller_f.yue_plugin
 import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.storyteller_f.plugin_core.GiantExplorerPlugin
 import com.storyteller_f.plugin_core.GiantExplorerPluginManager
+import kotlinx.coroutines.launch
 import java.io.File
 
 private const val arg_path = "path"
@@ -44,22 +47,51 @@ class YueFragment : Fragment(), GiantExplorerPlugin {
         textView.text = path
 
         val u = uri ?: return
+        val uriPath = u.encodedPath?.substring(5) ?: return
+        val parent = File(uriPath).parent ?: return
+        val list = mutableListOf<Uri>()
 
         val viewPager2 = view.findViewById<ViewPager2>(R.id.image_gallery)
-        viewPager2.adapter = object : FragmentStateAdapter(childFragmentManager, lifecycle) {
+        val adapter = object : FragmentStateAdapter(childFragmentManager, lifecycle) {
             override fun getItemCount(): Int {
-                return 1
+                return list.size
             }
 
             override fun createFragment(position: Int): Fragment {
-                return ImageViewFragment.newInstance(u, 0)
+                return ImageViewFragment.newInstance(list[position], position)
             }
 
+        }
+        viewPager2.adapter = adapter
+        viewLifecycleOwner.lifecycleScope.launch {
+            list.clear()
+            Log.i(TAG, "onViewCreated: ${u.authority}")
+            if (u.authority?.contains("storyteller") == true) {
+                val build = Uri.Builder().scheme(u.scheme).authority(u.authority).path("/siblings$parent").build()
+                Log.i(TAG, "onViewCreated: build $build")
+                val query = requireContext().contentResolver.query(build, null, null, null, null)
+                Log.i(TAG, "onViewCreated: query $query")
+                query?.let {
+                    var count = 0
+                    while (it.moveToNext()) {
+                        count++
+                        val name = query.getString(0)
+                        val file = File(parent, name)
+                        val build = Uri.Builder().scheme(u.scheme).authority(u.authority).path("/info${file.absolutePath}").build()
+                        Log.i(TAG, "onViewCreated: $count $build")
+                        list.add(build)
+                    }
+                }
+            } else {
+                list.add(u)
+            }
+            adapter.notifyDataSetChanged()
         }
 
     }
 
     companion object {
+        private const val TAG = "YueFragment"
         @JvmStatic
         fun newInstance(path: String, binder: IBinder, uri: Uri) =
             YueFragment().apply {

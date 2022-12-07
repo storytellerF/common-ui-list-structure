@@ -198,7 +198,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                 val uriForFile = Uri.Builder()
                     .scheme("content")
                     .authority(BuildConfig.FILE_SYSTEM_PROVIDER_AUTHORITY)
-                    .path("/info/${file.absolutePath}")
+                    .path("/info${file.absolutePath}")
                     .build()
                 val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension)
                 intent.putExtra("path", itemHolder.file.fullPath)
