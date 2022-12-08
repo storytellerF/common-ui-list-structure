@@ -73,8 +73,10 @@ class YueFragment : Fragment(), GiantExplorerPlugin {
                     while (it.moveToNext()) {
                         val name = query.getString(0)
                         val path = query.getString(1)
+                        val mimeType = query.getString(3)
                         Log.i(TAG, "onViewCreated: $name")
-                        list.add(Uri.Builder().scheme(u.scheme).authority(u.authority).path("/info$path").build())
+                        if (mimeType.startsWith("image"))
+                            list.add(Uri.Builder().scheme(u.scheme).authority(u.authority).path("/info$path").build())
                     }
                 }
             } else {
@@ -87,6 +89,7 @@ class YueFragment : Fragment(), GiantExplorerPlugin {
 
     companion object {
         private const val TAG = "YueFragment"
+
         @JvmStatic
         fun newInstance(path: String, binder: IBinder, uri: Uri) =
             YueFragment().apply {

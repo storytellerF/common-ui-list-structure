@@ -6,7 +6,9 @@ import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
 import android.os.ParcelFileDescriptor
+import android.provider.DocumentsContract
 import android.util.Log
+import android.webkit.MimeTypeMap
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.giant_explorer.control.getFileInstance
 import java.io.File
@@ -55,11 +57,12 @@ class FileSystemProvider : ContentProvider() {
     private fun queryFileInstance(fileInstance: FileInstance): MatrixCursor {
         val listSafe = fileInstance.listSafe()
         val matrixCursor = MatrixCursor(fileProjection)
+        val singleton = MimeTypeMap.getSingleton()
         listSafe.directories.forEach {
-            matrixCursor.addRow(arrayOf(it.name, it.fullPath, 0))
+            matrixCursor.addRow(arrayOf(it.name, it.fullPath, 0, DocumentsContract.Document.MIME_TYPE_DIR))
         }
         listSafe.files.forEach {
-            matrixCursor.addRow(arrayOf(it.name, it.fullPath, it.size))
+            matrixCursor.addRow(arrayOf(it.name, it.fullPath, it.size, singleton.getMimeTypeFromExtension(it.extension)))
         }
         return matrixCursor
     }
@@ -86,8 +89,9 @@ class FileSystemProvider : ContentProvider() {
         const val file_name = "file name"
         const val file_path = "file path"
         const val file_size = "file size"
+        const val file_mime_type = "file mime type"
         private val fileProjection = arrayOf(
-            file_name, file_path, file_size
+            file_name, file_path, file_size, file_mime_type
         )
     }
 }
