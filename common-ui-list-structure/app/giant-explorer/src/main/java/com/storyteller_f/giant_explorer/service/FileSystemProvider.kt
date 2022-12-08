@@ -25,9 +25,9 @@ class FileSystemProvider : ContentProvider() {
     }
 
     override fun query(uri: Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?): Cursor? {
-        val encodedPath = uri.encodedPath ?: return null
+        val uriPath = uri.path ?: return null
         val c = context ?: return null
-        val (type, filePath) = encodedPath.let {
+        val (type, filePath) = uriPath.let {
             val startIndex = it.indexOf("/", 1)
             it.substring(1, startIndex) to it.substring(startIndex)
         }

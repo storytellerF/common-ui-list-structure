@@ -65,16 +65,16 @@ class YueFragment : Fragment(), GiantExplorerPlugin {
             list.clear()
             Log.i(TAG, "onViewCreated: ${u.authority}")
             if (u.authority?.contains("storyteller") == true) {
-                val uriPath = u.encodedPath?.substring(5) ?: return@launch
-                val parent = File(uriPath).parent ?: return@launch
-                val build = Uri.Builder().scheme(u.scheme).authority(u.authority).path("/siblings$parent").build()
-                Log.i(TAG, "onViewCreated: build $build")
+                val truePath = u.path?.substring(5) ?: return@launch
+                val build = Uri.Builder().scheme(u.scheme).authority(u.authority).path("/siblings$truePath").build()
+                Log.i(TAG, "onViewCreated: build $build $truePath")
                 val query = requireContext().contentResolver.query(build, null, null, null, null)
                 query?.use {
                     while (it.moveToNext()) {
                         val name = query.getString(0)
-                        val file = File(parent, name)
-                        list.add(Uri.Builder().scheme(u.scheme).authority(u.authority).path("/info${file.absolutePath}").build())
+                        val path = query.getString(1)
+                        Log.i(TAG, "onViewCreated: $name")
+                        list.add(Uri.Builder().scheme(u.scheme).authority(u.authority).path("/info$path").build())
                     }
                 }
             } else {

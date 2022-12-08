@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.TextView
 
 private const val arg_uri = "param1"
 private const val arg_position = "param2"
@@ -34,12 +35,18 @@ class ImageViewFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val u = uri ?: return
-        val parcelFileDescriptor = requireContext().contentResolver.openFileDescriptor(u, "r")
-        parcelFileDescriptor.use {
-            val fileDescriptor = parcelFileDescriptor?.fileDescriptor ?: return
-            val decodeStream = BitmapFactory.decodeFileDescriptor(fileDescriptor)
-            view.findViewById<ImageView>(R.id.image_view).setImageBitmap(decodeStream)
+        try {
+            val parcelFileDescriptor = requireContext().contentResolver.openFileDescriptor(u, "r")
+            parcelFileDescriptor.use {
+                val fileDescriptor = parcelFileDescriptor?.fileDescriptor ?: return
+                val decodeStream = BitmapFactory.decodeFileDescriptor(fileDescriptor)
+                view.findViewById<ImageView>(R.id.image_view).setImageBitmap(decodeStream)
+            }
+        } catch (e: Exception) {
+            view.findViewById<TextView>(R.id.status).text = """$u
+                |${e.localizedMessage}""".trimMargin()
         }
+
     }
 
     companion object {
