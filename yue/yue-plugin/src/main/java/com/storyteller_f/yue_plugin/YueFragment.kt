@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
+import com.storyteller_f.plugin_core.FileSystemProviderConstant
 import com.storyteller_f.plugin_core.GiantExplorerPlugin
 import com.storyteller_f.plugin_core.GiantExplorerPluginManager
 import kotlinx.coroutines.launch
@@ -71,10 +72,9 @@ class YueFragment : Fragment(), GiantExplorerPlugin {
                 val query = requireContext().contentResolver.query(build, null, null, null, null)
                 query?.use {
                     while (it.moveToNext()) {
-                        val name = query.getString(0)
-                        val path = query.getString(1)
-                        val mimeType = query.getString(3)
-                        Log.i(TAG, "onViewCreated: $name")
+                        val name = query.getString(query.getColumnIndexOrThrow(FileSystemProviderConstant.fileName))
+                        val path = query.getString(query.getColumnIndexOrThrow(FileSystemProviderConstant.filePath))
+                        val mimeType = query.getString(query.getColumnIndexOrThrow(FileSystemProviderConstant.fileMimeType))
                         if (mimeType.startsWith("image"))
                             list.add(Uri.Builder().scheme(u.scheme).authority(u.authority).path("/info$path").build())
                     }

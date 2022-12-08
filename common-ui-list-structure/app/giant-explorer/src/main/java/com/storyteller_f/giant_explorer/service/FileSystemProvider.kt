@@ -11,6 +11,7 @@ import android.util.Log
 import android.webkit.MimeTypeMap
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.giant_explorer.control.getFileInstance
+import com.storyteller_f.plugin_core.FileSystemProviderConstant
 import java.io.File
 
 
@@ -86,12 +87,11 @@ class FileSystemProvider : ContentProvider() {
 
     companion object {
         private const val TAG = "FileSystemProvider"
-        const val file_name = "file name"
-        const val file_path = "file path"
-        const val file_size = "file size"
-        const val file_mime_type = "file mime type"
         private val fileProjection = arrayOf(
-            file_name, file_path, file_size, file_mime_type
+            FileSystemProviderConstant.fileName,
+            FileSystemProviderConstant.filePath,
+            FileSystemProviderConstant.fileSize,
+            FileSystemProviderConstant.fileMimeType
         )
     }
 }
