@@ -12,7 +12,7 @@
         tools:layout="@layout/fragment_task_list">
 
         <action
-            android:id="@+id/action_FirstFragment_to_SecondFragment"
+            android:id="@+id/action_add_task"
             app:destination="@id/AddTaskFragment" />
     </fragment>
     <fragment
@@ -21,7 +21,7 @@
         android:label="@string/second_fragment_label"
         tools:layout="@layout/fragment_add_task">
         <action
-            android:id="@+id/action_SecondFragment_to_requestPathDialog"
+            android:id="@+id/action_select_task_path"
             app:destination="@id/requestPathDialog" />
     </fragment>
     <dialog
