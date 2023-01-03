@@ -7,6 +7,7 @@ import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.core.DefaultAdapter
 
+@Suppress("UNCHECKED_CAST")
 open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val key: String? = null) :
     PagingDataAdapter<IH, VH>(
         common_diff_util as DiffUtil.ItemCallback<IH>

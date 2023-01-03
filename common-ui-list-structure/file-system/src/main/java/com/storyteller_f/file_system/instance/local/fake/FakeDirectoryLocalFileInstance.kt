@@ -84,13 +84,13 @@ class FakeDirectoryLocalFileInstance(path: String, val context: Context) :
 
     override fun isHidden() = false
 
-    override fun toChild(name: String, isFile: Boolean, reCreate: Boolean): FileInstance {
+    override fun toChild(name: String, isFile: Boolean, createWhenNotExists: Boolean): FileInstance {
         return if (!isFile) {
             FakeDirectoryLocalFileInstance("$path/$name", context)
         } else throw Exception("不允许文件")
     }
 
-    override fun changeToChild(name: String, isFile: Boolean, reCreate: Boolean) {
+    override fun changeToChild(name: String, isFile: Boolean, createWhenNotExists: Boolean) {
         TODO("Not yet implemented")
     }
 
@@ -100,10 +100,6 @@ class FakeDirectoryLocalFileInstance(path: String, val context: Context) :
 
     override fun getParent(): String {
         TODO("Not yet implemented")
-    }
-
-    override fun listSafe(): FilesAndDirectories {
-        return list()
     }
 
     companion object {

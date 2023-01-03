@@ -8,8 +8,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.paging.PagingData
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ktx.context
-import com.storyteller_f.common_ui.*
-import com.storyteller_f.common_vm_ktx.HasStateValueModel
+import com.storyteller_f.common_ui.SimpleDialogFragment
+import com.storyteller_f.common_ui.scope
+import com.storyteller_f.common_ui.setFragmentResult
+import com.storyteller_f.common_ui.setOnClick
+import com.storyteller_f.common_vm_ktx.StateValueModel
 import com.storyteller_f.common_vm_ktx.combine
 import com.storyteller_f.common_vm_ktx.svm
 import com.storyteller_f.common_vm_ktx.vm
@@ -21,8 +24,8 @@ import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.control.*
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.DialogRequestPathBinding
-import com.storyteller_f.ui_list.source.SearchProducer
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
+import com.storyteller_f.ui_list.source.SearchProducer
 import com.storyteller_f.ui_list.source.observerInScope
 import com.storyteller_f.ui_list.source.search
 import com.storyteller_f.ui_list.ui.ListWithState
@@ -39,7 +42,7 @@ class RequestPathDialog :
         FileExplorerSession(requireActivity().application, it)
     }
     private val filterHiddenFile by svm({}) { it, _ ->
-        HasStateValueModel(it, FileListFragment.filterHiddenFileKey, false)
+        StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
     }
 
     @Parcelize
@@ -139,6 +142,9 @@ class RequestPathDialog :
                 requireContext(),
                 false
             )
+        } else {
+            setFragmentResult(RequestPathResult(itemHolder.file.fullPath))
+            dismiss()
         }
     }
 

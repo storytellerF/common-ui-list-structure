@@ -55,30 +55,12 @@ public abstract class FileInstance {
     public FileInstance(Filter filter, String path) {
         this.filter = filter;
         this.path = path;
-        initName(path);
+        initName();
     }
 
     public FileInstance(String path) {
         this.path = path;
-        initName(path);
-    }
-
-    public FileInstance() {
-
-    }
-
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        FileInstance that = (FileInstance) o;
-        return ObjectsCompat.equals(path, that.path) && ObjectsCompat.equals(name, that.name);
-    }
-
-    @Override
-    public int hashCode() {
-        return ObjectsCompat.hash(path, name);
+        initName();
     }
 
     @Nullable
@@ -91,6 +73,19 @@ public abstract class FileInstance {
             extension = null;
         }
         return extension;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FileInstance that = (FileInstance) o;
+        return ObjectsCompat.equals(path, that.path) && ObjectsCompat.equals(name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(path, name);
     }
 
     protected void editAccessTime(File childFile, FileSystemItemModel fileSystemItemModel) {
@@ -124,8 +119,8 @@ public abstract class FileInstance {
         else return getDirectory();
     }
 
-    private void initName(String path) {
-        file = new File(path);
+    protected void initName() {
+        file = new File(this.path);
         name = file.getName();
     }
 
@@ -178,7 +173,7 @@ public abstract class FileInstance {
     public abstract FileOutputStream getFileOutputStream() throws FileNotFoundException;
 
     /**
-     * 应该仅用于目录
+     * 应该仅用于目录。可能会抛出异常，内部不会处理。
      *
      * @return 返回所有的文件和目录
      */
@@ -260,15 +255,15 @@ public abstract class FileInstance {
      * 不应该考虑能否转换成功
      *
      * @param name     名称
-     * @param reCreate 是否创建
+     * @param createWhenNotExists 是否创建
      * @return 返回子对象
      */
-    public abstract FileInstance toChild(@NonNull String name, boolean isFile, boolean reCreate) throws Exception;
+    public abstract FileInstance toChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) throws Exception;
 
     /**
      * 不应该考虑能否转换成功
      */
-    public abstract void changeToChild(@NonNull String name, boolean isFile, boolean reCreate) throws Exception;
+    public abstract void changeToChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) throws Exception;
 
     /**
      * 基本上完成的工作是构造函数应该做的
@@ -286,17 +281,6 @@ public abstract class FileInstance {
      */
     public String getParent() {
         return file.getParent();
-    }
-
-    @WorkerThread
-    @NonNull
-    public abstract FilesAndDirectories listSafe();
-
-    public void destroy() {
-        name = null;
-        file = null;
-        path = null;
-        filter = null;
     }
 
     /**

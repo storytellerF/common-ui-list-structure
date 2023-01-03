@@ -4,8 +4,8 @@ import android.net.Uri
 import java.util.*
 
 class MultiDetector(private val selected: List<Uri>) {
-    fun start(): LinkedList<DetectorTask> {
-        val detectorTasks = LinkedList<DetectorTask>()
+    fun start(): LinkedList<DetectedTask> {
+        val detectedTasks = LinkedList<DetectedTask>()
         for (uri in selected) {
             val scheme = try {
                 uri.scheme
@@ -13,12 +13,12 @@ class MultiDetector(private val selected: List<Uri>) {
                 continue
             }
             when (scheme) {
-                "file" -> detectorTasks.add(LocalTask(uri.path!!))
-                "http", "https" -> detectorTasks.add(DownloadTask(uri.path!!))
-                "content" -> detectorTasks.add(ContentTask(uri))
-                else -> detectorTasks.add(ErrorTask(uri.toString() + "无法识别"))
+                "file" -> detectedTasks.add(LocalTask(uri.path!!))
+                "http", "https" -> detectedTasks.add(DownloadTask(uri.path!!))
+                "content" -> detectedTasks.add(ContentTask(uri))
+                else -> detectedTasks.add(ErrorTask(uri.toString() + "无法识别"))
             }
         }
-        return detectorTasks
+        return detectedTasks
     }
 }

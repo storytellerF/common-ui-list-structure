@@ -13,6 +13,7 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.storyteller_f.common_ui.scope
+import com.storyteller_f.file_system_ktx.ensureFile
 import com.storyteller_f.ping.database.Wallpaper
 import com.storyteller_f.ping.database.requireMainDatabase
 import com.storyteller_f.ping.databinding.ActivityMainBinding
@@ -70,29 +71,6 @@ class MainActivity : AppCompatActivity() {
         binding.fab.setOnClickListener {
             pickFile.launch(arrayOf("video/*"))
         }
-    }
-
-    private suspend fun File.ensureFile(): File? {
-        if (!exists()) {
-            parentFile?.ensureDirs() ?: return null
-            if (!withContext(Dispatchers.IO) {
-                    createNewFile()
-                }) {
-                return null
-            }
-        }
-        return this
-    }
-
-    private suspend fun File.ensureDirs(): File? {
-        if (!exists()) {
-            if (!withContext(Dispatchers.IO) {
-                    mkdirs()
-                }) {
-                return null
-            }
-        }
-        return this
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

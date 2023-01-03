@@ -7,30 +7,24 @@ import com.storyteller_f.file_system.Filter;
 
 @SuppressWarnings({"unused", "RedundantSuppression"})
 public class MountedLocalFileInstance extends DocumentLocalFileInstance {
-    public static final String Name = "mountedFileInstance";
+    public static final String Name = "mounted-DocumentLocalFileInstance";
     public static final String ROOT_URI = "external-extend-uri";
 
     public MountedLocalFileInstance(Filter filter, Context context, String path) {
-        super(filter, context, path, Name, ROOT_URI);
-        updateRootKey();
+        super(filter, context, path);
+        updateRootKey(Name, ROOT_URI);
         initDocumentFile();
     }
 
     public MountedLocalFileInstance(Context context, String path) {
-        super(context, path, Name, ROOT_URI);
-        updateRootKey();
+        super(context, path);
+        updateRootKey(Name, ROOT_URI);
         initDocumentFile();
-    }
-
-    public MountedLocalFileInstance(String prefix, Context context) {
-        super(context, Name, ROOT_URI);
-        updateRootKey();
-        this.prefix = prefix;
     }
 
     @Override
     protected DocumentLocalFileInstance getInstance() {
-        return new MountedLocalFileInstance(prefix, context);
+        return new MountedLocalFileInstance(filter, context, "");
     }
 
 }

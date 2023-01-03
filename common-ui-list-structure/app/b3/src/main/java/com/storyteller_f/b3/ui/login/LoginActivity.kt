@@ -4,7 +4,9 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.geetest.sdk.*
+import com.geetest.sdk.GT3ConfigBean
+import com.geetest.sdk.GT3GeetestUtils
+import com.geetest.sdk.GT3LoadImageView
 import com.storyteller_f.b3.R
 import com.storyteller_f.b3.api.Common
 import com.storyteller_f.b3.api.GeetestAPI

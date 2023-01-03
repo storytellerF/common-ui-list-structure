@@ -15,7 +15,7 @@ fun <T : View> T.setOnClick(block: (T) -> Unit) {
     }
 }
 
-fun <T: View> T.pp(block: (T) -> Unit) {
+fun <T : View> T.pp(block: (T) -> Unit) {
     post {
         block(this)
     }
@@ -55,7 +55,8 @@ inline fun <T : View, reified V> T.setVisible(obj: Any, visible: (V) -> Boolean,
 }
 
 @ExtFuncFlat()
-val Context.lf: LayoutInflater get() = LayoutInflater.from(this)
+val Context.lf: LayoutInflater
+    get() = LayoutInflater.from(this)
 
 fun List<View>.onVisible(view: View) {
     forEach {

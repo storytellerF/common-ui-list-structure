@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 /**
  * 支持排序，需要搭配SimpleDataViewModel和SimpleDataRepository
  */
+@Suppress("UNCHECKED_CAST")
 class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val key: String? = null) :
     ListAdapter<IH, VH>(SimpleSourceAdapter.common_diff_util as DiffUtil.ItemCallback<IH>) {
     var last = mutableListOf<IH>()

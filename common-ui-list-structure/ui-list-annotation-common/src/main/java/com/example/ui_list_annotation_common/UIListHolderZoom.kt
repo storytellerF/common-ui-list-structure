@@ -1,6 +1,5 @@
 package com.example.ui_list_annotation_common
 
-import javax.lang.model.element.Element
 import javax.lang.model.element.PackageElement
 import javax.lang.model.element.TypeElement
 
@@ -22,11 +21,11 @@ class UIListHolderZoom<T> {
         setTemp[first] = second
     }
 
-    fun addClickEvent(map: Map<String?, Map<String, List<Event<T>>>>) {
+    fun addClickEvent(map: Map<String, Map<String, List<Event<T>>>>) {
         clickEventMapTemp.putAll(map)
     }
 
-    fun addLongClick(map: Map<String?, Map<String, List<Event<T>>>>) {
+    fun addLongClick(map: Map<String, Map<String, List<Event<T>>>>) {
         longClickEventMapTemp.putAll(map)
     }
 
@@ -53,23 +52,29 @@ class UIListHolderZoom<T> {
         }).plus(holderEntryTemp.map { it.origin })
     }
 
-    fun importBindingClass(): String {
+    fun importHolders(): String {
         return holderEntryTemp.joinToString("\n") { entry ->
-            val allViewHolderModel = entry.viewHolders.map {
-                """import ${it.value.bindingFullName};
-import ${it.value.viewHolderFullName};"""
-            }.joinToString("\n")
-            allViewHolderModel + "\nimport ${entry.itemHolderFullName};"
+            val bindings = entry.viewHolders.values.map {
+                it.bindingFullName
+            }.distinct().joinToString("\n") {
+                "import ${it};"
+            }
+            val viewHolders = entry.viewHolders.values.joinToString("\n") {
+                "import ${it.viewHolderFullName};"
+            }
+            bindings + "\n" + viewHolders + "\nimport ${entry.itemHolderFullName};//item holder end\n"
         }
     }
 
-    val hasComposeView: Boolean get() {
-        return holderEntryTemp.any { entry ->
-            entry.viewHolders.any {
-                !it.value.bindingName.endsWith("Binding")
+    val hasComposeView: Boolean
+        get() {
+            return holderEntryTemp.any { entry ->
+                entry.viewHolders.any {
+                    !it.value.bindingName.endsWith("Binding")
+                }
             }
         }
-    }
+
     private fun receiverList(longClickEvent: Map<String?, Map<String, List<Event<T>>>>) =
         longClickEvent.flatMap { it.value.flatMap { entry -> entry.value } }
             .map { it.receiverFullName }
@@ -82,4 +87,36 @@ import ${it.value.viewHolderFullName};"""
             "import $it;\n"
         }
     }
+}
+
+inline fun <T, K1 : Any, K2 : Any, V> Iterable<T>.doubleLayerGroupBy(doubleKeySelector: (T) -> Pair<K1, K2>?, valueTransform: (T) -> V): Map<K1, Map<K2, List<V>>> {
+    val destination = mutableMapOf<K1, MutableMap<K2, MutableList<V>>>()
+    for (element in this) {
+        val key = doubleKeySelector(element)
+        key?.let {
+            val map = destination.getOrPut(key.first) { mutableMapOf() }
+            val secondMap = map.getOrPut(key.second) {
+                mutableListOf()
+            }
+            secondMap.add(valueTransform(element))
+        }
+
+    }
+    return destination
+}
+
+inline fun <T, K1, K2, V> Sequence<T>.doubleLayerGroupBy(doubleKeySelector: (T) -> Pair<K1, K2>?, valueTransform: (T) -> V): Map<K1, Map<K2, List<V>>> {
+    val destination = mutableMapOf<K1, MutableMap<K2, MutableList<V>>>()
+    for (element in this) {
+        val key = doubleKeySelector(element)
+        key?.let {
+            val map = destination.getOrPut(key.first) { mutableMapOf() }
+            val secondMap = map.getOrPut(key.second) {
+                mutableListOf()
+            }
+            secondMap.add(valueTransform(element))
+        }
+
+    }
+    return destination
 }

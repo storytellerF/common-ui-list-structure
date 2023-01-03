@@ -22,7 +22,7 @@
         android:id="@+id/SecondFragment"
         android:name="com.storyteller_f.common_ui_list_structure.SecondFragment"
         android:label="@string/second_fragment_label"
-        tools:layout="@layout/fragment_second"/>
+        tools:layout="@layout/fragment_second" />
     <dialog
         android:id="@+id/testDialog"
         android:name="com.storyteller_f.common_ui_list_structure.TestDialog"

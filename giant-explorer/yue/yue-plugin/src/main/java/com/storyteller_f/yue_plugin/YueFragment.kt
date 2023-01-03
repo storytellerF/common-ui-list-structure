@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.storyteller_f.plugin_core.FileSystemProviderConstant
+import com.storyteller_f.plugin_core.FileSystemProviderResolver
 import com.storyteller_f.plugin_core.GiantExplorerPlugin
 import com.storyteller_f.plugin_core.GiantExplorerPluginManager
 import kotlinx.coroutines.launch
@@ -26,7 +27,7 @@ class YueFragment : Fragment(), GiantExplorerPlugin {
     private var path: String? = null
     private var uri: Uri? = null
     private var binder: IBinder? = null
-    lateinit var plugin: GiantExplorerPluginManager
+    var plugin: GiantExplorerPluginManager? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,39 +53,47 @@ class YueFragment : Fragment(), GiantExplorerPlugin {
 
         val viewPager2 = view.findViewById<ViewPager2>(R.id.image_gallery)
         val adapter = object : FragmentStateAdapter(childFragmentManager, lifecycle) {
-            override fun getItemCount(): Int {
-                return list.size
-            }
+            override fun getItemCount() = list.size
 
-            override fun createFragment(position: Int): Fragment {
-                return ImageViewFragment.newInstance(list[position], position)
-            }
-
+            override fun createFragment(position: Int) = ImageViewFragment.newInstance(list[position], position)
         }
         viewPager2.adapter = adapter
         viewLifecycleOwner.lifecycleScope.launch {
             list.clear()
-            Log.i(TAG, "onViewCreated: ${u.authority}")
-            if (u.authority?.contains("storyteller") == true) {
-                val truePath = u.path?.substring(5) ?: return@launch
-                val build = Uri.Builder().scheme(u.scheme).authority(u.authority).path("/siblings$truePath").build()
-                Log.i(TAG, "onViewCreated: build $build $truePath")
-                val query = requireContext().contentResolver.query(build, null, null, null, null)
-                query?.use {
-                    while (it.moveToNext()) {
-                        val name = query.getString(query.getColumnIndexOrThrow(FileSystemProviderConstant.fileName))
-                        val path = query.getString(query.getColumnIndexOrThrow(FileSystemProviderConstant.filePath))
-                        val mimeType = query.getString(query.getColumnIndexOrThrow(FileSystemProviderConstant.fileMimeType))
-                        if (mimeType.startsWith("image"))
-                            list.add(Uri.Builder().scheme(u.scheme).authority(u.authority).path("/info$path").build())
-                    }
-                }
-            } else {
-                list.add(u)
+            if (listFiles(u, list)) {
+                adapter.notifyItemRangeInserted(0, list.size)
             }
-            adapter.notifyDataSetChanged()
         }
 
+    }
+
+    private fun listFiles(u: Uri, list: MutableList<Uri>): Boolean {
+        Log.i(TAG, "onViewCreated: ${u.authority}")
+        val (_, truePath) = FileSystemProviderResolver.resolve(u) ?: return false
+        val manager = plugin
+        val parent = File(truePath).parent
+        if (requireContext().javaClass.canonicalName != "com.storyteller_f.yue.MainActivity" && manager != null && parent != null) {
+            list.addAll(manager.listFiles(parent).map {
+                Uri.fromFile(File(it))
+            })
+        } else if (u.authority?.contains("storyteller") == true) {
+            val siblingUri = FileSystemProviderResolver.build(u.authority!!, FileSystemProviderConstant.typeSibling, truePath)!!
+            Log.i(TAG, "onViewCreated: build $siblingUri $truePath")
+            val query = requireContext().contentResolver.query(siblingUri, null, null, null, null)
+            query?.use {
+                while (it.moveToNext()) {
+                    //                        val name = query.getString(query.getColumnIndexOrThrow(FileSystemProviderConstant.fileName))
+                    val path = query.getString(query.getColumnIndexOrThrow(FileSystemProviderConstant.filePath))
+                    val mimeType = query.getString(query.getColumnIndexOrThrow(FileSystemProviderConstant.fileMimeType))
+                    Log.i(TAG, "listFiles: $path $mimeType")
+                    if (mimeType != null && mimeType.startsWith("image"))
+                        list.add(Uri.Builder().scheme(u.scheme).authority(u.authority).path("/info$path").build())
+                }
+            }
+        } else {
+            list.add(u)
+        }
+        return true
     }
 
     companion object {

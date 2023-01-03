@@ -41,6 +41,9 @@ android {
 
 dependencies {
     implementation(fileTree("libs"))
+    implementation("androidx.appcompat:appcompat:${Versions.appcompatVersion}")
+    implementation("com.google.android.material:material:${Versions.materialVersion}")
+    implementation("androidx.constraintlayout:constraintlayout:${Versions.constraintLayoutVersion}")
     fileSystemDependency()
     networkDependency()
     workerDependency()

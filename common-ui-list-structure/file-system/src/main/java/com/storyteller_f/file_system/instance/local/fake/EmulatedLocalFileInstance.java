@@ -83,12 +83,6 @@ public class EmulatedLocalFileInstance extends LocalFileInstance {
 
     @NonNull
     @Override
-    public FilesAndDirectories listSafe() {
-        return list();
-    }
-
-    @NonNull
-    @Override
     public FilesAndDirectories list() {
         List<DirectoryItemModel> directoryItemModels = new ArrayList<>();
         directoryItemModels.add(new DirectoryItemModel("0", path + "/0", false, new File(FileInstanceFactory.rootUserEmulatedPath).lastModified()));
@@ -151,12 +145,12 @@ public class EmulatedLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
-    public LocalFileInstance toChild(@NonNull String name, boolean isFile, boolean reCreate) {
+    public LocalFileInstance toChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) {
         return null;
     }
 
     @Override
-    public void changeToChild(@NonNull String name, boolean isFile, boolean reCreate) {
+    public void changeToChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) {
 
     }
 

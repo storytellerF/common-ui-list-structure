@@ -65,11 +65,11 @@ class StorageLocalFileInstance(val context: Context) :
 
     override fun isHidden() = false
 
-    override fun toChild(name: String, isFile: Boolean, reCreate: Boolean): FileInstance {
+    override fun toChild(name: String, isFile: Boolean, createWhenNotExists: Boolean): FileInstance {
         TODO("Not yet implemented")
     }
 
-    override fun changeToChild(name: String, isFile: Boolean, reCreate: Boolean) {
+    override fun changeToChild(name: String, isFile: Boolean, createWhenNotExists: Boolean) {
         TODO("Not yet implemented")
     }
 
@@ -78,5 +78,4 @@ class StorageLocalFileInstance(val context: Context) :
     }
 
     override fun getParent() = "/"
-    override fun listSafe() = list()
 }

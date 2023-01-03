@@ -34,10 +34,10 @@ import androidx.core.view.updatePadding
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
-import com.storyteller_f.common_pr.dip
-import com.storyteller_f.common_pr.dipToInt
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
+import com.storyteller_f.common_pr.dip
+import com.storyteller_f.common_pr.dipToInt
 import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_ui_list_structure.api.requireReposService
 import com.storyteller_f.common_ui_list_structure.databinding.ActivityMainBinding

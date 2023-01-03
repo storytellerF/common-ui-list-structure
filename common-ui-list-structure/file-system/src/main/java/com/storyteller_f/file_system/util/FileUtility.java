@@ -20,12 +20,11 @@ import java.util.Locale;
 public class FileUtility {
     private static final String TAG = "FileUtility";
 
-    public static String getPermissionStringByFile(boolean b, String fullPath) {
-        File file = new File(fullPath);
+    public static String getPermissionStringByFile(File file) {
         boolean w = file.canWrite();
         boolean e = file.canExecute();
         boolean r = file.canRead();
-        return String.format(Locale.CHINA, "%c%c%c%c", (b ? '-' : 'd'), (r ? 'r' : '-'), (w ? 'w' : '-'), (e ? 'e' : '-'));
+        return String.format(Locale.CHINA, "%c%c%c%c", (file.isFile() ? '-' : 'd'), (r ? 'r' : '-'), (w ? 'w' : '-'), (e ? 'e' : '-'));
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -128,7 +127,7 @@ public class FileUtility {
     }
 
     @Nullable
-    public static Intent produceRequestSaf(String prefix, Activity activity) {
+    public static Intent produceSafRequestIntent(String prefix, Activity activity) {
         Intent intent = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             StorageManager sm = activity.getSystemService(StorageManager.class);

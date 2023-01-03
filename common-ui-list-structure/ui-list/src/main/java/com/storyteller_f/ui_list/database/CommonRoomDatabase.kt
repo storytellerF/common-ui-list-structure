@@ -3,7 +3,6 @@ package com.storyteller_f.ui_list.database
 import androidx.room.PrimaryKey
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
-import androidx.room.TypeConverters
 import com.storyteller_f.ui_list.core.Datum
 import java.util.*
 
@@ -14,6 +13,7 @@ abstract class CommonRoomDatabase<D : Datum<RK>, RK : RemoteKey, DT : RoomDataba
     abstract suspend fun getRemoteKey(id: String): RK?
     abstract suspend fun insertAllData(repos: List<D>)
     abstract suspend fun deleteItemBy(d: D)
+
     @Deprecated("don't use it", replaceWith = ReplaceWith("deleteItem"))
     abstract suspend fun deleteItemById(commonDatumId: String)
 }

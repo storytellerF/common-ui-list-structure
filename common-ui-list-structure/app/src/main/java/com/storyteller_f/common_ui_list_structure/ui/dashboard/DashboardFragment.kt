@@ -3,10 +3,8 @@ package com.storyteller_f.common_ui_list_structure.ui.dashboard
 import android.widget.TextView
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.Text
@@ -47,10 +45,12 @@ class DashboardFragment : RegularFragment<FragmentDashboardBinding>(FragmentDash
     @Composable
     fun ToolBar() {
         Row(
-            modifier = Modifier.background(
-                Brush.linearGradient(listOf(Color.Black, Color.Red)),
-                RoundedCornerShape(3)
-            ).fillMaxWidth(),
+            modifier = Modifier
+                .background(
+                    Brush.linearGradient(listOf(Color.Black, Color.Red)),
+                    RoundedCornerShape(3)
+                )
+                .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Button(

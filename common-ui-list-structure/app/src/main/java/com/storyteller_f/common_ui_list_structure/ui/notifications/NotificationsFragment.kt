@@ -17,6 +17,7 @@ class NotificationsFragment : SimpleFragment<FragmentNotificationsBinding>(Fragm
             requireRepoDatabase.reposDao().select()
         }
     ))
+
     override fun onBindViewEvent(binding: FragmentNotificationsBinding) {
         val textView: TextView = binding.textNotifications
         detail.content.observe(viewLifecycleOwner) {

@@ -21,7 +21,7 @@ fun DependencyHandlerScope.baseDependency() {
 
     "kapt"("androidx.room:room-compiler:${Versions.roomVersion}")
 
-    "implementation"("androidx.fragment:fragment-ktx:${Versions.ktxVersion}")
+    "implementation"("androidx.fragment:fragment-ktx:${Versions.fragmentKtxVersion}")
     "implementation"("androidx.activity:activity-ktx:${Versions.ktxVersion}")
 
     "implementation"("org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.coroutinesVersion}")
@@ -32,7 +32,7 @@ fun DependencyHandlerScope.baseDependency() {
 }
 
 fun DependencyHandlerScope.composeDependency() {
-    "implementation"("androidx.compose.material:material:${Versions.composeVersion}")
+    "implementation"("androidx.compose.material:material:${Versions.composeMaterialVersion}")
     "implementation"("androidx.compose.ui:ui-tooling:${Versions.composeVersion}")
 }
 
@@ -176,12 +176,12 @@ fun Project.baseApp() {
             }
         }
         compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_1_8
-            targetCompatibility = JavaVersion.VERSION_1_8
+            sourceCompatibility = JavaVersion.VERSION_11
+            targetCompatibility = JavaVersion.VERSION_11
         }
 
         kotlinOptions {
-            jvmTarget = "1.8"
+            jvmTarget = "11"
         }
         dependenciesInfo {
             includeInBundle = false
@@ -207,11 +207,11 @@ fun Project.baseLibrary() {
             }
         }
         compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_1_8
-            targetCompatibility = JavaVersion.VERSION_1_8
+            sourceCompatibility = JavaVersion.VERSION_11
+            targetCompatibility = JavaVersion.VERSION_11
         }
         kotlinOptionsLibrary {
-            jvmTarget = "1.8"
+            jvmTarget = "11"
         }
     }
 }

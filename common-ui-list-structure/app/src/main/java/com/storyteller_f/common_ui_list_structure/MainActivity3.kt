@@ -24,10 +24,9 @@ class MainActivity3 : CommonActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
 
         binding.fab.setOnClickListener { view ->
-            dialog<TestDialog2.Result>(TestDialog2::class.java.toString(), TestDialog2::class.java) {
-
+            dialog<TestDialog2.Result>(TestDialog2::class.java) {
                 Snackbar.make(view, it.test, Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
+                    .setAction("activity->dialog", null).show()
             }
         }
     }

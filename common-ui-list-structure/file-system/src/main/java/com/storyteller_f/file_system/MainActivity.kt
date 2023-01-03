@@ -8,7 +8,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,8 +17,6 @@ import androidx.fragment.app.Fragment
 import com.storyteller_f.common_ktx.context
 import com.storyteller_f.file_system.instance.local.document.ExternalDocumentLocalFileInstance
 import com.storyteller_f.file_system.instance.local.document.MountedLocalFileInstance
-import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.util.FileUtility
 import kotlinx.coroutines.CompletableDeferred
 
@@ -33,8 +30,8 @@ class MainActivity : AppCompatActivity() {
         const val REQUEST_MANAGE = "REQUEST_MANAGE"
         const val REQUEST_CODE_EMULATED = 3
 
-        fun getBundle(type: String, path: String, intent: Intent) {
-            intent.putExtras(
+        fun Intent.getBundle(type: String, path: String) {
+            putExtras(
                 Bundle().apply {
                     putString("path", path)
                     putString("permission", type)
@@ -42,7 +39,7 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
-        fun fromBundle(bundle: Intent) = bundle.extras!!.let {
+        fun Intent.fromBundle() = extras!!.let {
             it.getString("permission") to it.getString("path")
         }
 
@@ -51,7 +48,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val fromBundle = fromBundle(intent)
+        val fromBundle = intent.fromBundle()
         when (fromBundle.first!!) {
             REQUEST_EMULATED -> ActivityCompat.requestPermissions(
                 this,
@@ -83,7 +80,7 @@ class MainActivity : AppCompatActivity() {
             ActivityResultContracts.StartActivityForResult()
         ) {
             if (it.resultCode == RESULT_OK) {
-                val uri = it.data
+                val uri = it.data?.data
                 if (uri != null) {
                     val sharedPreferences =
                         getSharedPreferences(
@@ -99,7 +96,7 @@ class MainActivity : AppCompatActivity() {
             }
             failure()
         }.launch(
-            FileUtility.produceRequestSaf(
+            FileUtility.produceSafRequestIntent(
                 FileInstanceFactory.getPrefix(fromBundle.second!!, this),
                 this
             )
@@ -111,7 +108,7 @@ class MainActivity : AppCompatActivity() {
             ActivityResultContracts.StartActivityForResult()
         ) {
             if (it.resultCode == RESULT_OK) {
-                val uri = it.data
+                val uri = it.data?.data
                 if (uri != null) {
                     val sharedPreferences = getSharedPreferences(
                         ExternalDocumentLocalFileInstance.Name,
@@ -129,7 +126,7 @@ class MainActivity : AppCompatActivity() {
             }
             failure()
         }.launch(
-            FileUtility.produceRequestSaf(
+            FileUtility.produceSafRequestIntent(
                 FileInstanceFactory.getPrefix(fromBundle.second!!, this),
                 this
             )

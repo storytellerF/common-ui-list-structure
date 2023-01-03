@@ -4,10 +4,8 @@ import android.content.Context;
 import android.graphics.Color;
 import android.os.Build;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -18,11 +16,14 @@ import androidx.annotation.RequiresApi;
 
 public class PathMan extends HorizontalScrollView {
     private static final String TAG = "PathMan";
+    private final StringBuilder pathBuilder = new StringBuilder();
     PathChangeListener pathChangeListener;
     private LinearLayout linearLayout;
     private boolean scrollToEnd = false;
-    private final StringBuilder pathBuilder = new StringBuilder();
-    /**
+    public PathMan(Context context) {
+        super(context);
+        init(context);
+    }    /**
      * 通过点击PathMan来进行跳转时，只能跳转到上级目录
      */
     OnClickListener clickListener = new OnClickListener() {
@@ -39,23 +40,6 @@ public class PathMan extends HorizontalScrollView {
         }
     };
 
-    @NonNull
-    String getPath(int index) {
-        if (index == 0) return "/";
-        String[] split = pathBuilder.toString().split("/");
-        StringBuilder path = new StringBuilder();
-        for (int i = 1; i <= index; i++) {
-            String name = split[i];
-            path.append("/").append(name);
-        }
-        return path.toString();
-    }
-
-    public PathMan(Context context) {
-        super(context);
-        init(context);
-    }
-
     public PathMan(Context context, AttributeSet attrs) {
         super(context, attrs);
         init(context);
@@ -69,6 +53,18 @@ public class PathMan extends HorizontalScrollView {
     public PathMan(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         init(context);
+    }
+
+    @NonNull
+    String getPath(int index) {
+        if (index == 0) return "/";
+        String[] split = pathBuilder.toString().split("/");
+        StringBuilder path = new StringBuilder();
+        for (int i = 1; i <= index; i++) {
+            String name = split[i];
+            path.append("/").append(name);
+        }
+        return path.toString();
     }
 
     public void append(String name) {
@@ -154,4 +150,6 @@ public class PathMan extends HorizontalScrollView {
     public interface PathChangeListener {
         void onSkipOnPathMan(@NonNull String pathString);
     }
+
+
 }

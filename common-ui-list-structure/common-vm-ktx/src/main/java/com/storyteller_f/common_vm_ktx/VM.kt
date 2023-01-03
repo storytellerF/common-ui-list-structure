@@ -144,6 +144,6 @@ class GenericListValueModel<T> : ViewModel() {
     val data = MutableLiveData<List<T>>()
 }
 
-class HasStateValueModel<T>(stateHandle: SavedStateHandle, key: String, default: T) : ViewModel() {
+class StateValueModel<T>(stateHandle: SavedStateHandle, key: String, default: T) : ViewModel() {
     val data = stateHandle.getLiveData(key, default)
 }

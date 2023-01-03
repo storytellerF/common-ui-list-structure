@@ -15,8 +15,6 @@ import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.viewbinding.ViewBinding
 
@@ -29,8 +27,8 @@ abstract class CommonFragment : Fragment(), RequestFragment, RegistryFragment {
     override fun onStart() {
         super.onStart()
         waitingInFragment.forEach { t ->
-            val action = t.value.action as Function2<CommonFragment, Parcelable, Unit>
-            if (t.value.requestKey == registryKey()) {
+            @Suppress("UNCHECKED_CAST") val action = t.value.action as Function2<CommonFragment, Parcelable, Unit>
+            if (t.value.registerKey == registryKey()) {
                 val callback = { s: String, r: Bundle ->
                     if (waitingInFragment.containsKey(s)) {
                         r.getParcelable<Parcelable>(resultKey)?.let {
@@ -147,17 +145,23 @@ val LifecycleOwner.fm
         else -> throw Exception("unknown type $this")
     }
 
-class ActivityAction<T : Parcelable, F : CommonActivity>(val action: F.(T) -> Unit, val requestKey: String)
-class FragmentAction<T : Parcelable, F : CommonFragment>(val action: F.(T) -> Unit, val requestKey: String)
+class ActivityAction<T : Parcelable, F : CommonActivity>(val action: F.(T) -> Unit, val registerKey: String)
+class FragmentAction<T : Parcelable, F : CommonFragment>(val action: F.(T) -> Unit, val registerKey: String)
 
 val waitingInActivity = mutableMapOf<String, ActivityAction<*, *>>()
 val waitingInFragment = mutableMapOf<String, FragmentAction<*, *>>()
 
 interface RequestFragment {
+    /**
+     * 用于setFragmentResultListener 接受结果
+     */
     fun requestKey(): String = this.javaClass.toString()
 }
 
 interface RegistryFragment {
+    /**
+     * 代表当前关心的事件
+     */
     fun registryKey(): String = "${this.javaClass}-registry"
 }
 

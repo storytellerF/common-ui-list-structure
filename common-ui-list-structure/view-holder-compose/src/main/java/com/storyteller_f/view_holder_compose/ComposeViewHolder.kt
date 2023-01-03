@@ -14,7 +14,7 @@ interface EdComposeViewEventEmitter {
     fun notifyLongClickEvent(viewName: String)
 
 
-    companion object{
+    companion object {
         val default = object : EdComposeViewEventEmitter {
             override val isSelected: Boolean
                 get() = false

@@ -1,15 +1,15 @@
 package com.storyteller_f.b3.api
 
-import com.storyteller_f.b3.ui.login.GeetestResult
-import retrofit2.http.Body
-import retrofit2.http.POST
-import retrofit2.http.Query
 import com.google.gson.annotations.SerializedName
+import com.storyteller_f.b3.ui.login.GeetestResult
 import com.storyteller_f.b3.ui.login.geetest_url
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Body
+import retrofit2.http.POST
+import retrofit2.http.Query
 
 
 interface GeetestAPI {

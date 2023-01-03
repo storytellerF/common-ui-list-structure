@@ -1,5 +1,6 @@
 package com.storyteller_f.yue_plugin
 
+import android.content.ContentResolver
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
@@ -9,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import java.io.File
 
 private const val arg_uri = "param1"
 private const val arg_position = "param2"
@@ -35,13 +37,24 @@ class ImageViewFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val u = uri ?: return
+        val path = u.path
+        val findViewById = view.findViewById<ImageView>(R.id.image_view)
+
         try {
-            val parcelFileDescriptor = requireContext().contentResolver.openFileDescriptor(u, "r")
-            parcelFileDescriptor.use {
-                val fileDescriptor = parcelFileDescriptor?.fileDescriptor ?: return
-                val decodeStream = BitmapFactory.decodeFileDescriptor(fileDescriptor)
-                view.findViewById<ImageView>(R.id.image_view).setImageBitmap(decodeStream)
+            if (u.scheme == ContentResolver.SCHEME_FILE && path != null) {
+                (requireParentFragment() as? YueFragment)?.plugin?.fileInputStream(path)?.use {
+                    val decodeStream = BitmapFactory.decodeStream(it)
+                    findViewById.setImageBitmap(decodeStream)
+                }
+            } else if (u.scheme == ContentResolver.SCHEME_CONTENT) {
+                val parcelFileDescriptor = requireContext().contentResolver.openFileDescriptor(u, "r")
+                parcelFileDescriptor.use {
+                    val fileDescriptor = parcelFileDescriptor?.fileDescriptor ?: return
+                    val decodeStream = BitmapFactory.decodeFileDescriptor(fileDescriptor)
+                    findViewById.setImageBitmap(decodeStream)
+                }
             }
+
         } catch (e: Exception) {
             view.findViewById<TextView>(R.id.status).text = """$u
                 |${e.localizedMessage}""".trimMargin()

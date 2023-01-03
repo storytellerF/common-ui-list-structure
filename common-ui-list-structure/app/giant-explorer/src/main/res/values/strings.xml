@@ -60,4 +60,9 @@
     <string name="settings">settings</string>
     <string name="root_access">root access</string>
     <string name="about">about</string>
+    <string name="title_activity_plugin_manage">PluginManageActivity</string>
+    <string name="operation_task_done">done</string>
+    <string name="ok">OK</string>
+    <string name="cancel">CANCEL</string>
+    <string name="stay_screen_on">保持常亮</string>
 </resources>

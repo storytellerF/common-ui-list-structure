@@ -23,6 +23,7 @@ class WallpaperInfoFragment : SimpleFragment<FragmentWallpaperInfoBinding>(Fragm
             .inflateTransition(R.transition.shared_image)
 
     }
+
     override fun onBindViewEvent(binding: FragmentWallpaperInfoBinding) {
         ViewCompat.setTransitionName(binding.wallpaperCard.wallpaperPreview, "wallpaper-preview")
         scope.launch {

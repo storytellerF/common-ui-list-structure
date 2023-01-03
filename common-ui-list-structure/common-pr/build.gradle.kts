@@ -1,7 +1,7 @@
 import common_ui_list_structure_preset.Versions
 import common_ui_list_structure_preset.baseLibrary
-import common_ui_list_structure_preset.unitTestDependency
 import common_ui_list_structure_preset.setupExtFuncSupport
+import common_ui_list_structure_preset.unitTestDependency
 
 plugins {
     id("com.android.library")

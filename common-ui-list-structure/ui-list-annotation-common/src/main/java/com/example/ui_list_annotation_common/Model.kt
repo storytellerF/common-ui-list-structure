@@ -1,7 +1,5 @@
 package com.example.ui_list_annotation_common
 
-import javax.lang.model.element.Element
-
 class Holder(
     val bindingName: String,
     val bindingFullName: String,

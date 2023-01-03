@@ -6,7 +6,7 @@ pluginManagement {
         google()
         mavenCentral()
         maven { url 'https://jitpack.io' }
-        maven { url '../repo'}
+        maven { url '../repo' }
     }
 }
 dependencyResolutionManagement {

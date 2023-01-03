@@ -24,7 +24,7 @@ public class FileSystemUriSaver {
     }
 
     public String saveUri(String sharedPreferenceName, String sharedPreferenceKey, Context context) {
-        String key = sharedPreferenceName + sharedPreferenceKey;
+        String key = String.format("%s-%s", sharedPreferenceName, sharedPreferenceKey);
         if (!documentRootCache.containsKey(key)) {
             SharedPreferences sharedPreferences = context.getSharedPreferences(sharedPreferenceName, Context.MODE_PRIVATE);
             String uriString = sharedPreferences.getString(sharedPreferenceKey, null);

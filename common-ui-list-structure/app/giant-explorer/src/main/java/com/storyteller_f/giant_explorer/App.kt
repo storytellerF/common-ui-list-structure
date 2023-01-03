@@ -2,34 +2,35 @@ package com.storyteller_f.giant_explorer
 
 import android.app.Application
 import android.content.Context
-import android.os.Build
 import android.util.Log
-import android.widget.Toast
-import androidx.core.content.PackageManagerCompat
 import androidx.work.*
-import com.osama.firecrasher.CrashListener
-import com.osama.firecrasher.FireCrasher
 import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.TorrentFileItemModel
-import com.storyteller_f.giant_explorer.control.adapter_produce.Temp
+import com.storyteller_f.giant_explorer.control.adapter_produce.HolderBuilder
 import com.storyteller_f.giant_explorer.database.FileMDRecord
 import com.storyteller_f.giant_explorer.database.FileSizeRecord
 import com.storyteller_f.giant_explorer.database.FileTorrentRecord
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.utils.TorrentFile
 import com.storyteller_f.multi_core.StoppableTask
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 import java.math.BigInteger
 import java.security.MessageDigest
 
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
-        Temp.add()
+        listOf(HolderBuilder::add).fold(0) { acc, kFunction1 ->
+            kFunction1(acc)
+        }
         MainScope().launch {
             requireDatabase.bigTimeDao().fetchSuspend().groupBy {
                 it.workerName
@@ -46,6 +47,11 @@ class App : Application() {
                             .build()
                     ).build()
                 )
+            }
+            File(filesDir, "plugins").listFiles { it ->
+                it.extension == "apk" || it.extension == "zip"
+            }?.forEach {
+                PluginManager.list.add(Plugin(it.name))
             }
         }
 //        FireCrasher.install(this, object : CrashListener() {
@@ -107,7 +113,7 @@ class FolderWorker(context: Context, workerParams: WorkerParameters) :
             if (record != null && record.lastUpdateTime > fileInstance.directory.lastModifiedTime) return WorkerResult.SizeWorker(
                 record.size
             )
-            val listSafe = fileInstance.listSafe()
+            val listSafe = fileInstance.list()
             val mapNullNull = listSafe.directories.map {
                 if (isStopped) return WorkerResult.Stopped
                 work(context, it.fullPath)
@@ -154,7 +160,7 @@ class MDWorker(context: Context, workerParams: WorkerParameters) :
     override suspend fun work(context: Context, path: String): WorkerResult {
         return try {
             val fileInstance = FileInstanceFactory.getFileInstance(path, context)
-            val listSafe = fileInstance.listSafe()
+            val listSafe = fileInstance.list()
             listSafe.directories.mapNullNull {
                 if (isStopped) return WorkerResult.Stopped
                 work(context, it.fullPath)
@@ -192,7 +198,7 @@ class TorrentWorker(context: Context, workerParams: WorkerParameters) :
     override suspend fun work(context: Context, path: String): WorkerResult {
         return try {
             val fileInstance = FileInstanceFactory.getFileInstance(path, context)
-            val listSafe = fileInstance.listSafe()
+            val listSafe = fileInstance.list()
             listSafe.directories.mapNullNull {
                 if (isStopped) return WorkerResult.Stopped
                 work(context, it.fullPath)

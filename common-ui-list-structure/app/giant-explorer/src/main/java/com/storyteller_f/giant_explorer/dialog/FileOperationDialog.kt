@@ -1,5 +1,6 @@
 package com.storyteller_f.giant_explorer.dialog
 
+import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.core.view.isVisible
@@ -8,9 +9,11 @@ import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.repeatOnLifecycle
 import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.*
+import com.storyteller_f.file_system.operate.DefaultForemanProgressListener
+import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.databinding.DialogFileOperationBinding
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
-import com.storyteller_f.giant_explorer.service.LocalFileOperateWorker
+import com.storyteller_f.giant_explorer.service.LocalFileOperationForeman
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
@@ -23,8 +26,8 @@ class FileOperationDialog : SimpleDialogFragment<DialogFileOperationBinding>(Dia
 //        GenericValueModel<Int>()
 //    }
     private val progressVM by keyPrefix({ "progresss" }, vm({}) {
-            GenericValueModel<Int>()
-        }
+        GenericValueModel<Int>()
+    }
     )
     private val leftVM by keyPrefix("left", vm({}) {
         GenericValueModel<Triple<Int, Int, Long>>().apply {
@@ -45,6 +48,11 @@ class FileOperationDialog : SimpleDialogFragment<DialogFileOperationBinding>(Dia
     })
 
     override fun onBindViewEvent(binding: DialogFileOperationBinding) {
+
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         binding.lifecycleOwner = owner
         binding.handler = object : Handler {
             override fun close() {
@@ -58,13 +66,13 @@ class FileOperationDialog : SimpleDialogFragment<DialogFileOperationBinding>(Dia
             val key = uuid.data.value ?: return
             if (!binder.map.containsKey(key)) dismiss()
             bindUi(key, list, binding)
-            bindListenter(key, binding)
+            bindListener(key, binding)
         } else dismiss()
     }
 
-    private fun bindListenter(key: String, binding: DialogFileOperationBinding) {
+    private fun bindListener(key: String, binding: DialogFileOperationBinding) {
         val orPut = binder.fileOperationProgressListener.getOrPut(key) { mutableListOf() }
-        orPut.add(object : LocalFileOperateWorker.DefaultProgressListener() {
+        orPut.add(object : DefaultForemanProgressListener() {
             override fun onProgress(progress: Int, key: String) = progressVM.data.postValue(progress)
 
             override fun onState(state: String?, key: String) = stateVM.data.postValue(state)
@@ -81,7 +89,7 @@ class FileOperationDialog : SimpleDialogFragment<DialogFileOperationBinding>(Dia
 
         })
         val callbackFlow = callbackFlow {
-            val defaultProgressListener = object : LocalFileOperateWorker.DefaultProgressListener() {
+            val defaultProgressListener = object : DefaultForemanProgressListener() {
                 override fun onDetail(detail: String?, level: Int, key: String) {
                     trySend(detail ?: "null")
                 }
@@ -103,13 +111,13 @@ class FileOperationDialog : SimpleDialogFragment<DialogFileOperationBinding>(Dia
         binder.state.debounce(500).distinctUntilChanged().observe(owner) {
             when (it) {
                 FileOperateBinder.state_running -> {
-                    val task = binder.map[key]?.taskEquivalent
+                    val task = binder.map[key]?.taskAssessResult
                     list.onVisible(binding.stateRunning)
                     Log.i(TAG, "onBindViewEvent: $key $task ${binder.map.keys}")
                     binding.textViewTask.text = String.format("total size: %d\ntotal file:%d\ntotal folder:%d", task?.size, task?.fileCount, task?.folderCount)
                 }
                 FileOperateBinder.state_end -> {
-                    binding.doneText.text = "done"
+                    binding.doneText.text = getString(R.string.operation_task_done)
                     list.onVisible(binding.stateDone)
                 }
                 FileOperateBinder.state_error -> {

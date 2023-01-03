@@ -8,10 +8,15 @@
     <queries>
         <intent>
             <action android:name="com.storyteller_f.action.giant_explorer.PLUGIN" />
+
             <category android:name="android.intent.category.DEFAULT" />
-            <data android:scheme="content" android:mimeType="*/*"/>
+
+            <data
+                android:mimeType="*/*"
+                android:scheme="content" />
         </intent>
     </queries>
+
     <application
         android:name=".App"
         android:allowBackup="true"
@@ -20,7 +25,29 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Common_ui_list_structure">
-
+        <activity
+            android:name=".control.PluginManageActivity"
+            android:exported="false"
+            android:label="@string/title_activity_plugin_manage"
+            android:theme="@style/Theme.Common_ui_list_structure">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
+            android:name=".control.WebViewPluginActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
+            android:name=".control.FragmentPluginActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
         <activity
             android:name=".control.RootAccessActivity"
             android:configChanges="keyboard|keyboardHidden"
@@ -58,7 +85,6 @@
             android:name=".service.FileOperateService"
             android:enabled="true"
             android:exported="false" />
-        <service android:name=".service.FileService" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

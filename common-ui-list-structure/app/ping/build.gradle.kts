@@ -5,7 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id("androidx.navigation.safeargs.kotlin")
-    id("app.cash.licensee")
+//    id("app.cash.licensee")
 }
 android {
     defaultConfig {
@@ -15,17 +15,19 @@ android {
 }
 
 dependencies {
-    implementation("com.google.android.exoplayer:exoplayer-core:2.18.1")
+    implementation("com.google.android.exoplayer:exoplayer-core:2.18.2")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation("com.squareup.okio:okio:3.2.0")
     implementation("com.github.bumptech.glide:glide:4.14.2")
+    "implementation"(project(":file-system-ktx"))
 }
 baseApp()
 setupGeneric()
 setupDataBinding()
 setupDipToPx()
 
-licensee {
-    allow("Apache-2.0")
-    allow("MIT")
-}
+//licensee {
+//    allow("Apache-2.0")
+//    allow("MIT")
+//    allow("ISC")
+//}

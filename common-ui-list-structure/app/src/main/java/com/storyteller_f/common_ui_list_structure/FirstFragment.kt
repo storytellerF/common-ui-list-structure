@@ -1,9 +1,12 @@
 package com.storyteller_f.common_ui_list_structure
 
-import androidx.fragment.app.Fragment
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.storyteller_f.common_ui.*
+import com.storyteller_f.common_ui.SimpleFragment
+import com.storyteller_f.common_ui.dialog
+import com.storyteller_f.common_ui.fragment
+import com.storyteller_f.common_ui.setOnClick
 import com.storyteller_f.common_ui_list_structure.databinding.FragmentFirstBinding
 
 /**

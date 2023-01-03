@@ -57,7 +57,7 @@ class RootAccessFileInstance(path: String, remote: FileSystemManager) : FileInst
     }
 
     override fun toParent(): FileInstance {
-        return RootAccessFileInstance(File(file, name).parent!!, remote!!)
+        return RootAccessFileInstance(File(path).parent!!, remote!!)
     }
 
     override fun changeToParent() {
@@ -78,11 +78,11 @@ class RootAccessFileInstance(path: String, remote: FileSystemManager) : FileInst
         TODO("Not yet implemented")
     }
 
-    override fun toChild(name: String, isFile: Boolean, reCreate: Boolean): FileInstance {
+    override fun toChild(name: String, isFile: Boolean, createWhenNotExists: Boolean): FileInstance {
         return RootAccessFileInstance(File(file, name).absolutePath, remote!!)
     }
 
-    override fun changeToChild(name: String, isFile: Boolean, reCreate: Boolean) {
+    override fun changeToChild(name: String, isFile: Boolean, createWhenNotExists: Boolean) {
         val tempFile = File(file, name)
         val childFile = remote?.getFile(file.absolutePath)
         childFile?.let {
@@ -101,6 +101,4 @@ class RootAccessFileInstance(path: String, remote: FileSystemManager) : FileInst
     }
 
     override fun getParent(): String? = extendedFile.parent
-
-    override fun listSafe() = list()
 }

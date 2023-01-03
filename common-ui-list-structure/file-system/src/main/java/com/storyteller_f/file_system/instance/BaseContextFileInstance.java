@@ -20,8 +20,4 @@ public abstract class BaseContextFileInstance extends FileInstance {
         super(path);
         this.context = context;
     }
-
-    public BaseContextFileInstance(Context context) {
-        this.context = context;
-    }
 }

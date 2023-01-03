@@ -9,140 +9,80 @@ import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.message.Message
 import com.storyteller_f.file_system.model.FileSystemItemModel
-import com.storyteller_f.file_system.operate.FileCopy
-import com.storyteller_f.file_system.operate.FileDelete
-import com.storyteller_f.file_system.operate.FileMoveCmd
-import com.storyteller_f.file_system.operate.FileOperateListener
+import com.storyteller_f.file_system.operate.*
 import com.storyteller_f.multi_core.StoppableTask
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.buffer
 import okio.source
-import java.lang.Exception
 import java.nio.ByteBuffer
 import java.util.concurrent.Callable
 
-abstract class FileOperateWorker(val context: Context, private val fileCount: Int, private val folderCount: Int, val size: Long, val key: String) : Callable<Boolean>,
-    StoppableTask {
-    var fileOperationProgressListener: LocalFileOperateWorker.FileOperationProgressListener? = null
-    var leftFileCount = fileCount
-    var leftFolderCount = folderCount
-    var leftSize = size
+class TaskOverview(val fileCount: Int, val folderCount: Int, val size: Long) {
+    val sumCount = fileCount + folderCount
+}
+
+abstract class FileOperationForeman(val context: Context, val overview: TaskOverview, val key: String) : Callable<Boolean>, StoppableTask, FileOperationListener {
+    var fileOperationForemanProgressListener: FileOperationForemanProgressListener? = null
+    var leftFileCount = overview.fileCount
+    var leftFolderCount = overview.folderCount
+    var leftSize = overview.size
     fun emitCurrentStateMessage() {
-        fileOperationProgressListener?.onLeft(leftFileCount, leftFolderCount, leftSize, key)
-        fileOperationProgressListener?.onProgress(progress, key)
+        fileOperationForemanProgressListener?.onLeft(leftFileCount, leftFolderCount, leftSize, key)
+        fileOperationForemanProgressListener?.onProgress(progress, key)
     }
 
     open val progress: Int
         get() {
-            val sumCount = fileCount + folderCount
+            val sumCount = overview.sumCount
             val completedCount = sumCount - leftFolderCount - leftFileCount
             return (completedCount * 1.0 / sumCount * 100).toInt()
         }
 
     protected fun emitDetailMessage(detail: String, level: Int) {
-        fileOperationProgressListener?.onDetail(detail, level, key)
+        fileOperationForemanProgressListener?.onDetail(detail, level, key)
     }
 
     protected fun emitStateMessage(tip: String) {
-        fileOperationProgressListener?.onState(tip, key)
+        fileOperationForemanProgressListener?.onState(tip, key)
     }
-}
 
-abstract class LocalFileOperateWorker(
-    context: Context, fileCount: Int, folderCount: Int, size: Long,
-    val focused: FileSystemItemModel, key: String
-) : FileOperateWorker(context, fileCount, folderCount, size, key), FileOperateListener {
-    constructor(context: Context, focused: FileSystemItemModel, taskEquivalent: TaskEquivalent, key: String) : this(
-        context,
-        taskEquivalent.fileCount,
-        taskEquivalent.folderCount,
-        taskEquivalent.size,
-        focused,
-        key
-    )
-
-    override fun onFileDone(fileInstance: FileInstance?, type: Int, message: Message?, size: Long) {
+    override fun onFileDone(fileInstance: FileInstance?, message: Message?, size: Long, type: Int) {
         leftFileCount--
         leftSize -= size
         emitCurrentStateMessage()
+        emitStateMessage("file done ${fileInstance?.name}")
     }
 
-    override fun onDirectoryDone(fileInstance: FileInstance?, type: Int, message: Message?) {
+    override fun onDirectoryDone(fileInstance: FileInstance?, message: Message?, type: Int) {
         leftFolderCount--
         emitCurrentStateMessage()
+        emitStateMessage("directory done ${fileInstance?.name}")
     }
 
     override fun onError(message: Message?, type: Int) {
-        fileOperationProgressListener?.onDetail(message?.name + message?.get(), Log.ERROR, key)
+        fileOperationForemanProgressListener?.onDetail(message?.name + message?.get(), Log.ERROR, key)
     }
+}
 
+abstract class LocalFileOperationForeman(
+    val focused: FileSystemItemModel, context: Context, overview: TaskOverview, key: String
+) : FileOperationForeman(context, overview, key) {
 
     override fun needStop() = Thread.currentThread().isInterrupted
 
     abstract val description: String?
-
-    interface FileOperationProgressListener {
-        /**
-         * 进度改变
-         *
-         * @param progress 新的进度
-         */
-        fun onProgress(progress: Int, key: String)
-
-        /**
-         * 正在做的工作
-         *
-         * @param state 新的状态信息
-         */
-        fun onState(state: String?, key: String)
-
-        /**
-         * 进入某个文件夹
-         *
-         * @param tip 新的提示
-         */
-        fun onTip(tip: String?, key: String)
-
-        /**
-         * 需要展示的详细信息
-         */
-        fun onDetail(detail: String?, level: Int, key: String)
-
-        /**
-         * 还剩余的任务
-         */
-        fun onLeft(fileCount: Int, folderCount: Int, size: Long, key: String)
-
-        /**
-         * 任务完成，可以刷新页面
-         *
-         * @param dest
-         */
-        fun onComplete(dest: String?, isSuccess: Boolean, key: String)
-    }
-
-    open class DefaultProgressListener : FileOperationProgressListener {
-        override fun onProgress(progress: Int, key: String) = Unit
-
-        override fun onState(state: String?, key: String) = Unit
-
-        override fun onTip(tip: String?, key: String) = Unit
-
-        override fun onDetail(detail: String?, level: Int, key: String) = Unit
-
-        override fun onLeft(fileCount: Int, folderCount: Int, size: Long, key: String) = Unit
-
-        override fun onComplete(dest: String?, isSuccess: Boolean, key: String) = Unit
-
-    }
-
 }
 
-class CopyImpl(
-    context: Context, private val detectorTasks: List<FileSystemItemModel>, taskEquivalent: TaskEquivalent,
-    focused: FileSystemItemModel, private val isMove: Boolean, private val dest: FileInstance, key: String
-) : LocalFileOperateWorker(context, focused, taskEquivalent, key) {
+class CopyForemanImpl(
+    private val detectorTasks: List<FileSystemItemModel>,
+    private val isMove: Boolean,
+    private val dest: FileInstance,
+    context: Context,
+    overview: TaskOverview,
+    focused: FileSystemItemModel,
+    key: String
+) : LocalFileOperationForeman(focused, context, overview, key) {
     override val description: String
         get() {
             val taskName: String
@@ -163,19 +103,17 @@ class CopyImpl(
                 }
                 val fileInstance = FileInstanceFactory.getFileInstance(it.fullPath, context)
                 emitStateMessage("处理${fileInstance.path}")
-                if (isMove)
-                    !FileMoveCmd(this, fileInstance, dest, context).apply {
-                        fileOperateListener = this@CopyImpl
-                    }.call()
-                else
-                    !FileCopy(this, fileInstance, dest, context).apply {
-                        fileOperateListener = this@CopyImpl
-                    }.call()
+                if (isMove) !FileMoveOpInShell(this, fileInstance, dest, context).apply {
+                    fileOperationListener = this@CopyForemanImpl
+                }.call()
+                else !FileCopyOp(this, fileInstance, dest, context).apply {
+                    fileOperationListener = this@CopyForemanImpl
+                }.call()
             }) {
             emitDetailMessage("error", Log.ERROR)
             true
         } else false
-        fileOperationProgressListener?.onComplete(
+        fileOperationForemanProgressListener?.onComplete(
             dest.path, isSuccess, key
         )
         return isSuccess
@@ -183,17 +121,15 @@ class CopyImpl(
 
     override val progress: Int
         get() {
-            val doneSize: Long = size - leftSize
-            return (doneSize * 100.0 / size).toInt()
+            val doneSize: Long = overview.size - leftSize
+            return (doneSize * 100.0 / overview.size).toInt()
         }
 
 }
 
-class DeleteImpl(
-    context: Context, private val detectorTasks: List<FileSystemItemModel>,
-    taskEquivalent: TaskEquivalent,
-    focused: FileSystemItemModel, key: String
-) : LocalFileOperateWorker(context, focused, taskEquivalent, key) {
+class DeleteForemanImpl(
+    private val detectorTasks: List<FileSystemItemModel>, context: Context, overview: TaskOverview, focused: FileSystemItemModel, key: String
+) : LocalFileOperationForeman(focused, context, overview, key) {
 
     override val description: String
         get() {
@@ -207,23 +143,26 @@ class DeleteImpl(
     override fun call(): Boolean {
         val isSuccess = !detectorTasks.any {//如果有一个失败了，就提前退出
             emitStateMessage("处理${it.fullPath}")
-            !FileDelete(this, FileInstanceFactory.getFileInstance(it.fullPath, context), context).call()
+            !FileDeleteOp(this, FileInstanceFactory.getFileInstance(it.fullPath, context), context).apply {
+                fileOperationListener = this@DeleteForemanImpl
+            }.call()
         }
-        fileOperationProgressListener?.onComplete(focused.fullPath, isSuccess, key)
+        fileOperationForemanProgressListener?.onComplete(focused.fullPath, isSuccess, key)
         return isSuccess
     }
 
 }
 
-class CompoundImpl(private val selected: List<DetectorTask>, private val dest: FileInstance, context: Context, fileCount: Int, folderCount: Int, size: Long, key: String) :
-    FileOperateWorker(context, fileCount, folderCount, size, key) {
+class CompoundForemanImpl(private val selected: List<DetectedTask>, private val dest: FileInstance, context: Context, overview: TaskOverview, key: String) : FileOperationForeman(context, overview, key), FileOperationListener {
     override fun call(): Boolean {
         val okHttpClient = OkHttpClient()
         val isSuccess = !selected.any { //have error?
             try {
                 when (it) {
                     is DownloadTask -> !executeDownload(okHttpClient, it)
-                    is LocalTask -> !FileCopy(this, FileInstanceFactory.getFileInstance(it.path, context), dest, context).call()
+                    is LocalTask -> !FileCopyOp(this, FileInstanceFactory.getFileInstance(it.path, context), dest, context).apply {
+                        fileOperationListener = this@CompoundForemanImpl
+                    }.call()
                     is ContentTask -> !executeContentTask(it)
                     else -> {
                         emitDetailMessage("无法识别的任务${it.javaClass}", Log.ASSERT)
@@ -231,11 +170,11 @@ class CompoundImpl(private val selected: List<DetectorTask>, private val dest: F
                     }
                 }
             } catch (e: Exception) {
-                emitDetailMessage(e.exceptionMessage, Log.ERROR)
+                emitDetailMessage(e.stackTraceToString(), Log.ERROR)
                 true
             }
         }
-        fileOperationProgressListener?.onComplete(null, isSuccess, key)
+        fileOperationForemanProgressListener?.onComplete(null, isSuccess, key)
         return isSuccess
     }
 

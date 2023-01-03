@@ -1,7 +1,6 @@
 package com.storyteller_f.common_ui_list_structure
 
 import android.os.Parcelable
-import com.storyteller_f.common_ui.CommonDialogFragment
 import com.storyteller_f.common_ui.SimpleDialogFragment
 import com.storyteller_f.common_ui.setFragmentResult
 import com.storyteller_f.common_ui.setOnClick

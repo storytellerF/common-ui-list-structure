@@ -13,7 +13,9 @@
     </item>
     <item
         android:id="@+id/paste_file"
-        android:title="paste" />
+        android:icon="@drawable/ic_baseline_content_paste_24"
+        android:title="paste"
+        app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/background_task"

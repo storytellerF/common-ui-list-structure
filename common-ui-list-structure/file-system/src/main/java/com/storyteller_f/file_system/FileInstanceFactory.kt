@@ -5,16 +5,15 @@ import android.os.Build
 import android.os.StatFs
 import android.util.Log
 import androidx.annotation.WorkerThread
-import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.instance.FileInstance
-import com.storyteller_f.file_system.instance.local.document.ExternalDocumentLocalFileInstance
 import com.storyteller_f.file_system.instance.local.RegularLocalFileInstance
-import com.storyteller_f.file_system.instance.local.fake.EmulatedLocalFileInstance
-import com.storyteller_f.file_system.instance.local.fake.StorageLocalFileInstance
+import com.storyteller_f.file_system.instance.local.document.ExternalDocumentLocalFileInstance
 import com.storyteller_f.file_system.instance.local.document.MountedLocalFileInstance
+import com.storyteller_f.file_system.instance.local.fake.EmulatedLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.FakeDirectoryLocalFileInstance
-import java.lang.Exception
+import com.storyteller_f.file_system.instance.local.fake.StorageLocalFileInstance
+import com.storyteller_f.file_system.model.DirectoryItemModel
+import com.storyteller_f.file_system.model.FileItemModel
 import java.util.*
 
 object FileInstanceFactory {
@@ -109,6 +108,7 @@ object FileInstanceFactory {
         }
     }
 
+    @Suppress("DEPRECATION")
     fun getSpace(prefix: String?): Long {
         val stat = StatFs(prefix)
         val blockSize: Long

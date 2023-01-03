@@ -115,4 +115,5 @@ abstract class FileSizeRecordDatabase : RoomDatabase() {
 }
 
 @ExtFuncFlat(type = ExtFuncFlatType.V2)
-val Context.requireDatabase get() = FileSizeRecordDatabase.getInstance(this)
+val Context.requireDatabase
+    get() = FileSizeRecordDatabase.getInstance(this)

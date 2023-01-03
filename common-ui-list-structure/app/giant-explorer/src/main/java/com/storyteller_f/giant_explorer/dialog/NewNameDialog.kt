@@ -1,7 +1,9 @@
 package com.storyteller_f.giant_explorer.dialog
 
 import android.os.Parcelable
-import com.storyteller_f.common_ui.*
+import com.storyteller_f.common_ui.SimpleDialogFragment
+import com.storyteller_f.common_ui.setFragmentResult
+import com.storyteller_f.common_ui.setOnClick
 import com.storyteller_f.giant_explorer.databinding.DialogNewNameBinding
 import kotlinx.parcelize.Parcelize
 
@@ -19,7 +21,7 @@ class NewNameDialog : SimpleDialogFragment<DialogNewNameBinding>(DialogNewNameBi
     @Parcelize
     class NewNameResult(val name: String) : Parcelable
 
-    companion object{
+    companion object {
         const val requestKey = "add-file"
     }
 

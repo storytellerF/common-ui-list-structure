@@ -51,4 +51,5 @@ abstract class FaPiaoDatabase : RoomDatabase() {
 }
 
 @ExtFuncFlat(type = ExtFuncFlatType.V2)
-val Context.requireDatabase get() = FaPiaoDatabase.getInstance(this)
+val Context.requireDatabase
+    get() = FaPiaoDatabase.getInstance(this)

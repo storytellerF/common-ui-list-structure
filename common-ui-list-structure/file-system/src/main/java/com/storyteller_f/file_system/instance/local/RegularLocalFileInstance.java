@@ -1,7 +1,6 @@
 package com.storyteller_f.file_system.instance.local;
 
 import android.content.Context;
-import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -23,12 +22,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @SuppressWarnings({"unused", "RedundantSuppression"})
 public class RegularLocalFileInstance extends LocalFileInstance {
@@ -58,86 +52,34 @@ public class RegularLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
-    public LocalFileInstance toChild(@NonNull String name, boolean isFile, boolean reCreate) throws Exception {
+    public LocalFileInstance toChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) throws Exception {
         File file = new File(path, name);
         RegularLocalFileInstance internalFileInstance = new RegularLocalFileInstance(context, filter, file.getAbsolutePath());
-        if (exists()) {
-            if (isFile()) {
-                throw new Exception("当前是一个文件，无法向下操作");
-            } else {
-                //检查目标文件是否存在
-                if (file.exists()) {
-                    if (file.isFile() == isFile) {
-                        return internalFileInstance;
-                    } else {
-                        throw new Exception("当前文件已经存在，并且类型不符合：" + file.isFile() + " " + isFile);
-                    }
-                } else {
-                    if (reCreate) if (isFile) {
-                        boolean newFile = file.createNewFile();
-                        if (newFile) {
-                            return internalFileInstance;
-                        } else {
-                            throw new Exception("新建文件失败");
-                        }
-                    } else {
-                        boolean mkdirs = file.mkdirs();
-                        if (mkdirs) {
-                            return internalFileInstance;
-                        } else {
-                            throw new Exception("新建文件失败");
-                        }
-                    }
-                }
-            }
-        }
-        throw new Exception("当前文件或者文件夹不存在");
+        //检查目标文件是否存在
+        checkChildExistsOtherwiseCreate(file, isFile, createWhenNotExists);
+        return internalFileInstance;
+    }
+
+    private void checkChildExistsOtherwiseCreate(File file, boolean isFile, boolean createWhenNotExists) throws Exception {
+        if (exists()) if (isFile()) throw new Exception("当前是一个文件，无法向下操作");
+        else if (file.exists()) {
+            if (file.isFile() != isFile) throw new Exception("当前文件已经存在，并且类型不符合：" + file.isFile() + " " + isFile);
+        } else if (createWhenNotExists) {
+            if (isFile) {
+                if (!file.createNewFile()) throw new Exception("新建文件失败");
+            } else if (!file.mkdirs()) throw new Exception("新建文件失败");
+        } else throw new Exception("不存在，且不能创建");
+        else
+            throw new Exception("当前文件或者文件夹不存在。path:" + path);
     }
 
     @Override
-    public void changeToChild(@NonNull String name, boolean isFile, boolean reCreate) throws Exception {
+    public void changeToChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) throws Exception {
         Log.d(TAG, "changeToChild() called with: name = [" + name + "], isFile = [" + isFile + "]");
         File file = new File(path, name);
-        if (exists()) {
-            if (isFile()) {
-                throw new Exception("当前是一个文件，无法向下操作");
-            } else {
-                //检查目标文件是否存在
-                if (file.exists()) {
-                    if (file.isFile() == isFile) {
-                        this.path = this.path + name;
-                        if (!isFile) {
-                            this.path += "/";
-                        }
-                        this.file = file;
-                        return;
-                    } else {
-                        throw new Exception("当前文件已经存在，并且类型不符合：" + file.isFile() + " " + isFile);
-                    }
-                } else {
-                    if (reCreate) if (isFile) {
-                        boolean newFile = file.createNewFile();
-                        if (newFile) {
-                            this.path = this.path + name;
-                            this.file = file;
-                            return;
-                        } else {
-                            throw new Exception("新建文件失败");
-                        }
-                    } else {
-                        boolean mkdirs = file.mkdirs();
-                        if (mkdirs) {
-                            this.file = file;
-                            this.path = this.path + name + "/";
-                            return;
-                        } else {
-                            throw new Exception("新建文件失败");
-                        }
-                    }
-                }
-            }
-        }
-        throw new Exception("当前文件或者文件夹不存在。path:" + path);
+        checkChildExistsOtherwiseCreate(file, isFile, createWhenNotExists);
+        path = file.getAbsolutePath();
+        initName();
     }
 
     @Override
@@ -169,74 +111,6 @@ public class RegularLocalFileInstance extends LocalFileInstance {
         return new FileOutputStream(file);
     }
 
-    @WorkerThread
-    private FilesAndDirectories getFilesAndDirectoriesByCommand(ArrayList<FileItemModel> files, ArrayList<DirectoryItemModel> directories) {
-        ProcessBuilder processBuilder = new ProcessBuilder("ls", "-Al").directory(new File(path));
-        Process process = null;
-        BufferedReader error = null;
-        BufferedReader bufferedReader = null;
-        try {
-            process = processBuilder.start();
-            error = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-            bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            if (bufferedReader.readLine() != null) {
-                String temp;
-                while ((temp = bufferedReader.readLine()) != null) {
-                    if (needStop()) break;
-                    turnCmdLineToFileObject(files, directories, temp);
-                }
-                return new FilesAndDirectories(files, directories);
-            } else {
-                return null;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        } finally {
-            close(error);
-            close(bufferedReader);
-            if (process != null) {
-                process.destroy();
-            }
-        }
-    }
-
-    private void close(BufferedReader error) {
-        try {
-            if (error != null) {
-                error.close();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void turnCmdLineToFileObject(ArrayList<FileItemModel> files, ArrayList<DirectoryItemModel> directories, String temp) {
-        int index = 0;
-        int space_count = 0;
-        Pattern pattern = Pattern.compile("\\s+");
-        Matcher matcher = pattern.matcher(temp);
-        while (matcher.find()) {
-            if (needStop()) break;
-            space_count++;
-            if (space_count == 7) {
-                index = matcher.start();
-                break;
-            }
-        }
-
-        String permissions = temp.substring(0, index);
-        String name = temp.substring(index + 1);
-        File childFile = new File(path, name);
-        boolean hidden = childFile.isHidden();
-        if (childFile.isFile()) {
-            addFile(files, path, childFile, permissions);
-        } else if (childFile.isDirectory()) {
-            addDirectory(directories, path, childFile, permissions);
-        }
-    }
-
-
     @NonNull
     @Override
     @WorkerThread
@@ -247,20 +121,12 @@ public class RegularLocalFileInstance extends LocalFileInstance {
 
         if (listFiles != null) {
             for (File childFile : listFiles) {
-                String permissions;
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    permissions = FileUtility.getPermissionString(childFile.isFile(), childFile.getAbsolutePath());
-                } else {
-                    permissions = FileUtility.getPermissionStringByFile(childFile.isFile(), childFile.getAbsolutePath());
-                }
-                FileSystemItemModel fileSystemItemModel = null;
+                String permissions = FileUtility.getPermissionStringByFile(childFile);
+                FileSystemItemModel fileSystemItemModel;
                 // 判断是否为文件夹
                 if (childFile.isDirectory()) {
                     fileSystemItemModel = addDirectory(directories, file.getAbsolutePath(), childFile, permissions);
-                    if (!fileSystemItemModel.getFullPath().endsWith("/")) {
-                        Log.e(TAG, "list: 最后一个不是slash");
-                    }
-                } else if (childFile.isFile()) {
+                } else {
                     fileSystemItemModel = addFile(files, file.getAbsolutePath(), childFile, permissions);
                 }
                 editAccessTime(childFile, fileSystemItemModel);
@@ -269,7 +135,6 @@ public class RegularLocalFileInstance extends LocalFileInstance {
             return FilesAndDirectories.Companion.empty();
         }
         return new FilesAndDirectories(files, directories);
-
     }
 
     @Override

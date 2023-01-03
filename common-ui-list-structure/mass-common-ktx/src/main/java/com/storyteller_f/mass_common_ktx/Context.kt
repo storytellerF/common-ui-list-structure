@@ -4,7 +4,6 @@ import android.content.Context
 import android.view.View
 import androidx.core.app.ComponentActivity
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LifecycleOwner
 import androidx.work.ListenableWorker
 
 fun <T, R> T.contextAny(function: Context.() -> R) = (when (this) {

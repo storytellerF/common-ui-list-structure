@@ -10,6 +10,7 @@
         android:layout_height="wrap_content"
         android:checked="true"
         android:text="过滤隐藏文件" />
+
     <com.storyteller_f.giant_explorer.view.EditablePathMan
         android:id="@+id/path_man"
         android:layout_width="match_parent"

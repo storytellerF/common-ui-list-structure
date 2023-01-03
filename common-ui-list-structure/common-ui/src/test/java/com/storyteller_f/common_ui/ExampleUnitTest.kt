@@ -1,10 +1,6 @@
 package com.storyteller_f.common_ui
 
-import android.graphics.Rect
-import androidx.core.graphics.plus
 import org.junit.Test
-
-import org.junit.Assert.*
 
 /**
  * Example local unit test, which will execute on the development machine (host).

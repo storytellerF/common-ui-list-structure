@@ -1,19 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/filterHiddenFile"
         android:checkable="true"
-        android:title="@string/filter_hidden_file" />
+        android:icon="@drawable/ic_eye"
+        android:title="@string/filter_hidden_file"
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/newWindow"
-        android:title="@string/new_window" />
+        android:icon="@drawable/ic_baseline_add_to_photos_24"
+        android:title="@string/new_window"
+        app:showAsAction="ifRoom" />
     <item
-        android:id="@+id/open_settings"
-        android:title="@string/settings" />
+        android:id="@+id/plugin_manager"
+        android:title="plugin manager" />
     <item
         android:id="@+id/open_root_access"
         android:title="@string/root_access" />
     <item
         android:id="@+id/about"
         android:title="@string/about" />
+    <item
+        android:id="@+id/open_settings"
+        android:icon="@drawable/ic_baseline_settings_24"
+        android:title="@string/settings" />
 </menu>

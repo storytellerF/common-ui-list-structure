@@ -1,10 +1,7 @@
 package com.storyteller_f.giant_explorer.control
 
 import android.app.Activity
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.ComponentName
-import android.content.Intent
+import android.content.*
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.text.TextPaint
@@ -28,18 +25,18 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ktx.mm
-import com.storyteller_f.common_ui.SimpleFragment
-import com.storyteller_f.common_ui.dialog
-import com.storyteller_f.common_ui.fragment
-import com.storyteller_f.common_ui.owner
+import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.BuildConfig
+import com.storyteller_f.giant_explorer.PluginManager
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentFileListBinding
 import com.storyteller_f.giant_explorer.dialog.*
+import com.storyteller_f.plugin_core.FileSystemProviderConstant
+import com.storyteller_f.plugin_core.FileSystemProviderResolver
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import com.storyteller_f.ui_list.source.SearchProducer
 import com.storyteller_f.ui_list.source.search
@@ -68,7 +65,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     })
 
     private val filterHiddenFile by asvm({}) { it, _ ->
-        HasStateValueModel(it, filterHiddenFileKey, false)
+        StateValueModel(it, filterHiddenFileKey, false)
     }
 
     private val args by navArgs<FileListFragmentArgs>()
@@ -83,8 +80,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     override fun onBindViewEvent(binding: FragmentFileListBinding) {
         val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
         supportDirectoryContent(
-            binding.content, adapter, data, session,
-            filterHiddenFile.data
+            binding.content, adapter, data, session, filterHiddenFile.data
         ) {
             (requireContext() as MainActivity).drawPath(it)
         }
@@ -119,11 +115,11 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         }, owner)
     }
 
-    fun handleClipData(data: ClipData, path: String? = null) {
+    fun handleClipData(data: ClipData, destDirectory: String? = null) {
         val key = uuid.data.value ?: return
         Log.i(TAG, "handleClipData: key $key")
         viewLifecycleOwner.lifecycleScope.launch {
-            val dest = path?.let {
+            val dest = destDirectory?.let {
                 FileInstanceFactory.getFileInstance(it, requireContext())
             } ?: session.fileInstance.value ?: kotlin.run {
                 Toast.makeText(requireContext(), "无法确定目的地", Toast.LENGTH_LONG).show()
@@ -132,19 +128,28 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             val mutableList = MutableList(data.itemCount) {
                 data.getItemAt(it)
             }
-            val regex = Regex("^/([\\w.]+/)*[\\w.]+$")
+            val filePathMatcher = Regex("^/([\\w.]+/)*[\\w.]+$")
             val uriList = mutableList.mapNotNull {
                 val text = it.coerceToText(requireContext()).toString()
-                (if (URLUtil.isNetworkUrl(text)) Uri.parse(text)
-                else if (regex.matches(text)) {
-                    Uri.fromFile(File(text))
-                } else {
-                    Toast.makeText(requireContext(), "正则失败$text", Toast.LENGTH_LONG).show()
-                    null
-                })?.takeIf { uri -> uri.toString().isNotEmpty() }
-            }.plus(mutableList.mapNotNull {
-                it.uri
-            })
+                val u = when {
+                    it.uri != null -> it.uri
+                    URLUtil.isNetworkUrl(text) -> Uri.parse(text)
+                    filePathMatcher.matches(text) -> {
+                        Uri.fromFile(File(text))
+                    }
+                    else -> {
+                        Toast.makeText(requireContext(), "正则失败$text", Toast.LENGTH_LONG).show()
+                        null
+                    }
+                }
+                u?.takeIf { uri -> uri.toString().isNotEmpty() }
+            }
+            if (uriList.any {
+                    it.scheme == ContentResolver.SCHEME_FILE && it.path == destDirectory
+                }) {
+                //静默处理
+                return@launch
+            }
             temp.list.clear()
             temp.list.addAll(uriList.map { it.toString() })
             temp.dest = dest.path
@@ -154,8 +159,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             }
             if (activity?.getSharedPreferences("${requireContext().packageName}_preferences", Activity.MODE_PRIVATE)?.getBoolean("notify_before_paste", true) == true) {
                 dialog(TaskConfirmDialog()) { r: TaskConfirmDialog.Result ->
-                    if (r.confirm)
-                        fileOperateBinderLocal.compoundTask(uriList, dest, key)
+                    if (r.confirm) fileOperateBinderLocal.compoundTask(uriList, dest, key)
                 }
             } else {
                 fileOperateBinderLocal.compoundTask(uriList, dest, key)
@@ -194,6 +198,19 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(File(itemHolder.file.fullPath).extension)
 
             resolvePlugins(itemHolder, mimeTypeFromExtension)
+            PluginManager.list.forEach { plugin ->
+                menu.add(plugin.name).setOnMenuItemClickListener {
+                    if (plugin.name.endsWith("apk")) startActivity(Intent(requireContext(), FragmentPluginActivity::class.java).apply {
+                        putExtra("plugin-name", plugin.name)
+                        plugUri(mimeTypeFromExtension, itemHolder.file.fullPath)
+                    })
+                    else startActivity(Intent(requireContext(), WebViewPluginActivity::class.java).apply {
+                        putExtra("plugin-name", plugin.name)
+                        plugUri(mimeTypeFromExtension, itemHolder.file.fullPath)
+                    })
+                    true
+                }
+            }
 
             setOnMenuItemClickListener { item ->
                 when (item.itemId) {
@@ -233,22 +250,14 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     private fun PopupMenu.resolvePlugins(itemHolder: FileItemHolder, mimeTypeFromExtension: String?) {
         val intent = Intent("com.storyteller_f.action.giant_explorer.PLUGIN")
         intent.addCategory("android.intent.category.DEFAULT")
-        val uriForFile = Uri.Builder()
-            .scheme("content")
-            .authority(BuildConfig.FILE_SYSTEM_PROVIDER_AUTHORITY)
-            .path("/info${itemHolder.file.fullPath}")
-            .build()
-        intent.putExtra("path", itemHolder.file.fullPath)
-        intent.setDataAndType(uriForFile, mimeTypeFromExtension)
-        intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+        intent.plugUri(mimeTypeFromExtension, itemHolder.file.fullPath)
 
         val activities = requireContext().packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY or PackageManager.GET_META_DATA)
-        Log.i(TAG, "resolvePlugins: activities ${activities.size}")
         activities.forEach {
             val activityInfo = it?.activityInfo ?: return@forEach
             val groups = activityInfo.metaData?.getString("group")?.split("/") ?: return@forEach
             val title = activityInfo.metaData?.getString("title") ?: return@forEach
-            this.menu.loopAdd(groups).add(title).setOnMenuItemClickListener {
+            menu.loopAdd(groups).add(title).setOnMenuItemClickListener {
                 intent.setPackage(requireContext().packageName).component = ComponentName(activityInfo.packageName, activityInfo.name)
                 startActivity(intent)
                 return@setOnMenuItemClickListener true
@@ -276,8 +285,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         private const val TAG = "FileListFragment"
     }
 
-    private fun detectSelected(itemHolder: FileItemHolder) =
-        session.selected.value?.map { pair -> (pair.first as FileItemHolder).file.item } ?: listOf(itemHolder.file.item)
+    private fun detectSelected(itemHolder: FileItemHolder) = session.selected.value?.map { pair -> (pair.first as FileItemHolder).file.item } ?: listOf(itemHolder.file.item)
 
     override fun requestKey() = "file-list"
 
@@ -287,4 +295,11 @@ private fun Menu.loopAdd(strings: List<String>): Menu {
     return strings.fold(this) { t, e ->
         t.addSubMenu(e)
     }
+}
+
+private fun Intent.plugUri(mimeType: String?, fullPath: String) {
+    val build = FileSystemProviderResolver.build(BuildConfig.FILE_SYSTEM_PROVIDER_AUTHORITY, FileSystemProviderConstant.typeInfo, fullPath)
+    putExtra("path", fullPath)
+    setDataAndType(build, mimeType)
+    flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
 }

@@ -4,12 +4,15 @@ import android.app.Application
 import android.content.Context
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.storyteller_f.ping.adapter_produce.Temp
+import com.storyteller_f.ping.adapter_produce.HolderBuilder
 
 class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        Temp.add()
+
+        listOf(HolderBuilder::add).fold(0) { acc, kFunction1 ->
+            kFunction1(acc)
+        }
     }
 }
 

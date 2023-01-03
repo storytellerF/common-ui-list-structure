@@ -17,11 +17,11 @@ fun <T> LiveData<T>.withState(ob: Observer<in T>) {
 }
 
 context(Context)
-@ExtFuncFlat(ExtFuncFlatType.V4, isContextReceiver = true)
+        @ExtFuncFlat(ExtFuncFlatType.V4, isContextReceiver = true)
 val Float.dip: Float
     get() = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this@dip, resources.displayMetrics)
 
 context(Context)
-@ExtFuncFlat(ExtFuncFlatType.V4, isContextReceiver = true)
+        @ExtFuncFlat(ExtFuncFlatType.V4, isContextReceiver = true)
 val Float.dipToInt: Float
     get() = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this@dipToInt, resources.displayMetrics)

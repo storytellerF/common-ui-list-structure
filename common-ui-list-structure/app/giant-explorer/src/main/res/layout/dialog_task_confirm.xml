@@ -1,24 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
+    android:minWidth="400dp"
     android:padding="20dp">
+
+    <LinearLayout
+        android:id="@+id/selected"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:maxHeight="400dp"
+        android:minHeight="40dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toStartOf="@id/icon"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_baseline_double_arrow_24"
+        app:layout_constraintBottom_toBottomOf="@id/selected"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/selected" />
 
     <TextView
         android:id="@+id/label_dest"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="TextView"
+        android:layout_marginStart="8dp"
+        android:background="@color/greyAlpha"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="@id/selected"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toEndOf="@id/icon"
+        app:layout_constraintTop_toTopOf="@id/selected"
+        tools:text="TextView" />
 
     <include
         android:id="@+id/include"
         layout="@layout/general_dialog_bottom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@+id/label_dest" />
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/selected" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

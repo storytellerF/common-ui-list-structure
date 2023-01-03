@@ -1,15 +1,10 @@
 package com.storyteller_f.file_system
 
-import android.content.pm.PackageManager
-import androidx.core.content.PackageManagerCompat
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.storyteller_f.file_system.util.FileUtility
-
+import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
-
-import org.junit.Assert.*
 import java.io.File
 
 /**

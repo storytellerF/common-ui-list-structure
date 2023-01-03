@@ -1,7 +1,11 @@
 package com.storyteller_f.ping
 
+import android.content.res.AssetFileDescriptor
 import android.database.Cursor
 import android.database.MatrixCursor
+import android.graphics.Bitmap
+import android.graphics.Point
+import android.media.MediaMetadataRetriever
 import android.os.Build
 import android.os.CancellationSignal
 import android.os.Handler
@@ -10,9 +14,12 @@ import android.provider.DocumentsContract
 import android.provider.DocumentsProvider
 import android.util.Log
 import android.webkit.MimeTypeMap
+import androidx.core.graphics.scale
 import java.io.File
 import java.io.FileNotFoundException
+import java.io.FileOutputStream
 import java.io.IOException
+import java.security.MessageDigest
 
 class StorageProvider : DocumentsProvider() {
     private val DEFAULT_ROOT_ID = "0"
@@ -91,12 +98,15 @@ class StorageProvider : DocumentsProvider() {
                             DocumentsContract.Document.MIME_TYPE_DIR
                         }
                         add(DocumentsContract.Document.COLUMN_MIME_TYPE, type)
-                        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        val copyFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                             DocumentsContract.Document.FLAG_SUPPORTS_COPY
                         } else {
                             0
                         }
-                        add(DocumentsContract.Document.COLUMN_FLAGS, flags)
+                        val thumbnailFlag = if (it.extension == "mp4") {
+                            DocumentsContract.Document.FLAG_SUPPORTS_THUMBNAIL
+                        } else 0
+                        add(DocumentsContract.Document.COLUMN_FLAGS, copyFlag or thumbnailFlag)
                         add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, it.name)
                         add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, it.lastModified())
                         val size = if (it.isFile) {
@@ -122,10 +132,9 @@ class StorageProvider : DocumentsProvider() {
         val accessMode: Int = ParcelFileDescriptor.parseMode(mode)
 
         val isWrite: Boolean = mode?.contains("w") ?: false
-        val lc = context
-        lc ?: throw Exception()
+        val lc = context!!
         val root = lc.filesDir?.parentFile
-        val file = File(root, documentId ?: throw Exception())
+        val file = File(root, documentId!!)
         return if (isWrite) {
             val handler = Handler(lc.mainLooper ?: throw Exception())
             // Attach a close listener if the document is opened in write mode.
@@ -142,5 +151,39 @@ class StorageProvider : DocumentsProvider() {
         } else {
             ParcelFileDescriptor.open(file, accessMode)
         }
+    }
+
+    override fun openDocumentThumbnail(documentId: String?, sizeHint: Point?, signal: CancellationSignal?): AssetFileDescriptor {
+        val lc = context!!
+        sizeHint!!
+        val hash = MessageDigest.getInstance("md5").digest(documentId!!.toByteArray()).joinToString("") {
+            "%02x".format(it)
+        }
+        val root = lc.filesDir?.parentFile!!
+        val thumbFile = File(root, "cache/.storage-provider/.thumbnail/$hash.jpg")
+        if (!thumbFile.exists()) {
+            thumbFile.parentFile?.mkdirs()
+            thumbFile.createNewFile()
+            val fileOutputStream = FileOutputStream(thumbFile)
+            val frameAtTime = firstFrame(root, documentId)
+            var preHeight = frameAtTime.height
+            var preWidth = frameAtTime.width
+            while (preHeight >= sizeHint.y * 2 && preWidth >= sizeHint.x * 2) {
+                preHeight /= 2
+                preWidth /= 2
+            }
+            val scale = frameAtTime.scale(preWidth, preHeight)
+            scale.compress(Bitmap.CompressFormat.JPEG, 90, fileOutputStream)
+        }
+
+        return AssetFileDescriptor(ParcelFileDescriptor.open(thumbFile, ParcelFileDescriptor.parseMode("r")), 0, AssetFileDescriptor.UNKNOWN_LENGTH)
+    }
+
+    private fun firstFrame(root: File, documentId: String): Bitmap {
+        val file = File(root, documentId)
+        val mediaExtractor = MediaMetadataRetriever()
+        mediaExtractor.setDataSource(file.absolutePath)
+        val frameAtTime = mediaExtractor.getFrameAtTime(0)!!
+        return frameAtTime
     }
 }

@@ -17,16 +17,16 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.flowWithLifecycle
-import com.storyteller_f.common_pr.withState
 import com.storyteller_f.annotation_defination.BindItemHolder
+import com.storyteller_f.common_pr.withState
 import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.fapiao.database.FaPiaoEntity
 import com.storyteller_f.fapiao.database.requireDatabase
 import com.storyteller_f.fapiao.databinding.FragmentFirstBinding
+import com.storyteller_f.ui_list.adapter.ManualAdapter
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
-import com.storyteller_f.ui_list.adapter.ManualAdapter
 import com.storyteller_f.ui_list.ui.ListWithState
 import com.storyteller_f.view_holder_compose.ComposeViewHolder
 import com.storyteller_f.view_holder_compose.EDComposeView
@@ -95,9 +95,11 @@ fun FaPiaoItemCompose(@PreviewParameter(FaPiaoProvider::class) itemHolder: FaPia
             edComposeView.notifyClickEvent("card")
         }
     ) {
-        Column(modifier = Modifier
-            .padding(5.dp)
-            .background(Color.Transparent)) {
+        Column(
+            modifier = Modifier
+                .padding(5.dp)
+                .background(Color.Transparent)
+        ) {
             Text(itemHolder.item.code)
             Text(itemHolder.item.number)
             Text(text = itemHolder.item.created.toString())

@@ -1,6 +1,5 @@
 package com.storyteller_f.ui_list.source
 
-import androidx.lifecycle.Transformations.map
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewModelScope
@@ -84,8 +83,6 @@ class SourceProducer<RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, Dat
     val processFactory: (D, D?) -> Holder,
     val interceptorFactory: (Holder?, Holder?) -> DataItemHolder? = { _, _ -> null }
 )
-
-
 
 
 fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, Database : RoomDatabase, Composite : CommonRoomDatabase<D, RK, Database>, ARG, T> T.source(

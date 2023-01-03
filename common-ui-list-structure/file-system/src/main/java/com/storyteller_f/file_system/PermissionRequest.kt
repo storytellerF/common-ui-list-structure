@@ -7,7 +7,7 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
-import androidx.fragment.app.Fragment
+import com.storyteller_f.file_system.MainActivity.Companion.getBundle
 import kotlinx.coroutines.CompletableDeferred
 
 suspend fun Context.requestPermissionForSpecialPath(path: String) {
@@ -52,7 +52,7 @@ private suspend fun Context.requestWriteExternalStorage(task: CompletableDeferre
     if (yesOrNo("权限不足", "查看文件夹系统必须授予权限", "授予", "取消")) {
         MainActivity.task = task
         startActivity(Intent(this, MainActivity::class.java).apply {
-            MainActivity.getBundle(MainActivity.REQUEST_EMULATED, "", this)
+            getBundle(MainActivity.REQUEST_EMULATED, "")
         })
     } else {
         task.complete(false)
@@ -68,7 +68,7 @@ private suspend fun Context.requestSAF(
     if (yesOrNo("需要授予权限", "在Android 10 或者访问存储卡，需要获取SAF权限", "去授予", "取消")) {
         MainActivity.task = task
         startActivity(Intent(this, MainActivity::class.java).apply {
-            MainActivity.getBundle(requestCodeSAF, path, this)
+            getBundle(requestCodeSAF, path)
         })
     } else {
         task.complete(false)
@@ -80,7 +80,7 @@ private suspend fun Context.requestManageExternalPermission(task: CompletableDef
     if (yesOrNo("需要授予权限", "在Android 11上，需要获取Manage External Storage权限", "去授予", "取消")) {
         MainActivity.task = task
         startActivity(Intent(this, MainActivity::class.java).apply {
-            MainActivity.getBundle(MainActivity.REQUEST_MANAGE, "", this)
+            getBundle(MainActivity.REQUEST_MANAGE, "")
         })
     } else {
         task.complete(false)

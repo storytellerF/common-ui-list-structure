@@ -21,7 +21,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.storyteller_f.ui_list.adapter.ManualAdapter
 import com.storyteller_f.ui_list.adapter.SimpleDataAdapter
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
-import com.storyteller_f.ui_list.core.*
+import com.storyteller_f.ui_list.core.AbstractViewHolder
+import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.databinding.ListWithStateBinding
 import com.storyteller_f.ui_list.source.SimpleDataViewModel
 import com.storyteller_f.ui_list.source.isError
@@ -54,7 +55,7 @@ class ListWithState @JvmOverloads constructor(
         }
     }
 
-    fun<IH: DataItemHolder, VH: AbstractViewHolder<IH>> sourceUp(
+    fun <IH : DataItemHolder, VH : AbstractViewHolder<IH>> sourceUp(
         adapter: SimpleSourceAdapter<IH, VH>,
         lifecycleOwner: LifecycleOwner,
         selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>? = null,

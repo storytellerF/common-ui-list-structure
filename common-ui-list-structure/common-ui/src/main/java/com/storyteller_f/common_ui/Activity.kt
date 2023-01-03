@@ -14,15 +14,14 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updatePadding
 import androidx.databinding.ViewDataBinding
 import androidx.viewbinding.ViewBinding
-import androidx.viewbinding.ViewBindings
 
 abstract class CommonActivity : AppCompatActivity(), RegistryFragment {
     override fun onStart() {
         super.onStart()
         //主要用于旋转屏幕
         waitingInActivity.forEach { t ->
-            val action = t.value.action as Function2<CommonActivity, Parcelable, Unit>
-            if (t.value.requestKey == registryKey()) {
+            @Suppress("UNCHECKED_CAST") val action = t.value.action as Function2<CommonActivity, Parcelable, Unit>
+            if (t.value.registerKey == registryKey()) {
                 val callback = { s: String, r: Bundle ->
                     if (waitingInFragment.containsKey(s)) {
                         r.getParcelable<Parcelable>("result")?.let {
@@ -37,10 +36,12 @@ abstract class CommonActivity : AppCompatActivity(), RegistryFragment {
         }
     }
 
-    fun <T : Parcelable> dialog(requestKey: String, dialog: Class<out CommonDialogFragment>, parameters: Bundle? = null, action: (T) -> Unit) {
-        dialog.newInstance().apply {
+    fun <T : Parcelable> dialog(dialog: Class<out CommonDialogFragment>, parameters: Bundle? = null, action: (T) -> Unit) {
+        val apply = dialog.newInstance().apply {
             arguments = parameters
-        }.show(supportFragmentManager, requestKey)
+            show(supportFragmentManager, this.tag())
+        }
+        val requestKey = apply.requestKey()
         val callback = { s: String, r: Bundle ->
             if (waitingInActivity.containsKey(s)) {
                 r.getParcelable<T>("result")?.let {

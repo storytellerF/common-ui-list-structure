@@ -1,0 +1,20 @@
+<html>
+<body>
+<img id="ci" src="">
+<script>
+    document.write(file.fullPath())
+    let ele = document.getElementById("ci")
+    var callbackId = 0;
+    let callbackMap = {};
+    function callback(callbackId, obj) {
+        callbackMap[callbackId](obj)
+    }
+    callbackMap[callbackId + ""] = function(result) {
+        ele.src = "data:image/png;base64," + result
+    }
+    plugin.base64(file.fullPath(), callbackId + "")
+
+
+</script>
+</body>
+</html>

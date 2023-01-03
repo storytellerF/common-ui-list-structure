@@ -11,7 +11,9 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 import java.util.*
 
-val list = mutableListOf<(ViewGroup, String) -> AbstractViewHolder<out DataItemHolder>>()
+typealias BuildViewHolderFunction = (ViewGroup, String) -> AbstractViewHolder<out DataItemHolder>
+
+val list = mutableListOf<BuildViewHolderFunction>()
 
 val registerCenter = mutableMapOf<Class<out DataItemHolder>, Int>()
 

@@ -68,15 +68,19 @@ class FileExplorerSession(application: Application, path: String) : AndroidViewM
 
     init {
         viewModelScope.launch {
-            suspendCancellableCoroutine {
-                thread {
-                    val result = Result.success(getFileInstance(path, application.applicationContext))
-                    it.resumeWith(result)
-                }
-            }.let {
+            getFileInstanceAsync(path, application.applicationContext).let {
                 fileInstance.value = it
             }
         }
+    }
+
+
+}
+
+suspend fun getFileInstanceAsync(path: String, context: Context) = suspendCancellableCoroutine {
+    thread {
+        val result = Result.success(getFileInstance(path, context))
+        it.resumeWith(result)
     }
 }
 
@@ -93,7 +97,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
 
     private val binding by viewBinding(ActivityMainBinding::inflate)
     private val filterHiddenFile by svm({}) { it, _ ->
-        HasStateValueModel(it, FileListFragment.filterHiddenFileKey, false)
+        StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
     }
     private val uuid by vm({}) {
         GenericValueModel<String>().apply {
@@ -107,11 +111,11 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         setSupportActionBar(binding.toolbar)
         supportNavigatorBarImmersive(binding.root)
         //连接服务
-        val intent1 = Intent(this, FileOperateService::class.java)
+        val fileOperateIntent = Intent(this, FileOperateService::class.java)
         try {
-            bindService(intent1, connection, BIND_AUTO_CREATE)
+            bindService(fileOperateIntent, connection, BIND_AUTO_CREATE)
         } catch (_: Exception) {
-            bindService(intent1, connection, 0)
+            bindService(fileOperateIntent, connection, 0)
         }
         Shell.getShell {
             if (it.isRoot) {
@@ -143,7 +147,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        MenuInflater(this).inflate(R.menu.main_menu, menu)
+        menuInflater.inflate(R.menu.main_menu, menu)
         return super.onCreateOptionsMenu(menu)
     }
 
@@ -175,6 +179,9 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             }
             R.id.about -> {
                 startActivity(Intent(this, AboutActivity::class.java))
+            }
+            R.id.plugin_manager -> {
+                startActivity(Intent(this, PluginManageActivity::class.java))
             }
 
         }
@@ -391,7 +398,7 @@ fun fileServiceBuilder(
     return { searchQuery: FileExplorerSearch, start: Int, count: Int ->
         val listSafe = suspendCancellableCoroutine {
             thread {
-                searchQuery.path.listSafe().run {
+                searchQuery.path.list().run {
                     it.resumeWith(Result.success(this))
                 }
             }

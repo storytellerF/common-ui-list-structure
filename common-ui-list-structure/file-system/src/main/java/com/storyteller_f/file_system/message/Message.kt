@@ -1,7 +1,5 @@
 package com.storyteller_f.file_system.message
 
-import java.lang.StringBuilder
-
 class Message(val name: String) {
     val time = System.currentTimeMillis()
     val content = StringBuilder()

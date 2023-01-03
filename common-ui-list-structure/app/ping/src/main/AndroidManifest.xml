@@ -14,8 +14,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Common_ui_list_structure">
         <activity
-            android:configChanges="keyboard|keyboardHidden"
             android:name=".MainActivity"
+            android:configChanges="keyboard|keyboardHidden"
             android:exported="true"
             android:theme="@style/Theme.Common_ui_list_structure">
             <intent-filter>
@@ -38,8 +38,8 @@
         <provider
             android:name=".StorageProvider"
             android:authorities="com.storyteller_f.ping.documents"
-            android:grantUriPermissions="true"
             android:exported="true"
+            android:grantUriPermissions="true"
             android:permission="android.permission.MANAGE_DOCUMENTS">
             <intent-filter>
                 <action android:name="android.content.action.DOCUMENTS_PROVIDER" />

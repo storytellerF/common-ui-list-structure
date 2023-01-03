@@ -2,7 +2,6 @@ package com.storyteller_f.ui_list.event
 
 import android.view.LayoutInflater
 import android.view.View
-import androidx.annotation.Nullable
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager.findFragment
@@ -67,7 +66,7 @@ inline fun <reified T> View.findActionReceiverOrNull(): T? {
         null
     }
     while (fragment != null) {
-        if (fragment is T){
+        if (fragment is T) {
             return fragment
         }
         fragment = fragment.parentFragment
@@ -75,7 +74,7 @@ inline fun <reified T> View.findActionReceiverOrNull(): T? {
     return null
 }
 
-inline fun<reified T> doWhenIs(any: Any, block: (T) -> Unit) {
+inline fun <reified T> doWhenIs(any: Any, block: (T) -> Unit) {
     if (any is T) {
         block(any as T)
     }
