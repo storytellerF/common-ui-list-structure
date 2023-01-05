@@ -43,9 +43,7 @@ class SimpleSearchSource<D : Model, SQ : Any>(
                 prevKey = if (position == STARTING_PAGE_INDEX) null else position - 1,
                 nextKey = nextKey
             )
-        } catch (exception: IOException) {
-            LoadResult.Error(exception)
-        } catch (exception: HttpException) {
+        } catch (exception: Exception) {
             LoadResult.Error(exception)
         }
     }

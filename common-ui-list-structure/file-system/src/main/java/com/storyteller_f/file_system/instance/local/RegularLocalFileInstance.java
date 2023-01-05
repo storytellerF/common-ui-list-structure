@@ -38,7 +38,8 @@ public class RegularLocalFileInstance extends LocalFileInstance {
 
     @Override
     public boolean createFile() throws IOException {
-        return new File(getPath()).createNewFile();
+        if (file.exists()) return true;
+        return file.createNewFile();
     }
 
     @Override
@@ -48,12 +49,12 @@ public class RegularLocalFileInstance extends LocalFileInstance {
 
     @Override
     public boolean createDirectory() {
-        return new File(getPath()).mkdirs();
+        if (file.exists()) return true;
+        return file.mkdirs();
     }
 
     @Override
     public LocalFileInstance toChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) throws Exception {
-        File file = new File(path, name);
         RegularLocalFileInstance internalFileInstance = new RegularLocalFileInstance(context, filter, file.getAbsolutePath());
         //检查目标文件是否存在
         checkChildExistsOtherwiseCreate(file, isFile, createWhenNotExists);
@@ -76,7 +77,6 @@ public class RegularLocalFileInstance extends LocalFileInstance {
     @Override
     public void changeToChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) throws Exception {
         Log.d(TAG, "changeToChild() called with: name = [" + name + "], isFile = [" + isFile + "]");
-        File file = new File(path, name);
         checkChildExistsOtherwiseCreate(file, isFile, createWhenNotExists);
         path = file.getAbsolutePath();
         initName();
@@ -164,12 +164,12 @@ public class RegularLocalFileInstance extends LocalFileInstance {
 
     @Override
     public LocalFileInstance toParent() {
-        return new RegularLocalFileInstance(context, filter, new File(path).getParent());
+        return new RegularLocalFileInstance(context, filter, file.getParent());
     }
 
     @Override
     public void changeToParent() {
-        File parentFile = new File(path).getParentFile();
+        File parentFile = file.getParentFile();
         path = parentFile.getPath();
         name = parentFile.getName();
     }

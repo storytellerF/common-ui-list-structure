@@ -29,6 +29,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Locale;
 
 public abstract class DocumentLocalFileInstance extends LocalFileInstance {
@@ -69,26 +70,26 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
      */
     public boolean initDocumentFile() {
         if (treeRootKey == null) {
-            Log.e(TAG, "initCurrentFile: 获取root 失败:" + path + ",不会进行初始化");
+            Log.e(TAG, "initDocumentFile: 获取root 失败:" + path + ",不会进行初始化");
             return false;
         }
         if (path == null || path.isEmpty()) {
-            Log.e(TAG, "initCurrentFile: path is invalid:[" + path + "],不会进行初始化");
+            Log.w(TAG, "initDocumentFile: path is empty, 不会进行初始化");
             return false;
         }
-        current = getSpecialDocumentFile(path, false);
-        if (current == null) Log.e(TAG, "initCurrentFile: 初始化失败" + path);
+        current = getSpecialDocumentFile(path, false, true);
+        if (current == null) Log.e(TAG, "initDocumentFile: 初始化失败" + path);
         return current != null;
     }
 
     /**
      * 获取指定目录的document file
      *
-     * @param destination         目标地址
-     * @param createDirectoryFlag 决定在没有文件夹的时候是否创建文件夹
+     * @param destination        目标地址
+     * @param createWhenNoExists 决定在没有文件夹的时候是否创建文件夹
      * @return 返回目标文件
      */
-    public DocumentFile getSpecialDocumentFile(String destination, boolean createDirectoryFlag) {
+    public DocumentFile getSpecialDocumentFile(String destination, boolean createWhenNoExists, boolean isFile) {
         if (!destination.startsWith(prefix)) {
             Log.e(TAG, "getCurrent: prefix 出错 " + prefix);
             return null;
@@ -102,17 +103,33 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
         }
         if (truePath.isEmpty()) return rootFile;
         String[] nameItemPath = truePath.substring(1).split("/");
+        String[] paths;
+        String[] files;
+        if (isFile && createWhenNoExists) {
+            paths = Arrays.copyOf(nameItemPath, nameItemPath.length - 1);
+        } else paths = nameItemPath;
+        if (isFile && createWhenNoExists) {
+            files = new String[]{nameItemPath[nameItemPath.length - 1]};
+        } else files = new String[0];
         //Log.i(TAG, "getCurrent: "+ Arrays.toString(nameItemPath));
         DocumentFile temp = rootFile;
-        for (String name : nameItemPath) {
+        for (String name : paths) {
             if (needStop()) break;
             DocumentFile foundFile = temp.findFile(name);
             if (foundFile == null) {
-                if (!createDirectoryFlag) return null;
+                if (!createWhenNoExists) return null;
                 DocumentFile created = temp.createDirectory(name);
                 if (created == null) return null;
                 else temp = created;
             } else temp = foundFile;
+        }
+        //find file
+        if (isFile && createWhenNoExists) {
+            String fileName = files[0];
+            DocumentFile file = temp.findFile(fileName);
+            if (file == null) {
+                return temp.createFile("*/*", fileName);
+            }
         }
         return temp;
     }
@@ -146,26 +163,22 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
     }
 
     public boolean createDirectory() {
-        DocumentFile destDirectory = getSpecialDocumentFile(path, true);
-        if (destDirectory != null) {
-            return initDocumentFile();
+        //todo 检查是不是真的directory
+        if (current != null) return true;
+        DocumentFile created = getSpecialDocumentFile(path, true, false);
+        if (created != null) {
+            current = created;
+            return true;
         }
         return false;
     }
 
     public boolean createFile() {
-        File file = new File(getPath());
-        String parent = file.getParent();
-        if (parent == null) {
-            return false;
-        } else {
-            DocumentFile parentDocumentFile = getSpecialDocumentFile(parent, true);
-            if (parentDocumentFile != null) {
-                DocumentFile file1 = parentDocumentFile.createFile("*/*", file.getName());
-                if (file1 != null) {
-                    return initDocumentFile();
-                }
-            }
+        if (current != null) return true;
+        DocumentFile created = getSpecialDocumentFile(path, true, true);
+        if (created != null) {
+            current = created;
+            return true;
         }
         return false;
     }
@@ -182,7 +195,7 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
             DocumentLocalFileInstance instance = getInstance();
             instance.treeRootKey = treeRootKey;
             instance.prefix = prefix;
-            instance.path = path + name;
+            instance.path = String.format("%s/%s", path, name);
             instance.name = name;
             instance.current = getNewCurrent(name, isFile, createWhenNotExists);
             return instance;
@@ -257,7 +270,7 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
             String p = documentFile.getUri().getPath();
             assert documentFileName != null;
             String fullPath = new File(path, documentFileName).getAbsolutePath();
-            Log.i(TAG, "list: directory documentFile.getUri().getPath():" + p + " fullPath:" + fullPath);
+//            Log.i(TAG, "list: directory documentFile.getUri().getPath():" + p + " fullPath:" + fullPath);
             String detailString = getDetailString(documentFile);
             if (documentFile.isFile()) {
                 addFile(files, fullPath, detailString, documentFile).setSize(documentFile.length());

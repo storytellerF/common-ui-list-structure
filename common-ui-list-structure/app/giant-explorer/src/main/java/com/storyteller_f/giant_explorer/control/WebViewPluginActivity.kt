@@ -83,23 +83,18 @@ class WebViewPluginActivity : AppCompatActivity() {
 
     @Suppress("JavascriptInterface")
     private fun bindApi(webView: WebView, data: Uri?) {
-        val pluginManager = object : GiantExplorerPluginManager {
+        val pluginManager = object : DefaultPluginManager(this) {
 
             @JavascriptInterface
-            override fun fileInputStream(path: String) = getFileInstance(path, this@WebViewPluginActivity).fileInputStream
+            override fun fileInputStream(path: String) = super.fileInputStream(path)
 
             @JavascriptInterface
-            override fun fileOutputStream(path: String) = getFileInstance(path, this@WebViewPluginActivity).fileOutputStream
+            override fun fileOutputStream(path: String) = super.fileOutputStream(path)
 
             @JavascriptInterface
-            override fun listFiles(path: String): List<String> {
-                return getFileInstance(path, this@WebViewPluginActivity).list().let { filesAndDirectories ->
-                    filesAndDirectories.files.map {
-                        it.fullPath
-                    } + filesAndDirectories.directories.map {
-                        it.fullPath
-                    }
-                }
+            override fun listFiles(path: String): List<String> = super.listFiles(path)
+            override suspend fun requestPath(initPath: String?): String {
+                return ""
             }
 
             @JavascriptInterface

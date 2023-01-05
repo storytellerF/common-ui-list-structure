@@ -23,6 +23,7 @@ import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.local.document.DocumentLocalFileInstance
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.model.TorrentFileItemModel
@@ -398,7 +399,11 @@ fun fileServiceBuilder(
     return { searchQuery: FileExplorerSearch, start: Int, count: Int ->
         val listSafe = suspendCancellableCoroutine {
             thread {
-                searchQuery.path.list().run {
+                searchQuery.path.apply {
+                    if (this is DocumentLocalFileInstance) {
+                        if (!this.exists()) this.initDocumentFile()
+                    }
+                }.list().run {
                     it.resumeWith(Result.success(this))
                 }
             }

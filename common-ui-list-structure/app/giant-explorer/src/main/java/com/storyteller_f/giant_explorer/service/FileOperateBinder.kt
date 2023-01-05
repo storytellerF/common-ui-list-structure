@@ -13,6 +13,7 @@ import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.operate.FileOperationForemanProgressListener
 import com.storyteller_f.giant_explorer.service.FileOperateService.FileOperateResultContainer
+import com.storyteller_f.plugin_core.GiantExplorerService
 import okio.FileNotFoundException
 import java.lang.ref.WeakReference
 import java.util.*
@@ -74,6 +75,20 @@ class FileOperateBinder(val context: Context) : Binder() {
         thread {
             preTask(selected, key)?.let { linkedList ->
                 startCompoundTask(linkedList, dest, key)
+            }
+        }
+    }
+
+    fun pluginTask(key: String, block: GiantExplorerService.() -> Boolean) {
+        whenStart(key)
+        thread {
+            val value = object : GiantExplorerService {
+                override fun reportRunning() {
+                    taskStarted(key, TaskAssessResult(0, 0, 0))
+                }
+            }
+            if (block.invoke(value)) {
+                whenEnd(key)
             }
         }
     }

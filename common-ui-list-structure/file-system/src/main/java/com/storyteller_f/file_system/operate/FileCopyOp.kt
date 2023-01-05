@@ -149,9 +149,6 @@ class FileMoveOpInShell(
 class FileDeleteOp(
     task: StoppableTask, fileInstance: FileInstance, context: Context
 ) : FileOpInSitu(task, fileInstance, context) {
-    init {
-        assert(fileInstance.isDirectory)
-    }
 
     override fun call(): Boolean {
         return deleteDirectory(fileInstance)

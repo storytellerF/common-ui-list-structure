@@ -35,14 +35,18 @@ import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentFileListBinding
 import com.storyteller_f.giant_explorer.dialog.*
-import com.storyteller_f.plugin_core.FileSystemProviderConstant
-import com.storyteller_f.plugin_core.FileSystemProviderResolver
+import com.storyteller_f.plugin_core.*
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import com.storyteller_f.ui_list.source.SearchProducer
 import com.storyteller_f.ui_list.source.search
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 import java.util.*
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
 
 class TempVM : ViewModel() {
     var list: MutableList<String> = mutableListOf()
@@ -193,30 +197,58 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
     @BindClickEvent(FileItemHolder::class, "fileIcon")
     fun fileMenu(view: View, itemHolder: FileItemHolder) {
+        val fullPath = itemHolder.file.fullPath
+        val key = uuid.data.value ?: return
+
         PopupMenu(requireContext(), view).apply {
             inflate(R.menu.item_context_menu)
-            val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(File(itemHolder.file.fullPath).extension)
+            val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(File(fullPath).extension)
 
             resolvePlugins(itemHolder, mimeTypeFromExtension)
             PluginManager.list.forEach { plugin ->
                 menu.add(plugin.name).setOnMenuItemClickListener {
                     if (plugin.name.endsWith("apk")) startActivity(Intent(requireContext(), FragmentPluginActivity::class.java).apply {
                         putExtra("plugin-name", plugin.name)
-                        plugUri(mimeTypeFromExtension, itemHolder.file.fullPath)
+                        plugUri(mimeTypeFromExtension, fullPath)
                     })
                     else startActivity(Intent(requireContext(), WebViewPluginActivity::class.java).apply {
                         putExtra("plugin-name", plugin.name)
-                        plugUri(mimeTypeFromExtension, itemHolder.file.fullPath)
+                        plugUri(mimeTypeFromExtension, fullPath)
                     })
                     true
+                }
+            }
+
+            val liPlugin = LiPlugin()
+            val pluginManager = object : DefaultPluginManager(requireContext()) {
+                override suspend fun requestPath(initPath: String?): String {
+                    val completableDeferred = CompletableDeferred<String>()
+                    dialog(RequestPathDialog()) { result: RequestPathDialog.RequestPathResult ->
+                        completableDeferred.complete(result.path)
+                    }
+                    return completableDeferred.await()
+                }
+
+                override fun runInService(block: GiantExplorerService.() -> Boolean) {
+                    fileOperateBinder?.pluginTask(key, block)
+                }
+
+            }
+            liPlugin.plugPluginManager(pluginManager)
+            if (liPlugin.accept(listOf(File(fullPath)))) {
+                menu.loopAdd(liPlugin.group()).add("li").setOnMenuItemClickListener {
+                    scope.launch {
+
+                        liPlugin.start(fullPath)
+                    }
+                    return@setOnMenuItemClickListener true
                 }
             }
 
             setOnMenuItemClickListener { item ->
                 when (item.itemId) {
                     R.id.delete -> {
-                        val key = uuid.data.value ?: return@setOnMenuItemClickListener true
-                        fileOperateBinder?.delete(itemHolder.file.item, listOf(itemHolder.file.item), key)
+                        fileOperateBinder?.delete(itemHolder.file.item, detectSelected(itemHolder), key)
                     }
                     R.id.move_to -> {
                         moveOrCopy(true, itemHolder)
@@ -238,7 +270,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                         }
                     }
                     R.id.properties -> {
-                        findNavController().navigate(R.id.action_fileListFragment_to_propertiesDialog, PropertiesDialogArgs(itemHolder.file.fullPath).toBundle())
+                        findNavController().navigate(R.id.action_fileListFragment_to_propertiesDialog, PropertiesDialogArgs(fullPath).toBundle())
                     }
 
                 }
@@ -302,4 +334,65 @@ private fun Intent.plugUri(mimeType: String?, fullPath: String) {
     putExtra("path", fullPath)
     setDataAndType(build, mimeType)
     flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+}
+
+class LiPlugin : GiantExplorerShellPlugin {
+    private lateinit var pluginManager: GiantExplorerPluginManager
+    override fun plugPluginManager(pluginManager: GiantExplorerPluginManager) {
+        this.pluginManager = pluginManager
+    }
+
+    override fun accept(file: List<File>): Boolean {
+        return file.all {
+            it.extension == "zip"
+        }
+    }
+
+    override fun group(): List<String> {
+        return listOf("archive", "extract to")
+    }
+
+    override suspend fun start(fullPath: String) {
+        val requestPath = pluginManager.requestPath()
+        println("request path $requestPath")
+        unCompress(pluginManager.fileInputStream(fullPath), File(requestPath))
+    }
+
+    private fun unCompress(archive: InputStream, dest: File) {
+        pluginManager.runInService {
+            reportRunning()
+            ZipInputStream(archive).use { stream ->
+                while (true) {
+                    val nextEntry = stream.nextEntry
+                    nextEntry?.let {
+                        processEntry(dest, nextEntry, stream)
+                    } ?: break
+                }
+            }
+            true
+        }
+    }
+
+    private fun processEntry(dest: File, nextEntry: ZipEntry, stream: ZipInputStream) {
+        val child = File(dest, nextEntry.name)
+        println(nextEntry.name)
+        if (nextEntry.isDirectory) {
+            pluginManager.ensureDir(child)
+        } else {
+            write(pluginManager.fileOutputStream(child.absolutePath), stream)
+        }
+    }
+
+    private fun write(file: FileOutputStream, stream: ZipInputStream) {
+        val buffer = ByteArray(1024)
+        file.buffered().use {
+            while (true) {
+                val offset = stream.read(buffer)
+                if (offset != -1) {
+                    it.write(buffer, 0, offset)
+                } else break
+            }
+        }
+    }
+
 }

@@ -1,4 +1,6 @@
+import com.android.build.gradle.internal.tasks.factory.dependsOn
 import common_ui_list_structure_preset.Versions
+import org.jetbrains.kotlin.util.capitalizeDecapitalize.toUpperCaseAsciiOnly
 
 plugins {
     id("com.android.library")
@@ -41,18 +43,23 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.4")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
 }
-
-tasks {
-    val dispatchLib = register("dispatchPluginCoreLib", Copy::class) {
-        from("~/AndroidStudioProjects/common-ui-list-structure/common-ui-list-structure/app/giant-explorer/plugin-core/build/outputs/aar/plugin-core-debug.aar") {
+val target = listOf("yue", "li")
+val dispatchTasks = target.map { targetName ->
+    tasks.register("dispatchPluginCoreLibTo${targetName.toUpperCaseAsciiOnly()}", Copy::class) {
+        from(File(buildDir, "/outputs/aar/plugin-core-debug.aar")) {
             rename {
                 it.replace("plugin-core-debug.aar", "core.aar")
             }
         }
-        into("~/AndroidStudioProjects/common-ui-list-structure/giant-explorer/yue/giant-explorer-plugin-core")
+        into(File(rootDir, "../giant-explorer/$targetName/giant-explorer-plugin-core"))
     }
+}
 
-    build {
-        finalizedBy(dispatchLib)
+afterEvaluate {
+    val taskName = "bundleDebugAar"
+    val packageDebug = tasks.findByName(taskName)
+    dispatchTasks.forEach {
+        it.dependsOn(taskName)
+        packageDebug?.finalizedBy(it)
     }
 }
