@@ -52,13 +52,12 @@ dependencies {
     implementation(project(":yue-plugin"))
 }
 val dispatchApk = tasks.register("dispatchApk") {
-    println("dispatchApk")
     doLast {
-        println("do last")
-        val adbPath = "~/Library/Android/sdk/platform-tools/adb"
-        val modulePath = "~/AndroidStudioProjects/common-ui-list-structure/giant-explorer/yue/app"
-        val apkFile = "$modulePath/build/outputs/apk/debug/app-debug.apk"
-        val output = "/data/data/com.storyteller_f.giant_explorer/files/plugins/yue.apk"
+        val userHome = System.getProperty("user.home")
+        val adbPath = "$userHome/Library/Android/sdk/platform-tools/adb"
+        val apkFile = "${buildDir.absolutePath}/outputs/apk/debug/app-debug.apk"
+        val outputPath = "/data/data/com.storyteller_f.giant_explorer/files/plugins"
+        val output = "$outputPath/yue.apk"
         val tmp = "/data/local/tmp/yue.apk"
         val getDevicesCommand = Runtime.getRuntime().exec(arrayOf(adbPath, "devices"))
         getDevicesCommand.waitFor()
@@ -74,6 +73,7 @@ val dispatchApk = tasks.register("dispatchApk") {
         devices.forEach {
             println("dispatch to $it")
             command(arrayOf(adbPath, "-s", it, "push", apkFile, tmp))
+            command(arrayOf(adbPath, "-s", it, "shell", "run-as", "com.storyteller_f.giant_explorer", "sh", "-c", "\'mkdir $outputPath\'"))
             command(arrayOf(adbPath, "-s", it, "shell", "run-as", "com.storyteller_f.giant_explorer", "sh", "-c", "\'cp $tmp $output\'"))
             command(arrayOf(adbPath, "-s", it, "shell", "sh", "-c", "\'rm $tmp\'"))
         }

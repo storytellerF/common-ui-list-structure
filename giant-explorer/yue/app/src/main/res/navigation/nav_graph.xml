@@ -33,9 +33,6 @@
         android:id="@+id/YueFragment"
         android:name="com.storyteller_f.yue_plugin.YueFragment">
         <argument
-            android:name="path"
-            app:argType="string" />
-        <argument
             android:name="uri"
             app:argType="android.net.Uri" />
     </fragment>

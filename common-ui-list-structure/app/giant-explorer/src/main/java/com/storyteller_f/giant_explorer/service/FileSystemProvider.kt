@@ -10,9 +10,9 @@ import android.provider.DocumentsContract
 import android.util.Log
 import android.webkit.MimeTypeMap
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.giant_explorer.FileSystemProviderResolver
 import com.storyteller_f.giant_explorer.control.getFileInstance
 import com.storyteller_f.plugin_core.FileSystemProviderConstant
-import com.storyteller_f.plugin_core.FileSystemProviderResolver
 import java.io.File
 
 
@@ -23,35 +23,26 @@ class FileSystemProvider : ContentProvider() {
     }
 
     override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor? {
-        val (_, path) = FileSystemProviderResolver.resolve(uri) ?: return null
+        val path = FileSystemProviderResolver.resolvePath(uri) ?: return null
         return ParcelFileDescriptor.open(File(path), ParcelFileDescriptor.MODE_READ_ONLY)
     }
 
     override fun query(uri: Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?): Cursor? {
         val c = context ?: return null
-        val (type, filePath) = FileSystemProviderResolver.resolve(uri) ?: return null
-        Log.i(TAG, "query: file path:$filePath $type $uri")
+        val filePath = FileSystemProviderResolver.resolvePath(uri) ?: return null
+        Log.i(TAG, "query: file path:$filePath $uri")
         val fileInstance = getFileInstance(filePath, c)
-        return when (type) {
-            FileSystemProviderConstant.typeInfo -> {
-                MatrixCursor(fileProjection).apply {
-                    val file = fileInstance.file
-                    addRow(arrayOf(file.name, file.fullPath, fileInstance.fileLength))
-                }
+        return if (fileInstance.isFile) {
+            MatrixCursor(fileProjection).apply {
+                val file = fileInstance.file
+                addRow(arrayOf(file.name, file.fullPath, fileInstance.fileLength))
             }
-            FileSystemProviderConstant.typeList -> {
-                require(fileInstance.isDirectory)
-                queryFileInstance(fileInstance)
-            }
-            FileSystemProviderConstant.typeSibling -> {
-                val toParent = fileInstance.toParent()
-                queryFileInstance(toParent)
-            }
-            else -> null
+        } else {
+            queryFileInstanceChild(fileInstance)
         }
     }
 
-    private fun queryFileInstance(fileInstance: FileInstance): MatrixCursor {
+    private fun queryFileInstanceChild(fileInstance: FileInstance): MatrixCursor {
         val list = fileInstance.list()
         Log.i(TAG, "queryFileInstance: ${fileInstance.path} ${list.directories.size} ${list.files.size}")
         val matrixCursor = MatrixCursor(fileProjection)

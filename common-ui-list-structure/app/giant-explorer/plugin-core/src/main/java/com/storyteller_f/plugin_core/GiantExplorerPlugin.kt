@@ -19,7 +19,7 @@ interface GiantExplorerService {
     fun reportRunning()
 }
 
-interface GiantExplorerShellPlugin: GiantExplorerPlugin {
+interface GiantExplorerShellPlugin : GiantExplorerPlugin {
     suspend fun start(fullPath: String)
 }
 
@@ -39,5 +39,11 @@ interface GiantExplorerPluginManager {
     fun ensureDir(child: File)
 
     fun runInService(block: GiantExplorerService.() -> Boolean)
+
+    fun resolveParentUri(uriString: String): String?
+
+    fun resolvePath(uriString: String): String?
+
+    fun resolveParentPath(uriString: String): String?
 
 }

@@ -17,30 +17,13 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.google.android.material.snackbar.Snackbar
-import com.storyteller_f.plugin_core.GiantExplorerPlugin
-import com.storyteller_f.plugin_core.GiantExplorerPluginManager
 import com.storyteller_f.yue.databinding.ActivityMainBinding
 import com.storyteller_f.yue_plugin.YueFragmentArgs
-import java.io.FileInputStream
-import java.io.FileOutputStream
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
-    private val pluginManager = object : GiantExplorerPluginManager {
-        override fun fileInputStream(path: String): FileInputStream {
-            return FileInputStream(path)
-        }
-
-        override fun fileOutputStream(path: String): FileOutputStream {
-            return FileOutputStream(path)
-        }
-
-        override fun listFiles(path: String): List<String> {
-            return filesDir.list()?.toList() ?: emptyList()
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,9 +54,6 @@ class MainActivity : AppCompatActivity() {
     private fun setupNavigation() {
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main) as NavHostFragment
         navHostFragment.childFragmentManager.addFragmentOnAttachListener { _, fragment ->
-            if (fragment is GiantExplorerPlugin) {
-                fragment.plugPluginManager(pluginManager)
-            }
             Log.i(TAG, "onCreate: ${fragment.javaClass.canonicalName}")
         }
         val navController = navHostFragment.navController
@@ -89,11 +69,10 @@ class MainActivity : AppCompatActivity() {
     private fun navigateToYue(intent: Intent?) {
         intent ?: return
         println(intent)
-        val path = intent.getStringExtra("path") ?: "unknown path"
         val uri = intent.data ?: return
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         navController.popBackStack(R.id.FirstFragment, true)
-        navController.navigate(R.id.YueFragment, YueFragmentArgs(path, uri).toBundle())
+        navController.navigate(R.id.YueFragment, YueFragmentArgs(uri).toBundle())
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

@@ -16,25 +16,36 @@ android {
     namespace = "com.storyteller_f.giant_explorer"
 
     defaultConfig {
-        val fileProvider = "$applicationId.file-provider"
+        val fileProviderAuthority = "$applicationId.file-provider"
 
         // Now we can use ${documentsAuthority} in our Manifest
-        manifestPlaceholders["providerAuthority"] = fileProvider
+        manifestPlaceholders["providerAuthority"] = fileProviderAuthority
         // Now we can use BuildConfig.DOCUMENTS_AUTHORITY in our code
         buildConfigField(
             "String",
             "FILE_PROVIDER_AUTHORITY",
-            "\"${fileProvider}\""
+            "\"${fileProviderAuthority}\""
         )
-        val fileSystemProvider = "$applicationId.file-system-provider"
+        val fileSystemProviderAuthority = "$applicationId.file-system-provider"
 
         // Now we can use ${documentsAuthority} in our Manifest
-        manifestPlaceholders["fileSystemProviderAuthority"] = fileSystemProvider
+        manifestPlaceholders["fileSystemProviderAuthority"] = fileSystemProviderAuthority
         // Now we can use BuildConfig.DOCUMENTS_AUTHORITY in our code
         buildConfigField(
             "String",
             "FILE_SYSTEM_PROVIDER_AUTHORITY",
-            "\"${fileSystemProvider}\""
+            "\"${fileSystemProviderAuthority}\""
+        )
+
+        val fileSystemProviderEncryptedAuthority = "$applicationId.file-system-encrypted-provider"
+
+        // Now we can use ${documentsAuthority} in our Manifest
+        manifestPlaceholders["fileSystemProviderEncryptedAuthority"] = fileSystemProviderEncryptedAuthority
+        // Now we can use BuildConfig.DOCUMENTS_AUTHORITY in our code
+        buildConfigField(
+            "String",
+            "FILE_SYSTEM_ENCRYPTED_PROVIDER_AUTHORITY",
+            "\"${fileSystemProviderEncryptedAuthority}\""
         )
     }
 }

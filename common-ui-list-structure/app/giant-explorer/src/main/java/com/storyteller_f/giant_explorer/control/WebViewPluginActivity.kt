@@ -9,9 +9,9 @@ import android.webkit.*
 import androidx.appcompat.app.AppCompatActivity
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.file_system_ktx.ensureFile
+import com.storyteller_f.giant_explorer.FileSystemProviderResolver
 import com.storyteller_f.giant_explorer.R
-import com.storyteller_f.plugin_core.FileSystemProviderResolver
-import com.storyteller_f.plugin_core.GiantExplorerPluginManager
+import com.storyteller_f.plugin_core.GiantExplorerService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -97,6 +97,10 @@ class WebViewPluginActivity : AppCompatActivity() {
                 return ""
             }
 
+            override fun runInService(block: GiantExplorerService.() -> Boolean) {
+                TODO("Not yet implemented")
+            }
+
             @JavascriptInterface
             fun base64(path: String, callbackId: String) {
                 thread {
@@ -114,8 +118,7 @@ class WebViewPluginActivity : AppCompatActivity() {
             @JavascriptInterface
             override fun fullPath(): String {
                 val u = data ?: return ""
-                val (_, path) = FileSystemProviderResolver.resolve(u) ?: return ""
-                return path
+                return FileSystemProviderResolver.resolvePath(u) ?: return ""
             }
 
             @JavascriptInterface

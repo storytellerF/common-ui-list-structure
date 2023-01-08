@@ -35,7 +35,7 @@ class IntroFragment : Fragment() {
         if (result.resultCode == Activity.RESULT_OK) {
             val uri = result.data?.data ?: return@registerForActivityResult
             println(uri)
-            findNavController().navigate(R.id.action_FirstFragment_to_yue, YueFragmentArgs("", uri).toBundle())
+            findNavController().navigate(R.id.action_FirstFragment_to_yue, YueFragmentArgs(uri).toBundle())
         }
     }
 

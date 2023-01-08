@@ -30,6 +30,7 @@ import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.BuildConfig
+import com.storyteller_f.giant_explorer.FileSystemProviderResolver
 import com.storyteller_f.giant_explorer.PluginManager
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.requireDatabase
@@ -330,7 +331,7 @@ private fun Menu.loopAdd(strings: List<String>): Menu {
 }
 
 private fun Intent.plugUri(mimeType: String?, fullPath: String) {
-    val build = FileSystemProviderResolver.build(BuildConfig.FILE_SYSTEM_PROVIDER_AUTHORITY, FileSystemProviderConstant.typeInfo, fullPath)
+    val build = FileSystemProviderResolver.build(false, fullPath)
     putExtra("path", fullPath)
     setDataAndType(build, mimeType)
     flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
