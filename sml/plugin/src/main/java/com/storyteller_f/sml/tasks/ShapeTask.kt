@@ -1,6 +1,5 @@
 package com.storyteller_f.sml.tasks
 
-import com.storyteller_f.sml.config.Drawable
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input

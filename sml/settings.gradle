@@ -3,7 +3,7 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
-        maven { url '../repo'}
+        maven { url '../repo-snapshot'}
     }
 }
 dependencyResolutionManagement {

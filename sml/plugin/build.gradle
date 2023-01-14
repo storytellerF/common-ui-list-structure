@@ -21,15 +21,16 @@ publishing {
     repositories {
         maven {
             // $rootDir 表示你项目的根目录
-            url = "$rootDir/../repo"
+            url = "$rootDir/../repo-snapshot"
         }
     }
 }
 
 dependencies {
     testImplementation 'junit:junit:4.13.2'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.7.10"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.7.21"
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.21")
 
     // Android gradle plugin will allow us to access Android specific features
-    implementation 'com.android.tools.build:gradle:7.2.1'
+    implementation 'com.android.tools.build:gradle:7.4.0'
 }
