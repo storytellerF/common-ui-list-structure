@@ -3,6 +3,9 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
+        maven {
+            url "../../../../IdeaProjects/song/repo"
+        }
     }
 }
 dependencyResolutionManagement {

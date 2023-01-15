@@ -1,9 +1,8 @@
-import com.android.build.gradle.internal.tasks.factory.dependsOn
-import java.util.regex.Pattern
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("androidx.navigation.safeargs.kotlin")
+    id("com.storyteller_f.song")
 }
 
 android {
@@ -51,48 +50,12 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     implementation(project(":yue-plugin"))
 }
-val dispatchApk = tasks.register("dispatchApk") {
-    doLast {
-        val userHome = System.getProperty("user.home")
-        val adbPath = "$userHome/Library/Android/sdk/platform-tools/adb"
-        val apkFile = "${buildDir.absolutePath}/outputs/apk/debug/app-debug.apk"
-        val outputPath = "/data/data/com.storyteller_f.giant_explorer/files/plugins"
-        val output = "$outputPath/yue.apk"
-        val tmp = "/data/local/tmp/yue.apk"
-        val getDevicesCommand = Runtime.getRuntime().exec(arrayOf(adbPath, "devices"))
-        getDevicesCommand.waitFor()
-        val readText = getDevicesCommand.inputStream.bufferedReader().use {
-            it.readText().trim()
-        }
-        getDevicesCommand.destroy()
-        val devices = readText.split("\n").let {
-            it.subList(1, it.size)
-        }.map {
-            it.split(Pattern.compile("\\s+")).first()
-        }
-        devices.forEach {
-            println("dispatch to $it")
-            command(arrayOf(adbPath, "-s", it, "push", apkFile, tmp))
-            command(arrayOf(adbPath, "-s", it, "shell", "run-as", "com.storyteller_f.giant_explorer", "sh", "-c", "\'mkdir $outputPath\'"))
-            command(arrayOf(adbPath, "-s", it, "shell", "run-as", "com.storyteller_f.giant_explorer", "sh", "-c", "\'cp $tmp $output\'"))
-            command(arrayOf(adbPath, "-s", it, "shell", "sh", "-c", "\'rm $tmp\'"))
-        }
-    }
 
-}
-afterEvaluate {
-    val taskName = "packageDebug"
-    val packageDebug = tasks.findByName(taskName)
-    dispatchApk.dependsOn(taskName)
-    dispatchApk.get().onlyIf {
-        packageDebug?.state?.didWork == true
-    }
-    packageDebug?.finalizedBy(dispatchApk)
-}
-
-fun command(arrayOf: Array<String>): Int {
-    val pushCommand = Runtime.getRuntime().exec(arrayOf)
-    val waitFor = pushCommand.waitFor()
-    pushCommand.destroy()
-    return waitFor
+val userHome: String = System.getProperty("user.home")
+song {
+    this.apkFile.set("${buildDir.absolutePath}/outputs/apk/debug/app-debug.apk")
+    this.adb.set("$userHome/Library/Android/sdk/platform-tools/adb")
+    this.paths.set(listOf())
+    this.packages.set(listOf("com.storyteller_f.giant_explorer" to "files/plugins"))
+    this.outputName.set("yue.apk")
 }
