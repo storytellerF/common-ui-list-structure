@@ -4,12 +4,25 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <CheckBox
-        android:id="@+id/filterHiddenFile"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:checked="true"
-        android:text="过滤隐藏文件" />
+        android:orientation="horizontal">
+
+        <CheckBox
+            android:id="@+id/filterHiddenFile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="@string/filter_hidden_file" />
+
+        <Button
+            android:id="@+id/new_file"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="7dp"
+            android:text="@string/string_add_file" />
+    </LinearLayout>
 
     <com.storyteller_f.giant_explorer.view.EditablePathMan
         android:id="@+id/path_man"

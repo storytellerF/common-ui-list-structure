@@ -1,17 +1,17 @@
 package com.storyteller_f.giant_explorer.dialog
 
+import android.os.Bundle
 import android.os.Parcelable
+import android.view.View
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.paging.PagingData
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ktx.context
-import com.storyteller_f.common_ui.SimpleDialogFragment
-import com.storyteller_f.common_ui.scope
-import com.storyteller_f.common_ui.setFragmentResult
-import com.storyteller_f.common_ui.setOnClick
+import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.StateValueModel
 import com.storyteller_f.common_vm_ktx.combine
 import com.storyteller_f.common_vm_ktx.svm
@@ -21,6 +21,7 @@ import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.requestPermissionForSpecialPath
 import com.storyteller_f.file_system_ktx.isDirectory
+import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.control.*
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.DialogRequestPathBinding
@@ -37,7 +38,7 @@ import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 
 class RequestPathDialog :
-    SimpleDialogFragment<DialogRequestPathBinding>(DialogRequestPathBinding::inflate) {
+    SimpleDialogFragment<DialogRequestPathBinding>(DialogRequestPathBinding::inflate), RegistryFragment {
     private val session by vm({ FileInstanceFactory.rootUserEmulatedPath }) {
         FileExplorerSession(requireActivity().application, it)
     }
@@ -80,7 +81,27 @@ class RequestPathDialog :
         binding.bottom.negative.setOnClick {
             dismiss()
         }
-        val owner = viewLifecycleOwner
+        binding.newFile.setOnClick {
+            dialog(NewNameDialog()) { nameResult: NewNameDialog.NewNameResult ->
+                session.fileInstance.value?.toChild(nameResult.name, true, true)
+            }
+        }
+
+//        requireActivity().onBackPressedDispatcher.addCallback(this) {
+//            val value = session.fileInstance.value
+//            if (value != null) {
+//                if (value.path == "/" || value.path == FileInstanceFactory.rootUserEmulatedPath) {
+//                    isEnabled = false
+//                    requireActivity().onBackPressed()
+//                } else {
+//                    session.fileInstance.value = FileInstanceFactory.toParent(value, requireContext())
+//                }
+//            }
+//        }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         context {
             binding.content.sourceUp(adapter, owner, session.selected, flash = ListWithState.Companion::remote)
             session.fileInstance.observe(owner) {
@@ -91,7 +112,7 @@ class RequestPathDialog :
                 val file = it["file"] as FileInstance? ?: return@Observer
                 val path = file.path
                 //检查权限
-                owner.lifecycleScope.launch {
+                scope.launch {
                     if (!checkPathPermission(path)) {
                         requestPermissionForSpecialPath(path)
                     }
@@ -117,18 +138,6 @@ class RequestPathDialog :
                 session.fileInstance.value = FileInstanceFactory.getFileInstance(it, requireContext())
             }
         }
-
-//        requireActivity().onBackPressedDispatcher.addCallback(this) {
-//            val value = session.fileInstance.value
-//            if (value != null) {
-//                if (value.path == "/" || value.path == FileInstanceFactory.rootUserEmulatedPath) {
-//                    isEnabled = false
-//                    requireActivity().onBackPressed()
-//                } else {
-//                    session.fileInstance.value = FileInstanceFactory.toParent(value, requireContext())
-//                }
-//            }
-//        }
     }
 
     @BindClickEvent(FileItemHolder::class, viewName = "getRoot()", key = requestKey)

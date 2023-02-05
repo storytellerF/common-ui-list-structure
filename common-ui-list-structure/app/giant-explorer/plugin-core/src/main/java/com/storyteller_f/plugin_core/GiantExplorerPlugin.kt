@@ -7,12 +7,10 @@ import java.io.FileOutputStream
 interface GiantExplorerPlugin {
     fun plugPluginManager(pluginManager: GiantExplorerPluginManager)
 
-    fun accept(file: List<File>): Boolean
-
     /**
      * 至少包含一个。
      */
-    fun group(): List<String>
+    fun group(file: List<File>): List<Pair<List<String>, Int>>
 }
 
 interface GiantExplorerService {
@@ -20,7 +18,7 @@ interface GiantExplorerService {
 }
 
 interface GiantExplorerShellPlugin : GiantExplorerPlugin {
-    suspend fun start(fullPath: String)
+    suspend fun start(fullPath: String, id: Int)
 }
 
 interface GiantExplorerPluginManager {
@@ -40,10 +38,20 @@ interface GiantExplorerPluginManager {
 
     fun runInService(block: GiantExplorerService.() -> Boolean)
 
+    /**
+     * 获取uri 对应的path 的parent uri
+     */
     fun resolveParentUri(uriString: String): String?
 
+    /**
+     * 获取uri 对应的path
+     */
     fun resolvePath(uriString: String): String?
 
+    /**
+     * 获取uri 对应的path 的parent path
+     */
     fun resolveParentPath(uriString: String): String?
 
+    fun isFile(path: String): Boolean
 }

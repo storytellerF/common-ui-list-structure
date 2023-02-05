@@ -43,11 +43,13 @@ import com.storyteller_f.ui_list.source.search
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
 
 class TempVM : ViewModel() {
     var list: MutableList<String> = mutableListOf()
@@ -236,14 +238,17 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
             }
             liPlugin.plugPluginManager(pluginManager)
-            if (liPlugin.accept(listOf(File(fullPath)))) {
-                menu.loopAdd(liPlugin.group()).add("li").setOnMenuItemClickListener {
-                    scope.launch {
-
-                        liPlugin.start(fullPath)
+            val group = liPlugin.group(listOf(File(fullPath)))
+            if (group.isNotEmpty()) {
+                group.map {
+                    menu.loopAdd(it.first).add(0, it.second, 0, "li").setOnMenuItemClickListener {
+                        scope.launch {
+                            liPlugin.start(fullPath, it.itemId)
+                        }
+                        return@setOnMenuItemClickListener true
                     }
-                    return@setOnMenuItemClickListener true
                 }
+
             }
 
             setOnMenuItemClickListener { item ->
@@ -343,30 +348,70 @@ class LiPlugin : GiantExplorerShellPlugin {
         this.pluginManager = pluginManager
     }
 
-    override fun accept(file: List<File>): Boolean {
-        return file.all {
-            it.extension == "zip"
+    override fun group(file: List<File>): List<Pair<List<String>, Int>> {
+        return if (file.all {
+                it.extension == "zip"
+            }) listOf(listOf("archive", "extract to") to 108)
+        else listOf(listOf("archive", "compress") to 109)
+    }
+
+    override suspend fun start(fullPath: String, id: Int) {
+        val requestPath = pluginManager.requestPath()
+        println("request path $requestPath")
+        if (id == 108) {
+            extract(pluginManager.fileInputStream(fullPath), File(requestPath))
+        } else {
+            val dest = pluginManager.fileOutputStream(requestPath)
+            val zipOutputStream = ZipOutputStream(dest)
+            zipOutputStream.use {
+                compress(it, File(fullPath), "")
+            }
         }
     }
 
-    override fun group(): List<String> {
-        return listOf("archive", "extract to")
+    private fun compress(dest: ZipOutputStream, fullPath: File, offset: String) {
+        val path = fullPath.absolutePath
+        val name = fullPath.name
+        if (pluginManager.isFile(path)) {
+            val zipEntry = ZipEntry("$offset/$name")
+            dest.putNextEntry(zipEntry)
+            pluginManager.fileInputStream(path).use {
+                read(it, dest)
+            }
+        } else {
+            val listFiles = pluginManager.listFiles(path)
+            listFiles.forEach {
+                val subName = File(it).name
+                val subFile = File(fullPath, subName)
+                val subPath = subFile.absolutePath
+                if (!pluginManager.isFile(subPath)) {
+                    val subDir = ZipEntry("$offset/$it/")
+                    dest.putNextEntry(subDir)
+                }
+                compress(dest, subFile, name)
+            }
+        }
     }
 
-    override suspend fun start(fullPath: String) {
-        val requestPath = pluginManager.requestPath()
-        println("request path $requestPath")
-        unCompress(pluginManager.fileInputStream(fullPath), File(requestPath))
+    private fun read(it: FileInputStream, dest: ZipOutputStream) {
+        val buffer = ByteArray(1024)
+        it.buffered().use {
+            while (true) {
+                val offset = it.read(buffer)
+                if (offset != -1) {
+                    dest.write(buffer, 0, offset)
+                } else break
+            }
+        }
     }
 
-    private fun unCompress(archive: InputStream, dest: File) {
+    private fun extract(archive: InputStream, dest: File) {
         pluginManager.runInService {
             reportRunning()
             ZipInputStream(archive).use { stream ->
                 while (true) {
-                    val nextEntry = stream.nextEntry
-                    nextEntry?.let {
-                        processEntry(dest, nextEntry, stream)
+                    stream.nextEntry?.let {
+                        processEntry(dest, it, stream)
                     } ?: break
                 }
             }
@@ -395,5 +440,7 @@ class LiPlugin : GiantExplorerShellPlugin {
             }
         }
     }
+
+
 
 }

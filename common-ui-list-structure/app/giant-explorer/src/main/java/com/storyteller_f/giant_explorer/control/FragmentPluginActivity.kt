@@ -67,7 +67,11 @@ abstract class DefaultPluginManager(val context: Context) : GiantExplorerPluginM
     }
 
     override fun ensureDir(child: File) {
-        FileInstanceFactory.getFileInstance(child.absolutePath, context).createDirectory()
+        getFileInstance(child.absolutePath, context).createDirectory()
+    }
+
+    override fun isFile(path: String): Boolean {
+        return getFileInstance(path, context).isFile
     }
 }
 

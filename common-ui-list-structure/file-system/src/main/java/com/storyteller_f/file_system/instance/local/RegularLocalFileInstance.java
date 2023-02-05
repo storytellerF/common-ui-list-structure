@@ -55,9 +55,10 @@ public class RegularLocalFileInstance extends LocalFileInstance {
 
     @Override
     public LocalFileInstance toChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) throws Exception {
-        RegularLocalFileInstance internalFileInstance = new RegularLocalFileInstance(context, filter, file.getAbsolutePath());
+        File subFile = new File(file, name);
+        RegularLocalFileInstance internalFileInstance = new RegularLocalFileInstance(context, filter, subFile.getAbsolutePath());
         //检查目标文件是否存在
-        checkChildExistsOtherwiseCreate(file, isFile, createWhenNotExists);
+        checkChildExistsOtherwiseCreate(subFile, isFile, createWhenNotExists);
         return internalFileInstance;
     }
 
