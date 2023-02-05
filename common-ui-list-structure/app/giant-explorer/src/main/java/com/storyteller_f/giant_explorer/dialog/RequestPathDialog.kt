@@ -3,6 +3,8 @@ package com.storyteller_f.giant_explorer.dialog
 import android.os.Bundle
 import android.os.Parcelable
 import android.view.View
+import androidx.activity.ComponentDialog
+import androidx.activity.addCallback
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.flowWithLifecycle
@@ -86,18 +88,17 @@ class RequestPathDialog :
                 session.fileInstance.value?.toChild(nameResult.name, true, true)
             }
         }
-
-//        requireActivity().onBackPressedDispatcher.addCallback(this) {
-//            val value = session.fileInstance.value
-//            if (value != null) {
-//                if (value.path == "/" || value.path == FileInstanceFactory.rootUserEmulatedPath) {
-//                    isEnabled = false
-//                    requireActivity().onBackPressed()
-//                } else {
-//                    session.fileInstance.value = FileInstanceFactory.toParent(value, requireContext())
-//                }
-//            }
-//        }
+        (dialog as? ComponentDialog)?.onBackPressedDispatcher?.addCallback(this) {
+            val value = session.fileInstance.value
+            if (value != null) {
+                if (value.path == "/" || value.path == FileInstanceFactory.rootUserEmulatedPath) {
+                    isEnabled = false
+                    dialog?.onBackPressed()
+                } else {
+                    session.fileInstance.value = FileInstanceFactory.toParent(value, requireContext())
+                }
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
