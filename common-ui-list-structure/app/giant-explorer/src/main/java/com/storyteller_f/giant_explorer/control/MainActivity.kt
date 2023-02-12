@@ -61,6 +61,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import java.lang.ref.WeakReference
 import java.util.*
 import kotlin.concurrent.thread
+import kotlin.coroutines.resumeWithException
 import kotlin.math.min
 
 class FileExplorerSession(application: Application, path: String) : AndroidViewModel(application) {
@@ -397,15 +398,20 @@ fun fileServiceBuilder(
     database: FileSizeRecordDatabase
 ): suspend (searchQuery: FileExplorerSearch, start: Int, count: Int) -> SimpleResponse<FileModel> {
     return { searchQuery: FileExplorerSearch, start: Int, count: Int ->
-        val listSafe = suspendCancellableCoroutine {
+        val listSafe = suspendCancellableCoroutine { continuation ->
             thread {
-                searchQuery.path.apply {
-                    if (this is DocumentLocalFileInstance) {
-                        if (!this.exists()) this.initDocumentFile()
+                try {
+                    searchQuery.path.also {
+                        if (it is DocumentLocalFileInstance) {
+                            if (!it.exists()) it.initDocumentFile()
+                        }
+                    }.list().run {
+                        continuation.resumeWith(Result.success(this))
                     }
-                }.list().run {
-                    it.resumeWith(Result.success(this))
+                } catch (e: Exception) {
+                    continuation.resumeWithException(e)
                 }
+
             }
         }
 

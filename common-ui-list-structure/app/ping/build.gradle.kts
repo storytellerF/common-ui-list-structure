@@ -6,6 +6,7 @@ plugins {
     id("com.google.devtools.ksp")
     id("androidx.navigation.safeargs.kotlin")
 //    id("app.cash.licensee")
+    id("com.storyteller_f.sml")
 }
 android {
     defaultConfig {
@@ -31,3 +32,7 @@ setupDipToPx()
 //    allow("MIT")
 //    allow("ISC")
 //}
+
+sml {
+    
+}

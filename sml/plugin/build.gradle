@@ -21,7 +21,7 @@ publishing {
     repositories {
         maven {
             // $rootDir 表示你项目的根目录
-            url = "$rootDir/../repo-snapshot"
+            url = "$rootDir/../repo"
         }
     }
 }
