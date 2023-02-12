@@ -1,4 +1,4 @@
-package com.storyteller_f.fapiao_reader
+package com.storyteller_f.fapiao
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize

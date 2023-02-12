@@ -26,7 +26,6 @@
             <option value="$PROJECT_DIR$/composite-definition" />
             <option value="$PROJECT_DIR$/ext-func-compiler" />
             <option value="$PROJECT_DIR$/ext-func-definition" />
-            <option value="$PROJECT_DIR$/fapiao-reader" />
             <option value="$PROJECT_DIR$/file-system" />
             <option value="$PROJECT_DIR$/file-system-ktx" />
             <option value="$PROJECT_DIR$/mass-common-ktx" />

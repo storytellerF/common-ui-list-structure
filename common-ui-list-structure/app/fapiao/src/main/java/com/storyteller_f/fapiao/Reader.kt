@@ -1,4 +1,4 @@
-package com.storyteller_f.fapiao_reader
+package com.storyteller_f.fapiao
 
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
