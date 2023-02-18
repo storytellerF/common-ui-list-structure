@@ -7,11 +7,15 @@ import android.util.Base64
 import android.util.Log
 import android.webkit.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.webkit.WebMessageCompat
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.file_system_ktx.ensureFile
 import com.storyteller_f.giant_explorer.FileSystemProviderResolver
-import com.storyteller_f.giant_explorer.R
+import com.storyteller_f.giant_explorer.databinding.ActivityWebviewPluginBinding
 import com.storyteller_f.plugin_core.GiantExplorerService
+import com.storyteller_f.ui_list.event.viewBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -22,13 +26,42 @@ import java.util.zip.ZipInputStream
 import kotlin.concurrent.thread
 
 class WebViewPluginActivity : AppCompatActivity() {
+    private val binding by viewBinding(ActivityWebviewPluginBinding::inflate)
+    private val webView get() = binding.webView
+    private val messageChannel by lazy {
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.CREATE_WEB_MESSAGE_CHANNEL)) {
+            WebViewCompat.createWebMessageChannel(webView)
+        } else null
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_webview_plugin)
-        val data = intent.data
-        val webView = findViewById<WebView>(R.id.web_view)
+        val uriData = intent.data
+        binding
+        messageChannel
+        setupWebView()
+        bindApi(webView, uriData)
+        val pluginName = intent.getStringExtra("plugin-name")
+        val pluginFile = File(filesDir, "plugins/$pluginName")
+        val extractedPath = File(filesDir, "plugins/${pluginFile.nameWithoutExtension}")
+        scope.launch {
+            ensureExtract(extractedPath, pluginFile)
+            val indexFile = File(extractedPath, "index.html")
+            val toString = Uri.fromFile(indexFile).toString()
+            webView.loadDataWithBaseURL(baseUrl, indexFile.readText(), null, null, null)
+            Log.i(TAG, "onCreate: $toString")
+        }
+    }
+
+    private fun setupWebView() {
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
+            WebViewCompat.addWebMessageListener(webView, "test", setOf(baseUrl)) { view, message, sourceOrigin, isMainFrame, replyProxy ->
+                Log.d(TAG, "onCreate() called with: view = $view, message = ${message.data}, sourceOrigin = $sourceOrigin, isMainFrame = $isMainFrame, replyProxy = $replyProxy")
+                replyProxy.postMessage("from android")
+            }
+        }
+
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 Log.i(TAG, "shouldOverrideUrlLoading: ${request?.url}")
@@ -44,16 +77,6 @@ class WebViewPluginActivity : AppCompatActivity() {
         webView.settings.apply {
             javaScriptEnabled = true
             allowFileAccess = true
-        }
-        bindApi(webView, data)
-        val pluginName = intent.getStringExtra("plugin-name")
-        val file = File(filesDir, "plugins/$pluginName")
-        val extracted = File(filesDir, "plugins/${file.nameWithoutExtension}")
-        scope.launch {
-            ensureExtract(extracted, file)
-            val toString = Uri.fromFile(File(extracted, "index.html")).toString()
-            webView.loadUrl(toString)
-            Log.i(TAG, "onCreate: $toString")
         }
     }
 
@@ -108,6 +131,12 @@ class WebViewPluginActivity : AppCompatActivity() {
                     val result = Base64.encodeToString(readBytes, Base64.NO_WRAP)
                     webView.post {
                         webView.callback(callbackId, "'$result'")
+                        messageChannel?.let {
+                            if (WebViewFeature.isFeatureSupported(WebViewFeature.POST_WEB_MESSAGE)) {
+                                val webMessageCompat = WebMessageCompat(result, it)
+                                WebViewCompat.postWebMessage(webView, webMessageCompat, Uri.parse(baseUrl))
+                            }
+                        }
                     }
                 }
 
@@ -132,6 +161,8 @@ class WebViewPluginActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "WebViewPluginActivity"
+        const val baseUrl = "http://www.example.com"
+
     }
 
 }

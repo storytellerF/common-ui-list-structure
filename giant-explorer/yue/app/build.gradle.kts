@@ -53,9 +53,9 @@ dependencies {
 
 val userHome: String = System.getProperty("user.home")
 song {
-    this.apkFile.set("${buildDir.absolutePath}/outputs/apk/debug/app-debug.apk")
-    this.adb.set("$userHome/Library/Android/sdk/platform-tools/adb")
-    this.paths.set(listOf())
-    this.packages.set(listOf("com.storyteller_f.giant_explorer" to "files/plugins"))
-    this.outputName.set("yue.apk")
+    transfers.set(listOf("${buildDir.absolutePath}/outputs/apk/debug/app-debug.apk"))
+    adb.set("$userHome/Library/Android/sdk/platform-tools/adb")
+    paths.set(listOf())
+    packages.set(listOf("com.storyteller_f.giant_explorer" to "files/plugins"))
+    outputName.set("yue.apk")
 }

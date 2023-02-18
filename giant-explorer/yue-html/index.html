@@ -1,20 +1,33 @@
 <html>
+
 <body>
-<img id="ci" src="">
-<script>
-    document.write(file.fullPath())
-    let ele = document.getElementById("ci")
-    var callbackId = 0;
-    let callbackMap = {};
-    function callback(callbackId, obj) {
-        callbackMap[callbackId](obj)
-    }
-    callbackMap[callbackId + ""] = function(result) {
-        ele.src = "data:image/png;base64," + result
-    }
-    plugin.base64(file.fullPath(), callbackId + "")
+    <p class="output">origin content</p>
+    <img id="ci" src="">
+    <script>
+        document.write(file.fullPath())
+        let ele = document.getElementById("ci")
+        var callbackId = 0;
+        let callbackMap = {};
+        function callback(callbackId, obj) {
+            callbackMap[callbackId](obj)
+            delete callbackMap[callbackId]
+        }
+        callbackMap[callbackId + ""] = function (result) {
+            
+        }
+        plugin.base64(file.fullPath(), callbackId + "")
+        const output = document.querySelector(".output");
+        window.addEventListener("message", onMessage);
 
+        function onMessage(e) {
+            ele.src = "data:image/png;base64," + e.data;
+        }
+        test.onmessage = function(event) {
+            console.log(event.data);
+        }
+        test.postMessage("hello from yue-html")
 
-</script>
+    </script>
 </body>
+
 </html>
