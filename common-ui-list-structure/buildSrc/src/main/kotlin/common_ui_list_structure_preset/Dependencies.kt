@@ -4,7 +4,7 @@ object Versions {
     const val kotlinVersion = "1.7.21"
     const val compileSdkVersion = 33
     const val targetSdkVersion = 33
-    const val appcompatVersion = "1.5.1"
+    const val appcompatVersion = "1.6.1"
     const val coreVersion = "1.9.0"
     const val recyclerViewVersion = "1.2.1"
     const val constraintLayoutVersion = "2.1.4"
