@@ -74,15 +74,17 @@ class ListWithState @JvmOverloads constructor(
         }
         lifecycleOwner.lifecycleScope.launch {
             lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch {
-                    callbackFlow.distinctUntilChanged { old, new ->
-                        old.mediator?.refresh.isLoading == new.mediator?.refresh.isLoading
-                    }.shareIn(lifecycleOwner.lifecycleScope, SharingStarted.WhileSubscribed()).collectLatest {
-                        if (it.mediator?.refresh.isNotLoading) {
-                            binding.list.smoothScrollToPosition(0)
-                        }
-                    }
-                }
+//                launch {
+//                    callbackFlow.distinctUntilChanged { old, new ->
+//                        old.mediator?.refresh.isLoading == new.mediator?.refresh.isLoading
+//                    }.shareIn(lifecycleOwner.lifecycleScope, SharingStarted.WhileSubscribed()).collectLatest {
+//                        val notLoading = it.mediator?.refresh.isNotLoading
+//                        Log.d(TAG, "sourceUp: scroll to position if $notLoading")
+//                        if (notLoading) {
+//                            binding.list.smoothScrollToPosition(0)
+//                        }
+//                    }
+//                }
                 launch {
                     callbackFlow.map {
                         flash(it, adapter.itemCount)
