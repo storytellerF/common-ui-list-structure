@@ -170,43 +170,16 @@ fun Fragment.checkPathPermission(dest: String) = context {
 fun Context.checkPathPermission(dest: String): Boolean {
     return when {
         dest.startsWith(FileInstanceFactory.rootUserEmulatedPath) -> when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
-                Environment.isExternalStorageManager()
-            }
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
-                val externalFileInstance = getSharedPreferences(
-                    ExternalDocumentLocalFileInstance.NAME,
-                    Context.MODE_PRIVATE
-                )
-                val string = externalFileInstance.getString(
-                    ExternalDocumentLocalFileInstance.STORAGE_URI,
-                    null
-                )
-                string != null
-            }
-            else -> {
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-            }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> Environment.isExternalStorageManager()
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> ExternalDocumentLocalFileInstance(this, dest).exists()
+            else -> ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
         }
         dest == FileInstanceFactory.emulatedRootPath -> true
         dest == "/storage" -> true
         dest.startsWith("/storage") -> when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
-                Environment.isExternalStorageManager()
-            }
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> {
-                val externalFileInstance =
-                    getSharedPreferences(
-                        MountedLocalFileInstance.NAME,
-                        Context.MODE_PRIVATE
-                    )
-                val string =
-                    externalFileInstance.getString(MountedLocalFileInstance.ROOT_URI, null)
-                string != null
-            }
-            else -> {
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-            }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> Environment.isExternalStorageManager()
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> MountedLocalFileInstance(this, dest).exists()
+            else -> ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
         }
         else -> ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
     }

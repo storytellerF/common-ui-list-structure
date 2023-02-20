@@ -89,6 +89,11 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
         }
         current = getSpecialDocumentFile(path, false, true);
         if (current == null) Log.e(TAG, "initDocumentFile: 初始化失败" + path);
+        boolean canRead = current.canRead();
+        if (!canRead) {
+            current = null;
+            Log.e(TAG, "initDocumentFile: 初始化失败 不可读写");
+        }
         return current != null;
     }
 

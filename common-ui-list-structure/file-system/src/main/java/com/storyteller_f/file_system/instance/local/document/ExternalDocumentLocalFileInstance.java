@@ -16,6 +16,10 @@ public class ExternalDocumentLocalFileInstance extends DocumentLocalFileInstance
         super(filter, context, path, NAME, STORAGE_URI);
     }
 
+    public ExternalDocumentLocalFileInstance(Context context, String path) {
+        super(context, path, NAME, STORAGE_URI);
+    }
+
     @Override
     protected DocumentLocalFileInstance getInstance() {
         return new ExternalDocumentLocalFileInstance(filter, context, "");
