@@ -19,7 +19,7 @@ fun main() {
     }.map {
         it.split(Pattern.compile("\\s+")).first()
     }
-    command(arrayOf("zip", target, "$modulePath/index.html"))
+    command(arrayOf("zip", target, "$modulePath/index.html", "$modulePath/imgTouchCanvas.js"))
     devices.forEach {
         println("dispatch to $it")
         command(arrayOf(adbPath, "-s", it, "push", target, tmp))

@@ -1,11 +1,14 @@
 <html>
 
 <body>
-    <p class="output">origin content</p>
-    <img id="ci" src="">
+
+
+    <canvas id="mycanvas" width="400px" height="400px"></canvas>
+    <script src="imgTouchCanvas.js"></script>
+
     <script>
-        document.write(file.fullPath())
-        let ele = document.getElementById("ci")
+        // document.write(file.fullPath())
+
         var callbackId = 0;
         let callbackMap = {};
         function callback(callbackId, obj) {
@@ -13,19 +16,25 @@
             delete callbackMap[callbackId]
         }
         callbackMap[callbackId + ""] = function (result) {
-            
+
         }
         plugin.base64(file.fullPath(), callbackId + "")
-        const output = document.querySelector(".output");
+
         window.addEventListener("message", onMessage);
 
         function onMessage(e) {
-            ele.src = "data:image/png;base64," + e.data;
+            new ImgTouchCanvas({
+                canvas: document.getElementById('mycanvas'),
+                path: "data:image/png;base64," + e.data,
+            });
         }
-        test.onmessage = function(event) {
+        test.onmessage = function (event) {
             console.log(event.data);
         }
         test.postMessage("hello from yue-html")
+
+    </script>
+    <script>
 
     </script>
 </body>

@@ -2,6 +2,8 @@ package com.storyteller_f.giant_explorer.control
 
 import android.annotation.SuppressLint
 import android.net.Uri
+import android.net.http.SslError
+import android.os.Build
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
@@ -37,14 +39,14 @@ class WebViewPluginActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val uriData = intent.data
         binding
-        messageChannel
-        setupWebView()
-        bindApi(webView, uriData)
+        val uriData = intent.data
         val pluginName = intent.getStringExtra("plugin-name")
         val pluginFile = File(filesDir, "plugins/$pluginName")
         val extractedPath = File(filesDir, "plugins/${pluginFile.nameWithoutExtension}")
+        messageChannel
+        setupWebView(extractedPath)
+        bindApi(webView, uriData)
         scope.launch {
             ensureExtract(extractedPath, pluginFile)
             val indexFile = File(extractedPath, "index.html")
@@ -54,7 +56,7 @@ class WebViewPluginActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupWebView() {
+    private fun setupWebView(extractedPath: File) {
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
             WebViewCompat.addWebMessageListener(webView, "test", setOf(baseUrl)) { view, message, sourceOrigin, isMainFrame, replyProxy ->
                 Log.d(TAG, "onCreate() called with: view = $view, message = ${message.data}, sourceOrigin = $sourceOrigin, isMainFrame = $isMainFrame, replyProxy = $replyProxy")
@@ -66,6 +68,35 @@ class WebViewPluginActivity : AppCompatActivity() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 Log.i(TAG, "shouldOverrideUrlLoading: ${request?.url}")
                 return super.shouldOverrideUrlLoading(view, request)
+            }
+
+            override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
+                Log.d(TAG, "shouldInterceptRequest() called with: request = ${request?.url}")
+                if (request != null) {
+                    val url = request.url
+                    val path = url.path
+                    if (url.toString().startsWith(baseUrl) && path?.endsWith(".js") == true) {
+                        return WebResourceResponse("text/javascript", "utf-8", FileInputStream(File(extractedPath, path)))
+                    }
+                }
+                return super.shouldInterceptRequest(view, request)
+            }
+
+            override fun onReceivedHttpError(view: WebView?, request: WebResourceRequest?, errorResponse: WebResourceResponse?) {
+                Log.d(TAG, "onReceivedHttpError() called with: view = $view, request = ${request?.url}, errorResponse = ${errorResponse?.reasonPhrase}")
+                super.onReceivedHttpError(view, request, errorResponse)
+            }
+
+            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    Log.d(TAG, "onReceivedError() called with: view = $view, request = ${request?.url}, error = ${error?.description} ${error?.errorCode}")
+                }
+                super.onReceivedError(view, request, error)
+            }
+
+            override fun onReceivedSslError(view: WebView?, handler: SslErrorHandler?, error: SslError?) {
+                Log.d(TAG, "onReceivedSslError() called with: view = $view, handler = $handler, error = $error")
+                super.onReceivedSslError(view, handler, error)
             }
         }
         webView.webChromeClient = object : WebChromeClient() {
@@ -97,7 +128,7 @@ class WebViewPluginActivity : AppCompatActivity() {
                                 } else break
                             }
                         }
-                        Log.i(TAG, "onCreate: $name ${nextEntry.isDirectory}")
+                        Log.i(TAG, "onCreate: extract $name ${nextEntry.isDirectory}")
                     } else break
                 }
             }

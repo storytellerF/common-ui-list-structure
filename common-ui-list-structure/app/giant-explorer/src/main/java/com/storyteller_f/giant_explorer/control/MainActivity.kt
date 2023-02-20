@@ -114,11 +114,9 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         supportNavigatorBarImmersive(binding.root)
         //连接服务
         val fileOperateIntent = Intent(this, FileOperateService::class.java)
-        try {
-            bindService(fileOperateIntent, connection, BIND_AUTO_CREATE)
-        } catch (_: Exception) {
-            bindService(fileOperateIntent, connection, 0)
-        }
+        startService(fileOperateIntent)
+        bindService(fileOperateIntent, connection, 0)
+
         Shell.getShell {
             if (it.isRoot) {
                 val intent = Intent(this, FileService::class.java)
