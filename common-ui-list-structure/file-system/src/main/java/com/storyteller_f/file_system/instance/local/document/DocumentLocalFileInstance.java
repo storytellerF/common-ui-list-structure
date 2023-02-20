@@ -40,15 +40,25 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
      */
     String prefix;
     private String treeRootKey;
+    private String preferenceName;
+    private String preferenceKey;
 
-    public DocumentLocalFileInstance(Filter filter, Context context, String path) {
+    public DocumentLocalFileInstance(Filter filter, Context context, String path, String preferenceName, String preferenceKey) {
         super(context, filter, path);
-        updatePrefix();
+        init(preferenceName, preferenceKey);
     }
 
-    public DocumentLocalFileInstance(Context context, String path) {
+    public DocumentLocalFileInstance(Context context, String path, String preferenceName, String preferenceKey) {
         super(context, path);
+        init(preferenceName, preferenceKey);
+    }
+
+    private void init(String preferenceName, String preferenceKey) {
+        this.preferenceKey = preferenceKey;
+        this.preferenceName = preferenceName;
         updatePrefix();
+        updateRootKey();
+        initDocumentFile();
     }
 
     private void updatePrefix() {
@@ -56,8 +66,8 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
         this.prefix = FileInstanceFactory.getPrefix(path, context);
     }
 
-    public void updateRootKey(String sharedPreferenceName, String sharedPreferenceKey) {
-        treeRootKey = FileSystemUriSaver.getInstance().saveUri(sharedPreferenceName, sharedPreferenceKey, context);
+    public void updateRootKey() {
+        treeRootKey = FileSystemUriSaver.getInstance().saveUri(preferenceName, preferenceKey, context);
         if (treeRootKey == null) {
             Log.e(TAG, "updateRootKey: 获取root失败:" + path + "，没有授予权限");
         }

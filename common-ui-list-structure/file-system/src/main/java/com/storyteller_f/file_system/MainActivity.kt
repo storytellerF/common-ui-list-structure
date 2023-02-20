@@ -84,7 +84,7 @@ class MainActivity : AppCompatActivity() {
                 if (uri != null) {
                     val sharedPreferences =
                         getSharedPreferences(
-                            MountedLocalFileInstance.Name,
+                            MountedLocalFileInstance.NAME,
                             MODE_PRIVATE
                         )
                     sharedPreferences.edit()
@@ -111,7 +111,7 @@ class MainActivity : AppCompatActivity() {
                 val uri = it.data?.data
                 if (uri != null) {
                     val sharedPreferences = getSharedPreferences(
-                        ExternalDocumentLocalFileInstance.Name,
+                        ExternalDocumentLocalFileInstance.NAME,
                         MODE_PRIVATE
                     )
                     sharedPreferences.edit()
@@ -175,7 +175,7 @@ fun Context.checkPathPermission(dest: String): Boolean {
             }
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
                 val externalFileInstance = getSharedPreferences(
-                    ExternalDocumentLocalFileInstance.Name,
+                    ExternalDocumentLocalFileInstance.NAME,
                     Context.MODE_PRIVATE
                 )
                 val string = externalFileInstance.getString(
@@ -197,7 +197,7 @@ fun Context.checkPathPermission(dest: String): Boolean {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> {
                 val externalFileInstance =
                     getSharedPreferences(
-                        MountedLocalFileInstance.Name,
+                        MountedLocalFileInstance.NAME,
                         Context.MODE_PRIVATE
                     )
                 val string =

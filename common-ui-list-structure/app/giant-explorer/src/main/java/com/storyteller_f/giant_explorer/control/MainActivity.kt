@@ -401,7 +401,10 @@ fun fileServiceBuilder(
                 try {
                     searchQuery.path.also {
                         if (it is DocumentLocalFileInstance) {
-                            if (!it.exists()) it.initDocumentFile()
+                            if (!it.exists()) {
+                                it.updateRootKey()
+                                it.initDocumentFile()
+                            }
                         }
                     }.list().run {
                         continuation.resumeWith(Result.success(this))
