@@ -28,7 +28,6 @@
             <option value="$PROJECT_DIR$/ext-func-definition" />
             <option value="$PROJECT_DIR$/file-system" />
             <option value="$PROJECT_DIR$/file-system-ktx" />
-            <option value="$PROJECT_DIR$/mass-common-ktx" />
             <option value="$PROJECT_DIR$/multi-core" />
             <option value="$PROJECT_DIR$/ui-list" />
             <option value="$PROJECT_DIR$/ui-list-annotation-common" />
