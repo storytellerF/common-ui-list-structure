@@ -22,19 +22,19 @@ class RootAccessFileInstance(path: String, remote: FileSystemManager) : FileInst
 
     override fun getFileOutputStream(): FileOutputStream = extendedFile.outputStream()
 
-    override fun list(): FilesAndDirectories {
+    override fun list(
+        fileItems: MutableList<FileItemModel>,
+        directoryItems: MutableList<DirectoryItemModel>
+    ) {
         val listFiles = extendedFile.listFiles()
-        val files = mutableListOf<FileItemModel>()
-        val directories = mutableListOf<DirectoryItemModel>()
         listFiles?.forEach {
             val format = it.permissions()
             if (it.isFile) {
-                addFile(files, extendedFile.absolutePath, it, format)
+                addFile(fileItems, extendedFile.absolutePath, it, format)
             } else if (it.isDirectory) {
-                addDirectory(directories, extendedFile.absolutePath, it, format)
+                addDirectory(directoryItems, extendedFile.absolutePath, it, format)
             }
         }
-        return FilesAndDirectories(files, directories)
     }
 
     private fun ExtendedFile.permissions(): String {

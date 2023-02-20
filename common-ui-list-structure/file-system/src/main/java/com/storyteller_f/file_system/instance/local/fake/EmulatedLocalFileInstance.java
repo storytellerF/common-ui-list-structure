@@ -81,12 +81,9 @@ public class EmulatedLocalFileInstance extends LocalFileInstance {
         return null;
     }
 
-    @NonNull
     @Override
-    public FilesAndDirectories list() {
-        List<DirectoryItemModel> directoryItemModels = new ArrayList<>();
-        directoryItemModels.add(new DirectoryItemModel("0", path + "/0", false, new File(FileInstanceFactory.rootUserEmulatedPath).lastModified()));
-        return new FilesAndDirectories(new ArrayList<>(), directoryItemModels);
+    public void list(List<FileItemModel> fileItems, List<DirectoryItemModel> directoryItems) {
+        directoryItems.add(new DirectoryItemModel("0", path + "/0", false, new File(FileInstanceFactory.rootUserEmulatedPath).lastModified()));
     }
 
     @Override

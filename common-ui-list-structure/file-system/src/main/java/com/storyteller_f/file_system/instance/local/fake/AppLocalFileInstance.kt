@@ -5,7 +5,6 @@ import com.storyteller_f.file_system.instance.BaseContextFileInstance
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.model.FilesAndDirectories
 import java.io.*
 
 /**
@@ -35,7 +34,7 @@ class AppLocalFileInstance(context: Context, path: String) : BaseContextFileInst
 
     override fun getFileOutputStream() = FileOutputStream(publicSourceDir)
 
-    override fun list(): FilesAndDirectories {
+    override fun list(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
         TODO("Not yet implemented")
     }
 

@@ -23,6 +23,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 @SuppressWarnings({"unused", "RedundantSuppression"})
 public class RegularLocalFileInstance extends LocalFileInstance {
@@ -112,12 +113,9 @@ public class RegularLocalFileInstance extends LocalFileInstance {
         return new FileOutputStream(file);
     }
 
-    @NonNull
     @Override
     @WorkerThread
-    public FilesAndDirectories list() {
-        ArrayList<FileItemModel> files = new ArrayList<>();
-        ArrayList<DirectoryItemModel> directories = new ArrayList<>();
+    public void list(List<FileItemModel> fileItems, List<DirectoryItemModel> directoryItems) {
         File[] listFiles = file.listFiles();//获取子文件
 
         if (listFiles != null) {
@@ -126,16 +124,13 @@ public class RegularLocalFileInstance extends LocalFileInstance {
                 FileSystemItemModel fileSystemItemModel;
                 // 判断是否为文件夹
                 if (childFile.isDirectory()) {
-                    fileSystemItemModel = addDirectory(directories, file.getAbsolutePath(), childFile, permissions);
+                    fileSystemItemModel = addDirectory(directoryItems, file.getAbsolutePath(), childFile, permissions);
                 } else {
-                    fileSystemItemModel = addFile(files, file.getAbsolutePath(), childFile, permissions);
+                    fileSystemItemModel = addFile(fileItems, file.getAbsolutePath(), childFile, permissions);
                 }
                 editAccessTime(childFile, fileSystemItemModel);
             }
-        } else {
-            return FilesAndDirectories.Companion.empty();
         }
-        return new FilesAndDirectories(files, directories);
     }
 
     @Override

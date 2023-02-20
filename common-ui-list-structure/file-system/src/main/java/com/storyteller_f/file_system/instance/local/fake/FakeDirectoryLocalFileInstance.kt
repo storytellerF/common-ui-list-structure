@@ -46,25 +46,29 @@ class FakeDirectoryLocalFileInstance(path: String, val context: Context) :
     override fun getFileLength() = -1L
 
     @WorkerThread
-    override fun list(): FilesAndDirectories {
-        return FilesAndDirectories(
-            dyf[path]?.map {
-                FileItemModel(it, "$path/$it", false, File("$path/$it").lastModified()).apply {
-                    size = File(context.packageManager.getApplicationInfo(it, 0).publicSourceDir).length()
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        try {
-                            val basicFileAttributes = Files.readAttributes(file.toPath(), BasicFileAttributes::class.java)
-                            createdTime = basicFileAttributes.creationTime().toMillis()
-                            lastAccessTime = basicFileAttributes.lastAccessTime().toMillis()
-                        } catch (e: IOException) {
-                            e.printStackTrace()
-                        }
+    override fun list(
+        fileItems: MutableList<FileItemModel>,
+        directoryItems: MutableList<DirectoryItemModel>
+    ) {
+        val files = dyf[path]?.map {
+            FileItemModel(it, "$path/$it", false, File("$path/$it").lastModified()).apply {
+                size = File(context.packageManager.getApplicationInfo(it, 0).publicSourceDir).length()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    try {
+                        val basicFileAttributes = Files.readAttributes(file.toPath(), BasicFileAttributes::class.java)
+                        createdTime = basicFileAttributes.creationTime().toMillis()
+                        lastAccessTime = basicFileAttributes.lastAccessTime().toMillis()
+                    } catch (e: IOException) {
+                        e.printStackTrace()
                     }
                 }
-            }?.toMutableList() ?: mutableListOf(), (map[path] ?: dy[path])?.map {
-                DirectoryItemModel(it, "$path/$it", false, File("$path/$it").lastModified())
-            }?.toMutableList() ?: mutableListOf()
-        )
+            }
+        }?.toMutableList() ?: mutableListOf()
+        val directories = (map[path] ?: dy[path])?.map {
+            DirectoryItemModel(it, "$path/$it", false, File("$path/$it").lastModified())
+        }?.toMutableList() ?: mutableListOf()
+        files.forEach { fileItems.add(it) }
+        directories.forEach { directoryItems.add(it) }
     }
 
     override fun exists() = true

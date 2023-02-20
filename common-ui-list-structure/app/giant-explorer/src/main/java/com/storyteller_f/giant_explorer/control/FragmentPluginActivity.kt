@@ -9,7 +9,6 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.giant_explorer.FileSystemProviderResolver
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.plugin_core.GiantExplorerPlugin
@@ -39,7 +38,7 @@ abstract class DefaultPluginManager(val context: Context) : GiantExplorerPluginM
     }
 
     override fun listFiles(path: String): List<String> {
-        return getFileInstance(path, context).list().let { filesAndDirectories ->
+        return getFileInstance(path, context).listSafe().let { filesAndDirectories ->
             filesAndDirectories.files.map {
                 it.fullPath
             } + filesAndDirectories.directories.map {

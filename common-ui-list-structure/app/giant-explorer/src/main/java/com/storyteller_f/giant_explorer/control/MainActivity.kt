@@ -406,7 +406,7 @@ fun fileServiceBuilder(
                                 it.initDocumentFile()
                             }
                         }
-                    }.list().run {
+                    }.listSafe().run {
                         continuation.resumeWith(Result.success(this))
                     }
                 } catch (e: Exception) {

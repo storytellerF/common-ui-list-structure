@@ -31,7 +31,9 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * notice 如果需要给name 设置值，那就需要提供path。或者自行处理
@@ -175,11 +177,67 @@ public abstract class FileInstance {
     /**
      * 应该仅用于目录。可能会抛出异常，内部不会处理。
      *
-     * @return 返回所有的文件和目录
      */
     @WorkerThread
-    @NonNull
-    public abstract FilesAndDirectories list();
+    protected abstract void list(List<FileItemModel> fileItems, List<DirectoryItemModel> directoryItems);
+
+    public FilesAndDirectories listSafe() {
+        FilesAndDirectories filesAndDirectories = new FilesAndDirectories(buildFilesContainer(), buildDirectoryContainer());
+        list(filesAndDirectories.getFiles(), filesAndDirectories.getDirectories());
+        return filesAndDirectories;
+    }
+
+    private List<FileItemModel> buildFilesContainer() {
+        return new ArrayList<>() {
+            @Override
+            public boolean add(FileItemModel fileItemModel) {
+                if (checkWhenAdd(path, fileItemModel.getFullPath(), true)) return super.add(fileItemModel);
+                return false;
+            }
+
+            @Override
+            public void add(int index, FileItemModel element) {
+                if (checkWhenAdd(path, element.getFullPath(), true)) super.add(index, element);
+            }
+
+            @Override
+            public boolean addAll(@NonNull Collection<? extends FileItemModel> c) {
+                return false;
+            }
+
+            @Override
+            public boolean addAll(int index, @NonNull Collection<? extends FileItemModel> c) {
+                return false;
+            }
+        };
+    }
+
+    private List<DirectoryItemModel> buildDirectoryContainer() {
+        return new ArrayList<>() {
+            @Override
+            public void add(int index, DirectoryItemModel element) {
+                if (checkWhenAdd(path, element.getFullPath(), false))
+                    super.add(index, element);
+            }
+
+            @Override
+            public boolean add(DirectoryItemModel directoryItemModel) {
+                if (checkWhenAdd(path, directoryItemModel.getFullPath(), false))
+                    return super.add(directoryItemModel);
+                return false;
+            }
+
+            @Override
+            public boolean addAll(int index, @NonNull Collection<? extends DirectoryItemModel> c) {
+                return false;
+            }
+
+            @Override
+            public boolean addAll(@NonNull Collection<? extends DirectoryItemModel> c) {
+                return false;
+            }
+        };
+    }
 
     /**
      * 是否是文件
@@ -254,7 +312,7 @@ public abstract class FileInstance {
      * 如果目标文件或者文件夹不存在，将会自动创建，因为在这种状态下，新建文件速度快，特别是外部存储目录
      * 不应该考虑能否转换成功
      *
-     * @param name     名称
+     * @param name                名称
      * @param createWhenNotExists 是否创建
      * @return 返回子对象
      */
@@ -332,18 +390,15 @@ public abstract class FileInstance {
      * @return 返回添加的文件
      */
     protected FileItemModel addFile(Collection<FileItemModel> files, String parent, boolean hidden, String name, String absolutePath, long lastModifiedTime, String extension, String permission, long size) {
-        if (checkWhenAdd(parent, absolutePath, true)) {
-            FileItemModel fileItemModel;
-            if ("torrent".equals(extension)) {
-                fileItemModel = new TorrentFileItemModel(name, absolutePath, hidden, lastModifiedTime);
-            } else {
-                fileItemModel = new FileItemModel(name, absolutePath, hidden, lastModifiedTime, extension);
-            }
-            fileItemModel.setPermissions(permission);
-            fileItemModel.setSize(size);
-            files.add(fileItemModel);
-            return fileItemModel;
+        FileItemModel fileItemModel;
+        if ("torrent".equals(extension)) {
+            fileItemModel = new TorrentFileItemModel(name, absolutePath, hidden, lastModifiedTime);
+        } else {
+            fileItemModel = new FileItemModel(name, absolutePath, hidden, lastModifiedTime, extension);
         }
+        fileItemModel.setPermissions(permission);
+        fileItemModel.setSize(size);
+        if (files.add(fileItemModel)) return fileItemModel;
         return null;
     }
 
@@ -359,12 +414,9 @@ public abstract class FileInstance {
      * @return 如果客户端不允许添加，返回null
      */
     protected FileSystemItemModel addDirectory(Collection<DirectoryItemModel> directories, String parentDirectory, boolean isHiddenFile, String directoryName, String absolutePath, long lastModifiedTime, String permissions) {
-        if (checkWhenAdd(parentDirectory, absolutePath, false)) {
-            DirectoryItemModel e = new DirectoryItemModel(directoryName, absolutePath, isHiddenFile, lastModifiedTime);
-            e.setPermissions(permissions);
-            directories.add(e);
-            return e;
-        }
+        DirectoryItemModel e = new DirectoryItemModel(directoryName, absolutePath, isHiddenFile, lastModifiedTime);
+        e.setPermissions(permissions);
+        if (directories.add(e)) return e;
         return null;
     }
 

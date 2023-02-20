@@ -30,6 +30,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 public abstract class DocumentLocalFileInstance extends LocalFileInstance {
@@ -273,19 +274,14 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
 
     protected abstract DocumentLocalFileInstance getInstance();
 
-    @NonNull
     @Override
-    public FilesAndDirectories list() {
+    public void list(List<FileItemModel> files, List<DirectoryItemModel> directories) {
         DocumentFile[] documentFiles = current.listFiles();
-        ArrayList<FileItemModel> files = new ArrayList<>();
-        ArrayList<DirectoryItemModel> directories = new ArrayList<>();
         for (DocumentFile documentFile : documentFiles) {
             if (needStop()) break;
             String documentFileName = documentFile.getName();
-            String p = documentFile.getUri().getPath();
             assert documentFileName != null;
             String fullPath = new File(path, documentFileName).getAbsolutePath();
-//            Log.i(TAG, "list: directory documentFile.getUri().getPath():" + p + " fullPath:" + fullPath);
             String detailString = getDetailString(documentFile);
             if (documentFile.isFile()) {
                 addFile(files, fullPath, detailString, documentFile).setSize(documentFile.length());
@@ -293,20 +289,18 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
                 adDirectory(directories, fullPath, detailString, documentFile);
             }
         }
-        return new FilesAndDirectories(files, directories);
     }
 
-    private void adDirectory(ArrayList<DirectoryItemModel> directories, String absp, String permissions, DocumentFile documentFile) {
+    private void adDirectory(List<DirectoryItemModel> directories, String absPath, String permissions, DocumentFile documentFile) {
         String name = documentFile.getName();
         boolean isHiddenFile = name.startsWith(".");
-        addDirectory(directories, path, isHiddenFile, name, absp, documentFile.lastModified(), permissions);
+        addDirectory(directories, path, isHiddenFile, name, absPath, documentFile.lastModified(), permissions);
     }
 
-    private FileItemModel addFile(ArrayList<FileItemModel> files, String absPath, String permissions, DocumentFile documentFile) {
+    private FileItemModel addFile(List<FileItemModel> files, String absPath, String permissions, DocumentFile documentFile) {
         String name = documentFile.getName();
         boolean isHiddenFile = name.startsWith(".");
         String extension = getExtension(name);
-
         return addFile(files, path, isHiddenFile, name, absPath, documentFile.lastModified(), extension, permissions, documentFile.length());
     }
 
