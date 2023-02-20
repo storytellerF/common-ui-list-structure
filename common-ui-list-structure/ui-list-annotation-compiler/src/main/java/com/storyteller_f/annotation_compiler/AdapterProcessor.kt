@@ -2,6 +2,10 @@ package com.storyteller_f.annotation_compiler
 
 import com.example.ui_list_annotation_common.*
 import com.storyteller_f.annotation_defination.*
+import com.storyteller_f.slim_ktx.indent
+import com.storyteller_f.slim_ktx.insertCode
+import com.storyteller_f.slim_ktx.no
+import com.storyteller_f.slim_ktx.trimInsertCode
 import java.rmi.activation.UnknownObjectException
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
@@ -365,39 +369,3 @@ class AdapterProcessor : AbstractProcessor() {
             """.trimInsertCode(addFunctions.indent())
     }
 }
-
-fun String.prependRest(indent: String = "    "): String = lineSequence().mapIndexed { index, it ->
-    if (index == 0) it
-    else when {
-        it.isBlank() -> {
-            when {
-                it.length < indent.length -> indent
-                else -> it
-            }
-        }
-
-        else -> indent + it
-    }
-}.joinToString("\n")
-
-fun String.insertCode(vararg codeBlock: CodeBlock): String {
-    return codeBlock.foldIndexed(this) { i, acc, block ->
-        acc.replace("$${i + 1}", block.prependRest())
-    }
-}
-
-fun String.trimInsertCode(vararg codeBlock: CodeBlock) = trimIndent().insertCode(*codeBlock)
-
-class CodeBlock(private val content: String, val indent: Int) {
-    fun prependRest(): String {
-        var result = content
-        repeat(indent) {
-            result = result.prependRest()
-        }
-        return result
-    }
-}
-
-fun String.no() = CodeBlock(this, 0)
-
-fun String.indent(i: Int = 1) = CodeBlock(this, i)

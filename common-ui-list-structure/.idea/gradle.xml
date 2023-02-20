@@ -29,6 +29,7 @@
             <option value="$PROJECT_DIR$/file-system" />
             <option value="$PROJECT_DIR$/file-system-ktx" />
             <option value="$PROJECT_DIR$/multi-core" />
+            <option value="$PROJECT_DIR$/slim-ktx" />
             <option value="$PROJECT_DIR$/ui-list" />
             <option value="$PROJECT_DIR$/ui-list-annotation-common" />
             <option value="$PROJECT_DIR$/ui-list-annotation-compiler" />
