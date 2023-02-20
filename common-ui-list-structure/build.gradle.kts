@@ -43,3 +43,11 @@ tasks.register<io.gitlab.arturbosch.detekt.Detekt>("detektAll") {
 tasks.register("clean", Delete::class) {
     delete(rootProject.buildDir)
 }
+
+allprojects {
+    gradle.projectsEvaluated {
+        tasks.withType<JavaCompile> {
+            options.compilerArgs.plusAssign(listOf("-Xlint:unchecked", "-Xlint:deprecation"))
+        }
+    }
+}

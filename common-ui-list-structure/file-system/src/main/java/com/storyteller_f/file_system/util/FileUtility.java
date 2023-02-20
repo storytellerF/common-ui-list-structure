@@ -127,6 +127,7 @@ public class FileUtility {
     }
 
     @Nullable
+    @SuppressWarnings("deprecation")
     public static Intent produceSafRequestIntent(String prefix, Activity activity) {
         Intent intent = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
