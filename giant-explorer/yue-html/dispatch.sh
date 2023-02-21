@@ -1,2 +1,4 @@
-~/'Library/Application Support/JetBrains/IdeaIC2022.2/plugins/Kotlin/kotlinc/bin/kotlinc' dispatch.kt -include-runtime -d build/dispatch.jar
- java -jar build/dispatch.jar
+zip build/yue-html.zip index.html imgTouchCanvas.js
+cd dispatcher
+./gradlew installDist
+build/install/dispatcher/bin/dispatcher .
