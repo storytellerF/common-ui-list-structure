@@ -10,7 +10,7 @@ import com.storyteller_f.file_system.Filter;
 import com.storyteller_f.file_system.model.DirectoryItemModel;
 import com.storyteller_f.file_system.model.FileItemModel;
 import com.storyteller_f.file_system.model.FileSystemItemModel;
-import com.storyteller_f.file_system.model.FilesAndDirectories;
+import com.storyteller_f.file_system.util.FileInstanceUtility;
 import com.storyteller_f.file_system.util.FileUtility;
 
 import java.io.BufferedReader;
@@ -22,7 +22,6 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings({"unused", "RedundantSuppression"})
@@ -124,11 +123,11 @@ public class RegularLocalFileInstance extends LocalFileInstance {
                 FileSystemItemModel fileSystemItemModel;
                 // 判断是否为文件夹
                 if (childFile.isDirectory()) {
-                    fileSystemItemModel = addDirectory(directoryItems, file.getAbsolutePath(), childFile, permissions);
+                    fileSystemItemModel = FileInstanceUtility.addDirectory(directoryItems, childFile, permissions);
                 } else {
-                    fileSystemItemModel = addFile(fileItems, file.getAbsolutePath(), childFile, permissions);
+                    fileSystemItemModel = FileInstanceUtility.addFile(fileItems, childFile, permissions);
                 }
-                editAccessTime(childFile, fileSystemItemModel);
+                fileSystemItemModel.editAccessTime(childFile);
             }
         }
     }

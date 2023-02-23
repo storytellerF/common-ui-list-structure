@@ -14,7 +14,8 @@ import com.storyteller_f.file_system.Filter;
 import com.storyteller_f.file_system.instance.local.LocalFileInstance;
 import com.storyteller_f.file_system.model.DirectoryItemModel;
 import com.storyteller_f.file_system.model.FileItemModel;
-import com.storyteller_f.file_system.model.FilesAndDirectories;
+import com.storyteller_f.file_system.util.FileInstanceUtility;
+import com.storyteller_f.file_system.util.FileUtility;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -28,7 +29,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -284,24 +284,11 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
             String fullPath = new File(path, documentFileName).getAbsolutePath();
             String detailString = getDetailString(documentFile);
             if (documentFile.isFile()) {
-                addFile(files, fullPath, detailString, documentFile).setSize(documentFile.length());
+                FileInstanceUtility.addFile(files, fullPath, detailString, documentFile).setSize(documentFile.length());
             } else {
-                adDirectory(directories, fullPath, detailString, documentFile);
+                FileInstanceUtility.adDirectory(directories, fullPath, detailString, documentFile);
             }
         }
-    }
-
-    private void adDirectory(List<DirectoryItemModel> directories, String absPath, String permissions, DocumentFile documentFile) {
-        String name = documentFile.getName();
-        boolean isHiddenFile = name.startsWith(".");
-        addDirectory(directories, path, isHiddenFile, name, absPath, documentFile.lastModified(), permissions);
-    }
-
-    private FileItemModel addFile(List<FileItemModel> files, String absPath, String permissions, DocumentFile documentFile) {
-        String name = documentFile.getName();
-        boolean isHiddenFile = name.startsWith(".");
-        String extension = getExtension(name);
-        return addFile(files, path, isHiddenFile, name, absPath, documentFile.lastModified(), extension, permissions, documentFile.length());
     }
 
     InputStream getInputStream() throws FileNotFoundException {
@@ -447,7 +434,7 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
 
     @Override
     public FileItemModel getFile() {
-        return new FileItemModel(name, path, false, current.lastModified(), getExtension(name));
+        return new FileItemModel(name, path, false, current.lastModified(), FileUtility.getExtension(name));
     }
 
     @Override

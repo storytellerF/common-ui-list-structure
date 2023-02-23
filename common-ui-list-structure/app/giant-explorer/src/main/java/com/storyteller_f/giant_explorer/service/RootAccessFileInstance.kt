@@ -3,7 +3,7 @@ package com.storyteller_f.giant_explorer.service
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.model.FilesAndDirectories
+import com.storyteller_f.file_system.util.FileInstanceUtility
 import com.storyteller_f.giant_explorer.control.remote
 import com.topjohnwu.superuser.nio.ExtendedFile
 import com.topjohnwu.superuser.nio.FileSystemManager
@@ -30,9 +30,9 @@ class RootAccessFileInstance(path: String, remote: FileSystemManager) : FileInst
         listFiles?.forEach {
             val format = it.permissions()
             if (it.isFile) {
-                addFile(fileItems, extendedFile.absolutePath, it, format)
+                FileInstanceUtility.addFile(fileItems, it, format)
             } else if (it.isDirectory) {
-                addDirectory(directoryItems, extendedFile.absolutePath, it, format)
+                FileInstanceUtility.addDirectory(directoryItems, it, format)
             }
         }
     }

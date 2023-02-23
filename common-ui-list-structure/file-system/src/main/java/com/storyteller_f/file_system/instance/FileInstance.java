@@ -1,11 +1,7 @@
 package com.storyteller_f.file_system.instance;
 
 
-import android.os.Build;
-import android.util.Log;
-
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 import androidx.core.util.ObjectsCompat;
 
@@ -14,7 +10,7 @@ import com.storyteller_f.file_system.model.DirectoryItemModel;
 import com.storyteller_f.file_system.model.FileItemModel;
 import com.storyteller_f.file_system.model.FileSystemItemModel;
 import com.storyteller_f.file_system.model.FilesAndDirectories;
-import com.storyteller_f.file_system.model.TorrentFileItemModel;
+import com.storyteller_f.file_system.util.FileUtility;
 import com.storyteller_f.multi_core.StoppableTask;
 
 import java.io.BufferedInputStream;
@@ -29,8 +25,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -65,18 +59,6 @@ public abstract class FileInstance {
         initName();
     }
 
-    @Nullable
-    public static String getExtension(String name) {
-        String extension;
-        int index = name.lastIndexOf('.');
-        if (index != -1) {
-            extension = name.substring(index + 1);
-        } else {
-            extension = null;
-        }
-        return extension;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -90,29 +72,15 @@ public abstract class FileInstance {
         return ObjectsCompat.hash(path, name);
     }
 
-    protected void editAccessTime(File childFile, FileSystemItemModel fileSystemItemModel) {
-        if (fileSystemItemModel != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                try {
-                    BasicFileAttributes basicFileAttributes = Files.readAttributes(childFile.toPath(), BasicFileAttributes.class);
-                    fileSystemItemModel.setCreatedTime(basicFileAttributes.creationTime().toMillis());
-                    fileSystemItemModel.setLastAccessTime(basicFileAttributes.lastAccessTime().toMillis());
-                } catch (IOException e) {
-                    Log.w(TAG, "list: 获取BasicFileAttribute失败" + childFile.getAbsolutePath());
-                }
-            }
-        }
-    }
-
     public FileItemModel getFile() {
-        FileItemModel fileItemModel = new FileItemModel(name, path, file.isHidden(), file.lastModified(), getExtension(name));
-        editAccessTime(file, fileItemModel);
+        FileItemModel fileItemModel = new FileItemModel(name, path, file.isHidden(), file.lastModified(), FileUtility.getExtension(name));
+        fileItemModel.editAccessTime(file);
         return fileItemModel;
     }
 
     public DirectoryItemModel getDirectory() {
         DirectoryItemModel directoryItemModel = new DirectoryItemModel(name, path, file.isHidden(), file.lastModified());
-        editAccessTime(file, directoryItemModel);
+        directoryItemModel.editAccessTime(file);
         return directoryItemModel;
     }
 
@@ -139,20 +107,16 @@ public abstract class FileInstance {
         return file.length();
     }
 
-    public BufferedOutputStream getBufferedOutputStream() throws Exception {
-        return new BufferedOutputStream(getFileOutputStream());
-    }
-
-    public BufferedInputStream getBufferedInputSteam() throws Exception {
-        return new BufferedInputStream(new FileInputStream(path));
-    }
-
     /**
      * 应该仅用于文件，可以使用readLine 方法
      */
     public abstract BufferedReader getBufferedReader() throws Exception;
 
     public abstract BufferedWriter getBufferedWriter() throws Exception;
+
+    public abstract FileInputStream getFileInputStream() throws FileNotFoundException;
+
+    public abstract FileOutputStream getFileOutputStream() throws FileNotFoundException;
 
     public InputStreamReader getInputStreamReader(String charset) throws Exception {
         return new InputStreamReader(getBufferedInputSteam(), charset);
@@ -170,13 +134,16 @@ public abstract class FileInstance {
         return new OutputStreamWriter(getBufferedOutputStream(), charset);
     }
 
-    public abstract FileInputStream getFileInputStream() throws FileNotFoundException;
+    public BufferedOutputStream getBufferedOutputStream() throws Exception {
+        return new BufferedOutputStream(getFileOutputStream());
+    }
 
-    public abstract FileOutputStream getFileOutputStream() throws FileNotFoundException;
+    public BufferedInputStream getBufferedInputSteam() throws Exception {
+        return new BufferedInputStream(new FileInputStream(path));
+    }
 
     /**
      * 应该仅用于目录。可能会抛出异常，内部不会处理。
-     *
      */
     @WorkerThread
     protected abstract void list(List<FileItemModel> fileItems, List<DirectoryItemModel> directoryItems);
@@ -341,83 +308,7 @@ public abstract class FileInstance {
         return file.getParent();
     }
 
-    /**
-     * 添加普通目录，判断过滤监听事件
-     *
-     * @param directories    填充目的地
-     * @param parent         父文件夹
-     * @param childDirectory 当前目录下的子文件夹
-     */
-    protected FileSystemItemModel addDirectory(Collection<DirectoryItemModel> directories, String parent, File childDirectory, String permissions) {
-        boolean hidden = childDirectory.isHidden();
-        String absolutePath = childDirectory.getAbsolutePath();
-        String name = childDirectory.getName();
-        long lastModifiedTime = childDirectory.lastModified();
-        return addDirectory(directories, parent, hidden, name, absolutePath, lastModifiedTime, permissions);
-    }
-
-    /**
-     * 添加普通目录，判断过滤监听事件
-     *
-     * @param directories 填充目的地
-     * @param parent      父文件夹
-     * @param childFile   当前目录下的子文件夹
-     */
-    protected FileSystemItemModel addFile(Collection<FileItemModel> directories, String parent, File childFile, String permissions) {
-        boolean hidden = childFile.isHidden();
-        String name = childFile.getName();
-        String absolutePath = childFile.getAbsolutePath();
-        long lastModifiedTime = childFile.lastModified();
-        String extension = getExtension(name);
-        long length = childFile.length();
-        return addFile(directories, parent, hidden, name, absolutePath, lastModifiedTime, extension, permissions, length);
-    }
-
     private boolean checkWhenAdd(String parent, String absolutePath, boolean isFile) {
         return filter == null || filter.onPath(parent, absolutePath, isFile);
     }
-
-    /**
-     * 添加普通文件，判断过滤监听事件
-     *
-     * @param files            填充目的地
-     * @param parent           父文件夹
-     * @param hidden           是否是隐藏文件
-     * @param name             文件名
-     * @param absolutePath     绝对路径
-     * @param lastModifiedTime 上次访问时间
-     * @param extension        文件扩展
-     * @return 返回添加的文件
-     */
-    protected FileItemModel addFile(Collection<FileItemModel> files, String parent, boolean hidden, String name, String absolutePath, long lastModifiedTime, String extension, String permission, long size) {
-        FileItemModel fileItemModel;
-        if ("torrent".equals(extension)) {
-            fileItemModel = new TorrentFileItemModel(name, absolutePath, hidden, lastModifiedTime);
-        } else {
-            fileItemModel = new FileItemModel(name, absolutePath, hidden, lastModifiedTime, extension);
-        }
-        fileItemModel.setPermissions(permission);
-        fileItemModel.setSize(size);
-        if (files.add(fileItemModel)) return fileItemModel;
-        return null;
-    }
-
-    /**
-     * 添加普通目录，判断过滤监听事件
-     *
-     * @param directories      填充目的地
-     * @param parentDirectory  父文件夹
-     * @param isHiddenFile     是否是隐藏文件
-     * @param directoryName    文件夹名
-     * @param absolutePath     绝对路径
-     * @param lastModifiedTime 上次访问时间
-     * @return 如果客户端不允许添加，返回null
-     */
-    protected FileSystemItemModel addDirectory(Collection<DirectoryItemModel> directories, String parentDirectory, boolean isHiddenFile, String directoryName, String absolutePath, long lastModifiedTime, String permissions) {
-        DirectoryItemModel e = new DirectoryItemModel(directoryName, absolutePath, isHiddenFile, lastModifiedTime);
-        e.setPermissions(permissions);
-        if (directories.add(e)) return e;
-        return null;
-    }
-
 }

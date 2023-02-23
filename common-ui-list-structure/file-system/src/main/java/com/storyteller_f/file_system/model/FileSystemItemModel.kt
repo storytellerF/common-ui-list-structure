@@ -1,5 +1,12 @@
 package com.storyteller_f.file_system.model
 
+import android.os.Build
+import android.util.Log
+import com.storyteller_f.file_system.instance.FileInstance
+import java.io.File
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.attribute.BasicFileAttributes
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -41,7 +48,23 @@ open class FileSystemItemModel(
                 '}'
     }
 
+    fun editAccessTime(childFile: File) {
+        val fileSystemItemModel = this
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                val basicFileAttributes = Files.readAttributes(childFile.toPath(), BasicFileAttributes::class.java)
+                fileSystemItemModel.createdTime = basicFileAttributes.creationTime().toMillis()
+                fileSystemItemModel.lastAccessTime = basicFileAttributes.lastAccessTime().toMillis()
+            } catch (e: IOException) {
+                Log.w(TAG, "list: 获取BasicFileAttribute失败" + childFile.absolutePath)
+            }
+        }
+    }
+
     init {
         formattedLastModifiedTime = getTime(lastModifiedTime)
+    }
+    companion object {
+        private const val TAG = "FileSystemItemModel"
     }
 }

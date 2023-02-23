@@ -152,4 +152,16 @@ public class FileUtility {
         return intent;
     }
 
+    @Nullable
+    public static String getExtension(String name) {
+        String extension;
+        int index = name.lastIndexOf('.');
+        if (index != -1) {
+            extension = name.substring(index + 1);
+        } else {
+            extension = null;
+        }
+        return extension;
+    }
+
 }

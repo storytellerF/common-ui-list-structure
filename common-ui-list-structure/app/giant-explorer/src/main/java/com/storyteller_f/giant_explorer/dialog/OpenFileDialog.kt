@@ -13,6 +13,7 @@ import com.storyteller_f.common_vm_ktx.GenericValueModel
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.util.FileUtility
 import com.storyteller_f.giant_explorer.databinding.DialogOpenFileBinding
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -49,7 +50,7 @@ class OpenFileDialog : SimpleDialogFragment<DialogOpenFileBinding>(DialogOpenFil
                 dismiss()
             }
         }
-        val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(FileInstance.getExtension(path))
+        val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(FileUtility.getExtension(path))
         binding.mimeType = mimeTypeFromExtension
         scope.launch {
             dataType.data.value = suspendCancellableCoroutine {
