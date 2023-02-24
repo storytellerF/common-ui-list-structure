@@ -8,6 +8,7 @@ import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
 import android.os.Bundle
 import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.navArgs
@@ -22,7 +23,13 @@ import com.storyteller_f.giant_explorer.model.FileModel
 class PropertiesDialog : SimpleDialogFragment<DialogFilePropertiesBinding>(DialogFilePropertiesBinding::inflate) {
     private val args by navArgs<PropertiesDialogArgs>()
     override fun onBindViewEvent(binding: DialogFilePropertiesBinding) {
-        binding.fullPath.setOnClick {
+        listOf(binding.name, binding.fullPath, binding.accessedTime, binding.modifiedTime, binding.createdTime).forEach {
+            it.copyTextFeature()
+        }
+    }
+
+    private fun TextView.copyTextFeature() {
+        setOnClick {
             requireContext().copyText(it.text)
         }
     }
@@ -39,11 +46,11 @@ class PropertiesDialog : SimpleDialogFragment<DialogFilePropertiesBinding>(Dialo
                 val trimIndent = videoInfo(fileInstance)
                 binding.videoInfo.text = trimIndent
             }
-            binding.audoInfo.setVisible(fileInstance.file.extension == "mp3") {
+            binding.audioInfo.setVisible(fileInstance.file.extension == "mp3") {
                 val mediaMetadataRetriever = MediaMetadataRetriever()
                 mediaMetadataRetriever.setDataSource(fileInstance.path)
                 val duration = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-                binding.audoInfo.text = "duration: $duration ms"
+                binding.audioInfo.text = "duration: $duration ms"
             }
         }
 

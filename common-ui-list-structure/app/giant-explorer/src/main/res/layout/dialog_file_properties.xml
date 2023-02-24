@@ -27,9 +27,11 @@
                 android:orientation="vertical">
 
                 <TextView
-                    style="@style/TextAppearance.AppCompat.Body1"
+                    android:id="@+id/name"
+                    style="@style/TextAppearance.AppCompat.Title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@drawable/default_click"
                     android:padding="10dp"
                     android:text="@{model.name}"
                     tools:text="hello.txt" />
@@ -47,22 +49,28 @@
                     tools:text="/sdcard/" />
 
                 <TextView
+                    android:id="@+id/accessedTime"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@drawable/default_click"
                     android:padding="5dp"
                     android:text="@{`access:` + model.item.formattedLastAccessTime}"
                     tools:text="2022" />
 
                 <TextView
+                    android:id="@+id/modifiedTime"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@drawable/default_click"
                     android:padding="5dp"
                     android:text="@{`modified:` + model.item.formattedLastModifiedTime}"
                     tools:text="2022" />
 
                 <TextView
+                    android:id="@+id/createdTime"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@drawable/default_click"
                     android:padding="5dp"
                     android:text="@{`created:` + model.item.formattedCreatedTime}"
                     tools:text="2022" />
@@ -75,7 +83,7 @@
                     android:padding="10dp" />
 
                 <TextView
-                    android:id="@+id/audo_info"
+                    android:id="@+id/audio_info"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
