@@ -12,5 +12,7 @@ class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
         assertEquals(4, 2 + 2)
+
+        val dao2 = Dao1(1) dao "test"
     }
 }

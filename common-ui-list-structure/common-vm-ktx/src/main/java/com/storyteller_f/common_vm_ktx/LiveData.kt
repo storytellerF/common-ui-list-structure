@@ -22,7 +22,10 @@ class CountableMediatorLiveData : MediatorLiveData<Any>() {
 
 class KeyedLiveData<T>(value: T, val key: String = "") : MutableLiveData<T>(value)
 
-fun LiveData<out Any>.plus(source: LiveData<out Any>, key: String = ""): LiveData<out Any> {
+/**
+ * 合并LiveData，value 变成map
+ */
+fun LiveData<out Any>.plus(source: LiveData<out Any>, key: String = ""): MediatorLiveData<out Any> {
     val sourceKey = if (source is KeyedLiveData<*> && source.key.trim().isNotEmpty()) {
         source.key
     } else key
@@ -122,6 +125,9 @@ fun copyMap(map: Map<String, Any?>?): MutableMap<String, Any?> {
     return newly
 }
 
+/**
+ * 控制能否让下游observe 到数据变动
+ */
 class MuteLiveEvent<T> : MutableLiveData<T?>() {
     private val mPending: AtomicBoolean = AtomicBoolean(false)
 
@@ -140,7 +146,7 @@ class MuteLiveEvent<T> : MutableLiveData<T?>() {
     }
 
     @MainThread
-    override fun setValue(@Nullable t: T?) {
+    override fun setValue(t: T?) {
         mPending.set(true)
         super.setValue(t)
     }
@@ -153,7 +159,7 @@ class MuteLiveEvent<T> : MutableLiveData<T?>() {
         value = null
     }
 
-    fun reset(@Nullable t: T?) {
+    fun reset(t: T?) {
         mPending.set(false)
         super.setValue(t)
     }
@@ -181,7 +187,7 @@ class SingleLiveEvent<T> : MutableLiveData<T?>() {
     }
 
     @MainThread
-    override fun setValue(@Nullable t: T?) {
+    override fun setValue(t: T?) {
         mPending.set(true)
         super.setValue(t)
     }

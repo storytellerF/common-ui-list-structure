@@ -144,7 +144,6 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             }
 
             override fun onActiveChanged(dialog: FilterDialog<FileSystemItemModel>) {
-                super.onActiveChanged(dialog)
                 filters.data.value = dialog.active
             }
 
@@ -313,8 +312,8 @@ fun LifecycleOwner.supportDirectoryContent(
     adapter: SimpleSourceAdapter<FileItemHolder, FileViewHolder>,
     data: SimpleSearchViewModel<FileModel, FileExplorerSearch, FileItemHolder>,
     session: FileExplorerSession,
-    filterHiddenFile: LiveData<Boolean>,
-    filters: LiveData<MutableList<Filter<FileSystemItemModel>>>,
+    filterHiddenFileLiveData: LiveData<Boolean>,
+    filtersLiveData: LiveData<MutableList<Filter<FileSystemItemModel>>>,
     updatePathMan: (String) -> Unit
 ) {
     val owner = if (this is Fragment) viewLifecycleOwner else this
@@ -323,8 +322,8 @@ fun LifecycleOwner.supportDirectoryContent(
         session.fileInstance.observe(owner, Observer {
             updatePathMan(it.path)
         })
-        combine("file" to session.fileInstance, "filter" to filterHiddenFile, "filters" to filters.distinctUntilChanged()).observe(owner, Observer {
-            val filter = it["filter"] as? Boolean ?: return@Observer
+        combine("file" to session.fileInstance, "filter" to filterHiddenFileLiveData, "filters" to filtersLiveData.distinctUntilChanged()).observe(owner, Observer {
+            val filterHiddenFile = it["filter"] as? Boolean ?: return@Observer
             val filters = it["filters"] as? MutableList<Filter<FileSystemItemModel>> ?: return@Observer
             val file = it["file"] as FileInstance? ?: return@Observer
             val path = file.path
@@ -335,7 +334,7 @@ fun LifecycleOwner.supportDirectoryContent(
                 }
             }
 
-            data.observerInScope(owner, FileExplorerSearch(file, filter, filters)) { pagingData ->
+            data.observerInScope(owner, FileExplorerSearch(file, filterHiddenFile, filters)) { pagingData ->
                 adapter.submitData(pagingData)
             }
         })
