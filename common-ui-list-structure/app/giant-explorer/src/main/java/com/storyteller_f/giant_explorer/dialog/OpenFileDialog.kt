@@ -43,6 +43,7 @@ class OpenFileDialog : SimpleDialogFragment<DialogOpenFileBinding>(DialogOpenFil
         val path = args.path
         val fileInstance = FileInstanceFactory.getFileInstance(path, requireContext())
         binding.fileName.text = path
+        binding.fileName.copyTextFeature()
         binding.dataType = dataType
         binding.handler = object : StringResult {
             override fun onResult(string: String) {

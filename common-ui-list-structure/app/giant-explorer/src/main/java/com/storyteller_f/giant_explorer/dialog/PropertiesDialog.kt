@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.navArgs
 import com.storyteller_f.common_ui.SimpleDialogFragment
@@ -25,12 +26,6 @@ class PropertiesDialog : SimpleDialogFragment<DialogFilePropertiesBinding>(Dialo
     override fun onBindViewEvent(binding: DialogFilePropertiesBinding) {
         listOf(binding.name, binding.fullPath, binding.accessedTime, binding.modifiedTime, binding.createdTime).forEach {
             it.copyTextFeature()
-        }
-    }
-
-    private fun TextView.copyTextFeature() {
-        setOnClick {
-            requireContext().copyText(it.text)
         }
     }
 
@@ -102,5 +97,11 @@ fun <T : Any> totalSequence(total: Int, block: (Int) -> T): Sequence<T> {
             yield(block(start))
             start++
         }
+    }
+}
+
+fun TextView.copyTextFeature() {
+    setOnClick {
+        context.copyText(it.text)
     }
 }

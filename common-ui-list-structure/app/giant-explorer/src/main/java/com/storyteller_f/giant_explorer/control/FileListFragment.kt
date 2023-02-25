@@ -17,6 +17,7 @@ import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.ViewModel
@@ -138,14 +139,16 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             val filePathMatcher = Regex("^/([\\w.]+/)*[\\w.]+$")
             val uriList = mutableList.mapNotNull {
                 val text = it.coerceToText(requireContext()).toString()
+                val uriFromText = text.toUri()
                 val u = when {
+                    uriFromText.scheme == "file" -> uriFromText
                     it.uri != null -> it.uri
                     URLUtil.isNetworkUrl(text) -> Uri.parse(text)
                     filePathMatcher.matches(text) -> {
                         Uri.fromFile(File(text))
                     }
                     else -> {
-                        Toast.makeText(requireContext(), "正则失败$text", Toast.LENGTH_LONG).show()
+                        Toast.makeText(requireContext(), "正则失败 $text", Toast.LENGTH_LONG).show()
                         null
                     }
                 }
@@ -440,7 +443,6 @@ class LiPlugin : GiantExplorerShellPlugin {
             }
         }
     }
-
 
 
 }
