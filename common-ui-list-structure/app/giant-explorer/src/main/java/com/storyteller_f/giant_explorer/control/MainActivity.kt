@@ -112,8 +112,8 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     private val filterHiddenFile by svm({}) { it, _ ->
         StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
     }
-    private val filters by keyPrefix({ "test" }, svm({}) { it, _ ->
-        StateValueModel(it, FileListFragment.filterHiddenFileKey, mutableListOf<Filter<FileSystemItemModel>>())
+    private val filters by keyPrefix({ "test" }, svm({ filterDialog }) { it, f ->
+        StateValueModel(it, FileListFragment.filterHiddenFileKey, buildActive(f.current().configItems))
     })
 
     private val uuid by vm({}) {
@@ -121,29 +121,10 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             data.value = UUID.randomUUID().toString()
         }
     }
-    private val filterDialog by lazy {
-        FilterDialog(this, listOf(NameFilter(NameFilterConfig("^$"))), FilterFactory()).apply {
-            setListener(object : FilterDialog.Listener<FileSystemItemModel> {
-                override fun onSaveState(filters: MutableList<Filter<FileSystemItemModel>>?): MutableList<FilterConfigItem> {
-                    return filters.orEmpty().map {
-                        (it as NameFilter).item
-                    }.toMutableList()
-                }
+    private lateinit var filterDialog: FilterDialog<FileSystemItemModel>
 
-                override fun onInitHistory(configItems: MutableList<FilterConfigItem>?) {
-                    add(configItems.orEmpty().map {
-                        NameFilter(it as NameFilterConfig)
-                    })
-                }
-
-                override fun onClose() {
-                    super.onClose()
-                    filters.data.value = this@apply.active
-                }
-
-            })
-            init("filter", factory)
-        }
+    private fun buildActive(configItems: MutableList<FilterConfigItem>?): List<Filter<FileSystemItemModel>> = configItems.orEmpty().map {
+        NameFilter(it as NameFilterConfig)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -151,6 +132,23 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         uuid
         setSupportActionBar(binding.toolbar)
         supportNavigatorBarImmersive(binding.root)
+        filterDialog = FilterDialog(this, listOf(NameFilter(NameFilterConfig("^$"))), FilterFactory(), object : FilterDialog.Listener<FileSystemItemModel> {
+            override fun onSaveState(filters: MutableList<Filter<FileSystemItemModel>>?): MutableList<FilterConfigItem> {
+                return filters.orEmpty().map {
+                    (it as NameFilter).item
+                }.toMutableList()
+            }
+
+            override fun onActiveListSelected(dialog: FilterDialog<FileSystemItemModel>, configItems: MutableList<FilterConfigItem>?) {
+                dialog.add(buildActive(configItems))
+            }
+
+            override fun onActiveChanged(dialog: FilterDialog<FileSystemItemModel>) {
+                super.onActiveChanged(dialog)
+                filters.data.value = dialog.active
+            }
+
+        }, "filter", factory)
         //连接服务
         val fileOperateIntent = Intent(this, FileOperateService::class.java)
         startService(fileOperateIntent)
@@ -325,7 +323,7 @@ fun LifecycleOwner.supportDirectoryContent(
         session.fileInstance.observe(owner, Observer {
             updatePathMan(it.path)
         })
-        combine("file" to session.fileInstance, "filter" to filterHiddenFile, "filters" to filters).observe(owner, Observer {
+        combine("file" to session.fileInstance, "filter" to filterHiddenFile, "filters" to filters.distinctUntilChanged()).observe(owner, Observer {
             val filter = it["filter"] as? Boolean ?: return@Observer
             val filters = it["filters"] as? MutableList<Filter<FileSystemItemModel>> ?: return@Observer
             val file = it["file"] as FileInstance? ?: return@Observer
