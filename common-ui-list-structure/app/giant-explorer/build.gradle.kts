@@ -80,6 +80,7 @@ dependencies {
 
     //filter & sort
     implementation(project(":config-core"))
+    implementation(project(":sort-core"))
     implementation(project(":filter-core"))
     implementation(project(":filter-ui"))
     implementation(project(":sort-ui"))

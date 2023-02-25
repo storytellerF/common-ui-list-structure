@@ -40,6 +40,7 @@ import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentFileListBinding
 import com.storyteller_f.giant_explorer.dialog.*
 import com.storyteller_f.plugin_core.*
+import com.storyteller_f.sort_ui.SortChain
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import com.storyteller_f.ui_list.source.SearchProducer
 import com.storyteller_f.ui_list.source.search
@@ -71,6 +72,9 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     private val filters by keyPrefix({ "test" }, asvm({}) { it, _ ->
         StateValueModel(it, default = mutableListOf<Filter<FileSystemItemModel>>())
     })
+    private val sort by keyPrefix({ "sort" }, asvm({}) { it, _ ->
+        StateValueModel(it, default = mutableListOf<SortChain<FileSystemItemModel>>())
+    })
 
     private val data by search({ requireDatabase to session.selected }, { (database, selected) ->
         SearchProducer(fileServiceBuilder(database)) { fileModel, _ ->
@@ -94,7 +98,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     override fun onBindViewEvent(binding: FragmentFileListBinding) {
         val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
         supportDirectoryContent(
-            binding.content, adapter, data, session, filterHiddenFile.data, filters.data
+            binding.content, adapter, data, session, filterHiddenFile.data, filters.data, sort.data
         ) {
             (requireContext() as MainActivity).drawPath(it)
         }

@@ -23,6 +23,7 @@ import com.storyteller_f.filter_core.Filter
 import com.storyteller_f.giant_explorer.control.*
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.DialogRequestPathBinding
+import com.storyteller_f.sort_ui.SortChain
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import com.storyteller_f.ui_list.source.SearchProducer
 import com.storyteller_f.ui_list.source.observerInScope
@@ -44,7 +45,10 @@ class RequestPathDialog :
         StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
     }
     private val filters by keyPrefix({ "test" }, svm({}) { it, _ ->
-        StateValueModel(it, FileListFragment.filterHiddenFileKey, mutableListOf<Filter<FileSystemItemModel>>())
+        StateValueModel(it, default = mutableListOf<Filter<FileSystemItemModel>>())
+    })
+    private val sort by keyPrefix({ "sort" }, svm({}) { it, f ->
+        StateValueModel(it, default = mutableListOf<SortChain<FileSystemItemModel>>())
     })
 
     @Parcelize
@@ -107,10 +111,11 @@ class RequestPathDialog :
             session.fileInstance.observe(owner) {
                 binding.pathMan.drawPath(it.path)
             }
-            combine("file" to session.fileInstance, "filter" to filterHiddenFile.data, "filters" to filters.data).observe(owner, Observer {
+            combine("file" to session.fileInstance, "filter" to filterHiddenFile.data, "filters" to filters.data, "sort" to sort.data).observe(owner, Observer {
                 val filter = it["filter"] as? Boolean ?: return@Observer
                 val filters = it["filters"] as? MutableList<Filter<FileSystemItemModel>> ?: return@Observer
                 val file = it["file"] as FileInstance? ?: return@Observer
+                val sort = it["sort"] as? MutableList<SortChain<FileSystemItemModel>> ?: return@Observer
                 val path = file.path
                 //检查权限
                 scope.launch {
@@ -119,7 +124,7 @@ class RequestPathDialog :
                     }
                 }
 
-                data.observerInScope(owner, FileExplorerSearch(file, filter, filters)) { pagingData ->
+                data.observerInScope(owner, FileExplorerSearch(file, filter, filters, sort)) { pagingData ->
                     adapter.submitData(PagingData.empty())
                     delay(100)
                     adapter.submitData(pagingData)

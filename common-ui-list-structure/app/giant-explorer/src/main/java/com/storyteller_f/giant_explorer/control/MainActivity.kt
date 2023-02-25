@@ -41,15 +41,16 @@ import com.storyteller_f.giant_explorer.database.FileSizeRecordDatabase
 import com.storyteller_f.giant_explorer.databinding.ActivityMainBinding
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileBinding
 import com.storyteller_f.giant_explorer.dialog.FileOperationDialog
-import com.storyteller_f.giant_explorer.filter.FilterFactory
-import com.storyteller_f.giant_explorer.filter.NameFilter
-import com.storyteller_f.giant_explorer.filter.NameFilterConfig
+import com.storyteller_f.giant_explorer.filter.*
 import com.storyteller_f.giant_explorer.model.FileModel
 import com.storyteller_f.giant_explorer.pc_end_on
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
 import com.storyteller_f.giant_explorer.service.FileOperateService
 import com.storyteller_f.giant_explorer.service.FileService
 import com.storyteller_f.giant_explorer.service.RootAccessFileInstance
+import com.storyteller_f.sort_core.config.SortConfigItem
+import com.storyteller_f.sort_ui.SortChain
+import com.storyteller_f.sort_ui.SortDialog
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import com.storyteller_f.ui_list.core.*
 import com.storyteller_f.ui_list.data.SimpleResponse
@@ -113,7 +114,10 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
     }
     private val filters by keyPrefix({ "test" }, svm({ filterDialog }) { it, f ->
-        StateValueModel(it, FileListFragment.filterHiddenFileKey, buildActive(f.current().configItems))
+        StateValueModel(it, default = buildFilterActive(f.current().configItems))
+    })
+    private val sort by keyPrefix({ "sort" }, svm({ sortDialog }) { it, f ->
+        StateValueModel(it, default = buildSortActive(f.current().configItems))
     })
 
     private val uuid by vm({}) {
@@ -122,9 +126,13 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         }
     }
     private lateinit var filterDialog: FilterDialog<FileSystemItemModel>
-
-    private fun buildActive(configItems: MutableList<FilterConfigItem>?): List<Filter<FileSystemItemModel>> = configItems.orEmpty().map {
+    private lateinit var sortDialog: SortDialog<FileSystemItemModel>
+    private fun buildFilterActive(configItems: MutableList<FilterConfigItem>?): List<Filter<FileSystemItemModel>> = configItems.orEmpty().map {
         NameFilter(it as NameFilterConfig)
+    }
+
+    private fun buildSortActive(configItems: MutableList<SortConfigItem>?): List<SortChain<FileSystemItemModel>> = configItems.orEmpty().map {
+        NameSort()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -140,7 +148,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             }
 
             override fun onActiveListSelected(dialog: FilterDialog<FileSystemItemModel>, configItems: MutableList<FilterConfigItem>?) {
-                dialog.add(buildActive(configItems))
+                dialog.add(buildFilterActive(configItems))
             }
 
             override fun onActiveChanged(dialog: FilterDialog<FileSystemItemModel>) {
@@ -148,6 +156,28 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             }
 
         }, "filter", factory)
+        filters
+        val adapterFactory =
+            RuntimeTypeAdapterFactory.of(SortConfigItem::class.java, "sort-item-key")
+                .registerSubtype(NameSort.Item::class.java, "name")
+        sortDialog = SortDialog(this, listOf(NameSort()), SortFactory(), object : SortDialog.Listener<FileSystemItemModel> {
+            override fun onSaveState(chains: MutableList<SortChain<FileSystemItemModel>>?): MutableList<SortConfigItem> {
+                return chains.orEmpty().map {
+                    NameSort.Item()
+                }.toMutableList()
+            }
+
+            override fun onActiveSelected(sortDialog: SortDialog<FileSystemItemModel>, configItems: MutableList<SortConfigItem>?) {
+                sortDialog.add(buildSortActive(configItems))
+            }
+
+            override fun onActiveChanged(sortDialog: SortDialog<FileSystemItemModel>) {
+                sort.data.value = sortDialog.active
+            }
+
+        }, adapterFactory)
+        sort
+
         //连接服务
         val fileOperateIntent = Intent(this, FileOperateService::class.java)
         startService(fileOperateIntent)
@@ -209,6 +239,9 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             }
             R.id.filter -> {
                 filterDialog.show()
+            }
+            R.id.sort -> {
+                sortDialog.show()
             }
             R.id.open_settings -> {
                 startActivity(Intent(this, SettingsActivity::class.java))
@@ -314,6 +347,7 @@ fun LifecycleOwner.supportDirectoryContent(
     session: FileExplorerSession,
     filterHiddenFileLiveData: LiveData<Boolean>,
     filtersLiveData: LiveData<MutableList<Filter<FileSystemItemModel>>>,
+    sortLivedata: LiveData<MutableList<SortChain<FileSystemItemModel>>>,
     updatePathMan: (String) -> Unit
 ) {
     val owner = if (this is Fragment) viewLifecycleOwner else this
@@ -322,10 +356,15 @@ fun LifecycleOwner.supportDirectoryContent(
         session.fileInstance.observe(owner, Observer {
             updatePathMan(it.path)
         })
-        combine("file" to session.fileInstance, "filter" to filterHiddenFileLiveData, "filters" to filtersLiveData.distinctUntilChanged()).observe(owner, Observer {
-            val filterHiddenFile = it["filter"] as? Boolean ?: return@Observer
-            val filters = it["filters"] as? MutableList<Filter<FileSystemItemModel>> ?: return@Observer
-            val file = it["file"] as FileInstance? ?: return@Observer
+        combineDao(session.fileInstance, filterHiddenFileLiveData, filtersLiveData.distinctUntilChangedBy { filters1, filters2 ->
+            filters1.same(filters2)
+        }, sortLivedata.distinctUntilChangedBy { sort1, sort2 ->
+            sort1.same(sort2)
+        }).observe(owner, Observer {
+            val file = it.d1 ?: return@Observer
+            val filterHiddenFile = it.d2 ?: return@Observer
+            val filters = it.d3 ?: return@Observer
+            val sort = it.d4 ?: return@Observer
             val path = file.path
             //检查权限
             owner.lifecycleScope.launch {
@@ -334,7 +373,7 @@ fun LifecycleOwner.supportDirectoryContent(
                 }
             }
 
-            data.observerInScope(owner, FileExplorerSearch(file, filterHiddenFile, filters)) { pagingData ->
+            data.observerInScope(owner, FileExplorerSearch(file, filterHiddenFile, filters, sort)) { pagingData ->
                 adapter.submitData(pagingData)
             }
         })
@@ -438,7 +477,7 @@ fun format1024(args: Long): String {
     return String.format(Locale.CHINA, "%.2f %s", size, flags[flag])
 }
 
-class FileExplorerSearch(val path: FileInstance, val filterHiddenFile: Boolean, val filters: MutableList<Filter<FileSystemItemModel>>)
+class FileExplorerSearch(val path: FileInstance, val filterHiddenFile: Boolean, val filters: MutableList<Filter<FileSystemItemModel>>, val sort: MutableList<SortChain<FileSystemItemModel>>)
 
 fun fileServiceBuilder(
     database: FileSizeRecordDatabase
@@ -465,13 +504,19 @@ fun fileServiceBuilder(
         }
 
         val predicate: (FileSystemItemModel) -> Boolean = {
-            (!it.isHidden || !searchQuery.filterHiddenFile) && searchQuery.filters.any { f ->
+            (!it.isHidden || !searchQuery.filterHiddenFile) && (searchQuery.filters.isEmpty() || searchQuery.filters.any { f ->
                 f.filter(it)
-            }
+            })
+        }
+        val directories = listSafe.directories.toList()
+        val files = listSafe.files.toList()
+        if (searchQuery.sort.isNotEmpty()) {
+            SortDialog.sortInternal(directories, searchQuery.sort)
+            SortDialog.sortInternal(files, searchQuery.sort)
         }
         val listFiles = if (searchQuery.filterHiddenFile || searchQuery.filters.isNotEmpty()) {
-            listSafe.directories.filter(predicate).plus(listSafe.files.filter(predicate))
-        } else listSafe.directories.plus(listSafe.files)
+            directories.filter(predicate).plus(files.filter(predicate))
+        } else directories.plus(files)
         val total = listFiles.size
         val index = start - 1
         val startPosition = index * count
@@ -516,4 +561,34 @@ private suspend fun fileModelBuilder(
     model.formattedSize = format1024(length)
     model.size = length
     return FileModel(model.name, model.fullPath, length, model.isHidden, model)
+}
+
+fun <T> List<T>.same(list: List<T>): Boolean {
+    if (size != list.size) return false
+    forEachIndexed { index, t ->
+        if (list[index] != t) {
+            return false
+        }
+    }
+    return true
+}
+
+/**
+ * @param f 返回是否相等
+ */
+fun <X> LiveData<X>.distinctUntilChangedBy(f: (X, X) -> Boolean): LiveData<X?> {
+    val outputLiveData: MediatorLiveData<X?> = MediatorLiveData<X?>()
+    outputLiveData.addSource(this, object : Observer<X?> {
+        var mFirstTime = true
+        var previous: X? = null
+        override fun onChanged(currentValue: X?) {
+            val previousValue = previous
+            if (mFirstTime || previousValue == null && currentValue != null || previousValue != null && (previousValue != currentValue || !f(previousValue, currentValue))) {
+                mFirstTime = false
+                outputLiveData.value = currentValue
+                previous = currentValue
+            }
+        }
+    })
+    return outputLiveData
 }

@@ -68,4 +68,5 @@
     <string name="stay_screen_on">保持常亮</string>
     <string name="plugin_manager">plugin manager</string>
     <string name="filter">filter</string>
+    <string name="sort">sort</string>
 </resources>

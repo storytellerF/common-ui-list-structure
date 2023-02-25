@@ -17,6 +17,13 @@
         android:icon="@drawable/baseline_filter_list_24"
         android:title="@string/filter"
         app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/sort"
+        android:icon="@drawable/baseline_sort_24"
+        android:title="@string/sort"
+        app:showAsAction="ifRoom" />
+
     <item
         android:id="@+id/plugin_manager"
         android:title="@string/plugin_manager" />
