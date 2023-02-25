@@ -77,6 +77,12 @@ dependencies {
 
     implementation(project(":app:giant-explorer:plugin-core"))
     implementation("androidx.webkit:webkit:1.6.0")
+
+    //filter & sort
+    implementation(project(":config-core"))
+    implementation(project(":filter-core"))
+    implementation(project(":filter-ui"))
+    implementation(project(":sort-ui"))
 }
 baseApp()
 setupGeneric()

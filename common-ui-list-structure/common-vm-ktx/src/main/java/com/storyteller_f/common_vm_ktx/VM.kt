@@ -78,13 +78,13 @@ class KeyedViewModelLazy<VM : ViewModel>(
 }
 
 @MainThread
-inline fun <reified VM : ViewModel> Fragment.keyPrefix(
+inline fun <reified VM : ViewModel> keyPrefix(
     noinline keyPrefixProvider: () -> String,
     lazy: ViewModelLazy<VM>
 ) = KeyedViewModelLazy(keyPrefixProvider, lazy.viewModelClass, lazy.storeProducer, lazy.factoryProducer, lazy.extrasProducer)
 
 @MainThread
-inline fun <reified VM : ViewModel> Fragment.keyPrefix(
+inline fun <reified VM : ViewModel> keyPrefix(
     keyPrefixProvider: String,
     lazy: ViewModelLazy<VM>
 ) = KeyedViewModelLazy({ keyPrefixProvider }, lazy.viewModelClass, lazy.storeProducer, lazy.factoryProducer, lazy.extrasProducer)
@@ -144,6 +144,6 @@ class GenericListValueModel<T> : ViewModel() {
     val data = MutableLiveData<List<T>>()
 }
 
-class StateValueModel<T>(stateHandle: SavedStateHandle, key: String, default: T) : ViewModel() {
+class StateValueModel<T>(stateHandle: SavedStateHandle, key: String = "default", default: T) : ViewModel() {
     val data = stateHandle.getLiveData(key, default)
 }

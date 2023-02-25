@@ -29,7 +29,9 @@ import com.storyteller_f.common_ktx.mm
 import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
+import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system_ktx.isDirectory
+import com.storyteller_f.filter_core.Filter
 import com.storyteller_f.giant_explorer.BuildConfig
 import com.storyteller_f.giant_explorer.FileSystemProviderResolver
 import com.storyteller_f.giant_explorer.PluginManager
@@ -66,6 +68,10 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         }
     })
 
+    private val filters by keyPrefix({ "test" }, asvm({}) { it, _ ->
+        StateValueModel(it, default = mutableListOf<Filter<FileSystemItemModel>>())
+    })
+
     private val data by search({ requireDatabase to session.selected }, { (database, selected) ->
         SearchProducer(fileServiceBuilder(database)) { fileModel, _ ->
             FileItemHolder(fileModel, selected)
@@ -88,7 +94,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     override fun onBindViewEvent(binding: FragmentFileListBinding) {
         val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
         supportDirectoryContent(
-            binding.content, adapter, data, session, filterHiddenFile.data
+            binding.content, adapter, data, session, filterHiddenFile.data, filters.data
         ) {
             (requireContext() as MainActivity).drawPath(it)
         }

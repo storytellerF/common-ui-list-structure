@@ -2,6 +2,8 @@ package com.storyteller_f.giant_explorer.control
 
 import android.app.Application
 import android.content.*
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -15,6 +17,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
 import androidx.navigation.findNavController
+import com.google.gson.typeadapters.RuntimeTypeAdapterFactory
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ktx.context
 import com.storyteller_f.common_ktx.exceptionMessage
@@ -30,11 +33,17 @@ import com.storyteller_f.file_system.model.TorrentFileItemModel
 import com.storyteller_f.file_system.requestPermissionForSpecialPath
 import com.storyteller_f.file_system_ktx.fileIcon
 import com.storyteller_f.file_system_ktx.isDirectory
+import com.storyteller_f.filter_core.Filter
+import com.storyteller_f.filter_core.config.FilterConfigItem
+import com.storyteller_f.filter_ui.FilterDialog
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.FileSizeRecordDatabase
 import com.storyteller_f.giant_explorer.databinding.ActivityMainBinding
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileBinding
 import com.storyteller_f.giant_explorer.dialog.FileOperationDialog
+import com.storyteller_f.giant_explorer.filter.FilterFactory
+import com.storyteller_f.giant_explorer.filter.NameFilter
+import com.storyteller_f.giant_explorer.filter.NameFilterConfig
 import com.storyteller_f.giant_explorer.model.FileModel
 import com.storyteller_f.giant_explorer.pc_end_on
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
@@ -95,15 +104,45 @@ fun getFileInstance(path: String, context: Context): FileInstance {
 
 var remote: FileSystemManager? = null
 
+val factory = RuntimeTypeAdapterFactory.of(FilterConfigItem::class.java, "config-item-key").registerSubtype(NameFilterConfig::class.java, "name")
+
 class MainActivity : CommonActivity(), FileOperateService.FileOperateResultContainer {
 
     private val binding by viewBinding(ActivityMainBinding::inflate)
     private val filterHiddenFile by svm({}) { it, _ ->
         StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
     }
+    private val filters by keyPrefix({ "test" }, svm({}) { it, _ ->
+        StateValueModel(it, FileListFragment.filterHiddenFileKey, mutableListOf<Filter<FileSystemItemModel>>())
+    })
+
     private val uuid by vm({}) {
         GenericValueModel<String>().apply {
             data.value = UUID.randomUUID().toString()
+        }
+    }
+    private val filterDialog by lazy {
+        FilterDialog(this, listOf(NameFilter(NameFilterConfig("^$"))), FilterFactory()).apply {
+            setListener(object : FilterDialog.Listener<FileSystemItemModel> {
+                override fun onSaveState(filters: MutableList<Filter<FileSystemItemModel>>?): MutableList<FilterConfigItem> {
+                    return filters.orEmpty().map {
+                        (it as NameFilter).item
+                    }.toMutableList()
+                }
+
+                override fun onInitHistory(configItems: MutableList<FilterConfigItem>?) {
+                    add(configItems.orEmpty().map {
+                        NameFilter(it as NameFilterConfig)
+                    })
+                }
+
+                override fun onClose() {
+                    super.onClose()
+                    filters.data.value = this@apply.active
+                }
+
+            })
+            init("filter", factory)
         }
     }
 
@@ -152,9 +191,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     }
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        menu.findItem(R.id.filterHiddenFile)?.let {
-            it.isChecked = filterHiddenFile.data.value == true
-        }
+        menu.findItem(R.id.filterHiddenFile)?.updateIcon(filterHiddenFile.data.value == true)
         menu.findItem(R.id.paste_file)?.let {
             it.isEnabled = ContextCompat.getSystemService(this, ClipboardManager::class.java)?.hasPrimaryClip() == true
         }
@@ -164,12 +201,17 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.filterHiddenFile -> {
-                filterHiddenFile.data.value = filterHiddenFile.data.value?.not() ?: true
+                val newState = filterHiddenFile.data.value?.not() ?: true
+                item.updateIcon(newState)
+                filterHiddenFile.data.value = newState
             }
             R.id.newWindow -> {
                 startActivity(Intent(this, MainActivity::class.java).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
                 })
+            }
+            R.id.filter -> {
+                filterDialog.show()
             }
             R.id.open_settings -> {
                 startActivity(Intent(this, SettingsActivity::class.java))
@@ -186,6 +228,13 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
 
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun MenuItem.updateIcon(newState: Boolean) {
+        isChecked = newState
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            iconTintList = if (newState) ColorStateList.valueOf(Color.GRAY) else ColorStateList.valueOf(Color.BLACK)
+        }
     }
 
     var fileOperateBinder: FileOperateBinder? = null
@@ -267,6 +316,7 @@ fun LifecycleOwner.supportDirectoryContent(
     data: SimpleSearchViewModel<FileModel, FileExplorerSearch, FileItemHolder>,
     session: FileExplorerSession,
     filterHiddenFile: LiveData<Boolean>,
+    filters: LiveData<MutableList<Filter<FileSystemItemModel>>>,
     updatePathMan: (String) -> Unit
 ) {
     val owner = if (this is Fragment) viewLifecycleOwner else this
@@ -275,8 +325,9 @@ fun LifecycleOwner.supportDirectoryContent(
         session.fileInstance.observe(owner, Observer {
             updatePathMan(it.path)
         })
-        combine("file" to session.fileInstance, "filter" to filterHiddenFile).observe(owner, Observer {
+        combine("file" to session.fileInstance, "filter" to filterHiddenFile, "filters" to filters).observe(owner, Observer {
             val filter = it["filter"] as? Boolean ?: return@Observer
+            val filters = it["filters"] as? MutableList<Filter<FileSystemItemModel>> ?: return@Observer
             val file = it["file"] as FileInstance? ?: return@Observer
             val path = file.path
             //检查权限
@@ -286,7 +337,7 @@ fun LifecycleOwner.supportDirectoryContent(
                 }
             }
 
-            data.observerInScope(owner, FileExplorerSearch(file, filter)) { pagingData ->
+            data.observerInScope(owner, FileExplorerSearch(file, filter, filters)) { pagingData ->
                 adapter.submitData(pagingData)
             }
         })
@@ -390,7 +441,7 @@ fun format1024(args: Long): String {
     return String.format(Locale.CHINA, "%.2f %s", size, flags[flag])
 }
 
-class FileExplorerSearch(val path: FileInstance, val filterHiddenFile: Boolean)
+class FileExplorerSearch(val path: FileInstance, val filterHiddenFile: Boolean, val filters: MutableList<Filter<FileSystemItemModel>>)
 
 fun fileServiceBuilder(
     database: FileSizeRecordDatabase
@@ -417,9 +468,11 @@ fun fileServiceBuilder(
         }
 
         val predicate: (FileSystemItemModel) -> Boolean = {
-            !it.isHidden || !searchQuery.filterHiddenFile
+            (!it.isHidden || !searchQuery.filterHiddenFile) && searchQuery.filters.any { f ->
+                f.filter(it)
+            }
         }
-        val listFiles = if (searchQuery.filterHiddenFile) {
+        val listFiles = if (searchQuery.filterHiddenFile || searchQuery.filters.isNotEmpty()) {
             listSafe.directories.filter(predicate).plus(listSafe.files.filter(predicate))
         } else listSafe.directories.plus(listSafe.files)
         val total = listFiles.size

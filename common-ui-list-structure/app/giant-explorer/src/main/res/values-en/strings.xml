@@ -1,9 +1,10 @@
-<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="zh">
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
     <string name="app_name">giant-explorer</string>
 
-    <string name="string_add_file">添加文件</string>
-    <string name="string_add">添加</string>
-    <string name="string_add_directory">添加文件夹</string>
+    <string name="string_add_file">add file</string>
+    <string name="string_add">Add</string>
+    <string name="string_add_directory">add directory</string>
     <string name="title_activity_background_task_config">BackgroundTaskConfigActivity</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
@@ -49,22 +50,22 @@
         rhoncus tellus nec feugiat. In a ornare nulla. Donec rhoncus libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus vestibulum. Fusce dictum libero quis
         erat maximus, vitae volutpat diam dignissim.
     </string>
-    <string name="add_background_task_description">添加后台任务</string>
-    <string name="delete">删除</string>
-    <string name="move_to">移动到</string>
-    <string name="copy_to">复制到</string>
-    <string name="copy_files">复制</string>
+    <string name="add_background_task_description">add background task</string>
+    <string name="delete">delete</string>
+    <string name="move_to">move to</string>
+    <string name="copy_to">copy to</string>
+    <string name="copy_files">copy</string>
     <string name="properties">properties</string>
     <string name="filter_hidden_file">过滤隐藏文件</string>
-    <string name="new_window">新建窗口</string>
+    <string name="new_window">new window</string>
     <string name="settings">settings</string>
     <string name="root_access">root access</string>
-    <string name="about">关于</string>
+    <string name="about">about</string>
     <string name="title_activity_plugin_manage">PluginManageActivity</string>
-    <string name="operation_task_done">完成</string>
+    <string name="operation_task_done">done</string>
     <string name="ok">OK</string>
-    <string name="cancel">取消</string>
+    <string name="cancel">CANCEL</string>
     <string name="stay_screen_on">保持常亮</string>
     <string name="plugin_manager">plugin manager</string>
-    <string name="filter">过滤</string>
+    <string name="filter">filter</string>
 </resources>

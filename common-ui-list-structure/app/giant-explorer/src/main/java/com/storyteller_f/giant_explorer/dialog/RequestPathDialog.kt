@@ -8,22 +8,18 @@ import androidx.activity.addCallback
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.flowWithLifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import androidx.paging.PagingData
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ktx.context
 import com.storyteller_f.common_ui.*
-import com.storyteller_f.common_vm_ktx.StateValueModel
-import com.storyteller_f.common_vm_ktx.combine
-import com.storyteller_f.common_vm_ktx.svm
-import com.storyteller_f.common_vm_ktx.vm
+import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.requestPermissionForSpecialPath
 import com.storyteller_f.file_system_ktx.isDirectory
-import com.storyteller_f.giant_explorer.R
+import com.storyteller_f.filter_core.Filter
 import com.storyteller_f.giant_explorer.control.*
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.DialogRequestPathBinding
@@ -47,6 +43,9 @@ class RequestPathDialog :
     private val filterHiddenFile by svm({}) { it, _ ->
         StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
     }
+    private val filters by keyPrefix({ "test" }, svm({}) { it, _ ->
+        StateValueModel(it, FileListFragment.filterHiddenFileKey, mutableListOf<Filter<FileSystemItemModel>>())
+    })
 
     @Parcelize
     class RequestPathResult(val path: String) : Parcelable
@@ -108,8 +107,9 @@ class RequestPathDialog :
             session.fileInstance.observe(owner) {
                 binding.pathMan.drawPath(it.path)
             }
-            combine("file" to session.fileInstance, "filter" to filterHiddenFile.data).observe(owner, Observer {
+            combine("file" to session.fileInstance, "filter" to filterHiddenFile.data, "filters" to filters.data).observe(owner, Observer {
                 val filter = it["filter"] as? Boolean ?: return@Observer
+                val filters = it["filters"] as? MutableList<Filter<FileSystemItemModel>> ?: return@Observer
                 val file = it["file"] as FileInstance? ?: return@Observer
                 val path = file.path
                 //检查权限
@@ -119,7 +119,7 @@ class RequestPathDialog :
                     }
                 }
 
-                data.observerInScope(owner, FileExplorerSearch(file, filter)) { pagingData ->
+                data.observerInScope(owner, FileExplorerSearch(file, filter, filters)) { pagingData ->
                     adapter.submitData(PagingData.empty())
                     delay(100)
                     adapter.submitData(pagingData)

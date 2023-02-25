@@ -4,7 +4,7 @@
     <item
         android:id="@+id/filterHiddenFile"
         android:checkable="true"
-        android:icon="@drawable/ic_eye"
+        android:icon="@drawable/icon_filter_hidden_file"
         android:title="@string/filter_hidden_file"
         app:showAsAction="ifRoom" />
     <item
@@ -13,8 +13,13 @@
         android:title="@string/new_window"
         app:showAsAction="ifRoom" />
     <item
+        android:id="@+id/filter"
+        android:icon="@drawable/baseline_filter_list_24"
+        android:title="@string/filter"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/plugin_manager"
-        android:title="plugin manager" />
+        android:title="@string/plugin_manager" />
     <item
         android:id="@+id/open_root_access"
         android:title="@string/root_access" />

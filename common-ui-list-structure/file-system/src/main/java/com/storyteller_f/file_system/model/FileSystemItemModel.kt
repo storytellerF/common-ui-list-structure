@@ -2,7 +2,6 @@ package com.storyteller_f.file_system.model
 
 import android.os.Build
 import android.util.Log
-import com.storyteller_f.file_system.instance.FileInstance
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -64,6 +63,7 @@ open class FileSystemItemModel(
     init {
         formattedLastModifiedTime = getTime(lastModifiedTime)
     }
+
     companion object {
         private const val TAG = "FileSystemItemModel"
     }

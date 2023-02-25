@@ -10,6 +10,13 @@
         <option name="gradleJvm" value="Embedded JDK" />
         <option name="modules">
           <set>
+            <option value="$PROJECT_DIR$/../../FilterUIProject/config-core" />
+            <option value="$PROJECT_DIR$/../../FilterUIProject/config_edit" />
+            <option value="$PROJECT_DIR$/../../FilterUIProject/filter-core" />
+            <option value="$PROJECT_DIR$/../../FilterUIProject/filter-ui" />
+            <option value="$PROJECT_DIR$/../../FilterUIProject/recycleview_ui_extra" />
+            <option value="$PROJECT_DIR$/../../FilterUIProject/sort-core" />
+            <option value="$PROJECT_DIR$/../../FilterUIProject/sort-ui" />
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/app/b3" />
