@@ -105,7 +105,7 @@ fun getFileInstance(path: String, context: Context): FileInstance {
 
 var remote: FileSystemManager? = null
 
-val factory = RuntimeTypeAdapterFactory.of(FilterConfigItem::class.java, "config-item-key").registerSubtype(NameFilterConfig::class.java, "name")
+val factory: RuntimeTypeAdapterFactory<FilterConfigItem> = RuntimeTypeAdapterFactory.of(FilterConfigItem::class.java, "config-item-key").registerSubtype(NameFilter.Config::class.java, "name")!!
 
 class MainActivity : CommonActivity(), FileOperateService.FileOperateResultContainer {
 
@@ -113,11 +113,14 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     private val filterHiddenFile by svm({}) { it, _ ->
         StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
     }
+    private lateinit var filterDialog: FilterDialog<FileSystemItemModel>
+    private lateinit var sortDialog: SortDialog<FileSystemItemModel>
+
     private val filters by keyPrefix({ "test" }, svm({ filterDialog }) { it, f ->
-        StateValueModel(it, default = buildFilterActive(f.current().configItems))
+        StateValueModel(it, default = buildFilterActive(f.current()?.configItems.orEmpty().toList()))
     })
     private val sort by keyPrefix({ "sort" }, svm({ sortDialog }) { it, f ->
-        StateValueModel(it, default = buildSortActive(f.current().configItems))
+        StateValueModel(it, default = buildSortActive(f.current()?.configItems.orEmpty().toList()))
     })
 
     private val uuid by vm({}) {
@@ -125,14 +128,13 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             data.value = UUID.randomUUID().toString()
         }
     }
-    private lateinit var filterDialog: FilterDialog<FileSystemItemModel>
-    private lateinit var sortDialog: SortDialog<FileSystemItemModel>
-    private fun buildFilterActive(configItems: MutableList<FilterConfigItem>?): List<Filter<FileSystemItemModel>> = configItems.orEmpty().map {
-        NameFilter(it as NameFilterConfig)
+
+    private fun buildFilterActive(configItems: List<FilterConfigItem>?): List<Filter<FileSystemItemModel>> = configItems.orEmpty().map {
+        NameFilter(it as NameFilter.Config)
     }
 
-    private fun buildSortActive(configItems: MutableList<SortConfigItem>?): List<SortChain<FileSystemItemModel>> = configItems.orEmpty().map {
-        NameSort()
+    private fun buildSortActive(configItems: List<SortConfigItem>?): List<SortChain<FileSystemItemModel>> = configItems.orEmpty().map {
+        NameSort(NameSort.Item())
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -140,42 +142,8 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         uuid
         setSupportActionBar(binding.toolbar)
         supportNavigatorBarImmersive(binding.root)
-        filterDialog = FilterDialog(this, listOf(NameFilter(NameFilterConfig("^$"))), FilterFactory(), object : FilterDialog.Listener<FileSystemItemModel> {
-            override fun onSaveState(filters: MutableList<Filter<FileSystemItemModel>>?): MutableList<FilterConfigItem> {
-                return filters.orEmpty().map {
-                    (it as NameFilter).item
-                }.toMutableList()
-            }
-
-            override fun onActiveListSelected(dialog: FilterDialog<FileSystemItemModel>, configItems: MutableList<FilterConfigItem>?) {
-                dialog.add(buildFilterActive(configItems))
-            }
-
-            override fun onActiveChanged(dialog: FilterDialog<FileSystemItemModel>) {
-                filters.data.value = dialog.active
-            }
-
-        }, "filter", factory)
+        initDialog()
         filters
-        val adapterFactory =
-            RuntimeTypeAdapterFactory.of(SortConfigItem::class.java, "sort-item-key")
-                .registerSubtype(NameSort.Item::class.java, "name")
-        sortDialog = SortDialog(this, listOf(NameSort()), SortFactory(), object : SortDialog.Listener<FileSystemItemModel> {
-            override fun onSaveState(chains: MutableList<SortChain<FileSystemItemModel>>?): MutableList<SortConfigItem> {
-                return chains.orEmpty().map {
-                    NameSort.Item()
-                }.toMutableList()
-            }
-
-            override fun onActiveSelected(sortDialog: SortDialog<FileSystemItemModel>, configItems: MutableList<SortConfigItem>?) {
-                sortDialog.add(buildSortActive(configItems))
-            }
-
-            override fun onActiveChanged(sortDialog: SortDialog<FileSystemItemModel>) {
-                sort.data.value = sortDialog.active
-            }
-
-        }, adapterFactory)
         sort
 
         //连接服务
@@ -206,6 +174,39 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             }
         }
         findNavController(R.id.nav_host_fragment_main).setGraph(R.navigation.nav_main, FileListFragmentArgs(FileInstanceFactory.rootUserEmulatedPath).toBundle())
+    }
+    private fun initDialog() {
+        filterDialog = FilterDialog(this, listOf(NameFilter(NameFilter.Config("^$"))), FilterFactory(), object : FilterDialog.Listener<FileSystemItemModel> {
+            override fun onSaveState(filters: MutableList<Filter<FileSystemItemModel>>?): MutableList<FilterConfigItem> {
+                return filters.orEmpty().map {
+                    (it as NameFilter).item
+                }.toMutableList()
+            }
+
+            override fun onActiveListSelected(dialog: FilterDialog<FileSystemItemModel>, configItems: MutableList<FilterConfigItem>?) = dialog.add(buildFilterActive(configItems))
+
+            override fun onActiveChanged(dialog: FilterDialog<FileSystemItemModel>) {
+                filters.data.value = dialog.active
+            }
+
+        }, "filter", factory)
+        val adapterFactory =
+            RuntimeTypeAdapterFactory.of(SortConfigItem::class.java, "sort-item-key")
+                .registerSubtype(NameSort.Item::class.java, "name")
+        sortDialog = SortDialog(this, listOf(NameSort(NameSort.Item())), SortFactory(), object : SortDialog.Listener<FileSystemItemModel> {
+            override fun onSaveState(chains: MutableList<SortChain<FileSystemItemModel>>?): MutableList<SortConfigItem> {
+                return chains.orEmpty().map {
+                    NameSort.Item()
+                }.toMutableList()
+            }
+
+            override fun onActiveSelected(sortDialog: SortDialog<FileSystemItemModel>, configItems: MutableList<SortConfigItem>?) = sortDialog.add(buildSortActive(configItems))
+
+            override fun onActiveChanged(sortDialog: SortDialog<FileSystemItemModel>) {
+                sort.data.value = sortDialog.active
+            }
+
+        }, adapterFactory)
     }
 
     companion object {
@@ -420,13 +421,13 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
 
         binding.detail.text = item.permissions
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            drapSupport(itemHolder)
+            dragSupport(itemHolder)
         }
 
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
-    private fun drapSupport(itemHolder: FileItemHolder) {
+    private fun dragSupport(itemHolder: FileItemHolder) {
         val listener = { view: View, _: DragStartHelper ->
             val clipData = ClipData.newPlainText(FileListFragment.clipDataKey, itemHolder.file.fullPath)
             val flags = View.DRAG_FLAG_GLOBAL or View.DRAG_FLAG_GLOBAL_URI_READ
