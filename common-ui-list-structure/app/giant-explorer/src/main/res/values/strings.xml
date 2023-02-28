@@ -62,8 +62,6 @@
     <string name="about">关于</string>
     <string name="title_activity_plugin_manage">PluginManageActivity</string>
     <string name="operation_task_done">完成</string>
-    <string name="ok">OK</string>
-    <string name="cancel">取消</string>
     <string name="stay_screen_on">保持常亮</string>
     <string name="plugin_manager">plugin manager</string>
     <string name="filter">过滤</string>
