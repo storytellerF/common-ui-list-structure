@@ -117,7 +117,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     private lateinit var sortDialog: SortDialog<FileSystemItemModel>
 
     private val filters by keyPrefix({ "test" }, svm({ filterDialog }) { it, f ->
-        StateValueModel(it, default = buildFilterActive(f.current()?.configItems.orEmpty().toList()))
+        StateValueModel(it, default = buildFilterActive(f.currentConfig()?.configItems.orEmpty().toList()))
     })
     private val sort by keyPrefix({ "sort" }, svm({ sortDialog }) { it, f ->
         StateValueModel(it, default = buildSortActive(f.current()?.configItems.orEmpty().toList()))
@@ -186,7 +186,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             override fun onActiveListSelected(dialog: FilterDialog<FileSystemItemModel>, configItems: MutableList<FilterConfigItem>?) = dialog.add(buildFilterActive(configItems))
 
             override fun onActiveChanged(dialog: FilterDialog<FileSystemItemModel>) {
-                filters.data.value = dialog.active
+                filters.data.value = dialog.activeFilters
             }
 
         }, "filter", factory)

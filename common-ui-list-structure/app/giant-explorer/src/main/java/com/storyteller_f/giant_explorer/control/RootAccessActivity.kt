@@ -32,7 +32,7 @@ class RootAccessActivity : AppCompatActivity() {
 
         binding.fab.setOnClickListener {
             Shell.getShell { shell ->
-                Snackbar.make(it, shell.isRoot.toString(), Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(binding.root, shell.isRoot.toString(), Snackbar.LENGTH_SHORT).show()
             }
         }
     }

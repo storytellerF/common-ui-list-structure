@@ -54,16 +54,16 @@
     <string name="move_to">移动到</string>
     <string name="copy_to">复制到</string>
     <string name="copy_files">复制</string>
-    <string name="properties">properties</string>
+    <string name="properties">属性</string>
     <string name="filter_hidden_file">过滤隐藏文件</string>
     <string name="new_window">新建窗口</string>
-    <string name="settings">settings</string>
-    <string name="root_access">root access</string>
+    <string name="settings">设置</string>
+    <string name="root_access">root 访问</string>
     <string name="about">关于</string>
     <string name="title_activity_plugin_manage">PluginManageActivity</string>
     <string name="operation_task_done">完成</string>
     <string name="stay_screen_on">保持常亮</string>
-    <string name="plugin_manager">plugin manager</string>
+    <string name="plugin_manager">插件管理</string>
     <string name="filter">过滤</string>
     <string name="sort">排序</string>
 </resources>

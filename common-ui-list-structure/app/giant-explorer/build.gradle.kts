@@ -61,6 +61,7 @@ dependencies {
     implementation("androidx.preference:preference:1.2.0")
     implementation("com.j256.simplemagic:simplemagic:1.17")
     implementation("com.github.osama-raddad:FireCrasher:2.0.0")
+    implementation("androidx.browser:browser:1.5.0")
 
     val libsuVersion = "5.0.3"
 

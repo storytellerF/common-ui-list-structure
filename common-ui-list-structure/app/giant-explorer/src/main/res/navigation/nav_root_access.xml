@@ -17,9 +17,9 @@
     </fragment>
     <fragment
         android:id="@+id/Second2Fragment"
-        android:name="com.storyteller_f.giant_explorer.control.Second2Fragment"
+        android:name="com.storyteller_f.giant_explorer.control.RootIntroFragment"
         android:label="@string/second_fragment_label"
-        tools:layout="@layout/fragment_second2">
+        tools:layout="@layout/fragment_root_intro">
 
         <action
             android:id="@+id/action_Second2Fragment_to_First2Fragment"
