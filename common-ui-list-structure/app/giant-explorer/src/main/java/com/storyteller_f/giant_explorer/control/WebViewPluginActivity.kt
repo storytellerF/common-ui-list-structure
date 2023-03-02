@@ -15,7 +15,9 @@ import androidx.webkit.WebViewFeature
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.file_system_ktx.ensureFile
 import com.storyteller_f.giant_explorer.FileSystemProviderResolver
+import com.storyteller_f.giant_explorer.HtmlPluginConfiguration
 import com.storyteller_f.giant_explorer.databinding.ActivityWebviewPluginBinding
+import com.storyteller_f.giant_explorer.pluginManagerRegister
 import com.storyteller_f.plugin_core.GiantExplorerService
 import com.storyteller_f.ui_list.event.viewBinding
 import kotlinx.coroutines.Dispatchers
@@ -41,22 +43,20 @@ class WebViewPluginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding
         val uriData = intent.data
-        val pluginName = intent.getStringExtra("plugin-name")
-        val pluginFile = File(filesDir, "plugins/$pluginName")
-        val extractedPath = File(filesDir, "plugins/${pluginFile.nameWithoutExtension}")
+        val pluginName = intent.getStringExtra("plugin-name")!!
         messageChannel
-        setupWebView(extractedPath)
         bindApi(webView, uriData)
         scope.launch {
-            ensureExtract(extractedPath, pluginFile)
-            val indexFile = File(extractedPath, "index.html")
+            val revolvePluginName = pluginManagerRegister.revolvePluginName(pluginName, this@WebViewPluginActivity) as HtmlPluginConfiguration
+            setupWebView(revolvePluginName.extractedPath)
+            val indexFile = File(revolvePluginName.extractedPath, "index.html")
             val toString = Uri.fromFile(indexFile).toString()
             webView.loadDataWithBaseURL(baseUrl, indexFile.readText(), null, null, null)
             Log.i(TAG, "onCreate: $toString")
         }
     }
 
-    private fun setupWebView(extractedPath: File) {
+    private fun setupWebView(extractedPath: String) {
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
             WebViewCompat.addWebMessageListener(webView, "test", setOf(baseUrl)) { view, message, sourceOrigin, isMainFrame, replyProxy ->
                 Log.d(TAG, "onCreate() called with: view = $view, message = ${message.data}, sourceOrigin = $sourceOrigin, isMainFrame = $isMainFrame, replyProxy = $replyProxy")
@@ -108,30 +108,6 @@ class WebViewPluginActivity : AppCompatActivity() {
         webView.settings.apply {
             javaScriptEnabled = true
             allowFileAccess = true
-        }
-    }
-
-    private suspend fun ensureExtract(extracted: File, file: File) {
-        withContext(Dispatchers.IO) {
-            ZipInputStream(FileInputStream(file)).use {
-                val byteArray = ByteArray(1024)
-                while (true) {
-                    val nextEntry = it.nextEntry
-                    if (nextEntry != null) {
-                        val name = nextEntry.name
-                        val fileOutputStream = FileOutputStream(File(extracted, name).ensureFile())
-                        fileOutputStream.use { out ->
-                            while (true) {
-                                val read = it.read(byteArray)
-                                if (read != -1) {
-                                    out.write(byteArray, 0, read)
-                                } else break
-                            }
-                        }
-                        Log.i(TAG, "onCreate: extract $name ${nextEntry.isDirectory}")
-                    } else break
-                }
-            }
         }
     }
 
@@ -205,4 +181,27 @@ interface WebViewFilePlugin {
 
 fun WebView.callback(callbackId: String, parameters: String?) {
     evaluateJavascript("callback($callbackId, $parameters)") { }
+}
+
+suspend fun File.ensureExtract(extracted: String) {
+    withContext(Dispatchers.IO) {
+        ZipInputStream(FileInputStream(this@ensureExtract)).use {
+            val byteArray = ByteArray(1024)
+            while (true) {
+                val nextEntry = it.nextEntry
+                if (nextEntry != null) {
+                    val name = nextEntry.name
+                    val fileOutputStream = FileOutputStream(File(extracted, name).ensureFile())
+                    fileOutputStream.use { out ->
+                        while (true) {
+                            val read = it.read(byteArray)
+                            if (read != -1) {
+                                out.write(byteArray, 0, read)
+                            } else break
+                        }
+                    }
+                } else break
+            }
+        }
+    }
 }

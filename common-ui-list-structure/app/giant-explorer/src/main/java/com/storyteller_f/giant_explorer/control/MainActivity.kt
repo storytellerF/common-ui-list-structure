@@ -72,7 +72,6 @@ import java.lang.ref.WeakReference
 import java.util.*
 import kotlin.concurrent.thread
 import kotlin.coroutines.resumeWithException
-import kotlin.math.min
 
 class FileExplorerSession(application: Application, path: String) : AndroidViewModel(application) {
     val selected = MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>()
@@ -175,6 +174,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         }
         findNavController(R.id.nav_host_fragment_main).setGraph(R.navigation.nav_main, FileListFragmentArgs(FileInstanceFactory.rootUserEmulatedPath).toBundle())
     }
+
     private fun initDialog() {
         filterDialog = FilterDialog(this, listOf(NameFilter(NameFilter.Config("^$"))), FilterFactory(), object : FilterDialog.Listener<FileSystemItemModel> {
             override fun onSaveState(filters: MutableList<Filter<FileSystemItemModel>>?): MutableList<FilterConfigItem> {
@@ -524,7 +524,7 @@ fun fileServiceBuilder(
         if (startPosition > total) SimpleResponse(0)
         else {
             val items = listFiles
-                .subList(startPosition, startPosition + min(count, total - startPosition))
+                .subList(startPosition, (count + startPosition).coerceAtMost(total))
                 .map { model ->
                     fileModelBuilder(model, database)
                 }

@@ -25,6 +25,8 @@ import java.io.File
 import java.math.BigInteger
 import java.security.MessageDigest
 
+val pluginManagerRegister = PluginManager()
+
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
@@ -48,11 +50,7 @@ class App : Application() {
                     ).build()
                 )
             }
-            File(filesDir, "plugins").listFiles { it ->
-                it.extension == "apk" || it.extension == "zip"
-            }?.forEach {
-                PluginManager.list.add(Plugin(it.name))
-            }
+            refreshPlugin(this@App)
         }
 //        FireCrasher.install(this, object : CrashListener() {
 //
@@ -66,8 +64,16 @@ class App : Application() {
 //        })
 
     }
-}
 
+
+}
+fun refreshPlugin(context: Context) {
+    File(context.filesDir, "plugins").listFiles { it ->
+        it.extension == "apk" || it.extension == "zip"
+    }?.forEach {
+        pluginManagerRegister.foundPlugin(it)
+    }
+}
 abstract class BigTimeWorker(
     private val context: Context,
     private val workerParams: WorkerParameters

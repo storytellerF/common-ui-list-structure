@@ -32,9 +32,8 @@ import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.filter_core.Filter
+import com.storyteller_f.giant_explorer.*
 import com.storyteller_f.giant_explorer.BuildConfig
-import com.storyteller_f.giant_explorer.FileSystemProviderResolver
-import com.storyteller_f.giant_explorer.PluginManager
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentFileListBinding
@@ -221,7 +220,8 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(File(fullPath).extension)
 
             resolvePlugins(itemHolder, mimeTypeFromExtension)
-            PluginManager.list.forEach { plugin ->
+            pluginManagerRegister.pluginsName().forEach {
+                val plugin = File(it)
                 menu.add(plugin.name).setOnMenuItemClickListener {
                     if (plugin.name.endsWith("apk")) startActivity(Intent(requireContext(), FragmentPluginActivity::class.java).apply {
                         putExtra("plugin-name", plugin.name)

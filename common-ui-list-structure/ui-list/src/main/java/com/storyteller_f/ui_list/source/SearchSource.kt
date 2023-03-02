@@ -12,8 +12,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
-import java.io.IOException
 
 class SimpleSearchSource<D : Model, SQ : Any>(
     val service: suspend (SQ, Int, Int) -> SimpleResponse<D>,
@@ -107,8 +105,11 @@ fun <SQ : Any, Holder : DataItemHolder> SimpleSearchViewModel<*, SQ, Holder>.obs
     }
 }
 
+/**
+ * @param service startPage from 1
+ */
 class SearchProducer<D : Model, SQ : Any, Holder : DataItemHolder>(
-    val service: suspend (SQ, start: Int, count: Int) -> SimpleResponse<D>,
+    val service: suspend (SQ, startPage: Int, count: Int) -> SimpleResponse<D>,
     val processFactory: (D, list: D?) -> Holder,
 )
 

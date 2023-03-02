@@ -59,11 +59,12 @@ class ListWithState @JvmOverloads constructor(
         adapter: SimpleSourceAdapter<IH, VH>,
         lifecycleOwner: LifecycleOwner,
         selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>? = null,
+        refresh: (() -> Unit) = { },
         flash: ((CombinedLoadStates, Int) -> UIState) = Companion::simple
     ) {
         setAdapter(
             adapter.withLoadStateHeaderAndFooter(header = SimpleLoadStateAdapter { adapter.retry() },
-                footer = SimpleLoadStateAdapter { adapter.retry() }), adapter
+                footer = SimpleLoadStateAdapter { adapter.retry() }), adapter, refresh
         )
         val callbackFlow = callbackFlow {
             val listener: (CombinedLoadStates) -> Unit = {
@@ -103,18 +104,21 @@ class ListWithState @JvmOverloads constructor(
 
     private fun setAdapter(
         concatAdapter: ConcatAdapter,
-        adapter: SimpleSourceAdapter<out DataItemHolder, out AbstractViewHolder<*>>
+        adapter: SimpleSourceAdapter<out DataItemHolder, out AbstractViewHolder<*>>,
+        refresh: () -> Unit
     ) {
         setupLinearLayoutManager()
         binding.list.adapter = concatAdapter
-        setupRefresh(adapter)
+        setupRefresh(adapter, refresh)
     }
 
-    private fun setupRefresh(adapter: SimpleSourceAdapter<*, *>) {
+    private fun setupRefresh(adapter: SimpleSourceAdapter<*, *>, refresh: () -> Unit) {
         binding.refreshLayout.setOnRefreshListener {
+            refresh()
             adapter.refresh()
         }
         binding.retryButton.setOnClickListener {
+            refresh()
             adapter.refresh()
         }
     }
@@ -344,7 +348,7 @@ class ListWithState @JvmOverloads constructor(
         }
 
         /**
-         * 远程加载出错时，不会显示数据
+         * 远程加载出错时，会显示数据
          */
         fun remote(loadState: CombinedLoadStates, itemCount: Int): UIState {
             val refresh = if (loadState.mediator?.refresh !is LoadState.Loading) false else null

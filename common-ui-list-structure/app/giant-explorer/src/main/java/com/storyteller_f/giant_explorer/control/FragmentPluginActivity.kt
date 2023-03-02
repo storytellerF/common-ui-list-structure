@@ -10,19 +10,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.storyteller_f.giant_explorer.FileSystemProviderResolver
+import com.storyteller_f.giant_explorer.FragmentPluginConfiguration
 import com.storyteller_f.giant_explorer.R
+import com.storyteller_f.giant_explorer.pluginManagerRegister
 import com.storyteller_f.plugin_core.GiantExplorerPlugin
 import com.storyteller_f.plugin_core.GiantExplorerPluginManager
 import com.storyteller_f.plugin_core.GiantExplorerService
-import dalvik.system.DexClassLoader
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
-private const val giantExplorerPluginIni = "META-INF/giant-explorer-plugin.ini"
+const val giantExplorerPluginIni = "META-INF/giant-explorer-plugin.ini"
 
 abstract class DefaultPluginManager(val context: Context) : GiantExplorerPluginManager {
     override fun fileInputStream(path: String): FileInputStream {
@@ -109,14 +108,11 @@ class FragmentPluginActivity : AppCompatActivity() {
             }
 
         }
-        val classLoader = this@FragmentPluginActivity.javaClass.classLoader
         lifecycleScope.launch {
-            val dexClassLoader = DexClassLoader(pluginFile.absolutePath, null, null, classLoader)
-            val readText = withContext(Dispatchers.IO) {
-                dexClassLoader.getResourceAsStream(giantExplorerPluginIni).bufferedReader().readLines()
-            }
-            val name = readText.first()
-            pluginFragments = readText.last().split(",")
+            val revolvePlugin = pluginManagerRegister.revolvePluginName(pluginName, this@FragmentPluginActivity) as FragmentPluginConfiguration
+            val dexClassLoader = revolvePlugin.classLoader
+            val name = revolvePlugin.startFragment
+            pluginFragments = revolvePlugin.pluginFragments
             val loadClass = dexClassLoader.loadClass(name)
             val newInstance = loadClass.newInstance()
             if (newInstance is Fragment) {
@@ -126,7 +122,8 @@ class FragmentPluginActivity : AppCompatActivity() {
                 newInstance.arguments = Bundle().apply {
                     putParcelable("uri", uri)
                 }
-                supportFragmentManager.beginTransaction().replace(R.id.content, newInstance).commit()
+                if (savedInstanceState == null)
+                    supportFragmentManager.beginTransaction().replace(R.id.content, newInstance).commit()
             }
         }
     }

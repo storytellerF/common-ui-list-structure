@@ -9,7 +9,7 @@
         android:id="@+id/FirstFragment"
         android:name="com.storyteller_f.giant_explorer.control.PluginListFragment"
         android:label="@string/first_fragment_label"
-        tools:layout="@layout/fragment_first">
+        tools:layout="@layout/fragment_plugin_list">
         <action
             android:id="@+id/action_FirstFragment_to_SecondFragment"
             app:destination="@id/SecondFragment" />
