@@ -149,6 +149,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
                 Toast.makeText(this, "选择错误", Toast.LENGTH_LONG).show()
                 return
             }
+            contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
             FileSystemUriSaver.getInstance().saveUri(key, this, it)
             currentKey = null
         }
