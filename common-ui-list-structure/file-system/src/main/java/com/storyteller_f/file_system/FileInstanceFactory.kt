@@ -3,11 +3,10 @@ package com.storyteller_f.file_system
 import android.content.Context
 import android.os.Build
 import android.os.StatFs
-import android.util.Log
 import androidx.annotation.WorkerThread
 import com.storyteller_f.file_system.instance.FileInstance
-import com.storyteller_f.file_system.instance.local.RegularLocalFileInstance
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
+import com.storyteller_f.file_system.instance.local.RegularLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.EmulatedLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.FakeDirectoryLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.StorageLocalFileInstance
@@ -33,59 +32,51 @@ object FileInstanceFactory {
             "invalid path [$unsafePath]"
         }
         val path = simplyPath(unsafePath)
-        if (root != publicFileSystemRoot) return DocumentLocalFileInstance(context, path, root, root)
+        val prefix = getPrefix(path, context, root)
         return when {
-            path.startsWith(rootUserEmulatedPath) -> if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R && Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                DocumentLocalFileInstance.getEmulated(context, path)
-            } else {
-                RegularLocalFileInstance(context, path, root)
-            }
-            path.startsWith(emulatedRootPath) -> EmulatedLocalFileInstance(context)
-            path.startsWith(currentEmulatedPath) -> RegularLocalFileInstance(context, path, root)
+            prefix == "" && root != "/" -> DocumentLocalFileInstance(context, path, root, root)
+            prefix == "" -> RegularLocalFileInstance(context, path, root)
+            prefix == "/data/data/${context.packageName}" -> RegularLocalFileInstance(context, path, root)
+            prefix == sdcardPath -> RegularLocalFileInstance(context, path, root)
             path == storagePath -> StorageLocalFileInstance(context)
-            path.startsWith(storagePath) -> when {
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
-                    RegularLocalFileInstance(context, path, root)
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ->
-                    DocumentLocalFileInstance.getMounted(context, path)
-                Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1 -> {
-                    Log.e(TAG, "getFileInstance: 当前版本不支持formTreeUri，测试性的返回")
-                    RegularLocalFileInstance(context, path, root)
-                }
+            prefix == emulatedRootPath -> EmulatedLocalFileInstance(context)
+            prefix == currentEmulatedPath -> RegularLocalFileInstance(context, path, root)
+            prefix == rootUserEmulatedPath -> when {
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.R && Build.VERSION.SDK_INT > Build.VERSION_CODES.P -> DocumentLocalFileInstance.getEmulated(context, path)
                 else -> RegularLocalFileInstance(context, path, root)
             }
-            path.startsWith(sdcardPath) -> RegularLocalFileInstance(context, path, root)
-            regularPath.any {
-                path.startsWith(it)
-            } -> RegularLocalFileInstance(context, path, root)
-            path.startsWith("/data/data/${context.packageName}") -> RegularLocalFileInstance(context, path, root)
-            else -> FakeDirectoryLocalFileInstance(path, context)
+            path.startsWith(storagePath) -> when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> RegularLocalFileInstance(context, path, root)
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> DocumentLocalFileInstance.getMounted(context, path)
+                Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1 -> RegularLocalFileInstance(context, path, root)
+                else -> RegularLocalFileInstance(context, path, root)
+            }
+            prefix == "fake" -> FakeDirectoryLocalFileInstance(path, context)
+            else -> throw Exception("无法识别 $path $prefix $root")
         }
     }
 
-    /**
-     * @return 如果返回值是空字符串，代表应该使用fake 型file instance。否则必须要prefix
-     */
     @JvmStatic
     fun getPrefix(unsafePath: String, context: Context, root: String = publicFileSystemRoot): String {
         assert(!unsafePath.endsWith("/") || unsafePath.length == 1) {
             unsafePath
         }
         val path = simplyPath(unsafePath)
-        if (root != "/") return "/"
         return when {
+            root != "/" -> ""
+            regularPath.any { path.startsWith(it) } -> ""
+            path.startsWith(sdcardPath) -> sdcardPath
+            path.startsWith("/data/data/${context.packageName}") -> "/data/data/${context.packageName}"
+            path == storagePath -> storagePath
             path.startsWith(rootUserEmulatedPath) -> rootUserEmulatedPath
             path.startsWith(emulatedRootPath) -> emulatedRootPath
-            path == storagePath -> storagePath
+            path.startsWith(currentEmulatedPath) -> currentEmulatedPath
             path.startsWith(storagePath) -> {
                 var endIndex = path.indexOf("/", storagePath.length)
                 if (endIndex == -1) endIndex = path.length
                 path.substring(0, endIndex + 1)
             }
-            path.startsWith(sdcardPath) -> sdcardPath
-            regularPath.any { path.startsWith(it) } -> "/"
-            path.startsWith("/data/data/${context.packageName}") -> "/data/data/${context.packageName}"
-            else -> ""
+            else -> "fake"
         }
     }
 

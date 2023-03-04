@@ -80,7 +80,6 @@ public class DocumentLocalFileInstance extends LocalFileInstance {
             Log.e(TAG, "getCurrent: prefix 出错 " + prefix);
             return null;
         }
-        String truePath = destination.substring(prefix.length());//获取 SD卡名称后面的路径
         Uri uri = FileSystemUriSaver.getInstance().savedUri(preferenceKey, context);
         if (uri == null) {
             Log.e(TAG, "getSpecialDocumentFile: uri is null");
@@ -91,7 +90,8 @@ public class DocumentLocalFileInstance extends LocalFileInstance {
             Log.e(TAG, "getCurrent: rootFile is null");
             return null;
         }
-        if (truePath.isEmpty()) return rootFile;
+        String truePath = destination.substring(prefix.length());//获取 SD卡名称后面的路径
+        if (truePath.isEmpty() || (truePath.equals("/") && prefix.isEmpty())) return rootFile;
         String[] nameItemPath = truePath.substring(1).split("/");
         String[] paths;
         String[] files;
@@ -101,7 +101,6 @@ public class DocumentLocalFileInstance extends LocalFileInstance {
         if (isFile && createWhenNoExists) {
             files = new String[]{nameItemPath[nameItemPath.length - 1]};
         } else files = new String[0];
-        //Log.i(TAG, "getCurrent: "+ Arrays.toString(nameItemPath));
         DocumentFile temp = rootFile;
         for (String name : paths) {
             if (needStop()) break;
