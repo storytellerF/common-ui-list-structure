@@ -14,11 +14,11 @@
     <item
         android:id="@+id/paste_file"
         android:icon="@drawable/ic_baseline_content_paste_24"
-        android:title="paste"
+        android:title="@string/paste"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/background_task"
-        android:title="后台任务管理" />
+        android:title="@string/background_task_manage" />
 
 </menu>

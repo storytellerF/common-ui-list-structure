@@ -309,9 +309,18 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         info.forEach {
             val authority = it.providerInfo.authority
             val loadLabel = it.loadLabel(packageManager).toString()
+//            val icon = it.loadIcon(packageManager)
             menu.add(loadLabel)
                 .setChecked(savedUris.contains(authority))
                 .setCheckable(true)
+//                .setActionView(ImageView(this).apply {
+//                    setImageDrawable(icon)
+//                })
+                .apply {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        tooltipText = authority
+                    }
+                }
                 .setOnMenuItemClickListener {
                     switchRoot(authority)
                     true
