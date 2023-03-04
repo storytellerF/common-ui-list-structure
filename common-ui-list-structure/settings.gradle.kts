@@ -43,7 +43,7 @@ include(":ext-func-definition")
 include(":app:ping")
 include(":ui-list-annotation-compiler-ksp")
 include(":ui-list-annotation-common")
-include(":app:giant-explorer:plugin-core")
+include(":app:giant-explorer-plugin-core")
 include(":slim-ktx")
 
 val l = listOf("config-core", "filter-core", "sort-core", "config_edit", "filter-ui", "sort-ui", "recycleview_ui_extra")

@@ -76,7 +76,7 @@ dependencies {
 
     implementation("com.github.bumptech.glide:glide:4.14.2")
 
-    implementation(project(":app:giant-explorer:plugin-core"))
+    implementation(project(":app:giant-explorer-plugin-core"))
     implementation("androidx.webkit:webkit:1.6.0")
 
     //filter & sort
