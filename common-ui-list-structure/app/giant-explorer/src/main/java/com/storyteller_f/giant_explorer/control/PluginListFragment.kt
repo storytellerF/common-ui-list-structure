@@ -2,16 +2,15 @@ package com.storyteller_f.giant_explorer.control
 
 import android.os.Bundle
 import android.view.View
+import androidx.navigation.fragment.findNavController
+import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.common_ui.owner
 import com.storyteller_f.common_ui.scope
-import com.storyteller_f.giant_explorer.PluginConfiguration
-import com.storyteller_f.giant_explorer.PluginManager
+import com.storyteller_f.giant_explorer.*
 import com.storyteller_f.giant_explorer.databinding.FragmentPluginListBinding
 import com.storyteller_f.giant_explorer.databinding.ViewHolderPluginBinding
-import com.storyteller_f.giant_explorer.pluginManagerRegister
-import com.storyteller_f.giant_explorer.refreshPlugin
 import com.storyteller_f.ui_list.adapter.ManualAdapter
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import com.storyteller_f.ui_list.core.AbstractViewHolder
@@ -59,6 +58,11 @@ class PluginListFragment : SimpleFragment<FragmentPluginListBinding>(FragmentPlu
 
     override fun onBindViewEvent(binding: FragmentPluginListBinding) {
 
+    }
+
+    @BindClickEvent(PluginHolder::class)
+    fun clickPlugin(itemHolder: PluginHolder) {
+        findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment, PluginInfoFragmentArgs(itemHolder.name).toBundle())
     }
 
 }

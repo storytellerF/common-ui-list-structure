@@ -109,7 +109,7 @@ class FragmentPluginActivity : AppCompatActivity() {
 
         }
         lifecycleScope.launch {
-            val revolvePlugin = pluginManagerRegister.revolvePluginName(pluginName, this@FragmentPluginActivity) as FragmentPluginConfiguration
+            val revolvePlugin = pluginManagerRegister.resolvePluginName(pluginName, this@FragmentPluginActivity) as FragmentPluginConfiguration
             val dexClassLoader = revolvePlugin.classLoader
             val name = revolvePlugin.startFragment
             pluginFragments = revolvePlugin.pluginFragments

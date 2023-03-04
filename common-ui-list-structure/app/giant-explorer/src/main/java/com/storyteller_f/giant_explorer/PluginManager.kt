@@ -67,7 +67,7 @@ class PluginManager {
      */
     @WorkerThread
     @Synchronized
-    fun revolvePlugin(path: String, context: Context): PluginConfiguration {
+    fun resolvePlugin(path: String, context: Context): PluginConfiguration {
         val file = File(path)
         val name = file.name
         val extension = file.extension
@@ -87,8 +87,8 @@ class PluginManager {
 
     @WorkerThread
     @Synchronized
-    fun revolvePluginName(name: String, context: Context): PluginConfiguration {
-        return revolvePlugin(pluginPath(name), context)
+    fun resolvePluginName(name: String, context: Context): PluginConfiguration {
+        return resolvePlugin(pluginPath(name), context)
     }
 
     fun pluginsName(): Set<String> {

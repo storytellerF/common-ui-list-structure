@@ -6,8 +6,8 @@
     <string name="string_add_directory">添加文件夹</string>
     <string name="title_activity_background_task_config">BackgroundTaskConfigActivity</string>
     <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
+    <string name="first_fragment_label">插件列表</string>
+    <string name="second_fragment_label">插件详情</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
 

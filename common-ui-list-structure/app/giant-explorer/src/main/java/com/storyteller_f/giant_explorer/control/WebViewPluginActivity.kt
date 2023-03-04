@@ -47,7 +47,7 @@ class WebViewPluginActivity : AppCompatActivity() {
         messageChannel
         bindApi(webView, uriData)
         scope.launch {
-            val revolvePluginName = pluginManagerRegister.revolvePluginName(pluginName, this@WebViewPluginActivity) as HtmlPluginConfiguration
+            val revolvePluginName = pluginManagerRegister.resolvePluginName(pluginName, this@WebViewPluginActivity) as HtmlPluginConfiguration
             setupWebView(revolvePluginName.extractedPath)
             val indexFile = File(revolvePluginName.extractedPath, "index.html")
             val toString = Uri.fromFile(indexFile).toString()

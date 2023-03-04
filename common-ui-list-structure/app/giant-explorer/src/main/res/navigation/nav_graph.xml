@@ -16,9 +16,13 @@
     </fragment>
     <fragment
         android:id="@+id/SecondFragment"
-        android:name="com.storyteller_f.giant_explorer.control.SecondFragment"
+        android:name="com.storyteller_f.giant_explorer.control.PluginInfoFragment"
         android:label="@string/second_fragment_label"
-        tools:layout="@layout/fragment_second">
+        tools:layout="@layout/fragment_plugin_info">
+
+        <argument
+            android:name="pluginName"
+            app:argType="string" />
 
         <action
             android:id="@+id/action_SecondFragment_to_FirstFragment"

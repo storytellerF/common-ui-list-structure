@@ -15,6 +15,9 @@
                 android:mimeType="*/*"
                 android:scheme="content" />
         </intent>
+        <intent>
+            <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
+        </intent>
     </queries>
 
     <application
