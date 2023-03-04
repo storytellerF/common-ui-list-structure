@@ -1,7 +1,14 @@
 package com.storyteller_f.giant_explorer.control
 
+import android.content.ComponentName
+import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.browser.customtabs.CustomTabsCallback
+import androidx.browser.customtabs.CustomTabsClient
+import androidx.browser.customtabs.CustomTabsServiceConnection
+import androidx.browser.customtabs.CustomTabsSession
 import androidx.core.view.WindowCompat
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -12,10 +19,27 @@ import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.databinding.ActivityRootAccessBinding
 import com.topjohnwu.superuser.Shell
 
+
 class RootAccessActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityRootAccessBinding
+
+    private val CUSTOM_TAB_PACKAGE_NAME = "com.android.chrome" // Change when in stable
+    var newSession: CustomTabsSession? = null
+    private val connection: CustomTabsServiceConnection = object : CustomTabsServiceConnection() {
+        override fun onCustomTabsServiceConnected(name: ComponentName, client: CustomTabsClient) {
+            val warmup = client.warmup(0)
+            Log.i(TAG, "onCustomTabsServiceConnected: warmup $warmup")
+            newSession = client.newSession(object : CustomTabsCallback() {
+
+            })
+            val mayLaunchUrl = newSession?.mayLaunchUrl(Uri.parse("https://github.com/topjohnwu/Magisk"), null, null)
+            Log.i(TAG, "onCustomTabsServiceConnected: url: $mayLaunchUrl $newSession")
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {}
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -35,11 +59,16 @@ class RootAccessActivity : AppCompatActivity() {
                 Snackbar.make(binding.root, shell.isRoot.toString(), Snackbar.LENGTH_SHORT).show()
             }
         }
+        val bindCustomTabsService = CustomTabsClient.bindCustomTabsService(this, CUSTOM_TAB_PACKAGE_NAME, connection)
+        Log.i(TAG, "onCreate: bind $bindCustomTabsService")
     }
 
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment_content_root_access)
         return navController.navigateUp(appBarConfiguration)
                 || super.onSupportNavigateUp()
+    }
+    companion object {
+        private const val TAG = "RootAccessActivity"
     }
 }

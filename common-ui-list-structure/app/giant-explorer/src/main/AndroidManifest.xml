@@ -18,6 +18,10 @@
         <intent>
             <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
         </intent>
+        <intent>
+            <action android:name=
+                "android.support.customtabs.action.CustomTabsService" />
+        </intent>
     </queries>
 
     <application
