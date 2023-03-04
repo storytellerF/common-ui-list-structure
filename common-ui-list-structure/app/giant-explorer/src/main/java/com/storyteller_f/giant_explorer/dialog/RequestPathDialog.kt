@@ -23,6 +23,7 @@ import com.storyteller_f.filter_core.Filter
 import com.storyteller_f.giant_explorer.control.*
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.DialogRequestPathBinding
+import com.storyteller_f.giant_explorer.view.PathMan
 import com.storyteller_f.sort_ui.SortChain
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import com.storyteller_f.ui_list.source.SearchProducer
@@ -39,7 +40,7 @@ import kotlinx.parcelize.Parcelize
 class RequestPathDialog :
     SimpleDialogFragment<DialogRequestPathBinding>(DialogRequestPathBinding::inflate), RegistryFragment {
     private val session by vm({ FileInstanceFactory.rootUserEmulatedPath }) {
-        FileExplorerSession(requireActivity().application, it)
+        FileExplorerSession(requireActivity().application, it, FileInstanceFactory.publicFileSystemRoot)
     }
     private val filterHiddenFile by svm({}) { it, _ ->
         StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
@@ -96,6 +97,7 @@ class RequestPathDialog :
             if (value != null) {
                 if (value.path == "/" || value.path == FileInstanceFactory.rootUserEmulatedPath) {
                     isEnabled = false
+                    @Suppress("DEPRECATION")
                     dialog?.onBackPressed()
                 } else {
                     session.fileInstance.value = FileInstanceFactory.toParent(value, requireContext())
@@ -134,14 +136,21 @@ class RequestPathDialog :
         }
         scope.launch {
             callbackFlow {
-                binding.pathMan.setPathChangeListener {
-                    trySend(it)
-                }
+                binding.pathMan.setPathChangeListener(object : PathMan.PathChangeListener {
+                    override fun onSkipOnPathMan(pathString: String) {
+                        trySend(pathString)
+                    }
+
+                    override fun root(): String {
+                        return FileInstanceFactory.publicFileSystemRoot
+                    }
+
+                })
                 awaitClose {
                     binding.pathMan.setPathChangeListener(null)
                 }
             }.flowWithLifecycle(lifecycle).collectLatest {
-                session.fileInstance.value = FileInstanceFactory.getFileInstance(it, requireContext())
+                session.fileInstance.value = getFileInstance(it, requireContext())
             }
         }
     }

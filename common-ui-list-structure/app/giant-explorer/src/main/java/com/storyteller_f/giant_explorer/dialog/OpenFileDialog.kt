@@ -14,6 +14,7 @@ import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.util.FileUtility
+import com.storyteller_f.giant_explorer.control.getFileInstance
 import com.storyteller_f.giant_explorer.databinding.DialogOpenFileBinding
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -41,7 +42,7 @@ class OpenFileDialog : SimpleDialogFragment<DialogOpenFileBinding>(DialogOpenFil
 
     override fun onBindViewEvent(binding: DialogOpenFileBinding) {
         val path = args.path
-        val fileInstance = FileInstanceFactory.getFileInstance(path, requireContext())
+        val fileInstance = getFileInstance(path, requireContext())
         binding.fileName.text = path
         binding.fileName.copyTextFeature()
         binding.dataType = dataType

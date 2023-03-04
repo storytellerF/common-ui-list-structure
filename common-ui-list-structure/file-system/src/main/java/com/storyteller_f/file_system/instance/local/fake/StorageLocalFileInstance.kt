@@ -6,7 +6,6 @@ import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.model.FilesAndDirectories
 import com.storyteller_f.file_system.util.FileUtility
 import java.io.File
 import java.io.FileInputStream
@@ -36,20 +35,19 @@ class StorageLocalFileInstance(val context: Context) :
         fileItems: MutableList<FileItemModel>,
         directoryItems: MutableList<DirectoryItemModel>
     ) {
+        val path = FileInstanceFactory.emulatedRootPath
+        val emulated = DirectoryItemModel("emulated", path, false, File(path).lastModified())
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             val storageVolume = FileUtility.getStorageVolume(context)
-            storageVolume.mapNotNull {
+            val storages = storageVolume.mapNotNull {
                 it.uuid?.let { uuid ->
                     val s = "${FileInstanceFactory.storagePath}/${uuid}"
                     DirectoryItemModel(uuid, s, false, File(s).lastModified())
                 }
-            }.toMutableList().apply {
-                val path = FileInstanceFactory.emulatedRootPath
-                add(DirectoryItemModel("emulated", path, false, File(path).lastModified()))
-            }.forEach(directoryItems::add)
-
+            }
+            (storages + emulated).forEach(directoryItems::add)
         } else {
-            FilesAndDirectories.empty()
+            directoryItems.add(emulated)
         }
     }
 

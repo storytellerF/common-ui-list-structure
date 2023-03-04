@@ -6,7 +6,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
-import com.storyteller_f.file_system.Filter;
 import com.storyteller_f.file_system.model.DirectoryItemModel;
 import com.storyteller_f.file_system.model.FileItemModel;
 import com.storyteller_f.file_system.model.FileSystemItemModel;
@@ -28,12 +27,8 @@ import java.util.List;
 public class RegularLocalFileInstance extends LocalFileInstance {
     private static final String TAG = "ExternalFileInstance";
 
-    public RegularLocalFileInstance(Context context, Filter filter, String path) {
-        super(context, filter, path);
-    }
-
-    public RegularLocalFileInstance(Context context, String path) {
-        super(context, path);
+    public RegularLocalFileInstance(Context context, String path, String fileSystemRoot) {
+        super(context, path, fileSystemRoot);
     }
 
     @Override
@@ -56,7 +51,7 @@ public class RegularLocalFileInstance extends LocalFileInstance {
     @Override
     public LocalFileInstance toChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) throws Exception {
         File subFile = new File(file, name);
-        RegularLocalFileInstance internalFileInstance = new RegularLocalFileInstance(context, filter, subFile.getAbsolutePath());
+        RegularLocalFileInstance internalFileInstance = new RegularLocalFileInstance(context, subFile.getAbsolutePath(), fileSystemRoot);
         //检查目标文件是否存在
         checkChildExistsOtherwiseCreate(subFile, isFile, createWhenNotExists);
         return internalFileInstance;
@@ -72,34 +67,32 @@ public class RegularLocalFileInstance extends LocalFileInstance {
             } else if (!file.mkdirs()) throw new Exception("新建文件失败");
         } else throw new Exception("不存在，且不能创建");
         else
-            throw new Exception("当前文件或者文件夹不存在。path:" + path);
+            throw new Exception("当前文件或者文件夹不存在。path:" + getPath());
     }
 
     @Override
     public void changeToChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) throws Exception {
         Log.d(TAG, "changeToChild() called with: name = [" + name + "], isFile = [" + isFile + "]");
         checkChildExistsOtherwiseCreate(file, isFile, createWhenNotExists);
-        path = file.getAbsolutePath();
-        initName();
+        file = new File(file, name);
     }
 
     @Override
     public void changeTo(@NonNull String path) {
-        if (this.path.equals(path)) {
+        if (this.getPath().equals(path)) {
             return;
         }
-        this.path = path;
         this.file = new File(path);
     }
 
     @Override
     public BufferedReader getBufferedReader() throws FileNotFoundException {
-        return new BufferedReader(new FileReader(path));
+        return new BufferedReader(new FileReader(getPath()));
     }
 
     @Override
     public BufferedWriter getBufferedWriter() throws IOException {
-        return new BufferedWriter(new FileWriter(path));
+        return new BufferedWriter(new FileWriter(getPath()));
     }
 
     @Override
@@ -159,14 +152,12 @@ public class RegularLocalFileInstance extends LocalFileInstance {
 
     @Override
     public LocalFileInstance toParent() {
-        return new RegularLocalFileInstance(context, filter, file.getParent());
+        return new RegularLocalFileInstance(context, file.getParent(), fileSystemRoot);
     }
 
     @Override
     public void changeToParent() {
-        File parentFile = file.getParentFile();
-        path = parentFile.getPath();
-        name = parentFile.getName();
+        file = file.getParentFile();
     }
 
     @Override

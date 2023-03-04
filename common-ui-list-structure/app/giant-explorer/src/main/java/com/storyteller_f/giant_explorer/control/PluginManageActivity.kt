@@ -44,7 +44,7 @@ class PluginManageActivity : CommonActivity() {
         binding.fab.setOnClickListener {
             dialog(RequestPathDialog::class.java) { result: RequestPathDialog.RequestPathResult ->
                 result.path.mm {
-                    FileInstanceFactory.getFileInstance(it, this)
+                    getFileInstance(it, this)
                 }.mm { dest ->
                     lifecycleScope.launch {
                         addPlugin(dest, pluginRoot)

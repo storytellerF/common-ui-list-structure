@@ -7,11 +7,11 @@ import android.util.Log
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.MutableLiveData
 import com.storyteller_f.common_ktx.exceptionMessage
-import com.storyteller_f.file_system.FileInstanceFactory.getFileInstance
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.operate.FileOperationForemanProgressListener
+import com.storyteller_f.giant_explorer.control.getFileInstance
 import com.storyteller_f.giant_explorer.service.FileOperateService.FileOperateResultContainer
 import com.storyteller_f.plugin_core.GiantExplorerService
 import okio.FileNotFoundException

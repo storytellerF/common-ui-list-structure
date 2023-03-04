@@ -7,95 +7,76 @@ import android.util.Log
 import androidx.annotation.WorkerThread
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.local.RegularLocalFileInstance
-import com.storyteller_f.file_system.instance.local.document.ExternalDocumentLocalFileInstance
-import com.storyteller_f.file_system.instance.local.document.MountedLocalFileInstance
+import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.EmulatedLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.FakeDirectoryLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.StorageLocalFileInstance
-import com.storyteller_f.file_system.model.DirectoryItemModel
-import com.storyteller_f.file_system.model.FileItemModel
 import java.util.*
 
 object FileInstanceFactory {
     private const val TAG = "FileInstanceFactory"
     const val rootUserEmulatedPath = "/storage/emulated/0"
     const val emulatedRootPath = "/storage/emulated"
-    const val currentEmulatedPath = "/storage/self"
+    private const val currentEmulatedPath = "/storage/self"
     const val storagePath = "/storage"
-    const val sdcardPath = "/sdcard"
-    private val filter: Filter = object : Filter {
-        override fun onPath(parent: String, absolutePath: String, isFile: Boolean): Boolean {
-            return true
-        }
-
-        override fun onFile(parent: String): List<FileItemModel> {
-            return ArrayList()
-        }
-
-        override fun onDirectory(parent: String): List<DirectoryItemModel> {
-            return ArrayList()
-        }
-    }
-
-    @JvmStatic
-    @WorkerThread
-    fun getFileInstance(path: String, context: Context): FileInstance {
-        return getFileInstance(filter, path, context)
-    }
+    private const val sdcardPath = "/sdcard"
+    const val publicFileSystemRoot = "/"
 
     private val regularPath = listOf("/system", "/mnt")
 
+    /**
+     * @param root 如果是普通文件系统，是/。如果是document provider，是authority
+     */
     @WorkerThread
-    private fun getFileInstance(filter: Filter?, unsafePath: String, context: Context): FileInstance {
+    fun getFileInstance(unsafePath: String, context: Context, root: String = publicFileSystemRoot): FileInstance {
         assert(!unsafePath.endsWith("/") || unsafePath.length == 1) {
             "invalid path [$unsafePath]"
         }
         val path = simplyPath(unsafePath)
+        if (root != publicFileSystemRoot) return DocumentLocalFileInstance(context, path, root, root)
         return when {
             path.startsWith(rootUserEmulatedPath) -> if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R && Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                ExternalDocumentLocalFileInstance(filter, context, path)
+                DocumentLocalFileInstance.getEmulated(context, path)
             } else {
-                RegularLocalFileInstance(context, filter, path)
+                RegularLocalFileInstance(context, path, root)
             }
-            path.startsWith(emulatedRootPath) -> EmulatedLocalFileInstance(context, filter)
-            path.startsWith(currentEmulatedPath) -> RegularLocalFileInstance(context, filter, path)
+            path.startsWith(emulatedRootPath) -> EmulatedLocalFileInstance(context)
+            path.startsWith(currentEmulatedPath) -> RegularLocalFileInstance(context, path, root)
             path == storagePath -> StorageLocalFileInstance(context)
             path.startsWith(storagePath) -> when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
-                    RegularLocalFileInstance(context, filter, path)
+                    RegularLocalFileInstance(context, path, root)
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ->
-                    MountedLocalFileInstance(filter, context, path)
+                    DocumentLocalFileInstance.getMounted(context, path)
                 Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1 -> {
-                    Log.e(
-                        TAG,
-                        "getFileInstance: 当前版本不支持formTreeUri，测试性的返回"
-                    )
-                    RegularLocalFileInstance(context, filter, path)
+                    Log.e(TAG, "getFileInstance: 当前版本不支持formTreeUri，测试性的返回")
+                    RegularLocalFileInstance(context, path, root)
                 }
-                else -> RegularLocalFileInstance(context, filter, path)
+                else -> RegularLocalFileInstance(context, path, root)
             }
-            path.startsWith(sdcardPath) -> RegularLocalFileInstance(context, filter, path)
+            path.startsWith(sdcardPath) -> RegularLocalFileInstance(context, path, root)
             regularPath.any {
                 path.startsWith(it)
-            } -> RegularLocalFileInstance(context, filter, path)
-            path.startsWith("/data/data/${context.packageName}") -> RegularLocalFileInstance(context, filter, path)
+            } -> RegularLocalFileInstance(context, path, root)
+            path.startsWith("/data/data/${context.packageName}") -> RegularLocalFileInstance(context, path, root)
             else -> FakeDirectoryLocalFileInstance(path, context)
         }
     }
 
     /**
-     * @return 如果返回值是空字符串，代表应该使用fake 型file instance
+     * @return 如果返回值是空字符串，代表应该使用fake 型file instance。否则必须要prefix
      */
     @JvmStatic
-    fun getPrefix(unsafePath: String, context: Context): String {
+    fun getPrefix(unsafePath: String, context: Context, root: String = publicFileSystemRoot): String {
         assert(!unsafePath.endsWith("/") || unsafePath.length == 1) {
             unsafePath
         }
         val path = simplyPath(unsafePath)
+        if (root != "/") return "/"
         return when {
             path.startsWith(rootUserEmulatedPath) -> rootUserEmulatedPath
             path.startsWith(emulatedRootPath) -> emulatedRootPath
-            path == storagePath -> "/storage"
+            path == storagePath -> storagePath
             path.startsWith(storagePath) -> {
                 var endIndex = path.indexOf("/", storagePath.length)
                 if (endIndex == -1) endIndex = path.length
@@ -181,18 +162,18 @@ object FileInstanceFactory {
                             //无效操作
                         }
                         else -> {
-                            stack.add(name);
+                            stack.add(name)
                             stack.add("/")
                         }
                     }
                 }
             } else nameStack.add(current)
         }
-        val s = nameStack.joinToString("");
+        val s = nameStack.joinToString("")
         if (s.isNotEmpty())
             if (s == "..") {
                 if (stack.size > 1) {
-                    stack.removeLast();
+                    stack.removeLast()
                     stack.removeLast()
                 }
             } else if (s != ".") {

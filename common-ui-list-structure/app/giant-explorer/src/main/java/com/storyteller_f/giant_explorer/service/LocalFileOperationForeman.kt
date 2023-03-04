@@ -10,6 +10,7 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.message.Message
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.operate.*
+import com.storyteller_f.giant_explorer.control.getFileInstance
 import com.storyteller_f.multi_core.StoppableTask
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -101,7 +102,7 @@ class CopyForemanImpl(
                     emitDetailMessage("已暂停", Log.WARN)
                     return false
                 }
-                val fileInstance = FileInstanceFactory.getFileInstance(it.fullPath, context)
+                val fileInstance = getFileInstance(it.fullPath, context)
                 emitStateMessage("处理${fileInstance.path}")
                 if (isMove) !FileMoveOpInShell(this, fileInstance, dest, context).apply {
                     fileOperationListener = this@CopyForemanImpl
@@ -143,7 +144,7 @@ class DeleteForemanImpl(
     override fun call(): Boolean {
         val isSuccess = !detectorTasks.any {//如果有一个失败了，就提前退出
             emitStateMessage("处理${it.fullPath}")
-            !FileDeleteOp(this, FileInstanceFactory.getFileInstance(it.fullPath, context), context).apply {
+            !FileDeleteOp(this, getFileInstance(it.fullPath, context), context).apply {
                 fileOperationListener = this@DeleteForemanImpl
             }.call()
         }
@@ -160,7 +161,7 @@ class CompoundForemanImpl(private val selected: List<DetectedTask>, private val 
             try {
                 when (it) {
                     is DownloadTask -> !executeDownload(okHttpClient, it)
-                    is LocalTask -> !FileCopyOp(this, FileInstanceFactory.getFileInstance(it.path, context), dest, context).apply {
+                    is LocalTask -> !FileCopyOp(this, getFileInstance(it.path, context), dest, context).apply {
                         fileOperationListener = this@CompoundForemanImpl
                     }.call()
                     is ContentTask -> !executeContentTask(it)

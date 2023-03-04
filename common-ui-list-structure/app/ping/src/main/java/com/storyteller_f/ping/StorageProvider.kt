@@ -69,16 +69,18 @@ class StorageProvider : DocumentsProvider() {
     }
 
     override fun queryDocument(documentId: String?, projection: Array<out String>?): Cursor {
-        Log.d(TAG, "queryDocument() called with: documentId = $documentId, projection = $projection")
+        Log.d(TAG, "queryDocument() called with: documentId = $documentId, projection = ${projection?.joinToString()}")
         return MatrixCursor(projection ?: DEFAULT_DOCUMENT_PROJECTION).apply {
             val root = context?.filesDir?.parentFile ?: return@apply
+            val document = documentId ?: "/"
+            val file = File(root, document)
             newRow().apply {
-                add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, "/")
+                add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, document)
                 add(DocumentsContract.Document.COLUMN_MIME_TYPE, DocumentsContract.Document.MIME_TYPE_DIR)
                 val flags = 0
                 add(DocumentsContract.Document.COLUMN_FLAGS, flags)
-                add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, root.name)
-                add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, root.lastModified())
+                add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, file.name)
+                add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, file.lastModified())
                 add(DocumentsContract.Document.COLUMN_SIZE, 0)
             }
         }
@@ -120,7 +122,7 @@ class StorageProvider : DocumentsProvider() {
     }
 
     override fun queryChildDocuments(parentDocumentId: String?, projection: Array<out String>?, sortOrder: String?): Cursor {
-        Log.d(TAG, "queryChildDocuments() called with: parentDocumentId = $parentDocumentId, projection = $projection, sortOrder = $sortOrder")
+        Log.d(TAG, "queryChildDocuments() called with: parentDocumentId = $parentDocumentId, projection = ${projection?.joinToString()}, sortOrder = $sortOrder")
 
         return MatrixCursor(projection ?: DEFAULT_DOCUMENT_PROJECTION).apply {
             handleChild(parentDocumentId)
@@ -179,11 +181,16 @@ class StorageProvider : DocumentsProvider() {
         return AssetFileDescriptor(ParcelFileDescriptor.open(thumbFile, ParcelFileDescriptor.parseMode("r")), 0, AssetFileDescriptor.UNKNOWN_LENGTH)
     }
 
+    override fun isChildDocument(parentDocumentId: String?, documentId: String?): Boolean {
+        if (parentDocumentId == null) return false
+        if (documentId == null) return false
+        return documentId.startsWith(parentDocumentId)
+    }
+
     private fun firstFrame(root: File, documentId: String): Bitmap {
         val file = File(root, documentId)
         val mediaExtractor = MediaMetadataRetriever()
         mediaExtractor.setDataSource(file.absolutePath)
-        val frameAtTime = mediaExtractor.getFrameAtTime(0)!!
-        return frameAtTime
+        return mediaExtractor.getFrameAtTime(0)!!
     }
 }

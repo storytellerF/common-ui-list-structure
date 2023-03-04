@@ -2,21 +2,26 @@ package com.storyteller_f.giant_explorer.control
 
 import android.app.Application
 import android.content.*
+import android.content.pm.PackageManager
+import android.content.pm.ResolveInfo
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.view.*
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.view.DragStartHelper
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
-import androidx.navigation.findNavController
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
 import com.google.gson.typeadapters.RuntimeTypeAdapterFactory
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ktx.context
@@ -24,9 +29,10 @@ import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
+import com.storyteller_f.file_system.FileSystemUriSaver
 import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
-import com.storyteller_f.file_system.instance.local.document.DocumentLocalFileInstance
+import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.model.TorrentFileItemModel
@@ -48,6 +54,7 @@ import com.storyteller_f.giant_explorer.service.FileOperateBinder
 import com.storyteller_f.giant_explorer.service.FileOperateService
 import com.storyteller_f.giant_explorer.service.FileService
 import com.storyteller_f.giant_explorer.service.RootAccessFileInstance
+import com.storyteller_f.giant_explorer.view.PathMan
 import com.storyteller_f.sort_core.config.SortConfigItem
 import com.storyteller_f.sort_ui.SortChain
 import com.storyteller_f.sort_ui.SortDialog
@@ -73,13 +80,14 @@ import java.util.*
 import kotlin.concurrent.thread
 import kotlin.coroutines.resumeWithException
 
-class FileExplorerSession(application: Application, path: String) : AndroidViewModel(application) {
+
+class FileExplorerSession(application: Application, path: String, root: String) : AndroidViewModel(application) {
     val selected = MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>()
     val fileInstance = MutableLiveData<FileInstance>()
 
     init {
         viewModelScope.launch {
-            getFileInstanceAsync(path, application.applicationContext).let {
+            getFileInstanceAsync(path, application.applicationContext, root).let {
                 fileInstance.value = it
             }
         }
@@ -88,18 +96,18 @@ class FileExplorerSession(application: Application, path: String) : AndroidViewM
 
 }
 
-suspend fun getFileInstanceAsync(path: String, context: Context) = suspendCancellableCoroutine {
+suspend fun getFileInstanceAsync(path: String, context: Context, root: String) = suspendCancellableCoroutine {
     thread {
-        val result = Result.success(getFileInstance(path, context))
+        val result = Result.success(getFileInstance(path, context, root))
         it.resumeWith(result)
     }
 }
 
-fun getFileInstance(path: String, context: Context): FileInstance {
+fun getFileInstance(path: String, context: Context, root: String = FileInstanceFactory.publicFileSystemRoot): FileInstance {
     val fileSystemManager = remote
     return if (fileSystemManager != null) {
         RootAccessFileInstance(FileInstanceFactory.simplyPath(path), fileSystemManager)
-    } else FileInstanceFactory.getFileInstance(path, context)
+    } else FileInstanceFactory.getFileInstance(path, context, root)
 }
 
 var remote: FileSystemManager? = null
@@ -116,10 +124,10 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     private lateinit var sortDialog: SortDialog<FileSystemItemModel>
 
     private val filters by keyPrefix({ "test" }, svm({ filterDialog }) { it, f ->
-        StateValueModel(it, default = buildFilterActive(f.currentConfig()?.configItems.orEmpty().toList()))
+        StateValueModel(it, default = buildFilterActive(f.currentConfig()?.configItems.orEmpty()))
     })
     private val sort by keyPrefix({ "sort" }, svm({ sortDialog }) { it, f ->
-        StateValueModel(it, default = buildSortActive(f.current()?.configItems.orEmpty().toList()))
+        StateValueModel(it, default = buildSortActive(f.current()?.configItems.orEmpty()))
     })
 
     private val uuid by vm({}) {
@@ -128,11 +136,29 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         }
     }
 
-    private fun buildFilterActive(configItems: List<FilterConfigItem>?): List<Filter<FileSystemItemModel>> = configItems.orEmpty().map {
+    private var currentKey: String? = null
+    private val requestDocumentProvider = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) {
+        processDocumentProvider(it)
+    }
+
+    private fun processDocumentProvider(it: Uri?) {
+        Log.i(TAG, "uri: $it")
+        val key = currentKey
+        if (it != null && key != null) {
+            if (key != it.authority) {
+                Toast.makeText(this, "选择错误", Toast.LENGTH_LONG).show()
+                return
+            }
+            FileSystemUriSaver.getInstance().saveUri(key, this, it)
+            currentKey = null
+        }
+    }
+
+    private fun buildFilterActive(configItems: List<FilterConfigItem>): List<Filter<FileSystemItemModel>> = configItems.map {
         NameFilter(it as NameFilter.Config)
     }
 
-    private fun buildSortActive(configItems: List<SortConfigItem>?): List<SortChain<FileSystemItemModel>> = configItems.orEmpty().map {
+    private fun buildSortActive(configItems: List<SortConfigItem>): List<SortChain<FileSystemItemModel>> = configItems.map {
         NameSort(NameSort.Item())
     }
 
@@ -158,21 +184,33 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             }
 
         }
-
+        binding.switchRoot.setOnClick {
+            openContextMenu(it)
+        }
+        registerForContextMenu(binding.switchRoot)
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_main) as NavHostFragment
+        val navController = navHostFragment.navController
 
         scope.launch {
             callbackFlow {
-                binding.pathMan.setPathChangeListener {
-                    trySend(it)
-                }
+                binding.pathMan.setPathChangeListener(object : PathMan.PathChangeListener {
+                    override fun onSkipOnPathMan(pathString: String) {
+                        trySend(pathString)
+                    }
+
+                    override fun root(): String {
+                        return FileInstanceFactory.publicFileSystemRoot
+                    }
+
+                })
                 awaitClose {
                     binding.pathMan.setPathChangeListener(null)
                 }
             }.flowWithLifecycle(lifecycle).collectLatest {
-                findNavController(R.id.nav_host_fragment_main).navigate(R.id.fileListFragment, FileListFragmentArgs(it).toBundle())
+                navController.navigate(R.id.fileListFragment, FileListFragmentArgs(it, FileInstanceFactory.publicFileSystemRoot).toBundle())
             }
         }
-        findNavController(R.id.nav_host_fragment_main).setGraph(R.navigation.nav_main, FileListFragmentArgs(FileInstanceFactory.rootUserEmulatedPath).toBundle())
+        navController.setGraph(R.navigation.nav_main, FileListFragmentArgs(FileInstanceFactory.rootUserEmulatedPath, FileInstanceFactory.publicFileSystemRoot).toBundle())
     }
 
     private fun initDialog() {
@@ -183,7 +221,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
                 }.toMutableList()
             }
 
-            override fun onActiveListSelected(dialog: FilterDialog<FileSystemItemModel>, configItems: MutableList<FilterConfigItem>?) = dialog.add(buildFilterActive(configItems))
+            override fun onActiveListSelected(dialog: FilterDialog<FileSystemItemModel>, configItems: MutableList<FilterConfigItem>?) = dialog.add(buildFilterActive(configItems.orEmpty()))
 
             override fun onActiveChanged(dialog: FilterDialog<FileSystemItemModel>) {
                 filters.data.value = dialog.activeFilters
@@ -200,7 +238,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
                 }.toMutableList()
             }
 
-            override fun onActiveSelected(sortDialog: SortDialog<FileSystemItemModel>, configItems: MutableList<SortConfigItem>?) = sortDialog.add(buildSortActive(configItems))
+            override fun onActiveSelected(sortDialog: SortDialog<FileSystemItemModel>, configItems: MutableList<SortConfigItem>?) = sortDialog.add(buildSortActive(configItems.orEmpty()))
 
             override fun onActiveChanged(sortDialog: SortDialog<FileSystemItemModel>) {
                 sort.data.value = sortDialog.active
@@ -259,6 +297,45 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
 
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    override fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?) {
+        super.onCreateContextMenu(menu, v, menuInfo)
+        menu ?: return
+        val provider = Intent("android.content.action.DOCUMENTS_PROVIDER")
+        val info = packageManager.queryIntentContentProvidersCompat(provider, 0)
+        val savedUris = FileSystemUriSaver.getInstance().savedUris(this)
+        info.forEach {
+            val authority = it.providerInfo.authority
+            val loadLabel = it.loadLabel(packageManager).toString()
+            menu.add(loadLabel)
+                .setChecked(savedUris.contains(authority))
+                .setCheckable(true)
+                .setOnMenuItemClickListener {
+                    switchRoot(authority)
+                    true
+                }
+
+        }
+    }
+
+    private fun switchRoot(authority: String): Boolean {
+        val savedUri = FileSystemUriSaver.getInstance().savedUri(authority, this)
+        if (savedUri != null) {
+            val instance = DocumentLocalFileInstance(this, "/", authority, authority)
+            if (instance.exists()) {
+                findNavControl().navigate(R.id.fileListFragment, FileListFragmentArgs(instance.path, authority).toBundle())
+                return true
+            }
+        }
+        currentKey = authority
+        requestDocumentProvider.launch(null)
+        return false
+    }
+
+    private fun findNavControl(): NavController {
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_main) as NavHostFragment
+        return navHostFragment.navController
     }
 
     private fun MenuItem.updateIcon(newState: Boolean) {
@@ -362,11 +439,11 @@ fun LifecycleOwner.supportDirectoryContent(
         }, sortLivedata.distinctUntilChangedBy { sort1, sort2 ->
             sort1.same(sort2)
         }).observe(owner, Observer {
-            val file = it.d1 ?: return@Observer
+            val fileInstance = it.d1 ?: return@Observer
             val filterHiddenFile = it.d2 ?: return@Observer
             val filters = it.d3 ?: return@Observer
             val sort = it.d4 ?: return@Observer
-            val path = file.path
+            val path = fileInstance.path
             //检查权限
             owner.lifecycleScope.launch {
                 if (!checkPathPermission(path)) {
@@ -374,7 +451,7 @@ fun LifecycleOwner.supportDirectoryContent(
                 }
             }
 
-            data.observerInScope(owner, FileExplorerSearch(file, filterHiddenFile, filters, sort)) { pagingData ->
+            data.observerInScope(owner, FileExplorerSearch(fileInstance, filterHiddenFile, filters, sort)) { pagingData ->
                 adapter.submitData(pagingData)
             }
         })
@@ -490,7 +567,6 @@ fun fileServiceBuilder(
                     searchQuery.path.also {
                         if (it is DocumentLocalFileInstance) {
                             if (!it.exists()) {
-                                it.updateRootKey()
                                 it.initDocumentFile()
                             }
                         }
@@ -592,4 +668,22 @@ fun <X> LiveData<X>.distinctUntilChangedBy(f: (X, X) -> Boolean): LiveData<X?> {
         }
     })
     return outputLiveData
+}
+
+@Suppress("DEPRECATION")
+fun PackageManager.queryIntentActivitiesCompat(searchDocumentProvider: Intent, flags: Long): MutableList<ResolveInfo> {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        queryIntentActivities(searchDocumentProvider, PackageManager.ResolveInfoFlags.of(flags))
+    } else {
+        queryIntentActivities(searchDocumentProvider, flags.toInt())
+    }
+}
+
+@Suppress("DEPRECATION")
+fun PackageManager.queryIntentContentProvidersCompat(searchDocumentProvider: Intent, flags: Long): MutableList<ResolveInfo> {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        queryIntentContentProviders(searchDocumentProvider, PackageManager.ResolveInfoFlags.of(flags))
+    } else {
+        queryIntentContentProviders(searchDocumentProvider, flags.toInt())
+    }
 }

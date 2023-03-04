@@ -15,8 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import com.storyteller_f.common_ktx.context
-import com.storyteller_f.file_system.instance.local.document.ExternalDocumentLocalFileInstance
-import com.storyteller_f.file_system.instance.local.document.MountedLocalFileInstance
+import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.file_system.util.FileUtility
 import kotlinx.coroutines.CompletableDeferred
 
@@ -82,14 +81,7 @@ class MainActivity : AppCompatActivity() {
             if (it.resultCode == RESULT_OK) {
                 val uri = it.data?.data
                 if (uri != null) {
-                    val sharedPreferences =
-                        getSharedPreferences(
-                            MountedLocalFileInstance.NAME,
-                            MODE_PRIVATE
-                        )
-                    sharedPreferences.edit()
-                        .putString(MountedLocalFileInstance.ROOT_URI, uri.toString())
-                        .apply()
+                    FileSystemUriSaver.getInstance().saveUri(DocumentLocalFileInstance.mountedKey, this, uri)
                     toast()
                     return@registerForActivityResult
                 }
@@ -110,16 +102,7 @@ class MainActivity : AppCompatActivity() {
             if (it.resultCode == RESULT_OK) {
                 val uri = it.data?.data
                 if (uri != null) {
-                    val sharedPreferences = getSharedPreferences(
-                        ExternalDocumentLocalFileInstance.NAME,
-                        MODE_PRIVATE
-                    )
-                    sharedPreferences.edit()
-                        .putString(
-                            ExternalDocumentLocalFileInstance.STORAGE_URI,
-                            uri.toString()
-                        )
-                        .apply()
+                    FileSystemUriSaver.getInstance().saveUri(DocumentLocalFileInstance.emulatedKey, this, uri)
                     toast()
                     return@registerForActivityResult
                 }
@@ -171,14 +154,14 @@ fun Context.checkPathPermission(dest: String): Boolean {
     return when {
         dest.startsWith(FileInstanceFactory.rootUserEmulatedPath) -> when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> Environment.isExternalStorageManager()
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> ExternalDocumentLocalFileInstance(this, dest).exists()
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> DocumentLocalFileInstance.getEmulated(this, dest).exists()
             else -> ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
         }
         dest == FileInstanceFactory.emulatedRootPath -> true
         dest == "/storage" -> true
         dest.startsWith("/storage") -> when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> Environment.isExternalStorageManager()
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> MountedLocalFileInstance(this, dest).exists()
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> DocumentLocalFileInstance.getMounted(this, dest).exists()
             else -> ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
         }
         else -> ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED

@@ -1,4 +1,4 @@
-package com.storyteller_f.file_system.instance.local.document;
+package com.storyteller_f.file_system.instance.local;
 
 import android.content.Context;
 import android.net.Uri;
@@ -10,8 +10,6 @@ import androidx.documentfile.provider.DocumentFile;
 
 import com.storyteller_f.file_system.FileInstanceFactory;
 import com.storyteller_f.file_system.FileSystemUriSaver;
-import com.storyteller_f.file_system.Filter;
-import com.storyteller_f.file_system.instance.local.LocalFileInstance;
 import com.storyteller_f.file_system.model.DirectoryItemModel;
 import com.storyteller_f.file_system.model.FileItemModel;
 import com.storyteller_f.file_system.util.FileInstanceUtility;
@@ -33,45 +31,26 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-public abstract class DocumentLocalFileInstance extends LocalFileInstance {
+public class DocumentLocalFileInstance extends LocalFileInstance {
     private static final String TAG = "DocumentLocalFileInstan";
+    public static final String mountedKey = "mounted";
+    public static final String emulatedKey = "emulated";
     protected DocumentFile current;
     /**
      * 用来标识对象所在区域，可能是外部，也可能是外部
      */
     String prefix;
-    private String treeRootKey;
-    private String preferenceName;
     private String preferenceKey;
 
-    public DocumentLocalFileInstance(Filter filter, Context context, String path, String preferenceName, String preferenceKey) {
-        super(context, filter, path);
-        init(preferenceName, preferenceKey);
-    }
-
-    public DocumentLocalFileInstance(Context context, String path, String preferenceName, String preferenceKey) {
-        super(context, path);
-        init(preferenceName, preferenceKey);
-    }
-
-    private void init(String preferenceName, String preferenceKey) {
+    public DocumentLocalFileInstance(Context context, String path, String preferenceKey, String fileSystemRoot) {
+        super(context, path, fileSystemRoot);
         this.preferenceKey = preferenceKey;
-        this.preferenceName = preferenceName;
         updatePrefix();
-        updateRootKey();
         initDocumentFile();
     }
 
     private void updatePrefix() {
-        if (path == null || path.isEmpty()) return;
-        this.prefix = FileInstanceFactory.getPrefix(path, context);
-    }
-
-    public void updateRootKey() {
-        treeRootKey = FileSystemUriSaver.getInstance().saveUri(preferenceName, preferenceKey, context);
-        if (treeRootKey == null) {
-            Log.e(TAG, "updateRootKey: 获取root失败:" + path + "，没有授予权限");
-        }
+        prefix = FileInstanceFactory.getPrefix(getPath(), context, fileSystemRoot);
     }
 
     /**
@@ -80,20 +59,11 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
      * @return true 代表初始化成功
      */
     public boolean initDocumentFile() {
-        if (treeRootKey == null) {
-            Log.e(TAG, "initDocumentFile: 获取root 失败:" + path + ",不会进行初始化");
-            return false;
-        }
-        if (path == null || path.isEmpty()) {
-            Log.w(TAG, "initDocumentFile: path is empty, 不会进行初始化");
-            return false;
-        }
-        current = getSpecialDocumentFile(path, false, true);
-        if (current == null) Log.e(TAG, "initDocumentFile: 初始化失败" + path);
-        boolean canRead = current.canRead();
-        if (!canRead) {
+        current = getSpecialDocumentFile(getPath(), false, file.isFile());
+        if (current == null) Log.e(TAG, "initDocumentFile: 初始化失败（未授权）" + getPath());
+        if (current != null && !current.canRead()) {
             current = null;
-            Log.e(TAG, "initDocumentFile: 初始化失败 不可读写");
+            Log.e(TAG, "initDocumentFile: 初始化失败(权限过期) 不可读写");
         }
         return current != null;
     }
@@ -111,7 +81,11 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
             return null;
         }
         String truePath = destination.substring(prefix.length());//获取 SD卡名称后面的路径
-        Uri uri = FileSystemUriSaver.getInstance().getUri(treeRootKey);
+        Uri uri = FileSystemUriSaver.getInstance().savedUri(preferenceKey, context);
+        if (uri == null) {
+            Log.e(TAG, "getSpecialDocumentFile: uri is null");
+            return null;
+        }
         DocumentFile rootFile = DocumentFile.fromTreeUri(context, uri);
         if (rootFile == null) {
             Log.e(TAG, "getCurrent: rootFile is null");
@@ -181,7 +155,7 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
     public boolean createDirectory() {
         //todo 检查是不是真的directory
         if (current != null) return true;
-        DocumentFile created = getSpecialDocumentFile(path, true, false);
+        DocumentFile created = getSpecialDocumentFile(getPath(), true, false);
         if (created != null) {
             current = created;
             return true;
@@ -191,7 +165,7 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
 
     public boolean createFile() {
         if (current != null) return true;
-        DocumentFile created = getSpecialDocumentFile(path, true, true);
+        DocumentFile created = getSpecialDocumentFile(getPath(), true, true);
         if (created != null) {
             current = created;
             return true;
@@ -202,17 +176,16 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
     @Override
     public LocalFileInstance toChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) throws Exception {
         if (!exists()) {
-            Log.e(TAG, "toChild: 未经过初始化或者文件不存在：" + path);
+            Log.e(TAG, "toChild: 未经过初始化或者文件不存在：" + getPath());
             return null;
         }
         if (isFile()) {
             throw new Exception("当前是一个文件，无法向下操作");
         } else {
             DocumentLocalFileInstance instance = getInstance();
-            instance.treeRootKey = treeRootKey;
+            instance.preferenceKey = preferenceKey;
             instance.prefix = prefix;
-            instance.path = String.format("%s/%s", path, name);
-            instance.name = name;
+            instance.file = new File(file, name);
             instance.current = getNewCurrent(name, isFile, createWhenNotExists);
             return instance;
         }
@@ -263,16 +236,14 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
             throw new Exception("当前是一个文件，无法向下操作");
         } else {
             DocumentFile newCurrent = getNewCurrent(name, isFile, createWhenNotExists);
-            this.path += name;
-            this.name = name;
-            if (!isFile) {
-                this.path += "/";
-            }
+            this.file = new File(file, name);
             this.current = newCurrent;
         }
     }
 
-    protected abstract DocumentLocalFileInstance getInstance();
+    protected DocumentLocalFileInstance getInstance() {
+        return new DocumentLocalFileInstance(context, "", "", fileSystemRoot);
+    }
 
     @Override
     public void list(List<FileItemModel> files, List<DirectoryItemModel> directories) {
@@ -281,7 +252,7 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
             if (needStop()) break;
             String documentFileName = documentFile.getName();
             assert documentFileName != null;
-            String fullPath = new File(path, documentFileName).getAbsolutePath();
+            String fullPath = new File(getPath(), documentFileName).getAbsolutePath();
             String detailString = getDetailString(documentFile);
             if (documentFile.isFile()) {
                 FileInstanceUtility.addFile(files, fullPath, detailString, documentFile).setSize(documentFile.length());
@@ -306,17 +277,15 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
 
     @Override
     public LocalFileInstance toParent() throws Exception {
-        File parentFile = new File(path).getParentFile();
+        File parentFile = file.getParentFile();
         if (parentFile == null) {
             throw new Exception("到头了，无法继续向上寻找");
         }
-        String p = parentFile.getAbsolutePath();
         DocumentLocalFileInstance instance = getInstance();
         DocumentFile currentParentFile = current.getParentFile();
         if (currentParentFile != null) {
             if (!currentParentFile.isFile()) {
-                instance.path = p + "/";
-                instance.name = parentFile.getName();
+                instance.file = parentFile;
                 instance.current = currentParentFile;
                 return instance;
             } else {
@@ -330,16 +299,14 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
 
     @Override
     public void changeToParent() throws Exception {
-        File parentFile = new File(path).getParentFile();
+        File parentFile = file.getParentFile();
         if (parentFile == null) {
             throw new Exception("无法继续向上寻找");
         }
-        String p = parentFile.getAbsolutePath();
         DocumentFile documentFile = current.getParentFile();
         if (documentFile != null) {
             if (!documentFile.isFile()) {
-                path = p + "/";
-                name = documentFile.getName();
+                file = parentFile;
                 current = documentFile;
             } else {
                 throw new Exception("当前文件已存在，并且类型不同 源文件：" + documentFile.isFile());
@@ -353,7 +320,7 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
     @Override
     public boolean isFile() {
         if (current == null) {
-            Log.e(TAG, "isFile: path:" + path);
+            Log.e(TAG, "isFile: path:" + getPath());
         }
         return current.isFile();
     }
@@ -369,18 +336,18 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
     @Override
     public boolean isDirectory() {
         if (current == null) {
-            Log.e(TAG, "isDirectory: isDirectory:" + path);
+            Log.e(TAG, "isDirectory: isDirectory:" + getPath());
         }
         return current.isDirectory();
     }
 
     @Override
     public void changeTo(@NonNull String path) {
-        if (this.path.equals(path)) {
+        if (this.getPath().equals(path)) {
             return;
         }
         if (path.startsWith(prefix)) {
-            this.path = path;
+            file = new File(path);
             initDocumentFile();
         }
     }
@@ -434,17 +401,25 @@ public abstract class DocumentLocalFileInstance extends LocalFileInstance {
 
     @Override
     public FileItemModel getFile() {
-        return new FileItemModel(name, path, false, current.lastModified(), FileUtility.getExtension(name));
+        return new FileItemModel(getName(), getPath(), false, current.lastModified(), FileUtility.getExtension(getName()));
     }
 
     @Override
     public DirectoryItemModel getDirectory() {
-        return new DirectoryItemModel(name, path, false, current.lastModified());
+        return new DirectoryItemModel(getName(), getPath(), false, current.lastModified());
     }
 
     public static String getDetailString(DocumentFile file) {
         boolean w = file.canWrite();
         boolean r = file.canRead();
         return String.format(Locale.CHINA, "%c%c%c%c", (file.isFile() ? '-' : 'd'), (r ? 'r' : '-'), (w ? 'w' : '-'), '-');
+    }
+
+    public static DocumentLocalFileInstance getEmulated(Context context, String path) {
+        return new DocumentLocalFileInstance(context, path, emulatedKey, FileInstanceFactory.publicFileSystemRoot);
+    }
+
+    public static DocumentLocalFileInstance getMounted(Context context, String path) {
+        return new DocumentLocalFileInstance(context, path, mountedKey, FileInstanceFactory.publicFileSystemRoot);
     }
 }

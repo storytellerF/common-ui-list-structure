@@ -1,30 +1,8 @@
 package com.storyteller_f.file_system.instance.local;
 
 import android.content.Context;
-import android.os.Build;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.annotation.WorkerThread;
-
-import com.storyteller_f.file_system.Filter;
 import com.storyteller_f.file_system.instance.BaseContextFileInstance;
-import com.storyteller_f.file_system.model.DirectoryItemModel;
-import com.storyteller_f.file_system.model.FileItemModel;
-import com.storyteller_f.file_system.model.FileSystemItemModel;
-import com.storyteller_f.file_system.model.FilesAndDirectories;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.FileVisitOption;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.Locale;
 
 /**
  * 定义接口，方法
@@ -34,16 +12,8 @@ public abstract class LocalFileInstance extends BaseContextFileInstance {
 
     private static final String TAG = "FileInstance";
 
-    /**
-     * @param filter 遍历文件夹用的
-     * @param path   路径
-     */
-    public LocalFileInstance(Context context, Filter filter, String path) {
-        super(context, filter, path);
-    }
-
-    public LocalFileInstance(Context context, String path) {
-        super(context, path);
+    public LocalFileInstance(Context context, String path, String fileSystemRoot) {
+        super(context, path, fileSystemRoot);
     }
 
 //    @NonNull

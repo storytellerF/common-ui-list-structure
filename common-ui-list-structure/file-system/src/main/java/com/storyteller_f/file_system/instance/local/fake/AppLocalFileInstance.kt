@@ -1,6 +1,7 @@
 package com.storyteller_f.file_system.instance.local.fake
 
 import android.content.Context
+import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.BaseContextFileInstance
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
@@ -10,7 +11,7 @@ import java.io.*
 /**
  * 标识一个apk 文件
  */
-class AppLocalFileInstance(context: Context, path: String) : BaseContextFileInstance(context, path) {
+class AppLocalFileInstance(context: Context, path: String) : BaseContextFileInstance(context, path, FileInstanceFactory.publicFileSystemRoot) {
     override fun getFile() = FileItemModel(name, path, false, 0, "apk")
 
     override fun getDirectory(): DirectoryItemModel {

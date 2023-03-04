@@ -12,16 +12,16 @@ import android.widget.Toast;
 import com.storyteller_f.file_system.instance.FileInstance;
 
 public class EditablePathMan extends PathMan {
+    public EditablePathMan(Context context) {
+        super(context);
+    }
+
     public EditablePathMan(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
     public EditablePathMan(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-    }
-
-    public EditablePathMan(Context context) {
-        super(context);
     }
 
     public EditablePathMan(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
@@ -66,10 +66,12 @@ public class EditablePathMan extends PathMan {
         //如果用户输入了错误的路径，进行裁切
         int length = path.length();
         if (path.endsWith("/") && length != 1) path = path.substring(0, length - 1);
-        FileInstance fileInstance = getFileInstance(path, v.getContext());
-        if (fileInstance.exists()) {
-            if (pathChangeListener != null) pathChangeListener.onSkipOnPathMan(path);
-            drawPath(path);
+        if (pathChangeListener != null) {
+            FileInstance fileInstance = getFileInstance(path, v.getContext(), pathChangeListener.root());
+            if (fileInstance.exists()) {
+                if (pathChangeListener != null) pathChangeListener.onSkipOnPathMan(path);
+                drawPath(path);
+            }
         } else {
             Toast.makeText(getContext(), "输入的路径不存在", Toast.LENGTH_SHORT).show();
         }

@@ -11,6 +11,7 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.TorrentFileItemModel
 import com.storyteller_f.giant_explorer.control.adapter_produce.HolderBuilder
+import com.storyteller_f.giant_explorer.control.getFileInstance
 import com.storyteller_f.giant_explorer.database.FileMDRecord
 import com.storyteller_f.giant_explorer.database.FileSizeRecord
 import com.storyteller_f.giant_explorer.database.FileTorrentRecord
@@ -114,7 +115,7 @@ class FolderWorker(context: Context, workerParams: WorkerParameters) :
     BigTimeWorker(context, workerParams) {
     override suspend fun work(context: Context, path: String): WorkerResult {
         return try {
-            val fileInstance = FileInstanceFactory.getFileInstance(path, context)
+            val fileInstance = getFileInstance(path, context)
             val record = context.requireDatabase.sizeDao().search(path)
             if (record != null && record.lastUpdateTime > fileInstance.directory.lastModifiedTime) return WorkerResult.SizeWorker(
                 record.size
@@ -165,7 +166,7 @@ class MDWorker(context: Context, workerParams: WorkerParameters) :
 
     override suspend fun work(context: Context, path: String): WorkerResult {
         return try {
-            val fileInstance = FileInstanceFactory.getFileInstance(path, context)
+            val fileInstance = getFileInstance(path, context)
             val listSafe = fileInstance.listSafe()
             listSafe.directories.mapNullNull {
                 if (isStopped) return WorkerResult.Stopped
@@ -203,7 +204,7 @@ class TorrentWorker(context: Context, workerParams: WorkerParameters) :
 
     override suspend fun work(context: Context, path: String): WorkerResult {
         return try {
-            val fileInstance = FileInstanceFactory.getFileInstance(path, context)
+            val fileInstance = getFileInstance(path, context)
             val listSafe = fileInstance.listSafe()
             listSafe.directories.mapNullNull {
                 if (isStopped) return WorkerResult.Stopped

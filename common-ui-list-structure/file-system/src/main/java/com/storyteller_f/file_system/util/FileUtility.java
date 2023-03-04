@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.storage.StorageManager;
 import android.os.storage.StorageVolume;
+import android.provider.DocumentsContract;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -133,17 +134,16 @@ public class FileUtility {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             StorageManager sm = activity.getSystemService(StorageManager.class);
             StorageVolume volume = sm.getStorageVolume(new File(prefix));
-            if (volume != null) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    intent = volume.createOpenDocumentTreeIntent();
-                } else {
-                    intent = volume.createAccessIntent(null);
-                }
+            if (volume != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                intent = volume.createOpenDocumentTreeIntent();
             }
         }
         if (intent == null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, prefix);
+                }
             } else {
                 //没有权限问题
                 return null;

@@ -24,6 +24,9 @@
         <argument
             android:name="path"
             app:argType="string" />
+        <argument
+            android:name="root"
+            app:argType="string" />
         <action
             android:id="@+id/action_fileListFragment_to_propertiesDialog"
             app:destination="@id/propertiesDialog" />

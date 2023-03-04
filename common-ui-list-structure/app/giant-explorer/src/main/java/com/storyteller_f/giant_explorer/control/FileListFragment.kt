@@ -28,7 +28,6 @@ import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ktx.mm
 import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.*
-import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.filter_core.Filter
@@ -87,8 +86,8 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
     private val args by navArgs<FileListFragmentArgs>()
 
-    private val session by vm({ args.path }) {
-        FileExplorerSession(requireActivity().application, it)
+    private val session by vm({ args }) {
+        FileExplorerSession(requireActivity().application, it.path, it.root)
     }
     private val temp by keyPrefix({ "temp" }, pvm({}) {
         TempVM()
@@ -101,6 +100,10 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         ) {
             (requireContext() as MainActivity).drawPath(it)
         }
+        setupMenu()
+    }
+
+    private fun setupMenu() {
         (requireActivity() as? MenuHost)?.addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
                 menuInflater.inflate(R.menu.file_list_menu, menu)
@@ -137,7 +140,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         Log.i(TAG, "handleClipData: key $key")
         viewLifecycleOwner.lifecycleScope.launch {
             val dest = destDirectory?.let {
-                FileInstanceFactory.getFileInstance(it, requireContext())
+                getFileInstance(it, requireContext())
             } ?: session.fileInstance.value ?: kotlin.run {
                 Toast.makeText(requireContext(), "无法确定目的地", Toast.LENGTH_LONG).show()
                 return@launch
@@ -150,7 +153,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                 val text = it.coerceToText(requireContext()).toString()
                 val uriFromText = text.toUri()
                 val u = when {
-                    uriFromText.scheme == "file" -> uriFromText
+                    uriFromText.scheme == ContentResolver.SCHEME_FILE -> uriFromText
                     it.uri != null -> it.uri
                     URLUtil.isNetworkUrl(text) -> Uri.parse(text)
                     filePathMatcher.matches(text) -> {
@@ -190,9 +193,9 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
     @BindClickEvent(FileItemHolder::class)
     fun toChild(itemHolder: FileItemHolder) {
+        val old = session.fileInstance.value ?: return
         if (itemHolder.file.item.isDirectory) {
-            val old = session.fileInstance.value ?: return
-            findNavController().navigate(R.id.action_fileListFragment_self, FileListFragmentArgs(File(old.path, itemHolder.file.name).absolutePath).toBundle())
+            findNavController().navigate(R.id.action_fileListFragment_self, FileListFragmentArgs(File(old.path, itemHolder.file.name).absolutePath, old.fileSystemRoot).toBundle())
         } else {
             findNavController().navigate(R.id.action_fileListFragment_to_openFileDialog, OpenFileDialogArgs(itemHolder.file.fullPath).toBundle())
             fragment(OpenFileDialog.key) { r: OpenFileDialog.OpenFileResult ->
@@ -303,9 +306,9 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         intent.addCategory("android.intent.category.DEFAULT")
         intent.plugUri(mimeTypeFromExtension, itemHolder.file.fullPath)
 
-        val activities = requireContext().packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY or PackageManager.GET_META_DATA)
+        val activities = requireContext().packageManager.queryIntentActivitiesCompat(intent, (PackageManager.MATCH_DEFAULT_ONLY or PackageManager.GET_META_DATA).toLong())
         activities.forEach {
-            val activityInfo = it?.activityInfo ?: return@forEach
+            val activityInfo = it.activityInfo ?: return@forEach
             val groups = activityInfo.metaData?.getString("group")?.split("/") ?: return@forEach
             val title = activityInfo.metaData?.getString("title") ?: return@forEach
             menu.loopAdd(groups).add(title).setOnMenuItemClickListener {
@@ -320,7 +323,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     private fun moveOrCopy(move: Boolean, itemHolder: FileItemHolder) {
         dialog(RequestPathDialog()) { result: RequestPathDialog.RequestPathResult ->
             result.path.mm {
-                FileInstanceFactory.getFileInstance(it, requireContext())
+                getFileInstance(it, requireContext())
             }.mm { dest ->
                 val key = uuid.data.value ?: return@mm
                 val detectSelected = detectSelected(itemHolder)

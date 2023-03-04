@@ -5,11 +5,9 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.storyteller_f.file_system.FileInstanceFactory;
-import com.storyteller_f.file_system.Filter;
 import com.storyteller_f.file_system.instance.local.LocalFileInstance;
 import com.storyteller_f.file_system.model.DirectoryItemModel;
 import com.storyteller_f.file_system.model.FileItemModel;
-import com.storyteller_f.file_system.model.FilesAndDirectories;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -19,21 +17,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * 标识特殊目录/storage/emulated/
  */
 public class EmulatedLocalFileInstance extends LocalFileInstance {
-    private static final String TAG = "EmulatedLocalFileInstan";
-
-    public EmulatedLocalFileInstance(Context context, Filter filter) {
-        super(context, filter, FileInstanceFactory.emulatedRootPath);
-    }
 
     public EmulatedLocalFileInstance(Context context) {
-        super(context, FileInstanceFactory.emulatedRootPath);
+        super(context, FileInstanceFactory.emulatedRootPath, FileInstanceFactory.publicFileSystemRoot);
     }
 
     @Override
@@ -43,7 +35,7 @@ public class EmulatedLocalFileInstance extends LocalFileInstance {
 
     @Override
     public DirectoryItemModel getDirectory() {
-        return new DirectoryItemModel("emulated", path, false, 0);
+        return new DirectoryItemModel("emulated", getPath(), false, 0);
     }
 
     @Override
@@ -83,7 +75,7 @@ public class EmulatedLocalFileInstance extends LocalFileInstance {
 
     @Override
     public void list(List<FileItemModel> fileItems, List<DirectoryItemModel> directoryItems) {
-        directoryItems.add(new DirectoryItemModel("0", path + "/0", false, new File(FileInstanceFactory.rootUserEmulatedPath).lastModified()));
+        directoryItems.add(new DirectoryItemModel("0", getPath() + "/0", false, new File(FileInstanceFactory.rootUserEmulatedPath).lastModified()));
     }
 
     @Override

@@ -5,7 +5,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 import androidx.core.util.ObjectsCompat;
 
-import com.storyteller_f.file_system.Filter;
 import com.storyteller_f.file_system.model.DirectoryItemModel;
 import com.storyteller_f.file_system.model.FileItemModel;
 import com.storyteller_f.file_system.model.FileSystemItemModel;
@@ -34,10 +33,7 @@ import java.util.List;
  */
 public abstract class FileInstance {
     private static final String TAG = "FileInstance";
-    //在线程下执行才有意义
-    protected String path;
-    protected String name;
-    protected Filter filter;
+    public String fileSystemRoot;
     /**
      * 仅用来标识对象，有些情况下是不能够操作的
      */
@@ -45,18 +41,12 @@ public abstract class FileInstance {
     protected StoppableTask task;
 
     /**
-     * @param filter 遍历文件夹用的
      * @param path   路径
      */
-    public FileInstance(Filter filter, String path) {
-        this.filter = filter;
-        this.path = path;
-        initName();
-    }
-
-    public FileInstance(String path) {
-        this.path = path;
-        initName();
+    public FileInstance(@NonNull String path, String fileSystemRoot) {
+        assert path.trim().length() != 0;
+        file = new File(path);
+        this.fileSystemRoot = fileSystemRoot;
     }
 
     @Override
@@ -64,22 +54,22 @@ public abstract class FileInstance {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         FileInstance that = (FileInstance) o;
-        return ObjectsCompat.equals(path, that.path) && ObjectsCompat.equals(name, that.name);
+        return ObjectsCompat.equals(file.getAbsolutePath(), that.file.getAbsolutePath()) && ObjectsCompat.equals(fileSystemRoot, that.fileSystemRoot);
     }
 
     @Override
     public int hashCode() {
-        return ObjectsCompat.hash(path, name);
+        return ObjectsCompat.hash(file.getAbsolutePath());
     }
 
     public FileItemModel getFile() {
-        FileItemModel fileItemModel = new FileItemModel(name, path, file.isHidden(), file.lastModified(), FileUtility.getExtension(name));
+        FileItemModel fileItemModel = new FileItemModel(file.getName(), file.getAbsolutePath(), file.isHidden(), file.lastModified(), FileUtility.getExtension(getName()));
         fileItemModel.editAccessTime(file);
         return fileItemModel;
     }
 
     public DirectoryItemModel getDirectory() {
-        DirectoryItemModel directoryItemModel = new DirectoryItemModel(name, path, file.isHidden(), file.lastModified());
+        DirectoryItemModel directoryItemModel = new DirectoryItemModel(file.getName(), file.getAbsolutePath(), file.isHidden(), file.lastModified());
         directoryItemModel.editAccessTime(file);
         return directoryItemModel;
     }
@@ -89,13 +79,8 @@ public abstract class FileInstance {
         else return getDirectory();
     }
 
-    protected void initName() {
-        file = new File(this.path);
-        name = file.getName();
-    }
-
     public String getName() {
-        return name;
+        return file.getName();
     }
 
     /**
@@ -139,7 +124,7 @@ public abstract class FileInstance {
     }
 
     public BufferedInputStream getBufferedInputSteam() throws Exception {
-        return new BufferedInputStream(new FileInputStream(path));
+        return new BufferedInputStream(new FileInputStream(file.getAbsolutePath()));
     }
 
     /**
@@ -158,13 +143,13 @@ public abstract class FileInstance {
         return new ArrayList<>() {
             @Override
             public boolean add(FileItemModel fileItemModel) {
-                if (checkWhenAdd(path, fileItemModel.getFullPath(), true)) return super.add(fileItemModel);
+                if (checkWhenAdd(file.getAbsolutePath(), fileItemModel.getFullPath(), true)) return super.add(fileItemModel);
                 return false;
             }
 
             @Override
             public void add(int index, FileItemModel element) {
-                if (checkWhenAdd(path, element.getFullPath(), true)) super.add(index, element);
+                if (checkWhenAdd(file.getAbsolutePath(), element.getFullPath(), true)) super.add(index, element);
             }
 
             @Override
@@ -183,13 +168,13 @@ public abstract class FileInstance {
         return new ArrayList<>() {
             @Override
             public void add(int index, DirectoryItemModel element) {
-                if (checkWhenAdd(path, element.getFullPath(), false))
+                if (checkWhenAdd(file.getAbsolutePath(), element.getFullPath(), false))
                     super.add(index, element);
             }
 
             @Override
             public boolean add(DirectoryItemModel directoryItemModel) {
-                if (checkWhenAdd(path, directoryItemModel.getFullPath(), false))
+                if (checkWhenAdd(file.getAbsolutePath(), directoryItemModel.getFullPath(), false))
                     return super.add(directoryItemModel);
                 return false;
             }
@@ -264,7 +249,7 @@ public abstract class FileInstance {
     public abstract long getDirectorySize();
 
     public String getPath() {
-        return path;
+        return file.getAbsolutePath();
     }
 
     public abstract boolean createFile() throws IOException;
@@ -309,6 +294,6 @@ public abstract class FileInstance {
     }
 
     private boolean checkWhenAdd(String parent, String absolutePath, boolean isFile) {
-        return filter == null || filter.onPath(parent, absolutePath, isFile);
+        return true;
     }
 }

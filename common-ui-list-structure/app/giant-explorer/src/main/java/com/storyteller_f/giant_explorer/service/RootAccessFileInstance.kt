@@ -1,5 +1,6 @@
 package com.storyteller_f.giant_explorer.service
 
+import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
@@ -10,7 +11,7 @@ import com.topjohnwu.superuser.nio.FileSystemManager
 import java.io.*
 import java.util.*
 
-class RootAccessFileInstance(path: String, remote: FileSystemManager) : FileInstance(path) {
+class RootAccessFileInstance(path: String, remote: FileSystemManager) : FileInstance(path, FileInstanceFactory.publicFileSystemRoot) {
 
     private var extendedFile = remote.getFile(path)
 
