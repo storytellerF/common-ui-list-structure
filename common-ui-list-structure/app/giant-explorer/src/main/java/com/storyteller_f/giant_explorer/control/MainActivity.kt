@@ -310,8 +310,9 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             val authority = it.providerInfo.authority
             val loadLabel = it.loadLabel(packageManager).toString()
 //            val icon = it.loadIcon(packageManager)
+            val contains = savedUris.contains(authority) && getFileInstance("/", this, authority).exists()
             menu.add(loadLabel)
-                .setChecked(savedUris.contains(authority))
+                .setChecked(contains)
                 .setCheckable(true)
 //                .setActionView(ImageView(this).apply {
 //                    setImageDrawable(icon)
