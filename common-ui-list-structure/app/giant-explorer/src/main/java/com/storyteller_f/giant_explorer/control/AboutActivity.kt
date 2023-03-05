@@ -30,7 +30,7 @@ class AboutActivity : CommonActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Glide.with(this).load(R.drawable.storytellerf_github_business_card).into(binding.image)
+        Glide.with(this).load("https://crd.so/i/storytellerF").into(binding.image)
         CustomTabsClient.bindCustomTabsService(this, CUSTOM_TAB_PACKAGE_NAME, connection)
         binding.image.setOnClick {
             val newSession = newSession

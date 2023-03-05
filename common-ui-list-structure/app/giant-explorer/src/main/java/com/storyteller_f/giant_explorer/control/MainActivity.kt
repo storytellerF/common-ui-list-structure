@@ -423,7 +423,6 @@ class FileItemHolder(
         return (other as FileItemHolder).file == file
     }
 
-
 }
 
 @BindItemHolder(FileItemHolder::class)
