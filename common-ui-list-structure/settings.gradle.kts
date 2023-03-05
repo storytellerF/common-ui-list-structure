@@ -49,6 +49,6 @@ include(":slim-ktx")
 val l = listOf("config-core", "filter-core", "sort-core", "config_edit", "filter-ui", "sort-ui", "recycleview_ui_extra")
 val home: String = System.getProperty("user.home")
 l.forEach {
-    include(it)
-    project(":$it").projectDir = file("$home/AndroidStudioProjects/FilterUIProject/$it")
+    include("filter:$it")
+    project(":filter:$it").projectDir = file("$home/AndroidStudioProjects/FilterUIProject/$it")
 }

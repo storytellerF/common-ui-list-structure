@@ -80,11 +80,11 @@ dependencies {
     implementation("androidx.webkit:webkit:1.6.0")
 
     //filter & sort
-    implementation(project(":config-core"))
-    implementation(project(":sort-core"))
-    implementation(project(":filter-core"))
-    implementation(project(":filter-ui"))
-    implementation(project(":sort-ui"))
+    implementation(project(":filter:config-core"))
+    implementation(project(":filter:sort-core"))
+    implementation(project(":filter:filter-core"))
+    implementation(project(":filter:filter-ui"))
+    implementation(project(":filter:sort-ui"))
 }
 baseApp()
 setupGeneric()
