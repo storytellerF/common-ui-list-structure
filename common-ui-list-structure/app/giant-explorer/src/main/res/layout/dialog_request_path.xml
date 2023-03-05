@@ -7,21 +7,36 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <CheckBox
+        <ImageView
             android:id="@+id/filterHiddenFile"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="@string/filter_hidden_file" />
+            android:padding="8dp"
+            android:src="@drawable/icon_filter_hidden_file" />
 
         <Button
             android:id="@+id/new_file"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="7dp"
-            android:text="@string/string_add_file" />
+            android:text="@string/string_add_directory" />
+
+        <Button
+            android:id="@+id/filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="7dp"
+            android:text="@string/filter" />
+
+        <Button
+            android:id="@+id/sort"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="7dp"
+            android:text="@string/sort" />
     </LinearLayout>
 
     <com.storyteller_f.giant_explorer.view.EditablePathMan

@@ -22,7 +22,6 @@ import androidx.lifecycle.*
 import androidx.lifecycle.Observer
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import com.google.gson.typeadapters.RuntimeTypeAdapterFactory
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ktx.context
 import com.storyteller_f.common_ktx.exceptionMessage
@@ -40,8 +39,6 @@ import com.storyteller_f.file_system.requestPermissionForSpecialPath
 import com.storyteller_f.file_system_ktx.fileIcon
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.filter_core.Filter
-import com.storyteller_f.filter_core.config.FilterConfigItem
-import com.storyteller_f.filter_ui.FilterDialog
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.FileSizeRecordDatabase
 import com.storyteller_f.giant_explorer.databinding.ActivityMainBinding
@@ -55,7 +52,6 @@ import com.storyteller_f.giant_explorer.service.FileOperateService
 import com.storyteller_f.giant_explorer.service.FileService
 import com.storyteller_f.giant_explorer.service.RootAccessFileInstance
 import com.storyteller_f.giant_explorer.view.PathMan
-import com.storyteller_f.sort_core.config.SortConfigItem
 import com.storyteller_f.sort_ui.SortChain
 import com.storyteller_f.sort_ui.SortDialog
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
@@ -112,7 +108,6 @@ fun getFileInstance(path: String, context: Context, root: String = FileInstanceF
 
 var remote: FileSystemManager? = null
 
-val factory: RuntimeTypeAdapterFactory<FilterConfigItem> = RuntimeTypeAdapterFactory.of(FilterConfigItem::class.java, "config-item-key").registerSubtype(NameFilter.Config::class.java, "name")!!
 
 class MainActivity : CommonActivity(), FileOperateService.FileOperateResultContainer {
 
@@ -120,13 +115,12 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     private val filterHiddenFile by svm({}) { it, _ ->
         StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
     }
-    private lateinit var filterDialog: FilterDialog<FileSystemItemModel>
-    private lateinit var sortDialog: SortDialog<FileSystemItemModel>
+    private val dialogImpl = FilterDialogManager()
 
-    private val filters by keyPrefix({ "test" }, svm({ filterDialog }) { it, f ->
+    private val filters by keyPrefix({ "test" }, svm({ dialogImpl.filterDialog }) { it, f ->
         StateValueModel(it, default = buildFilterActive(f.currentConfig()?.configItems.orEmpty()))
     })
-    private val sort by keyPrefix({ "sort" }, svm({ sortDialog }) { it, f ->
+    private val sort by keyPrefix({ "sort" }, svm({ dialogImpl.sortDialog }) { it, f ->
         StateValueModel(it, default = buildSortActive(f.current()?.configItems.orEmpty()))
     })
 
@@ -155,20 +149,16 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         }
     }
 
-    private fun buildFilterActive(configItems: List<FilterConfigItem>): List<Filter<FileSystemItemModel>> = configItems.map {
-        NameFilter(it as NameFilter.Config)
-    }
-
-    private fun buildSortActive(configItems: List<SortConfigItem>): List<SortChain<FileSystemItemModel>> = configItems.map {
-        NameSort(NameSort.Item())
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         uuid
         setSupportActionBar(binding.toolbar)
         supportNavigatorBarImmersive(binding.root)
-        initDialog()
+        dialogImpl.init(this, {
+            filters.data.value = it
+        }, {
+            sort.data.value = it
+        })
         filters
         sort
 
@@ -214,40 +204,6 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         navController.setGraph(R.navigation.nav_main, FileListFragmentArgs(FileInstanceFactory.rootUserEmulatedPath, FileInstanceFactory.publicFileSystemRoot).toBundle())
     }
 
-    private fun initDialog() {
-        filterDialog = FilterDialog(this, listOf(NameFilter(NameFilter.Config("^$"))), FilterFactory(), object : FilterDialog.Listener<FileSystemItemModel> {
-            override fun onSaveState(filters: MutableList<Filter<FileSystemItemModel>>?): MutableList<FilterConfigItem> {
-                return filters.orEmpty().map {
-                    (it as NameFilter).item
-                }.toMutableList()
-            }
-
-            override fun onActiveListSelected(dialog: FilterDialog<FileSystemItemModel>, configItems: MutableList<FilterConfigItem>?) = dialog.add(buildFilterActive(configItems.orEmpty()))
-
-            override fun onActiveChanged(dialog: FilterDialog<FileSystemItemModel>) {
-                filters.data.value = dialog.activeFilters
-            }
-
-        }, "filter", factory)
-        val adapterFactory =
-            RuntimeTypeAdapterFactory.of(SortConfigItem::class.java, "sort-item-key")
-                .registerSubtype(NameSort.Item::class.java, "name")
-        sortDialog = SortDialog(this, listOf(NameSort(NameSort.Item())), SortFactory(), object : SortDialog.Listener<FileSystemItemModel> {
-            override fun onSaveState(chains: MutableList<SortChain<FileSystemItemModel>>?): MutableList<SortConfigItem> {
-                return chains.orEmpty().map {
-                    NameSort.Item()
-                }.toMutableList()
-            }
-
-            override fun onActiveSelected(sortDialog: SortDialog<FileSystemItemModel>, configItems: MutableList<SortConfigItem>?) = sortDialog.add(buildSortActive(configItems.orEmpty()))
-
-            override fun onActiveChanged(sortDialog: SortDialog<FileSystemItemModel>) {
-                sort.data.value = sortDialog.active
-            }
-
-        }, adapterFactory)
-    }
-
     companion object {
         private const val TAG = "MainActivity"
     }
@@ -272,29 +228,15 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
                 item.updateIcon(newState)
                 filterHiddenFile.data.value = newState
             }
-            R.id.newWindow -> {
-                startActivity(Intent(this, MainActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
-                })
-            }
-            R.id.filter -> {
-                filterDialog.show()
-            }
-            R.id.sort -> {
-                sortDialog.show()
-            }
-            R.id.open_settings -> {
-                startActivity(Intent(this, SettingsActivity::class.java))
-            }
-            R.id.open_root_access -> {
-                startActivity(Intent(this, RootAccessActivity::class.java))
-            }
-            R.id.about -> {
-                startActivity(Intent(this, AboutActivity::class.java))
-            }
-            R.id.plugin_manager -> {
-                startActivity(Intent(this, PluginManageActivity::class.java))
-            }
+            R.id.newWindow -> startActivity(Intent(this, MainActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+            })
+            R.id.filter -> dialogImpl.showFilter()
+            R.id.sort -> dialogImpl.showSort()
+            R.id.open_settings -> startActivity(Intent(this, SettingsActivity::class.java))
+            R.id.open_root_access -> startActivity(Intent(this, RootAccessActivity::class.java))
+            R.id.about -> startActivity(Intent(this, AboutActivity::class.java))
+            R.id.plugin_manager -> startActivity(Intent(this, PluginManageActivity::class.java))
 
         }
         return super.onOptionsItemSelected(item)
@@ -477,6 +419,11 @@ class FileItemHolder(
     override fun areItemsTheSame(other: DataItemHolder) =
         (other as FileItemHolder).file.fullPath == file.fullPath
 
+    override fun areContentsTheSame(other: DataItemHolder): Boolean {
+        return (other as FileItemHolder).file == file
+    }
+
+
 }
 
 @BindItemHolder(FileItemHolder::class)
@@ -566,7 +513,7 @@ fun format1024(args: Long): String {
     return String.format(Locale.CHINA, "%.2f %s", size, flags[flag])
 }
 
-class FileExplorerSearch(val path: FileInstance, val filterHiddenFile: Boolean, val filters: MutableList<Filter<FileSystemItemModel>>, val sort: MutableList<SortChain<FileSystemItemModel>>)
+class FileExplorerSearch(val path: FileInstance, val filterHiddenFile: Boolean, val filters: List<Filter<FileSystemItemModel>>, val sort: List<SortChain<FileSystemItemModel>>)
 
 fun fileServiceBuilder(
     database: FileSizeRecordDatabase

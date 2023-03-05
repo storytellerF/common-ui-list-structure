@@ -15,16 +15,12 @@ import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
-import com.storyteller_f.file_system.instance.FileInstance
-import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.requestPermissionForSpecialPath
 import com.storyteller_f.file_system_ktx.isDirectory
-import com.storyteller_f.filter_core.Filter
 import com.storyteller_f.giant_explorer.control.*
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.DialogRequestPathBinding
 import com.storyteller_f.giant_explorer.view.PathMan
-import com.storyteller_f.sort_ui.SortChain
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import com.storyteller_f.ui_list.source.SearchProducer
 import com.storyteller_f.ui_list.source.observerInScope
@@ -37,20 +33,20 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 
-class RequestPathDialog :
-    SimpleDialogFragment<DialogRequestPathBinding>(DialogRequestPathBinding::inflate), RegistryFragment {
+class RequestPathDialog : SimpleDialogFragment<DialogRequestPathBinding>(DialogRequestPathBinding::inflate), RegistryFragment {
     private val session by vm({ FileInstanceFactory.rootUserEmulatedPath }) {
         FileExplorerSession(requireActivity().application, it, FileInstanceFactory.publicFileSystemRoot)
     }
     private val filterHiddenFile by svm({}) { it, _ ->
         StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
     }
-    private val filters by keyPrefix({ "test" }, svm({}) { it, _ ->
-        StateValueModel(it, default = mutableListOf<Filter<FileSystemItemModel>>())
+    private val filters by keyPrefix({ "test" }, svm({ dialogImpl.filterDialog }) { it, f ->
+        StateValueModel(it, default = buildFilterActive(f.currentConfig()?.configItems.orEmpty()))
     })
-    private val sort by keyPrefix({ "sort" }, svm({}) { it, f ->
-        StateValueModel(it, default = mutableListOf<SortChain<FileSystemItemModel>>())
+    private val sort by keyPrefix({ "sort" }, svm({ dialogImpl.sortDialog }) { it, f ->
+        StateValueModel(it, default = buildSortActive(f.current()?.configItems.orEmpty()))
     })
+    private val dialogImpl = FilterDialogManager()
 
     @Parcelize
     class RequestPathResult(val path: String) : Parcelable
@@ -79,17 +75,17 @@ class RequestPathDialog :
             }
         }
         filterHiddenFile.data.observe(viewLifecycleOwner) {
-            binding.filterHiddenFile.isChecked = it
+            binding.filterHiddenFile.isActivated = it
         }
-        binding.filterHiddenFile.setOnCheckedChangeListener { _, isChecked ->
-            filterHiddenFile.data.value = isChecked
+        binding.filterHiddenFile.setOnClick {
+            filterHiddenFile.data.value = filterHiddenFile.data.value?.not() ?: false
         }
         binding.bottom.negative.setOnClick {
             dismiss()
         }
         binding.newFile.setOnClick {
             dialog(NewNameDialog()) { nameResult: NewNameDialog.NewNameResult ->
-                session.fileInstance.value?.toChild(nameResult.name, true, true)
+                session.fileInstance.value?.toChild(nameResult.name, false, true)
             }
         }
         (dialog as? ComponentDialog)?.onBackPressedDispatcher?.addCallback(this) {
@@ -97,27 +93,35 @@ class RequestPathDialog :
             if (value != null) {
                 if (value.path == "/" || value.path == FileInstanceFactory.rootUserEmulatedPath) {
                     isEnabled = false
-                    @Suppress("DEPRECATION")
-                    dialog?.onBackPressed()
+                    @Suppress("DEPRECATION") dialog?.onBackPressed()
                 } else {
                     session.fileInstance.value = FileInstanceFactory.toParent(value, requireContext())
                 }
             }
         }
+        binding.filter.setOnClick {
+            dialogImpl.showFilter()
+        }
+        binding.sort.setOnClick {
+            dialogImpl.showSort()
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        dialogImpl.init(requireContext(), { filters.data.value = it }, { sort.data.value = it })
+        filters
+        sort
         context {
             binding.content.sourceUp(adapter, owner, session.selected, flash = ListWithState.Companion::remote)
             session.fileInstance.observe(owner) {
                 binding.pathMan.drawPath(it.path)
             }
-            combine("file" to session.fileInstance, "filter" to filterHiddenFile.data, "filters" to filters.data, "sort" to sort.data).observe(owner, Observer {
-                val filter = it["filter"] as? Boolean ?: return@Observer
-                val filters = it["filters"] as? MutableList<Filter<FileSystemItemModel>> ?: return@Observer
-                val file = it["file"] as FileInstance? ?: return@Observer
-                val sort = it["sort"] as? MutableList<SortChain<FileSystemItemModel>> ?: return@Observer
+            combineDao(session.fileInstance, filterHiddenFile.data, filters.data, sort.data).observe(owner, Observer {
+                val file = it.d1 ?: return@Observer
+                val filter = it.d2 ?: return@Observer
+                val filters = it.d3 ?: return@Observer
+                val sort = it.d4 ?: return@Observer
                 val path = file.path
                 //检查权限
                 scope.launch {
@@ -160,11 +164,7 @@ class RequestPathDialog :
         if (itemHolder.file.item.isDirectory) {
             val current = session.fileInstance.value ?: return
             session.fileInstance.value = FileInstanceFactory.toChild(
-                current,
-                itemHolder.file.name,
-                false,
-                requireContext(),
-                false
+                current, itemHolder.file.name, false, requireContext(), false
             )
         } else {
             setFragmentResult(RequestPathResult(itemHolder.file.fullPath))
