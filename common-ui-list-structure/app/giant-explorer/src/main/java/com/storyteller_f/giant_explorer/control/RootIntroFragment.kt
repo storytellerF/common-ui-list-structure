@@ -14,17 +14,28 @@ import androidx.core.content.ContextCompat
 import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.giant_explorer.databinding.FragmentRootIntroBinding
 
+val MagiskUrl = "https://github.com/topjohnwu/Magisk"
+val kernelSuUrl = "https://github.com/tiann/KernelSU"
+
 class RootIntroFragment : SimpleFragment<FragmentRootIntroBinding>(FragmentRootIntroBinding::inflate) {
 
     override fun onBindViewEvent(binding: FragmentRootIntroBinding) {
-        val url = "https://github.com/topjohnwu/Magisk"
+
         binding.button.setOnClickListener {
-            val newSession = (requireActivity() as RootAccessActivity).newSession
-            val builder = CustomTabsIntent.Builder().setInitialActivityHeightPx((ScreenMetricsCompat.getScreenSize(requireContext()).height * 0.7).toInt())
-            if (newSession != null) builder.setSession(newSession)
-            val customTabsIntent = builder.build()
-            customTabsIntent.launchUrl(requireContext(), Uri.parse(url))
+            open(MagiskUrl)
         }
+        binding.kernelSu.setOnClickListener {
+            open(kernelSuUrl)
+        }
+    }
+
+    private fun open(url: String) {
+        val newSession = (requireActivity() as RootAccessActivity).newSession
+        val height = ScreenMetricsCompat.getScreenSize(requireContext()).height
+        val builder = CustomTabsIntent.Builder().setInitialActivityHeightPx((height * 0.7).toInt())
+        if (newSession != null) builder.setSession(newSession)
+        val customTabsIntent = builder.build()
+        customTabsIntent.launchUrl(requireContext(), Uri.parse(url))
     }
 
 }

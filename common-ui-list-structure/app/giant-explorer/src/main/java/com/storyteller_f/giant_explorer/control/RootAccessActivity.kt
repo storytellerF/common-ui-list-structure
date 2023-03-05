@@ -34,8 +34,8 @@ class RootAccessActivity : AppCompatActivity() {
             newSession = client.newSession(object : CustomTabsCallback() {
 
             })
-            val mayLaunchUrl = newSession?.mayLaunchUrl(Uri.parse("https://github.com/topjohnwu/Magisk"), null, null)
-            Log.i(TAG, "onCustomTabsServiceConnected: url: $mayLaunchUrl $newSession")
+            newSession?.mayLaunchUrl(Uri.parse(MagiskUrl), null, null)
+            newSession?.mayLaunchUrl(Uri.parse(kernelSuUrl), null, null)
         }
 
         override fun onServiceDisconnected(name: ComponentName) {}
@@ -68,6 +68,7 @@ class RootAccessActivity : AppCompatActivity() {
         return navController.navigateUp(appBarConfiguration)
                 || super.onSupportNavigateUp()
     }
+
     companion object {
         private const val TAG = "RootAccessActivity"
     }
