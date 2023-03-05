@@ -27,6 +27,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:minWidth="300dp"
         android:orientation="vertical"
         android:padding="10dp">
 
@@ -74,6 +75,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             app:constraint_referenced_ids="openByPicture,openByVideo,openByText,openByMusic,openByHex"
+            app:flow_horizontalGap="5dp"
             app:flow_wrapMode="aligned"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/type" />
@@ -87,7 +89,6 @@
 
         <Button
             android:id="@+id/openByVideo"
-
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:onClickListener="@{()->handler.onResult(`video/*`)}"
@@ -95,7 +96,6 @@
 
         <Button
             android:id="@+id/openByText"
-
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:onClickListener="@{()->handler.onResult(`video/*`)}"
@@ -103,7 +103,6 @@
 
         <Button
             android:id="@+id/openByMusic"
-
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:onClickListener="@{()->handler.onResult(`audio/*`)}"
@@ -111,7 +110,6 @@
 
         <Button
             android:id="@+id/openByHex"
-
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:onClickListener="@{()->handler.onResult(`application/*`)}"

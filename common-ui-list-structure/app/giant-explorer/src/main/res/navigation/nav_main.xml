@@ -42,6 +42,9 @@
         <argument
             android:name="path"
             app:argType="string" />
+        <argument
+            android:name="root"
+            app:argType="string" />
     </dialog>
     <dialog
         android:id="@+id/propertiesDialog"

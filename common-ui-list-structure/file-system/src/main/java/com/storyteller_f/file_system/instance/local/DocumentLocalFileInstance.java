@@ -61,10 +61,6 @@ public class DocumentLocalFileInstance extends LocalFileInstance {
     public boolean initDocumentFile() {
         current = getSpecialDocumentFile(getPath(), false, file.isFile());
         if (current == null) Log.e(TAG, "initDocumentFile: 初始化失败（未授权）" + getPath());
-        if (current != null && !current.canRead()) {
-            current = null;
-            Log.e(TAG, "initDocumentFile: 初始化失败(权限过期) 不可读写");
-        }
         return current != null;
     }
 
@@ -88,6 +84,10 @@ public class DocumentLocalFileInstance extends LocalFileInstance {
         DocumentFile rootFile = DocumentFile.fromTreeUri(context, uri);
         if (rootFile == null) {
             Log.e(TAG, "getCurrent: rootFile is null");
+            return null;
+        }
+        if (!rootFile.canRead()) {
+            Log.e(TAG, "initDocumentFile: 初始化失败(权限过期) 不可读写 " + getPath());
             return null;
         }
         String truePath = destination.substring(prefix.length());//获取 SD卡名称后面的路径

@@ -28,6 +28,7 @@ import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ktx.mm
 import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.*
+import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.filter_core.Filter
@@ -197,12 +198,13 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         if (itemHolder.file.item.isDirectory) {
             findNavController().navigate(R.id.action_fileListFragment_self, FileListFragmentArgs(File(old.path, itemHolder.file.name).absolutePath, old.fileSystemRoot).toBundle())
         } else {
-            findNavController().navigate(R.id.action_fileListFragment_to_openFileDialog, OpenFileDialogArgs(itemHolder.file.fullPath).toBundle())
+            findNavController().navigate(R.id.action_fileListFragment_to_openFileDialog, OpenFileDialogArgs(itemHolder.file.fullPath, old.fileSystemRoot).toBundle())
             fragment(OpenFileDialog.key) { r: OpenFileDialog.OpenFileResult ->
+                if (old.fileSystemRoot != FileInstanceFactory.publicFileSystemRoot) return@fragment
+                val file = File(itemHolder.file.fullPath)
+                val uriForFile = FileProvider.getUriForFile(requireContext(), BuildConfig.FILE_PROVIDER_AUTHORITY, file)
                 Intent("android.intent.action.VIEW").apply {
                     addCategory("android.intent.category.DEFAULT")
-                    val file = File(itemHolder.file.fullPath)
-                    val uriForFile = FileProvider.getUriForFile(requireContext(), BuildConfig.FILE_PROVIDER_AUTHORITY, file)
                     setDataAndType(uriForFile, r.mimeType)
                     flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 }.let {

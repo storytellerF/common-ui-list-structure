@@ -75,13 +75,7 @@ class StorageProvider : DocumentsProvider() {
             val document = documentId ?: "/"
             val file = File(root, document)
             newRow().apply {
-                add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, document)
-                add(DocumentsContract.Document.COLUMN_MIME_TYPE, DocumentsContract.Document.MIME_TYPE_DIR)
-                val flags = 0
-                add(DocumentsContract.Document.COLUMN_FLAGS, flags)
-                add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, file.name)
-                add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, file.lastModified())
-                add(DocumentsContract.Document.COLUMN_SIZE, 0)
+                fileRow(file, root)
             }
         }
     }
@@ -92,33 +86,37 @@ class StorageProvider : DocumentsProvider() {
                 val root = it.filesDir.parentFile ?: return@let
                 File(root, documentId).listFiles()?.forEach {
                     newRow().apply {
-                        val subDocumentId = it.absolutePath.substring(root.absolutePath.length)
-                        add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, subDocumentId)
-                        val type = if (it.isFile) {
-                            MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
-                        } else {
-                            DocumentsContract.Document.MIME_TYPE_DIR
-                        }
-                        add(DocumentsContract.Document.COLUMN_MIME_TYPE, type)
-                        val copyFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            DocumentsContract.Document.FLAG_SUPPORTS_COPY
-                        } else {
-                            0
-                        }
-                        val thumbnailFlag = if (it.extension == "mp4") {
-                            DocumentsContract.Document.FLAG_SUPPORTS_THUMBNAIL
-                        } else 0
-                        add(DocumentsContract.Document.COLUMN_FLAGS, copyFlag or thumbnailFlag)
-                        add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, it.name)
-                        add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, it.lastModified())
-                        val size = if (it.isFile) {
-                            it.length()
-                        } else 0
-                        add(DocumentsContract.Document.COLUMN_SIZE, size)
+                        fileRow(it, root)
                     }
                 }
             }
         }
+    }
+
+    private fun MatrixCursor.RowBuilder.fileRow(it: File, root: File) {
+        val subDocumentId = it.absolutePath.substring(root.absolutePath.length)
+        add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, subDocumentId)
+        val type = if (it.isFile) {
+            MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
+        } else {
+            DocumentsContract.Document.MIME_TYPE_DIR
+        }
+        add(DocumentsContract.Document.COLUMN_MIME_TYPE, type)
+        val copyFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            DocumentsContract.Document.FLAG_SUPPORTS_COPY
+        } else {
+            0
+        }
+        val thumbnailFlag = if (it.extension == "mp4") {
+            DocumentsContract.Document.FLAG_SUPPORTS_THUMBNAIL
+        } else 0
+        add(DocumentsContract.Document.COLUMN_FLAGS, copyFlag or thumbnailFlag)
+        add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, it.name)
+        add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, it.lastModified())
+        val size = if (it.isFile) {
+            it.length()
+        } else 0
+        add(DocumentsContract.Document.COLUMN_SIZE, size)
     }
 
     override fun queryChildDocuments(parentDocumentId: String?, projection: Array<out String>?, sortOrder: String?): Cursor {
