@@ -41,7 +41,7 @@ public abstract class FileInstance {
     protected StoppableTask task;
 
     /**
-     * @param path   路径
+     * @param path 路径
      */
     public FileInstance(@NonNull String path, String fileSystemRoot) {
         assert path.trim().length() != 0;
@@ -63,13 +63,13 @@ public abstract class FileInstance {
     }
 
     public FileItemModel getFile() {
-        FileItemModel fileItemModel = new FileItemModel(file.getName(), file.getAbsolutePath(), file.isHidden(), file.lastModified(), FileUtility.getExtension(getName()));
+        FileItemModel fileItemModel = new FileItemModel(file.getName(), file.getAbsolutePath(), file.isHidden(), file.lastModified(), FileUtility.getExtension(getName()), false);
         fileItemModel.editAccessTime(file);
         return fileItemModel;
     }
 
     public DirectoryItemModel getDirectory() {
-        DirectoryItemModel directoryItemModel = new DirectoryItemModel(file.getName(), file.getAbsolutePath(), file.isHidden(), file.lastModified());
+        DirectoryItemModel directoryItemModel = new DirectoryItemModel(file.getName(), file.getAbsolutePath(), file.isHidden(), file.lastModified(), false);
         directoryItemModel.editAccessTime(file);
         return directoryItemModel;
     }
@@ -126,6 +126,9 @@ public abstract class FileInstance {
     public BufferedInputStream getBufferedInputSteam() throws Exception {
         return new BufferedInputStream(new FileInputStream(file.getAbsolutePath()));
     }
+
+    //todo getChannel
+    //todo file descriptor
 
     /**
      * 应该仅用于目录。可能会抛出异常，内部不会处理。
@@ -295,5 +298,17 @@ public abstract class FileInstance {
 
     private boolean checkWhenAdd(String parent, String absolutePath, boolean isFile) {
         return true;
+    }
+
+    public boolean isSymbolicLink() {
+        return false;
+    }
+
+    public boolean isSoftLink() {
+        return false;
+    }
+
+    public boolean isHardLink() {
+        return false;
     }
 }

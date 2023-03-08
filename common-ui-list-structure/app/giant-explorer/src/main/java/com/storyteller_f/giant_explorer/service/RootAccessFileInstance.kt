@@ -102,4 +102,8 @@ class RootAccessFileInstance(path: String, remote: FileSystemManager) : FileInst
     }
 
     override fun getParent(): String? = extendedFile.parent
+
+    override fun isSymbolicLink(): Boolean {
+        return extendedFile.isSymlink
+    }
 }

@@ -400,12 +400,12 @@ public class DocumentLocalFileInstance extends LocalFileInstance {
 
     @Override
     public FileItemModel getFile() {
-        return new FileItemModel(getName(), getPath(), false, current.lastModified(), FileUtility.getExtension(getName()));
+        return new FileItemModel(getName(), getPath(), false, current.lastModified(), FileUtility.getExtension(getName()), false);
     }
 
     @Override
     public DirectoryItemModel getDirectory() {
-        return new DirectoryItemModel(getName(), getPath(), false, current.lastModified());
+        return new DirectoryItemModel(getName(), getPath(), false, current.lastModified(), false);
     }
 
     public static String getDetailString(DocumentFile file) {

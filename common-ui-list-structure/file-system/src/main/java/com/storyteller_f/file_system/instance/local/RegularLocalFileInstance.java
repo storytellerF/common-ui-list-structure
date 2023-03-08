@@ -1,6 +1,7 @@
 package com.storyteller_f.file_system.instance.local;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -21,6 +22,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
 @SuppressWarnings({"unused", "RedundantSuppression"})
@@ -179,5 +181,17 @@ public class RegularLocalFileInstance extends LocalFileInstance {
             }
         }
         return size;
+    }
+
+    @Override
+    public boolean isSymbolicLink() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return Files.isSymbolicLink(file.toPath());
+        }
+        try {
+            return file.getAbsolutePath().equals(file.getCanonicalPath());
+        } catch (IOException e) {
+            return false;
+        }
     }
 }

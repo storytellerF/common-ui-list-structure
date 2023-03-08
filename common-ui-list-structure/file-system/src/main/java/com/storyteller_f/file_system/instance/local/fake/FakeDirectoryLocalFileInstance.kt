@@ -6,7 +6,6 @@ import androidx.annotation.WorkerThread
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.model.FilesAndDirectories
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -19,12 +18,12 @@ import java.nio.file.attribute.BasicFileAttributes
  */
 class FakeDirectoryLocalFileInstance(path: String, val context: Context) :
     ForbidChangeDirectoryLocalFileInstance(path) {
-    private val dy: MutableMap<String, List<String>> = mutableMapOf(
+    private val presetDirectories: MutableMap<String, List<String>> = mutableMapOf(
         "/data/user/0" to listOf(context.packageName),
         "/data/data" to listOf(context.packageName),
     )
 
-    private val dyf: MutableMap<String, List<String>> = mutableMapOf(
+    private val presetFiles: MutableMap<String, List<String>> = mutableMapOf(
         "/data/app" to context.packageManager.getInstalledApplications(0).map {
             it.packageName ?: "unknown"
         }
@@ -32,7 +31,7 @@ class FakeDirectoryLocalFileInstance(path: String, val context: Context) :
 
 
     override fun getDirectory(): DirectoryItemModel {
-        return DirectoryItemModel("/", "/", false, -1)
+        return DirectoryItemModel("/", "/", false, -1, false)
     }
 
     override fun getFileInputStream(): FileInputStream {
@@ -50,25 +49,26 @@ class FakeDirectoryLocalFileInstance(path: String, val context: Context) :
         fileItems: MutableList<FileItemModel>,
         directoryItems: MutableList<DirectoryItemModel>
     ) {
-        val files = dyf[path]?.map {
-            FileItemModel(it, "$path/$it", false, File("$path/$it").lastModified()).apply {
-                size = File(context.packageManager.getApplicationInfo(it, 0).publicSourceDir).length()
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    try {
-                        val basicFileAttributes = Files.readAttributes(file.toPath(), BasicFileAttributes::class.java)
-                        createdTime = basicFileAttributes.creationTime().toMillis()
-                        lastAccessTime = basicFileAttributes.lastAccessTime().toMillis()
-                    } catch (e: IOException) {
-                        e.printStackTrace()
+        presetFiles[path]?.map {
+            fileItems.add(
+                FileItemModel(it, "$path/$it", false, File("$path/$it").lastModified(), isSymLink = false).apply {
+                    size = File(context.packageManager.getApplicationInfo(it, 0).publicSourceDir).length()
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        try {
+                            val basicFileAttributes = Files.readAttributes(file.toPath(), BasicFileAttributes::class.java)
+                            createdTime = basicFileAttributes.creationTime().toMillis()
+                            lastAccessTime = basicFileAttributes.lastAccessTime().toMillis()
+                        } catch (e: IOException) {
+                            e.printStackTrace()
+                        }
                     }
-                }
-            }
-        }?.toMutableList() ?: mutableListOf()
-        val directories = (map[path] ?: dy[path])?.map {
-            DirectoryItemModel(it, "$path/$it", false, File("$path/$it").lastModified())
-        }?.toMutableList() ?: mutableListOf()
-        files.forEach { fileItems.add(it) }
-        directories.forEach { directoryItems.add(it) }
+                })
+        }
+        (presetSystemDirectories[path] ?: presetDirectories[path])?.map {
+            directoryItems.add(
+                DirectoryItemModel(it, "$path/$it", false, File("$path/$it").lastModified(), symLink.contains(it))
+            )
+        }
     }
 
     override fun exists() = true
@@ -107,10 +107,12 @@ class FakeDirectoryLocalFileInstance(path: String, val context: Context) :
     }
 
     companion object {
-        val map = mapOf(
-            "" to listOf("sdcard", "storage", "data", "mnt", "system"),
+        val presetSystemDirectories = mapOf(
+            "/" to listOf("sdcard", "storage", "data", "mnt", "system"),
             "/data" to listOf("user", "data", "app"),
             "/data/user" to listOf("0"),
         )
+
+        val symLink = listOf("bin", "sdcard", "etc")
     }
 }

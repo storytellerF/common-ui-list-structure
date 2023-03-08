@@ -13,7 +13,8 @@ open class FileSystemItemModel(
     name: String,
     absolutePath: String,
     val isHidden: Boolean,
-    val lastModifiedTime: Long
+    val lastModifiedTime: Long,
+    val isSymLink: Boolean,
 ) : FileSystemItemModelLite(name, absolutePath) {
     private val simpleDateFormat = SimpleDateFormat("yyyy:MM:dd hh:mm:ss sss", Locale.CHINA)
     val formattedLastModifiedTime: String

@@ -13,8 +13,9 @@ open class FileItemModel : FileSystemItemModel {
     constructor(
         file: File,
         isHide: Boolean = file.isHidden,
-        extension: String = file.extension
-    ) : super(file.name, file.absolutePath, isHide, file.lastModified()) {
+        extension: String = file.extension,
+        isSymLink: Boolean,
+    ) : super(file.name, file.absolutePath, isHide, file.lastModified(), isSymLink) {
         this.extension = extension
     }
 
@@ -23,9 +24,10 @@ open class FileItemModel : FileSystemItemModel {
         fullPath: String,
         isHidden: Boolean,
         lastModifiedTime: Long,
-        extension: String? = null
+        extension: String? = null,
+        isSymLink: Boolean,
     ) : super(
-        name, fullPath, isHidden, lastModifiedTime
+        name, fullPath, isHidden, lastModifiedTime, isSymLink
     ) {
         this.extension = extension
     }

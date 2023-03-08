@@ -17,6 +17,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.view.DragStartHelper
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
@@ -457,6 +458,7 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             dragSupport(itemHolder)
         }
+        binding.symLink.isVisible = itemHolder.file.isSymLink
 
     }
 
@@ -594,7 +596,7 @@ private suspend fun fileModelBuilder(
     }
     model.formattedSize = format1024(length)
     model.size = length
-    return FileModel(model.name, model.fullPath, length, model.isHidden, model)
+    return FileModel(model.name, model.fullPath, length, model.isHidden, model, model.isSymLink)
 }
 
 fun <T> List<T>.same(list: List<T>): Boolean {

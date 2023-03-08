@@ -11,7 +11,8 @@ data class FileModel(
      */
     val size: Long,
     val isHidden: Boolean,
-    val item: FileSystemItemModel
+    val item: FileSystemItemModel,
+    val isSymLink: Boolean,
 ) : Model {
     override fun commonId() = fullPath
 }

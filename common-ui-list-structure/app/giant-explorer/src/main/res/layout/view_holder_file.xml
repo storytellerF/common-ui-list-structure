@@ -59,9 +59,18 @@
 
     <ImageView
         android:id="@+id/fileIcon"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/default_click"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:srcCompat="@drawable/ic_word" />
+        tools:srcCompat="@drawable/ic_folder_explorer" />
+
+    <ImageView
+        android:id="@+id/symLink"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/baseline_link_24"
+        app:layout_constraintEnd_toEndOf="@id/fileIcon"
+        app:layout_constraintTop_toTopOf="@id/fileIcon" />
 </androidx.constraintlayout.widget.ConstraintLayout>

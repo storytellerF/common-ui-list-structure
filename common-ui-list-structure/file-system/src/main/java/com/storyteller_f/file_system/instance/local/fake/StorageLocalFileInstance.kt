@@ -18,7 +18,7 @@ class StorageLocalFileInstance(val context: Context) :
     ForbidChangeDirectoryLocalFileInstance(FileInstanceFactory.storagePath) {
 
     override fun getDirectory(): DirectoryItemModel =
-        DirectoryItemModel("storage", path, isHidden, File(FileInstanceFactory.storagePath).lastModified())
+        DirectoryItemModel("storage", path, isHidden, File(FileInstanceFactory.storagePath).lastModified(), false)
 
     override fun getFileInputStream(): FileInputStream {
         TODO("Not yet implemented")
@@ -36,13 +36,13 @@ class StorageLocalFileInstance(val context: Context) :
         directoryItems: MutableList<DirectoryItemModel>
     ) {
         val path = FileInstanceFactory.emulatedRootPath
-        val emulated = DirectoryItemModel("emulated", path, false, File(path).lastModified())
+        val emulated = DirectoryItemModel("emulated", path, false, File(path).lastModified(), false)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             val storageVolume = FileUtility.getStorageVolume(context)
             val storages = storageVolume.mapNotNull {
                 it.uuid?.let { uuid ->
                     val s = "${FileInstanceFactory.storagePath}/${uuid}"
-                    DirectoryItemModel(uuid, s, false, File(s).lastModified())
+                    DirectoryItemModel(uuid, s, false, File(s).lastModified(), false)
                 }
             }
             (storages + emulated).forEach(directoryItems::add)

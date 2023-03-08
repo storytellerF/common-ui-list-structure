@@ -12,7 +12,7 @@ import java.io.*
  * 标识一个apk 文件
  */
 class AppLocalFileInstance(context: Context, path: String) : BaseContextFileInstance(context, path, FileInstanceFactory.publicFileSystemRoot) {
-    override fun getFile() = FileItemModel(name, path, false, 0, "apk")
+    override fun getFile() = FileItemModel(name, path, false, 0, "apk", false)
 
     override fun getDirectory(): DirectoryItemModel {
         TODO("Not yet implemented")
@@ -21,11 +21,6 @@ class AppLocalFileInstance(context: Context, path: String) : BaseContextFileInst
     private val publicSourceDir: String = context.packageManager.getApplicationInfo(name, 0).publicSourceDir
 
     override fun getFileLength() = File(publicSourceDir).length()
-
-
-    override fun getBufferedOutputStream() = BufferedOutputStream(fileOutputStream)
-
-    override fun getBufferedInputSteam() = BufferedInputStream(fileInputStream)
 
     override fun getBufferedReader() = BufferedReader(FileReader(publicSourceDir))
 

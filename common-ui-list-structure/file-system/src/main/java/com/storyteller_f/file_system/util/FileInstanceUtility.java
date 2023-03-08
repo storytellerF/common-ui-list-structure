@@ -27,9 +27,9 @@ public class FileInstanceUtility {
     public static FileItemModel addFile(Collection<FileItemModel> files, boolean hidden, String name, String absolutePath, long lastModifiedTime, String extension, String permission, long size) {
         FileItemModel fileItemModel;
         if ("torrent".equals(extension)) {
-            fileItemModel = new TorrentFileItemModel(name, absolutePath, hidden, lastModifiedTime);
+            fileItemModel = new TorrentFileItemModel(name, absolutePath, hidden, lastModifiedTime, false);
         } else {
-            fileItemModel = new FileItemModel(name, absolutePath, hidden, lastModifiedTime, extension);
+            fileItemModel = new FileItemModel(name, absolutePath, hidden, lastModifiedTime, extension, false);
         }
         fileItemModel.setPermissions(permission);
         fileItemModel.setSize(size);
@@ -48,7 +48,7 @@ public class FileInstanceUtility {
      * @return 如果客户端不允许添加，返回null
      */
     public static FileSystemItemModel addDirectory(Collection<DirectoryItemModel> directories, boolean isHiddenFile, String directoryName, String absolutePath, long lastModifiedTime, String permissions) {
-        DirectoryItemModel e = new DirectoryItemModel(directoryName, absolutePath, isHiddenFile, lastModifiedTime);
+        DirectoryItemModel e = new DirectoryItemModel(directoryName, absolutePath, isHiddenFile, lastModifiedTime, false);
         e.setPermissions(permissions);
         if (directories.add(e)) return e;
         return null;

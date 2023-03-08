@@ -35,4 +35,4 @@ class CodeBlock(private val content: String, val indent: Int) {
 
 fun String.no() = CodeBlock(this, 0)
 
-fun String.indent(i: Int = 1) = CodeBlock(this, i)
+fun String.indent1(i: Int = 1) = CodeBlock(this, i)

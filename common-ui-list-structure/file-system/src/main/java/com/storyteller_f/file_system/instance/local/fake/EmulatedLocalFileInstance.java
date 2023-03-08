@@ -35,22 +35,12 @@ public class EmulatedLocalFileInstance extends LocalFileInstance {
 
     @Override
     public DirectoryItemModel getDirectory() {
-        return new DirectoryItemModel("emulated", getPath(), false, 0);
+        return new DirectoryItemModel("emulated", getPath(), false, 0, false);
     }
 
     @Override
     public long getFileLength() {
         return 0;
-    }
-
-    @Override
-    public BufferedOutputStream getBufferedOutputStream() {
-        return null;
-    }
-
-    @Override
-    public BufferedInputStream getBufferedInputSteam() {
-        return null;
     }
 
     @Override
@@ -75,7 +65,7 @@ public class EmulatedLocalFileInstance extends LocalFileInstance {
 
     @Override
     public void list(List<FileItemModel> fileItems, List<DirectoryItemModel> directoryItems) {
-        directoryItems.add(new DirectoryItemModel("0", getPath() + "/0", false, new File(FileInstanceFactory.rootUserEmulatedPath).lastModified()));
+        directoryItems.add(new DirectoryItemModel("0", getPath() + "/0", false, new File(FileInstanceFactory.rootUserEmulatedPath).lastModified(), false));
     }
 
     @Override

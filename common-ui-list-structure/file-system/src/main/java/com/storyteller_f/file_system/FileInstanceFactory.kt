@@ -21,7 +21,7 @@ object FileInstanceFactory {
     private const val sdcardPath = "/sdcard"
     const val publicFileSystemRoot = "/"
 
-    private val regularPath = listOf("/system", "/mnt")
+    private val publicPath = listOf("/system", "/mnt")
 
     /**
      * @param root 如果是普通文件系统，是/。如果是document provider，是authority
@@ -33,8 +33,15 @@ object FileInstanceFactory {
         }
         val path = simplyPath(unsafePath)
         val prefix = getPrefix(path, context, root)
+
+        return if (root != publicFileSystemRoot) {
+            DocumentLocalFileInstance(context, path, root, root)
+        } else
+            getPublicFileSystemInstance(prefix, context, path, root)
+    }
+
+    private fun getPublicFileSystemInstance(prefix: String, context: Context, path: String, root: String): FileInstance {
         return when {
-            prefix == "" && root != "/" -> DocumentLocalFileInstance(context, path, root, root)
             prefix == "" -> RegularLocalFileInstance(context, path, root)
             prefix == "/data/data/${context.packageName}" -> RegularLocalFileInstance(context, path, root)
             prefix == sdcardPath -> RegularLocalFileInstance(context, path, root)
@@ -45,12 +52,14 @@ object FileInstanceFactory {
                 Build.VERSION.SDK_INT < Build.VERSION_CODES.R && Build.VERSION.SDK_INT > Build.VERSION_CODES.P -> DocumentLocalFileInstance.getEmulated(context, path)
                 else -> RegularLocalFileInstance(context, path, root)
             }
+
             path.startsWith(storagePath) -> when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> RegularLocalFileInstance(context, path, root)
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> DocumentLocalFileInstance.getMounted(context, path)
                 Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1 -> RegularLocalFileInstance(context, path, root)
                 else -> RegularLocalFileInstance(context, path, root)
             }
+
             prefix == "fake" -> FakeDirectoryLocalFileInstance(path, context)
             else -> throw Exception("无法识别 $path $prefix $root")
         }
@@ -62,9 +71,16 @@ object FileInstanceFactory {
             unsafePath
         }
         val path = simplyPath(unsafePath)
+        return if (root == publicFileSystemRoot)
+            getPublicFileSystemPrefix(path, context)
+        else {
+            ""
+        }
+    }
+
+    private fun getPublicFileSystemPrefix(path: String, context: Context): String {
         return when {
-            root != "/" -> ""
-            regularPath.any { path.startsWith(it) } -> ""
+            publicPath.any { path.startsWith(it) } -> ""
             path.startsWith(sdcardPath) -> sdcardPath
             path.startsWith("/data/data/${context.packageName}") -> "/data/data/${context.packageName}"
             path == storagePath -> storagePath
@@ -149,9 +165,11 @@ object FileInstanceFactory {
                             stack.removeLast()
                             stack.removeLast()//弹出上一个 name
                         }
+
                         "." -> {
                             //无效操作
                         }
+
                         else -> {
                             stack.add(name)
                             stack.add("/")
