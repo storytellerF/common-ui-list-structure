@@ -3,6 +3,9 @@ package com.storyteller_f.file_system;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Binder;
+
+import com.topjohnwu.superuser.nio.FileSystemManager;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -18,6 +21,9 @@ public class FileSystemUriSaver {
     public static FileSystemUriSaver getInstance() {
         return fileSystemUriSaver;
     }
+
+    @Nullable
+    public FileSystemManager remote;
 
     @Nullable
     public Uri savedUri(String sharedPreferenceKey, Context context) {

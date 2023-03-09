@@ -1,17 +1,15 @@
-package com.storyteller_f.giant_explorer.service
+package com.storyteller_f.file_system.instance
 
 import com.storyteller_f.file_system.FileInstanceFactory
-import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.FileInstanceUtility
-import com.storyteller_f.giant_explorer.control.remote
 import com.topjohnwu.superuser.nio.ExtendedFile
 import com.topjohnwu.superuser.nio.FileSystemManager
 import java.io.*
 import java.util.*
 
-class RootAccessFileInstance(path: String, remote: FileSystemManager) : FileInstance(path, FileInstanceFactory.publicFileSystemRoot) {
+class RootAccessFileInstance(path: String, private val remote: FileSystemManager) : FileInstance(path, FileInstanceFactory.rootFileSystemRoot) {
 
     private var extendedFile = remote.getFile(path)
 
@@ -58,7 +56,7 @@ class RootAccessFileInstance(path: String, remote: FileSystemManager) : FileInst
     }
 
     override fun toParent(): FileInstance {
-        return RootAccessFileInstance(File(path).parent!!, remote!!)
+        return RootAccessFileInstance(File(path).parent!!, remote)
     }
 
     override fun changeToParent() {
@@ -80,25 +78,21 @@ class RootAccessFileInstance(path: String, remote: FileSystemManager) : FileInst
     }
 
     override fun toChild(name: String, isFile: Boolean, createWhenNotExists: Boolean): FileInstance {
-        return RootAccessFileInstance(File(file, name).absolutePath, remote!!)
+        return RootAccessFileInstance(File(file, name).absolutePath, remote)
     }
 
     override fun changeToChild(name: String, isFile: Boolean, createWhenNotExists: Boolean) {
         val tempFile = File(file, name)
-        val childFile = remote?.getFile(file.absolutePath)
-        childFile?.let {
-            file = tempFile
-            extendedFile = childFile
-        }
+        val childFile = remote.getFile(file.absolutePath)
+        file = tempFile
+        extendedFile = childFile
     }
 
     override fun changeTo(path: String) {
         val tempFile = File(path)
-        val childFile = remote?.getFile(path)
-        childFile?.let {
-            file = tempFile
-            extendedFile = childFile
-        }
+        val childFile = remote.getFile(path)
+        file = tempFile
+        extendedFile = childFile
     }
 
     override fun getParent(): String? = extendedFile.parent

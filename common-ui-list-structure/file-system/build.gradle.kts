@@ -28,4 +28,6 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
+    val libsuVersion = "5.0.3"
+    implementation("com.github.topjohnwu.libsu:nio:${libsuVersion}")
 }

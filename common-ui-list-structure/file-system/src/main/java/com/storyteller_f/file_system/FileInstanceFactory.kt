@@ -1,10 +1,12 @@
 package com.storyteller_f.file_system
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.os.StatFs
 import androidx.annotation.WorkerThread
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.RootAccessFileInstance
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.file_system.instance.local.RegularLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.EmulatedLocalFileInstance
@@ -13,18 +15,20 @@ import com.storyteller_f.file_system.instance.local.fake.StorageLocalFileInstanc
 import java.util.*
 
 object FileInstanceFactory {
-    private const val TAG = "FileInstanceFactory"
     const val rootUserEmulatedPath = "/storage/emulated/0"
     const val emulatedRootPath = "/storage/emulated"
     private const val currentEmulatedPath = "/storage/self"
     const val storagePath = "/storage"
+
+    @SuppressLint("SdCardPath")
     private const val sdcardPath = "/sdcard"
     const val publicFileSystemRoot = "/"
+    const val rootFileSystemRoot = "root"
 
     private val publicPath = listOf("/system", "/mnt")
 
     /**
-     * @param root 如果是普通文件系统，是/。如果是document provider，是authority
+     * @param root 如果是普通文件系统，是/。如果是document provider，是authority。如果有root 权限，是root
      */
     @WorkerThread
     fun getFileInstance(unsafePath: String, context: Context, root: String = publicFileSystemRoot): FileInstance {
@@ -33,19 +37,23 @@ object FileInstanceFactory {
         }
         val path = simplyPath(unsafePath)
         val prefix = getPrefix(path, context, root)
+        val remote = FileSystemUriSaver.getInstance().remote
 
-        return if (root != publicFileSystemRoot) {
-            DocumentLocalFileInstance(context, path, root, root)
-        } else
-            getPublicFileSystemInstance(prefix, context, path, root)
+        return when {
+            root == rootFileSystemRoot && remote != null -> RootAccessFileInstance(path, remote)
+
+            root != publicFileSystemRoot -> DocumentLocalFileInstance(context, path, root, root)
+
+            else -> getPublicFileSystemInstance(prefix, context, path, root)
+        }
     }
 
     private fun getPublicFileSystemInstance(prefix: String, context: Context, path: String, root: String): FileInstance {
         return when {
             prefix == "" -> RegularLocalFileInstance(context, path, root)
-            prefix == "/data/data/${context.packageName}" -> RegularLocalFileInstance(context, path, root)
+            prefix == context.appDataDir() -> RegularLocalFileInstance(context, path, root)
             prefix == sdcardPath -> RegularLocalFileInstance(context, path, root)
-            path == storagePath -> StorageLocalFileInstance(context)
+            prefix == storagePath -> StorageLocalFileInstance(context)
             prefix == emulatedRootPath -> EmulatedLocalFileInstance(context)
             prefix == currentEmulatedPath -> RegularLocalFileInstance(context, path, root)
             prefix == rootUserEmulatedPath -> when {
@@ -65,16 +73,21 @@ object FileInstanceFactory {
         }
     }
 
+    /**
+     * 如果是根目录，返回空。
+     */
     @JvmStatic
     fun getPrefix(unsafePath: String, context: Context, root: String = publicFileSystemRoot): String {
         assert(!unsafePath.endsWith("/") || unsafePath.length == 1) {
             unsafePath
         }
         val path = simplyPath(unsafePath)
-        return if (root == publicFileSystemRoot)
-            getPublicFileSystemPrefix(path, context)
-        else {
-            ""
+        /**
+         * 只有publicFileSystem 才会有prefix 的区别，其他的都不需要。
+         */
+        return when {
+            root != publicFileSystemRoot -> ""
+            else -> getPublicFileSystemPrefix(path, context)
         }
     }
 
@@ -82,7 +95,7 @@ object FileInstanceFactory {
         return when {
             publicPath.any { path.startsWith(it) } -> ""
             path.startsWith(sdcardPath) -> sdcardPath
-            path.startsWith("/data/data/${context.packageName}") -> "/data/data/${context.packageName}"
+            path.startsWith(context.appDataDir()) -> context.appDataDir()
             path == storagePath -> storagePath
             path.startsWith(rootUserEmulatedPath) -> rootUserEmulatedPath
             path.startsWith(emulatedRootPath) -> emulatedRootPath
@@ -92,9 +105,13 @@ object FileInstanceFactory {
                 if (endIndex == -1) endIndex = path.length
                 path.substring(0, endIndex + 1)
             }
+
             else -> "fake"
         }
     }
+
+    @SuppressLint("SdCardPath")
+    private fun Context.appDataDir() = "/data/data/$packageName"
 
     @Suppress("DEPRECATION")
     fun getSpace(prefix: String?): Long {
@@ -179,15 +196,14 @@ object FileInstanceFactory {
             } else nameStack.add(current)
         }
         val s = nameStack.joinToString("")
-        if (s.isNotEmpty())
+        if (s.isNotEmpty()) {
             if (s == "..") {
                 if (stack.size > 1) {
                     stack.removeLast()
                     stack.removeLast()
                 }
-            } else if (s != ".") {
-                stack.add(s)
-            }
+            } else if (s != ".") stack.add(s)
+        }
         if (stack.size > 1 && stack.last == "/") stack.removeLast()
         return stack.joinToString("")
     }

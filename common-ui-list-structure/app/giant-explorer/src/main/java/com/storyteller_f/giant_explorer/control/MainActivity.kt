@@ -51,7 +51,6 @@ import com.storyteller_f.giant_explorer.pc_end_on
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
 import com.storyteller_f.giant_explorer.service.FileOperateService
 import com.storyteller_f.giant_explorer.service.FileService
-import com.storyteller_f.giant_explorer.service.RootAccessFileInstance
 import com.storyteller_f.giant_explorer.view.PathMan
 import com.storyteller_f.sort_ui.SortChain
 import com.storyteller_f.sort_ui.SortDialog
@@ -100,15 +99,7 @@ suspend fun getFileInstanceAsync(path: String, context: Context, root: String) =
     }
 }
 
-fun getFileInstance(path: String, context: Context, root: String = FileInstanceFactory.publicFileSystemRoot): FileInstance {
-    val fileSystemManager = remote
-    return if (fileSystemManager != null) {
-        RootAccessFileInstance(FileInstanceFactory.simplyPath(path), fileSystemManager)
-    } else FileInstanceFactory.getFileInstance(path, context, root)
-}
-
-var remote: FileSystemManager? = null
-
+fun getFileInstance(path: String, context: Context, root: String = FileInstanceFactory.publicFileSystemRoot) = FileInstanceFactory.getFileInstance(path, context, root)
 
 class MainActivity : CommonActivity(), FileOperateService.FileOperateResultContainer {
 
@@ -330,12 +321,12 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     private val fileConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             service?.let {
-                remote = FileSystemManager.getRemote(service)
+                FileSystemUriSaver.getInstance().remote = FileSystemManager.getRemote(service)
             }
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
-            remote = null
+            FileSystemUriSaver.getInstance().remote = null
         }
     }
 
