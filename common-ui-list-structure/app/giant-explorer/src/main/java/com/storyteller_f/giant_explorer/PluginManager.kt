@@ -30,7 +30,10 @@ class FragmentPluginConfiguration(meta: PluginMeta, val classLoader: ClassLoader
         fun resolve(meta: PluginMeta): FragmentPluginConfiguration {
             val dexClassLoader = DexClassLoader(meta.path, null, null, meta.javaClass.classLoader)
             val readText = dexClassLoader.getResourceAsStream(giantExplorerPluginIni).bufferedReader().readLines()
-            return FragmentPluginConfiguration(meta, dexClassLoader, readText.first(), readText.last().split(","))
+            val startFragment = readText.first()
+            val pluginFragments = readText[1].split(",")
+            val version = readText.last()
+            return FragmentPluginConfiguration(meta.copy(version = version), dexClassLoader, startFragment, pluginFragments)
         }
     }
 
@@ -43,7 +46,8 @@ class HtmlPluginConfiguration(meta: PluginMeta, val extractedPath: String) : Plu
             val pluginFile = File(meta.path)
             val extractedPath = File(context.filesDir, "plugins/${pluginFile.nameWithoutExtension}").absolutePath
             File(meta.path).ensureExtract(extractedPath)
-            return HtmlPluginConfiguration(meta, extractedPath)
+            val version = File(extractedPath, "config").readText()
+            return HtmlPluginConfiguration(meta.copy(version = version), extractedPath)
         }
     }
 }
@@ -108,9 +112,7 @@ class PluginManager {
         raw.clear()
     }
 
-    companion object {
-        private const val TAG = "PluginManager"
-    }
+    companion object
 }
 
 object FileSystemProviderResolver {

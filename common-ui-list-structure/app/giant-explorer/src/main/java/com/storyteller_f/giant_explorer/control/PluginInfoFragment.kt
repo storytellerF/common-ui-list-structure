@@ -9,6 +9,8 @@ import com.storyteller_f.giant_explorer.FragmentPluginConfiguration
 import com.storyteller_f.giant_explorer.HtmlPluginConfiguration
 import com.storyteller_f.giant_explorer.databinding.FragmentPluginInfoBinding
 import com.storyteller_f.giant_explorer.pluginManagerRegister
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class PluginInfoFragment : SimpleFragment<FragmentPluginInfoBinding>(FragmentPluginInfoBinding::inflate) {
     private val args by navArgs<PluginInfoFragmentArgs>()
@@ -17,13 +19,16 @@ class PluginInfoFragment : SimpleFragment<FragmentPluginInfoBinding>(FragmentPlu
         super.onViewCreated(view, savedInstanceState)
 
         scope.launchWhenResumed {
-            val pluginConfiguration = pluginManagerRegister.resolvePluginName(args.pluginName, requireContext())
-            binding.pluginName.text = args.pluginName
+            val pluginConfiguration = withContext(Dispatchers.IO) {
+                pluginManagerRegister.resolvePluginName(args.pluginName, requireContext())
+            }
+            binding.pluginName.text = "${args.pluginName} - ${pluginConfiguration.meta.version}"
             binding.pluginPath.text = pluginConfiguration.meta.path
             when (pluginConfiguration) {
                 is FragmentPluginConfiguration -> {
                     binding.other.text = pluginConfiguration.startFragment
                 }
+
                 is HtmlPluginConfiguration -> {
                     binding.other.text = pluginConfiguration.extractedPath
                 }

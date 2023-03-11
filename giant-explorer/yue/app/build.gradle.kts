@@ -53,7 +53,7 @@ dependencies {
 
 val userHome: String = System.getProperty("user.home")
 song {
-    transfers.set(listOf("${buildDir.absolutePath}/outputs/apk/debug/app-debug.apk"))
+    transfers.set(listOf("${buildDir.absolutePath}/intermediates/apk/debug/app-debug.apk"))
     adb.set("$userHome/Library/Android/sdk/platform-tools/adb")
     paths.set(listOf())
     packages.set(listOf("com.storyteller_f.giant_explorer" to "files/plugins"))

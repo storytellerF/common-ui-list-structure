@@ -76,7 +76,6 @@ import java.util.*
 import kotlin.concurrent.thread
 import kotlin.coroutines.resumeWithException
 
-
 class FileExplorerSession(application: Application, path: String, root: String) : AndroidViewModel(application) {
     val selected = MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>()
     val fileInstance = MutableLiveData<FileInstance>()
@@ -88,8 +87,6 @@ class FileExplorerSession(application: Application, path: String, root: String) 
             }
         }
     }
-
-
 }
 
 suspend fun getFileInstanceAsync(path: String, context: Context, root: String) = suspendCancellableCoroutine {
@@ -109,12 +106,9 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     }
     private val dialogImpl = FilterDialogManager()
 
-    private val filters by keyPrefix({ "test" }, svm({ dialogImpl.filterDialog }) { it, f ->
-        StateValueModel(it, default = buildFilterActive(f.currentConfig()?.configItems.orEmpty()))
-    })
-    private val sort by keyPrefix({ "sort" }, svm({ dialogImpl.sortDialog }) { it, f ->
-        StateValueModel(it, default = buildSortActive(f.current()?.configItems.orEmpty()))
-    })
+    private val filters by keyPrefix({ "filter" }, svm({ dialogImpl.filterDialog }, vmProducer = buildFilterDialogState))
+
+    private val sort by keyPrefix({ "sort" }, svm({ dialogImpl.sortDialog }, vmProducer = buildSortDialogState))
 
     private val uuid by vm({}) {
         GenericValueModel<String>().apply {

@@ -18,24 +18,26 @@ import com.google.android.material.snackbar.Snackbar
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.databinding.ActivityRootAccessBinding
 import com.topjohnwu.superuser.Shell
-
+import kotlin.concurrent.thread
 
 class RootAccessActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityRootAccessBinding
 
-    private val CUSTOM_TAB_PACKAGE_NAME = "com.android.chrome" // Change when in stable
     var newSession: CustomTabsSession? = null
     private val connection: CustomTabsServiceConnection = object : CustomTabsServiceConnection() {
         override fun onCustomTabsServiceConnected(name: ComponentName, client: CustomTabsClient) {
-            val warmup = client.warmup(0)
-            Log.i(TAG, "onCustomTabsServiceConnected: warmup $warmup")
-            newSession = client.newSession(object : CustomTabsCallback() {
+            thread {
+                val warmup = client.warmup(0)
+                Log.i(TAG, "onCustomTabsServiceConnected: warmup $warmup")
+                newSession = client.newSession(object : CustomTabsCallback() {
 
-            })
-            newSession?.mayLaunchUrl(Uri.parse(MagiskUrl), null, null)
-            newSession?.mayLaunchUrl(Uri.parse(kernelSuUrl), null, null)
+                })
+                newSession?.mayLaunchUrl(Uri.parse(MagiskUrl), null, null)
+                newSession?.mayLaunchUrl(Uri.parse(kernelSuUrl), null, null)
+            }
+
         }
 
         override fun onServiceDisconnected(name: ComponentName) {}
@@ -71,5 +73,6 @@ class RootAccessActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "RootAccessActivity"
+        private const val CUSTOM_TAB_PACKAGE_NAME = "com.android.chrome" // Change when in stable
     }
 }

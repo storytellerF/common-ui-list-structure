@@ -32,7 +32,7 @@ class FileOperateService : Service() {
         super.onConfigurationChanged(newConfig)
     }
 
-    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "onStartCommand() called with: intent = [$intent], flags = [$flags], startId = [$startId]")
         return super.onStartCommand(intent, flags, startId)
     }

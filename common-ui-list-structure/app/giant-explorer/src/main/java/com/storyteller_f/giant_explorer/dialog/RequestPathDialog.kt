@@ -20,6 +20,9 @@ import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.control.*
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.DialogRequestPathBinding
+import com.storyteller_f.giant_explorer.filter.FilterDialogManager
+import com.storyteller_f.giant_explorer.filter.buildFilterDialogState
+import com.storyteller_f.giant_explorer.filter.buildSortDialogState
 import com.storyteller_f.giant_explorer.view.PathMan
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import com.storyteller_f.ui_list.source.SearchProducer
@@ -40,12 +43,8 @@ class RequestPathDialog : SimpleDialogFragment<DialogRequestPathBinding>(DialogR
     private val filterHiddenFile by svm({}) { it, _ ->
         StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
     }
-    private val filters by keyPrefix({ "test" }, svm({ dialogImpl.filterDialog }) { it, f ->
-        StateValueModel(it, default = buildFilterActive(f.currentConfig()?.configItems.orEmpty()))
-    })
-    private val sort by keyPrefix({ "sort" }, svm({ dialogImpl.sortDialog }) { it, f ->
-        StateValueModel(it, default = buildSortActive(f.current()?.configItems.orEmpty()))
-    })
+    private val filters by keyPrefix({ "filter" }, svm({ dialogImpl.filterDialog }, vmProducer = buildFilterDialogState))
+    private val sort by keyPrefix({ "sort" }, svm({ dialogImpl.sortDialog }, vmProducer = buildSortDialogState))
     private val dialogImpl = FilterDialogManager()
 
     @Parcelize

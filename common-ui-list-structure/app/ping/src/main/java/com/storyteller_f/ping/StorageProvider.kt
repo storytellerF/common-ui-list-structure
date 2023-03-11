@@ -22,9 +22,10 @@ import java.io.IOException
 import java.security.MessageDigest
 
 class StorageProvider : DocumentsProvider() {
-    private val DEFAULT_ROOT_ID = "0"
 
     companion object {
+        private const val DEFAULT_ROOT_ID = "0"
+
         private val DEFAULT_ROOT_PROJECTION: Array<String> = arrayOf(
             DocumentsContract.Root.COLUMN_ROOT_ID,
             DocumentsContract.Root.COLUMN_MIME_TYPES,

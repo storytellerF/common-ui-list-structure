@@ -8,7 +8,6 @@ fun main(args: Array<String>) {
     // Learn more about running applications: https://www.jetbrains.com/help/idea/running-applications.html.
     println("Program arguments: ${args.joinToString()}")
     val path = args.firstOrNull() ?: "../"
-    println(path)
     println(File(path).absolutePath)
     extracted(
         listOf(File(path, "build/yue-html.zip")),
