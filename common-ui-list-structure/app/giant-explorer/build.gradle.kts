@@ -74,7 +74,7 @@ dependencies {
     // Optional: Provides remote file system support
     implementation("com.github.topjohnwu.libsu:nio:${libsuVersion}")
 
-    implementation("com.github.bumptech.glide:glide:4.14.2")
+    implementation("com.github.bumptech.glide:glide:4.15.0")
 
     implementation(project(":app:giant-explorer-plugin-core"))
     implementation("androidx.webkit:webkit:1.6.0")

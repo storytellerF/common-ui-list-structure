@@ -29,7 +29,7 @@ dependencies {
     //geetest
     implementation("com.geetest.sensebot:sensebot:4.3.9.1")
     // https://mvnrepository.com/artifact/com.google.code.gson/gson
-    implementation("com.google.code.gson:gson:2.10")
+    implementation("com.google.code.gson:gson:2.10.1")
 
 }
 baseApp()
