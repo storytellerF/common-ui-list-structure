@@ -1,6 +1,7 @@
 package com.storyteller_f.common_ui
 
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
 import android.view.LayoutInflater
@@ -20,12 +21,19 @@ abstract class CommonActivity : AppCompatActivity(), RegistryFragment {
         super.onStart()
         //主要用于旋转屏幕
         waitingInActivity.forEach { t ->
-            @Suppress("UNCHECKED_CAST") val action = t.value.action as Function2<CommonActivity, Parcelable, Unit>
+            @Suppress("UNCHECKED_CAST") val action = t.value.action
             if (t.value.registerKey == registryKey()) {
                 val callback = { s: String, r: Bundle ->
                     if (waitingInFragment.containsKey(s)) {
-                        r.getParcelable<Parcelable>("result")?.let {
-                            action(this, it)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            r.getParcelable("result", Parcelable::class.java)?.let {
+                                action(this, it)
+                            }
+                        } else {
+                            @Suppress("DEPRECATION")
+                            r.getParcelable<Parcelable>("result")?.let {
+                                action(this, it)
+                            }
                         }
                         waitingInFragment.remove(s)
                     }
@@ -35,24 +43,32 @@ abstract class CommonActivity : AppCompatActivity(), RegistryFragment {
             }
         }
     }
+}
 
-    fun <T : Parcelable> dialog(dialog: Class<out CommonDialogFragment>, parameters: Bundle? = null, action: (T) -> Unit) {
-        val apply = dialog.newInstance().apply {
-            arguments = parameters
-            show(supportFragmentManager, this.tag())
-        }
-        val requestKey = apply.requestKey()
-        val callback = { s: String, r: Bundle ->
-            if (waitingInActivity.containsKey(s)) {
-                r.getParcelable<T>("result")?.let {
-                    action.invoke(it)
-                }
-                waitingInActivity.remove(s)
-            }
-        }
-        waitingInActivity[requestKey] = ActivityAction(callback, registryKey())
-        supportFragmentManager.setFragmentResultListener(requestKey, this, callback)
+fun <T : Parcelable, A> A.dialog(dialog: Class<out CommonDialogFragment>, result: Class<T>, parameters: Bundle? = null, action: A.(T) -> Unit) where A : CommonActivity {
+    val apply = dialog.newInstance().apply {
+        arguments = parameters
+        show(supportFragmentManager, this.tag())
     }
+    val requestKey = apply.requestKey()
+    val callback = { s: String, r: Bundle ->
+        if (waitingInActivity.containsKey(s)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                r.getParcelable("result", result)?.let {
+                    action(it)
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                r.getParcelable<T>("result")?.let {
+                    action(it)
+                }
+            }
+            waitingInActivity.remove(s)
+        }
+    }
+    @Suppress("UNCHECKED_CAST")
+    waitingInActivity[requestKey] = ActivityAction(action as (CommonActivity, Parcelable) -> Unit, registryKey())
+    supportFragmentManager.setFragmentResultListener(requestKey, this, callback)
 }
 
 abstract class SimpleActivity<T : ViewBinding>(

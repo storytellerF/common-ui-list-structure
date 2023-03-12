@@ -40,7 +40,7 @@ class PluginListFragment : SimpleFragment<FragmentPluginListBinding>(FragmentPlu
             SimplePlugin(it)
         }
         SimpleResponse(toList.size, data)
-    }, processFactory = { p, n ->
+    }, processFactory = { p, _ ->
         PluginHolder(p.path)
     }))
 

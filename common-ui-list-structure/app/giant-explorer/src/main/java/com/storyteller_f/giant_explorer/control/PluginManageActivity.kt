@@ -10,7 +10,7 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.storyteller_f.common_ktx.mm
 import com.storyteller_f.common_ui.CommonActivity
-import com.storyteller_f.file_system.FileInstanceFactory
+import com.storyteller_f.common_ui.dialog
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system_ktx.ensureFile
 import com.storyteller_f.giant_explorer.R
@@ -42,7 +42,7 @@ class PluginManageActivity : CommonActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         val pluginRoot = File(filesDir, "plugins")
         binding.fab.setOnClickListener {
-            dialog(RequestPathDialog::class.java) { result: RequestPathDialog.RequestPathResult ->
+            dialog(RequestPathDialog::class.java, RequestPathDialog.RequestPathResult::class.java, null) { result ->
                 result.path.mm {
                     getFileInstance(it, this)
                 }.mm { dest ->

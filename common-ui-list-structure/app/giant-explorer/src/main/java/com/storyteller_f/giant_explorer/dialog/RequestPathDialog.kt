@@ -83,7 +83,7 @@ class RequestPathDialog : SimpleDialogFragment<DialogRequestPathBinding>(DialogR
             dismiss()
         }
         binding.newFile.setOnClick {
-            dialog(NewNameDialog()) { nameResult: NewNameDialog.NewNameResult ->
+            dialog(NewNameDialog(), NewNameDialog.NewNameResult::class.java) { nameResult ->
                 session.fileInstance.value?.toChild(nameResult.name, false, true)
             }
         }

@@ -602,12 +602,12 @@ fun <X> LiveData<X>.distinctUntilChangedBy(f: (X, X) -> Boolean): LiveData<X?> {
     outputLiveData.addSource(this, object : Observer<X?> {
         var mFirstTime = true
         var previous: X? = null
-        override fun onChanged(currentValue: X?) {
+        override fun onChanged(value: X?) {
             val previousValue = previous
-            if (mFirstTime || previousValue == null && currentValue != null || previousValue != null && (previousValue != currentValue || !f(previousValue, currentValue))) {
+            if (mFirstTime || previousValue == null && value != null || previousValue != null && (previousValue != value || !f(previousValue, value))) {
                 mFirstTime = false
-                outputLiveData.value = currentValue
-                previous = currentValue
+                outputLiveData.value = value
+                previous = value
             }
         }
     })

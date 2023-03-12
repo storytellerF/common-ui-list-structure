@@ -1,6 +1,7 @@
 package com.storyteller_f.common_ui
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
 import android.view.LayoutInflater
@@ -27,12 +28,19 @@ abstract class CommonFragment : Fragment(), RequestFragment, RegistryFragment {
     override fun onStart() {
         super.onStart()
         waitingInFragment.forEach { t ->
-            @Suppress("UNCHECKED_CAST") val action = t.value.action as Function2<CommonFragment, Parcelable, Unit>
+            @Suppress("UNCHECKED_CAST") val action = t.value.action
             if (t.value.registerKey == registryKey()) {
                 val callback = { s: String, r: Bundle ->
                     if (waitingInFragment.containsKey(s)) {
-                        r.getParcelable<Parcelable>(fragmentResultKey)?.let {
-                            action(this, it)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            r.getParcelable(fragmentResultKey, Parcelable::class.java)?.let {
+                                action(this, it)
+                            }
+                        } else {
+                            @Suppress("DEPRECATION")
+                            r.getParcelable<Parcelable>(fragmentResultKey)?.let {
+                                action(this, it)
+                            }
                         }
                         waitingInFragment.remove(s)
                     }
@@ -64,31 +72,47 @@ abstract class SimpleFragment<T : ViewBinding>(
     }
 }
 
-fun <T : Parcelable, F> F.fragment(requestKey: String, action: F.(T) -> Unit) where F : Fragment, F : RegistryFragment {
+fun <T : Parcelable, F> F.fragment(requestKey: String, result: Class<T>,  action: F.(T) -> Unit) where F : CommonFragment, F : RegistryFragment {
     val callback = { s: String, r: Bundle ->
         if (waitingInFragment.containsKey(s)) {
-            r.getParcelable<T>(fragmentResultKey)?.let {
-                this.action(it)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                r.getParcelable(fragmentResultKey, result)?.let {
+                    action(it)
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                r.getParcelable<T>(fragmentResultKey)?.let {
+                    action(it)
+                }
             }
             waitingInFragment.remove(s)
         }
     }
-    waitingInFragment[requestKey] = FragmentAction(action, registryKey())
+    @Suppress("UNCHECKED_CAST")
+    waitingInFragment[requestKey] = FragmentAction(action as (CommonFragment, Parcelable) -> Unit, registryKey())
     fm.setFragmentResultListener(requestKey, owner, callback)
 }
 
-fun <T : Parcelable, F> F.dialog(dialogFragment: CommonDialogFragment, action: F.(T) -> Unit) where F : Fragment, F : RegistryFragment {
+fun <T : Parcelable, F> F.dialog(dialogFragment: CommonDialogFragment, result: Class<T>, action: F.(T) -> Unit) where F : Fragment, F : RegistryFragment {
     val requestKey = dialogFragment.requestKey()
     dialogFragment.show(fm, requestKey)
     val callback = { s: String, r: Bundle ->
         if (waitingInFragment.containsKey(s)) {
-            r.getParcelable<T>(fragmentResultKey)?.let {
-                this.action(it)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                r.getParcelable(fragmentResultKey, result)?.let {
+                    action(it)
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                r.getParcelable<T>(fragmentResultKey)?.let {
+                    action(it)
+                }
             }
             waitingInFragment.remove(s)
         }
     }
-    waitingInFragment[requestKey] = FragmentAction(action, registryKey())
+    @Suppress("UNCHECKED_CAST")
+    waitingInFragment[requestKey] = FragmentAction(action as (CommonFragment, Parcelable) -> Unit, registryKey())
     fm.setFragmentResultListener(requestKey, owner, callback)
 }
 
@@ -145,11 +169,11 @@ val LifecycleOwner.fm
         else -> throw Exception("unknown type $this")
     }
 
-class ActivityAction<T : Parcelable, F : CommonActivity>(val action: F.(T) -> Unit, val registerKey: String)
-class FragmentAction<T : Parcelable, F : CommonFragment>(val action: F.(T) -> Unit, val registerKey: String)
+class ActivityAction(val action: (CommonActivity, Parcelable) -> Unit, val registerKey: String)
+class FragmentAction(val action: (CommonFragment, Parcelable) -> Unit, val registerKey: String)
 
-val waitingInActivity = mutableMapOf<String, ActivityAction<*, *>>()
-val waitingInFragment = mutableMapOf<String, FragmentAction<*, *>>()
+val waitingInActivity = mutableMapOf<String, ActivityAction>()
+val waitingInFragment = mutableMapOf<String, FragmentAction>()
 
 /**
  * 可以被请求。返回的结构通过requestKey 辨别

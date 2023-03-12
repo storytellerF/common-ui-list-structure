@@ -31,8 +31,10 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
@@ -56,6 +58,7 @@ import com.storyteller_f.view_holder_compose.ComposeViewHolder
 import com.storyteller_f.view_holder_compose.EDComposeView
 import com.storyteller_f.view_holder_compose.EdComposeViewEventEmitter
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private val binding by viewBinding(ActivityMainBinding::inflate)
@@ -112,9 +115,11 @@ class MainActivity : AppCompatActivity() {
 
         })
         supportNavigatorBarImmersive(binding.root)
-        lifecycleScope.launchWhenResumed {
-            viewModel.content?.collectLatest {
-                adapter.submitData(it)
+        scope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                viewModel.content?.collectLatest {
+                    adapter.submitData(it)
+                }
             }
         }
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->

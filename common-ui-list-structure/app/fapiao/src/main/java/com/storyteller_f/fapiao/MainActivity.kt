@@ -15,7 +15,6 @@ import com.storyteller_f.common_ui.waitingDialog
 import com.storyteller_f.fapiao.database.FaPiaoEntity
 import com.storyteller_f.fapiao.database.requireDatabase
 import com.storyteller_f.fapiao.databinding.ActivityMainBinding
-import com.storyteller_f.fapiao_reader.Reader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

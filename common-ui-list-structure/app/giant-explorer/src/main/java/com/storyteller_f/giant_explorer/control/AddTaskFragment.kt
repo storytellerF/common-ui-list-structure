@@ -36,7 +36,7 @@ class AddTaskFragment : SimpleFragment<FragmentAddTaskBinding>(FragmentAddTaskBi
         binding.selectWorkerName.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, arrayOf("message digest", "torrent name", "folder size"))
         binding.selectPath.setOnClick {
             findNavController().navigate(R.id.action_select_task_path)
-            fragment(RequestPathDialog.requestKey) { r: RequestPathDialog.RequestPathResult ->
+            fragment(RequestPathDialog.requestKey, RequestPathDialog.RequestPathResult::class.java) {r ->
                 binding.path.setText(r.path)
             }
         }
