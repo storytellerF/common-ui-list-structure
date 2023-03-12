@@ -1,3 +1,5 @@
+@file:Suppress("unused", "UnstableApiUsage", "DEPRECATION")
+
 package com.storyteller_f.version_manager
 
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
@@ -33,7 +35,7 @@ fun DependencyHandlerScope.baseDependency() {
 
 fun DependencyHandlerScope.composeDependency() {
     "implementation"("androidx.compose.material:material:${Versions.composeMaterialVersion}")
-    "implementation"("androidx.compose.ui:ui-tooling:${Versions.composeVersion}")
+    "implementation"("androidx.compose.ui:ui-tooling:${Versions.composeUiVersion}")
 }
 
 fun DependencyHandlerScope.networkDependency() {
