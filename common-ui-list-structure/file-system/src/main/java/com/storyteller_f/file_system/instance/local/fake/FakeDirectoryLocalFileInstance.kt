@@ -1,5 +1,6 @@
 package com.storyteller_f.file_system.instance.local.fake
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import androidx.annotation.WorkerThread
@@ -18,13 +19,14 @@ import java.nio.file.attribute.BasicFileAttributes
  */
 class FakeDirectoryLocalFileInstance(path: String, val context: Context) :
     ForbidChangeDirectoryLocalFileInstance(path) {
+    @SuppressLint("SdCardPath")
     private val presetDirectories: MutableMap<String, List<String>> = mutableMapOf(
         "/data/user/0" to listOf(context.packageName),
         "/data/data" to listOf(context.packageName),
     )
 
     private val presetFiles: MutableMap<String, List<String>> = mutableMapOf(
-        "/data/app" to context.packageManager.getInstalledApplications(0).map {
+        "/data/app" to context.packageManager.getInstalledApplicationsCompat(0).map {
             it.packageName ?: "unknown"
         }
     )
@@ -52,7 +54,7 @@ class FakeDirectoryLocalFileInstance(path: String, val context: Context) :
         presetFiles[path]?.map {
             fileItems.add(
                 FileItemModel(it, "$path/$it", false, File("$path/$it").lastModified(), isSymLink = false).apply {
-                    size = File(context.packageManager.getApplicationInfo(it, 0).publicSourceDir).length()
+                    size = File(context.packageManager.getApplicationInfoCompat(it, 0).publicSourceDir).length()
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         try {
                             val basicFileAttributes = Files.readAttributes(file.toPath(), BasicFileAttributes::class.java)

@@ -1,6 +1,11 @@
 package com.storyteller_f.file_system.instance.local.fake
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.content.PackageManagerCompat
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.BaseContextFileInstance
 import com.storyteller_f.file_system.instance.FileInstance
@@ -18,7 +23,7 @@ class AppLocalFileInstance(context: Context, path: String) : BaseContextFileInst
         TODO("Not yet implemented")
     }
 
-    private val publicSourceDir: String = context.packageManager.getApplicationInfo(name, 0).publicSourceDir
+    private val publicSourceDir: String = context.packageManager.getApplicationInfoCompat(name, 0).publicSourceDir
 
     override fun getFileLength() = File(publicSourceDir).length()
 
@@ -88,4 +93,19 @@ class AppLocalFileInstance(context: Context, path: String) : BaseContextFileInst
         TODO("Not yet implemented")
     }
 
+}
+
+@Suppress("DEPRECATION")
+fun PackageManager.getApplicationInfoCompat(packageName: String, flag: Long): ApplicationInfo {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        getApplicationInfo(packageName, PackageManager.ApplicationInfoFlags.of(flag))
+    } else getApplicationInfo(packageName, flag.toInt())
+}
+
+@SuppressLint("QueryPermissionsNeeded")
+@Suppress("DEPRECATION")
+fun PackageManager.getInstalledApplicationsCompat(flag: Long): MutableList<ApplicationInfo> {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        getInstalledApplications(PackageManager.ApplicationInfoFlags.of(flag))
+    } else getInstalledApplications(flag.toInt())
 }

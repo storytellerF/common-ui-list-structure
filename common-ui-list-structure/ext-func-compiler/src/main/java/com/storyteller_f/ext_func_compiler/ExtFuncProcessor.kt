@@ -25,7 +25,7 @@ val ViewBinding.$name get() = binding.root.context.$name"""
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val symbols = resolver.getSymbolsWithAnnotation(ExtFuncFlat::class.java.canonicalName)
-        val ret = symbols.filter { !it.validate() }.toList()
+//        val ret = symbols.filter { !it.validate() }.toList()
         val filter = symbols
             .filter {
                 (it is KSPropertyDeclaration || it is KSFunctionDeclaration) && it.validate()
