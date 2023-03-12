@@ -1,4 +1,4 @@
-import common_ui_list_structure_preset.*
+import com.storyteller_f.version_manager.*
 
 plugins {
     id("com.android.application")
@@ -7,6 +7,8 @@ plugins {
     id("androidx.navigation.safeargs.kotlin")
 //    id("app.cash.licensee")
     id("com.storyteller_f.sml")
+    id("com.storyteller_f.version_manager")
+
 }
 android {
     defaultConfig {

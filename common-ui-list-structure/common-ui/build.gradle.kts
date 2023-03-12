@@ -1,8 +1,5 @@
-import common_ui_list_structure_preset.Versions
-import common_ui_list_structure_preset.baseLibrary
-import common_ui_list_structure_preset.setupCompose
-import common_ui_list_structure_preset.setupExtFuncSupport
-import common_ui_list_structure_preset.unitTestDependency
+import com.storyteller_f.version_manager.*
+
 import org.gradle.kotlin.dsl.android
 import org.gradle.kotlin.dsl.api
 import org.gradle.kotlin.dsl.dependencies
@@ -13,6 +10,7 @@ plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
     id("kotlin-kapt")
+    id("com.storyteller_f.version_manager")
 }
 
 android {

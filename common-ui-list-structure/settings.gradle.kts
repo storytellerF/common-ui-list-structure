@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("version-manager")
     repositories {
         gradlePluginPortal()
         google()

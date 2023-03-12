@@ -1,10 +1,11 @@
 import com.android.build.gradle.internal.tasks.factory.dependsOn
-import common_ui_list_structure_preset.Versions
 import org.jetbrains.kotlin.util.capitalizeDecapitalize.toUpperCaseAsciiOnly
+import com.storyteller_f.version_manager.*
 
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
+    id("com.storyteller_f.version_manager")
 }
 
 android {

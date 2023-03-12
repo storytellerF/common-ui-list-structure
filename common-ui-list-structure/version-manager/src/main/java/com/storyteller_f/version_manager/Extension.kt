@@ -1,4 +1,4 @@
-package common_ui_list_structure_preset
+package com.storyteller_f.version_manager
 
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import org.gradle.api.Action
@@ -98,7 +98,7 @@ fun Project.setupCompose(isLibrary: Boolean) {
             }
         }
     } else
-        android {
+        androidApp {
             buildFeatures {
                 compose = true
             }
@@ -115,7 +115,7 @@ fun Project.setupGeneric() {
     setupCompose(false)
     setupExtFuncSupport()
     loadPlugin("kotlin-kapt")
-    android {
+    androidApp {
         kotlinOptions {
             addArgs("-opt-in=kotlin.RequiresOptIn")
         }
@@ -130,7 +130,7 @@ fun Project.setupGeneric() {
 
 fun Project.setupDataBinding() {
     loadPlugin("kotlin-kapt")
-    android {
+    androidApp {
         buildFeatures {
             viewBinding = true
             dataBinding = true
@@ -142,7 +142,7 @@ fun Project.setupDataBinding() {
 }
 
 fun Project.setupDipToPx() {
-    android {
+    androidApp {
         kotlinOptions {
             addArgs("-Xcontext-receivers")
         }
@@ -160,7 +160,7 @@ fun Project.baseApp() {
 //    listOf("com.android.application", "org.jetbrains.kotlin.android", "kotlin-android", "kotlin-parcelize").forEach {
 //        loadPlugin(it)
 //    }
-    android {
+    androidApp {
         compileSdk = Versions.compileSdkVersion
         defaultConfig {
             minSdk = 21
@@ -219,7 +219,7 @@ fun Project.baseLibrary() {
 fun Project.androidLibrary(configure: Action<com.android.build.gradle.LibraryExtension>): Unit =
     (this as org.gradle.api.plugins.ExtensionAware).extensions.configure("android", configure)
 
-fun Project.android(configure: Action<BaseAppModuleExtension>): Unit =
+fun Project.androidApp(configure: Action<BaseAppModuleExtension>): Unit =
     (this as org.gradle.api.plugins.ExtensionAware).extensions.configure("android", configure)
 
 fun Project.kotlin(configure: Action<KotlinAndroidProjectExtension>): Unit =

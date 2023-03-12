@@ -4,6 +4,18 @@
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
+        <compositeConfiguration>
+          <compositeBuild compositeDefinitionSource="SCRIPT">
+            <builds>
+              <build path="$PROJECT_DIR$/version-manager" name="version-manager">
+                <projects>
+                  <project path="$PROJECT_DIR$/version-manager" />
+                  <project path="$PROJECT_DIR$/version-manager/version-manager" />
+                </projects>
+              </build>
+            </builds>
+          </compositeBuild>
+        </compositeConfiguration>
         <option name="testRunner" value="GRADLE" />
         <option name="distributionType" value="DEFAULT_WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
@@ -43,6 +55,8 @@
             <option value="$PROJECT_DIR$/ui-list-annotation-compiler" />
             <option value="$PROJECT_DIR$/ui-list-annotation-compiler-ksp" />
             <option value="$PROJECT_DIR$/ui-list-annotation-definition" />
+            <option value="$PROJECT_DIR$/version-manager" />
+            <option value="$PROJECT_DIR$/version-manager/version-manager" />
             <option value="$PROJECT_DIR$/view-holder-compose" />
           </set>
         </option>

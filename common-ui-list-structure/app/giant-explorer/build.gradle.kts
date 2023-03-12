@@ -1,10 +1,11 @@
-import common_ui_list_structure_preset.*
+import com.storyteller_f.version_manager.*
 
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("kotlin-parcelize")
     id("androidx.navigation.safeargs.kotlin")
+    id("com.storyteller_f.version_manager")
 }
 
 android {

@@ -1,4 +1,4 @@
-package common_ui_list_structure_preset
+package com.storyteller_f.version_manager
 
 object Versions {
     const val kotlinVersion = "1.7.21"

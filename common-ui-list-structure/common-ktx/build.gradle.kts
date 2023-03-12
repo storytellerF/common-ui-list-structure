@@ -1,10 +1,9 @@
-import common_ui_list_structure_preset.Versions
-import common_ui_list_structure_preset.baseLibrary
-import common_ui_list_structure_preset.unitTestDependency
+import com.storyteller_f.version_manager.*
 
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
+    id("com.storyteller_f.version_manager")
 }
 
 android {

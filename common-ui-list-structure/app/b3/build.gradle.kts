@@ -1,12 +1,11 @@
-import common_ui_list_structure_preset.android
-import common_ui_list_structure_preset.baseApp
-import common_ui_list_structure_preset.networkDependency
-import common_ui_list_structure_preset.setupGeneric
+import com.storyteller_f.version_manager.*
 
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("kotlin-android")
+    id("com.storyteller_f.version_manager")
+
 }
 
 android {
