@@ -17,7 +17,8 @@
 
         <FrameLayout
             android:layout_width="350dp"
-            android:layout_height="350dp">
+            android:layout_height="350dp"
+            android:padding="8dp">
 
             <ProgressBar
                 android:id="@+id/state_progress"

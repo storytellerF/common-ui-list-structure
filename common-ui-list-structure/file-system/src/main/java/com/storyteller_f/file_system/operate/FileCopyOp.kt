@@ -14,15 +14,32 @@ import java.util.concurrent.Callable
 /**
  * 返回应该是任务是否成功
  */
-abstract class FileOp(val task: StoppableTask, val fileInstance: FileInstance, val context: Context) : Callable<Boolean?> {
+abstract class FileOp(val task: StoppableTask, val fileInstance: FileInstance, val context: Context) : Callable<Boolean>, FileOperationListener {
     var fileOperationListener: FileOperationListener? = null
+
+    override fun onError(message: Message?, type: Int) {
+        fileOperationListener?.onError(message, type)
+    }
+
+    override fun onDirectoryDone(fileInstance: FileInstance?, message: Message?, type: Int) {
+        fileOperationListener?.onDirectoryDone(fileInstance, message, type)
+    }
+
+    override fun onFileDone(fileInstance: FileInstance?, message: Message?, size: Long, type: Int) {
+        fileOperationListener?.onFileDone(fileInstance, message, size, type)
+    }
+
+    fun bind(fileOperationListener: FileOperationListener): FileOp {
+        this.fileOperationListener = fileOperationListener
+        return this
+    }
 }
 
 /**
  * target 必须是一个目录
  */
 abstract class FileOpInSpec(
-    task: StoppableTask, fileInstance: FileInstance, target: FileInstance, context: Context
+    task: StoppableTask, fileInstance: FileInstance, val target: FileInstance, context: Context
 ) : FileOp(task, fileInstance, context) {
     init {
         assert(target.isDirectory) {
@@ -36,7 +53,7 @@ abstract class FileOpInSitu(
 ) : FileOp(task, fileInstance, context)
 
 class FileCopyOp(
-    task: StoppableTask, fileInstance: FileInstance, private val target: FileInstance, context: Context
+    task: StoppableTask, fileInstance: FileInstance, target: FileInstance, context: Context
 ) : FileOpInSpec(task, fileInstance, target, context) {
     override fun call(): Boolean {
         return if (fileInstance.isFile) {
@@ -59,7 +76,7 @@ class FileCopyOp(
                 FileInstanceFactory.toChild(f, it.name, false, context, true), FileInstanceFactory.toChild(t, it.name, false, context, true)
             )
         }
-        fileOperationListener?.onDirectoryDone(fileInstance, Message("${f.name} success"), 0)
+        onDirectoryDone(fileInstance, Message("${f.name} success"), 0)
         return true
     }
 
@@ -76,21 +93,21 @@ class FileCopyOp(
                         out.write(byteBuffer)
                         byteBuffer.clear()
                     }
-                    fileOperationListener?.onFileDone(f, Message(""), f.fileLength, 0)
+                    onFileDone(f, Message(""), f.fileLength, 0)
                     return true
                 }
 
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            fileOperationListener?.onError(Message(e.message ?: "error"), 0)
+            onError(Message(e.message ?: "error"), 0)
         }
         return false
     }
 
     private fun needStop(): Boolean {
         if (task.needStop()) {
-            fileOperationListener?.onError(Message("canceled"), 0)
+            onError(Message("canceled"), 0)
             return true
         }
         return false
@@ -98,7 +115,7 @@ class FileCopyOp(
 }
 
 class FileMoveOp(
-    task: StoppableTask, fileInstance: FileInstance, private val target: FileInstance, context: Context
+    task: StoppableTask, fileInstance: FileInstance, target: FileInstance, context: Context
 ) : FileOpInSpec(task, fileInstance, target, context), FileOperationListener {
     override fun call(): Boolean {
         return FileCopyOp(task, fileInstance, target, context).also {
@@ -123,26 +140,22 @@ class FileMoveOp(
             fileOperationListener?.onError(Message("delete ${fileInstance?.name} failed ${e.exceptionMessage}"), 0)
         }
     }
-
-    override fun onError(message: Message?, type: Int) {
-        fileOperationListener?.onError(message, type)
-    }
 }
 
 class FileMoveOpInShell(
-    task: StoppableTask, fileInstance: FileInstance, private val target: FileInstance, context: Context
+    task: StoppableTask, fileInstance: FileInstance, target: FileInstance, context: Context
 ) : FileOpInSpec(task, fileInstance, target, context) {
     override fun call(): Boolean {
         val exec = Runtime.getRuntime().exec("mv ${fileInstance.path} ${target.path}")
         val waitFor = exec.waitFor()
-        val cmdResult = waitFor != 0
+        val cmdFailed = waitFor != 0
         Thread.sleep(500)
-        if (cmdResult) {
-            fileOperationListener?.onError(Message("exec return $waitFor"), 0)
-        } else {
-            fileOperationListener?.onDirectoryDone(fileInstance, Message("success"), 0)
+        when {
+            cmdFailed -> onError(Message("exec return $waitFor"), 0)
+            target.isFile -> onFileDone(target, Message("success"), target.fileLength, 0)
+            else -> onDirectoryDone(fileInstance, Message("success"), 0)
         }
-        return cmdResult
+        return !cmdFailed
     }
 }
 
@@ -175,10 +188,10 @@ class FileDeleteOp(
             //删除当前空文件夹
             val deleteCurrentDirectory = fileInstance.deleteFileOrEmptyDirectory()
             if (deleteCurrentDirectory)
-                fileOperationListener?.onDirectoryDone(
+                onDirectoryDone(
                     fileInstance, Message("delete ${fileInstance.name} success"), 0
                 )
-            else fileOperationListener?.onError(Message("delete ${fileInstance.name} failed"), 0)
+            else onError(Message("delete ${fileInstance.name} failed"), 0)
             return deleteCurrentDirectory
         } catch (_: Exception) {
             return false
@@ -193,10 +206,10 @@ class FileDeleteOp(
         )
         val deleteDirectory = deleteDirectory(childDirectory)
         if (deleteDirectory)
-            fileOperationListener?.onDirectoryDone(
+            onDirectoryDone(
                 childDirectory, Message("delete ${it.name} success"), 0
             )
-        else fileOperationListener?.onError(Message("delete ${it.name} failed"), 0)
+        else onError(Message("delete ${it.name} failed"), 0)
         return deleteDirectory
     }
 
@@ -205,10 +218,10 @@ class FileDeleteOp(
         val childFile = FileInstanceFactory.toChild(fileInstance, it.name, true, context, false)
         val deleteFileOrEmptyDirectory = childFile.deleteFileOrEmptyDirectory()
         if (deleteFileOrEmptyDirectory)
-            fileOperationListener?.onFileDone(
+            onFileDone(
                 childFile, Message("delete ${it.name} success"), fileInstance.fileLength, 0
             )
-        else fileOperationListener?.onError(Message("delete ${it.name} failed"), 0)
+        else onError(Message("delete ${it.name} failed"), 0)
         return deleteFileOrEmptyDirectory
     }
 

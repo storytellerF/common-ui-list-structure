@@ -5,11 +5,14 @@ import android.util.Log
 import android.webkit.MimeTypeMap
 import android.webkit.URLUtil
 import com.storyteller_f.common_ktx.exceptionMessage
-import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.message.Message
 import com.storyteller_f.file_system.model.FileSystemItemModel
-import com.storyteller_f.file_system.operate.*
+import com.storyteller_f.file_system.operate.FileCopyOp
+import com.storyteller_f.file_system.operate.FileDeleteOp
+import com.storyteller_f.file_system.operate.FileMoveOpInShell
+import com.storyteller_f.file_system.operate.FileOperationForemanProgressListener
+import com.storyteller_f.file_system.operate.FileOperationListener
 import com.storyteller_f.giant_explorer.control.getFileInstance
 import com.storyteller_f.multi_core.StoppableTask
 import okhttp3.OkHttpClient
@@ -33,13 +36,6 @@ abstract class FileOperationForeman(val context: Context, val overview: TaskOver
         fileOperationForemanProgressListener?.onProgress(progress, key)
     }
 
-    open val progress: Int
-        get() {
-            val sumCount = overview.sumCount
-            val completedCount = sumCount - leftFolderCount - leftFileCount
-            return (completedCount * 1.0 / sumCount * 100).toInt()
-        }
-
     protected fun emitDetailMessage(detail: String, level: Int) {
         fileOperationForemanProgressListener?.onDetail(detail, level, key)
     }
@@ -47,6 +43,14 @@ abstract class FileOperationForeman(val context: Context, val overview: TaskOver
     protected fun emitStateMessage(tip: String) {
         fileOperationForemanProgressListener?.onState(tip, key)
     }
+
+    open val progress: Int
+        get() {
+            val sumCount = overview.sumCount
+            val completedCount = sumCount - leftFolderCount - leftFileCount
+            return (completedCount * 1.0 / sumCount * 100).toInt()
+        }
+
 
     override fun onFileDone(fileInstance: FileInstance?, message: Message?, size: Long, type: Int) {
         leftFileCount--
@@ -78,7 +82,7 @@ abstract class LocalFileOperationForeman(
 class CopyForemanImpl(
     private val detectorTasks: List<FileSystemItemModel>,
     private val isMove: Boolean,
-    private val dest: FileInstance,
+    private val target: FileInstance,
     context: Context,
     overview: TaskOverview,
     focused: FileSystemItemModel,
@@ -93,29 +97,27 @@ class CopyForemanImpl(
             } else {
                 fileName + "等" + detectorTasks.size + "个文件"
             }
-            return (if (isMove) "移动" else "复制") + taskName + "到" + dest.name
+            return (if (isMove) "移动" else "复制") + taskName + "到" + target.name
         }
 
     override fun call(): Boolean {
-        val isSuccess = if (!detectorTasks.any {
-                if (needStop()) {
-                    emitDetailMessage("已暂停", Log.WARN)
-                    return false
-                }
-                val fileInstance = getFileInstance(it.fullPath, context)
-                emitStateMessage("处理${fileInstance.path}")
-                if (isMove) !FileMoveOpInShell(this, fileInstance, dest, context).apply {
-                    fileOperationListener = this@CopyForemanImpl
-                }.call()
-                else !FileCopyOp(this, fileInstance, dest, context).apply {
-                    fileOperationListener = this@CopyForemanImpl
-                }.call()
-            }) {
-            emitDetailMessage("error", Log.ERROR)
-            true
-        } else false
+        val isSuccess = !detectorTasks.any {
+            if (needStop()) {
+                emitDetailMessage("已暂停", Log.WARN)
+                return false
+            }
+            val fileInstance = getFileInstance(it.fullPath, context)
+            emitStateMessage("处理${fileInstance.path}")
+            val operationResult = if (isMove) {
+                FileMoveOpInShell(this, fileInstance, target, context).bind(this).call()
+            } else FileCopyOp(this, fileInstance, target, context).bind(this).call()
+            !operationResult//如果失败了，提前结束
+        }
+        if (!isSuccess) {
+            emitDetailMessage("error in copy impl", Log.ERROR)
+        }
         fileOperationForemanProgressListener?.onComplete(
-            dest.path, isSuccess, key
+            target.path, isSuccess, key
         )
         return isSuccess
     }
@@ -154,16 +156,18 @@ class DeleteForemanImpl(
 
 }
 
-class CompoundForemanImpl(private val selected: List<DetectedTask>, private val dest: FileInstance, context: Context, overview: TaskOverview, key: String) : FileOperationForeman(context, overview, key), FileOperationListener {
+class CompoundForemanImpl(private val selected: List<DetectedTask>, private val target: FileInstance, context: Context, overview: TaskOverview, key: String) :
+    FileOperationForeman(context, overview, key), FileOperationListener {
     override fun call(): Boolean {
         val okHttpClient = OkHttpClient()
         val isSuccess = !selected.any { //have error?
             try {
                 when (it) {
                     is DownloadTask -> !executeDownload(okHttpClient, it)
-                    is LocalTask -> !FileCopyOp(this, getFileInstance(it.path, context), dest, context).apply {
+                    is LocalTask -> !FileCopyOp(this, getFileInstance(it.path, context), target, context).apply {
                         fileOperationListener = this@CompoundForemanImpl
                     }.call()
+
                     is ContentTask -> !executeContentTask(it)
                     else -> {
                         emitDetailMessage("无法识别的任务${it.javaClass}", Log.ASSERT)
@@ -198,7 +202,7 @@ class CompoundForemanImpl(private val selected: List<DetectedTask>, private val 
             }
 
             contentResolver.openInputStream(contentTask.uri)?.source()?.buffer()?.use { int ->
-                dest.toChild(name, true, true).fileOutputStream.channel.use { out ->
+                target.toChild(name, true, true).fileOutputStream.channel.use { out ->
                     val byteBuffer = ByteBuffer.allocateDirect(1024)
                     while (int.read(byteBuffer) != -1) {
                         if (needStop()) return false
@@ -228,7 +232,7 @@ class CompoundForemanImpl(private val selected: List<DetectedTask>, private val 
                 Log.i(TAG, "call: $contentDisposition")
                 val guessFileName = URLUtil.guessFileName(it.url, contentDisposition, contentType)
                 (execute.body?.source()?.buffer ?: return true).use { int ->
-                    dest.toChild(guessFileName, true, true).fileOutputStream.channel.use { out ->
+                    target.toChild(guessFileName, true, true).fileOutputStream.channel.use { out ->
                         val byteBuffer = ByteBuffer.allocateDirect(1024)
                         while (int.read(byteBuffer) != -1) {
                             if (needStop()) return false

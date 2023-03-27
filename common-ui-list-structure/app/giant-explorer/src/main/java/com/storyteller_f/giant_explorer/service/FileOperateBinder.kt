@@ -84,7 +84,7 @@ class FileOperateBinder(val context: Context) : Binder() {
         thread {
             val value = object : GiantExplorerService {
                 override fun reportRunning() {
-                    taskStarted(key, TaskAssessResult(0, 0, 0))
+                    whenRunning(key, TaskAssessResult(0, 0, 0))
                 }
             }
             if (block.invoke(value)) {
@@ -118,7 +118,7 @@ class FileOperateBinder(val context: Context) : Binder() {
     ) {
         state.postValue(state_computing)
         val assessResult = TaskAssessor(selected, context, dest).assess()
-        taskStarted(key, assessResult)
+        whenRunning(key, assessResult)
         val copyForemanImpl = CopyForemanImpl(selected, deleteOrigin, dest, context, assessResult.toOverview(), focused, key).attachListener()
         if (copyForemanImpl.call()) {
             whenEnd(key)
@@ -143,7 +143,7 @@ class FileOperateBinder(val context: Context) : Binder() {
                 return
             }
         } else TaskAssessResult.empty
-        taskStarted(key, assessResult)
+        whenRunning(key, assessResult)
         val compoundForemanImpl = CompoundForemanImpl(linkedList, dest, context, assessResult.toOverview(count), key).attachListener()
         if (compoundForemanImpl.call()) {
             whenEnd(key)
@@ -167,12 +167,14 @@ class FileOperateBinder(val context: Context) : Binder() {
         return detectorTasks
     }
 
-    private fun taskStarted(key: String, computeSize: TaskAssessResult) {
+    private fun whenRunning(key: String, computeSize: TaskAssessResult) {
+        Log.d(TAG, "whenRunning() called with: key = $key, computeSize = $computeSize")
         map[key] = TaskSession(computeSize, null)
         state.postValue(state_running)
     }
 
     private fun whenStart(key: String) {
+        Log.d(TAG, "whenStart() called with: key = $key")
         map.getOrPut(key) {
             TaskSession(null, null)
         }
@@ -186,6 +188,7 @@ class FileOperateBinder(val context: Context) : Binder() {
     }
 
     private fun whenError(key: String, message: String) {
+        Log.d(TAG, "whenError() called with: key = $key, message = $message")
         map[key] = TaskSession(null, message)
         state.postValue(state_error)
         fileOperateResultContainer.get()?.onError(message)
@@ -214,7 +217,7 @@ class FileOperateBinder(val context: Context) : Binder() {
 
 class TaskSession(val taskAssessResult: TaskAssessResult?, val message: CharSequence?)
 
-class TaskAssessResult(val fileCount: Int, val folderCount: Int, val size: Long) {
+data class TaskAssessResult(val fileCount: Int, val folderCount: Int, val size: Long) {
     fun toOverview(fileCountExtra: Int = 0): TaskOverview {
         return TaskOverview(fileCount + fileCountExtra, folderCount, size)
     }
