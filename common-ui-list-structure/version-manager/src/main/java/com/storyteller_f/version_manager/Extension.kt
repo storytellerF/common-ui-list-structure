@@ -178,12 +178,12 @@ fun Project.baseApp() {
             }
         }
         compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_11
-            targetCompatibility = JavaVersion.VERSION_11
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
         }
 
         kotlinOptions {
-            jvmTarget = "11"
+            jvmTarget = "17"
         }
         dependenciesInfo {
             includeInBundle = false
@@ -209,11 +209,11 @@ fun Project.baseLibrary() {
             }
         }
         compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_11
-            targetCompatibility = JavaVersion.VERSION_11
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
         }
         kotlinOptionsLibrary {
-            jvmTarget = "11"
+            jvmTarget = "17"
         }
     }
 }

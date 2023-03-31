@@ -28,7 +28,7 @@ class AdapterProcessor : AbstractProcessor() {
     ): Boolean {
         count++
         println(
-            "binding event map  ${zoom.debugState()}" + "${roundEnvironment?.errorRaised()} ${roundEnvironment?.processingOver()} count $count"
+            "binding event map  ${zoom.debugState()} error:${roundEnvironment?.errorRaised()} over: ${roundEnvironment?.processingOver()} count $count"
         )
 
         processAnnotation(set, roundEnvironment)

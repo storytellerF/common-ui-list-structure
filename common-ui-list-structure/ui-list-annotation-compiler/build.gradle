@@ -3,14 +3,13 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
     id 'kotlin-kapt'
 }
-
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 compileKotlin {
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
 }
 
@@ -19,6 +18,4 @@ dependencies {
     implementation(project(":slim-ktx"))
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation(project(":ui-list-annotation-common"))
-    // configuration generator for services providers
-//    kapt "com.google.auto.services:auto-services:1.0.1"
 }

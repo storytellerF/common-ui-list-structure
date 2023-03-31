@@ -17,7 +17,7 @@ object Versions {
     const val retrofitVersion = "2.9.0"
     const val okhttpLoggingInterceptorVersion = "5.0.0-alpha.6"
     const val coroutinesVersion = "1.6.4"
-    const val composeCompilerVersion = "1.4.0"
+    const val composeCompilerVersion = "1.4.2"
     const val composeVersion = "1.4.0-alpha02"
     const val composeUiVersion = "1.4.0-beta02"
     const val composeMaterialVersion = "1.4.0-beta02"
