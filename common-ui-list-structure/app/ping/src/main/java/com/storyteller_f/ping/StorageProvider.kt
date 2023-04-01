@@ -63,7 +63,7 @@ class StorageProvider : DocumentsProvider() {
                 add(DocumentsContract.Root.COLUMN_FLAGS, flags)
                 add(DocumentsContract.Root.COLUMN_ICON, R.drawable.ic_launcher_foreground)
                 add(DocumentsContract.Root.COLUMN_TITLE, context?.getString(R.string.app_name))
-                add(DocumentsContract.Root.COLUMN_SUMMARY, "your data")
+                add(DocumentsContract.Root.COLUMN_SUMMARY, "your private data")
                 add(DocumentsContract.Root.COLUMN_DOCUMENT_ID, "/")
             }
         }
@@ -96,7 +96,7 @@ class StorageProvider : DocumentsProvider() {
 
     private fun MatrixCursor.RowBuilder.fileRow(it: File, root: File) {
         val subDocumentId = it.absolutePath.substring(root.absolutePath.length)
-        add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, subDocumentId)
+        add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, subDocumentId.ifBlank { "/" })
         val type = if (it.isFile) {
             MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
         } else {
@@ -118,6 +118,7 @@ class StorageProvider : DocumentsProvider() {
             it.length()
         } else 0
         add(DocumentsContract.Document.COLUMN_SIZE, size)
+        Log.d(TAG, "fileRow: $subDocumentId ${it.name}")
     }
 
     override fun queryChildDocuments(parentDocumentId: String?, projection: Array<out String>?, sortOrder: String?): Cursor {

@@ -97,7 +97,8 @@ suspend fun getFileInstanceAsync(path: String, context: Context, root: String = 
     }
 }
 
-fun getFileInstance(path: String, context: Context, root: String = FileInstanceFactory.publicFileSystemRoot, stoppableTask: StoppableTask = StoppableTask.Blocking) = FileInstanceFactory.getFileInstance(path, context, root, stoppableTask)
+fun getFileInstance(path: String, context: Context, root: String = FileInstanceFactory.publicFileSystemRoot, stoppableTask: StoppableTask = StoppableTask.Blocking) =
+    FileInstanceFactory.getFileInstance(path, context, root, stoppableTask)
 
 class MainActivity : CommonActivity(), FileOperateService.FileOperateResultContainer {
 
@@ -122,16 +123,16 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         processDocumentProvider(it)
     }
 
-    private fun processDocumentProvider(it: Uri?) {
+    private fun processDocumentProvider(uri: Uri?) {
         val key = currentRequestingKey
-        Log.i(TAG, "uri: $it $key")
-        if (it != null && key != null) {
-            if (key != it.authority) {
+        Log.i(TAG, "uri: $uri $key")
+        if (uri != null && key != null) {
+            if (key != uri.authority) {
                 Toast.makeText(this, "选择错误", Toast.LENGTH_LONG).show()
                 return
             }
-            contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-            FileSystemUriSaver.getInstance().saveUri(key, this, it)
+            contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            FileSystemUriSaver.getInstance().saveUri(key, this, uri)
             currentRequestingKey = null
         }
     }
@@ -215,9 +216,11 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
                 item.updateIcon(newState)
                 filterHiddenFile.data.value = newState
             }
+
             R.id.newWindow -> startActivity(Intent(this, MainActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
             })
+
             R.id.filter -> dialogImpl.showFilter()
             R.id.sort -> dialogImpl.showSort()
             R.id.open_settings -> startActivity(Intent(this, SettingsActivity::class.java))
@@ -242,7 +245,11 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
                 val root = Uri.Builder().scheme("content").authority(authority).build().toString()
                 val loadLabel = it.loadLabel(packageManager).toString()
 //            val icon = it.loadIcon(packageManager)
-                val contains = savedUris.contains(authority) && getFileInstance("/", this@MainActivity, root, stoppable()).exists()
+                val contains = savedUris.contains(authority) && try {
+                    DocumentLocalFileInstance(this@MainActivity, "/", authority, root).exists()
+                } catch (_: Exception) {
+                    false
+                }
                 menu.add(loadLabel)
                     .setChecked(contains)
                     .setCheckable(true)
@@ -476,10 +483,12 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
                         clipDescription.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)
                                 && clipDescription.label == FileListFragment.clipDataKey
                     }
+
                     DragEvent.ACTION_DROP -> {
                         v.findActionReceiverOrNull<FileListFragment>()?.handleClipData(event.clipData, itemHolder.file.fullPath)
                         true
                     }
+
                     else -> true
                 }
             }
