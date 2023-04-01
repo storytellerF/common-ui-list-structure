@@ -32,7 +32,6 @@ import java.util.List;
  * notice 如果需要给name 设置值，那就需要提供path。或者自行处理
  */
 public abstract class FileInstance {
-    private static final String TAG = "FileInstance";
     public String fileSystemRoot;
     /**
      * 仅用来标识对象，有些情况下是不能够操作的

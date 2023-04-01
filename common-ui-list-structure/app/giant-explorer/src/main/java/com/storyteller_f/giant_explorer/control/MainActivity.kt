@@ -117,14 +117,14 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         }
     }
 
-    private var currentKey: String? = null
+    private var currentRequestingKey: String? = null
     private val requestDocumentProvider = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) {
         processDocumentProvider(it)
     }
 
     private fun processDocumentProvider(it: Uri?) {
-        Log.i(TAG, "uri: $it")
-        val key = currentKey
+        val key = currentRequestingKey
+        Log.i(TAG, "uri: $it $key")
         if (it != null && key != null) {
             if (key != it.authority) {
                 Toast.makeText(this, "选择错误", Toast.LENGTH_LONG).show()
@@ -132,7 +132,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             }
             contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
             FileSystemUriSaver.getInstance().saveUri(key, this, it)
-            currentKey = null
+            currentRequestingKey = null
         }
     }
 
@@ -239,9 +239,10 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
 
             info.forEach {
                 val authority = it.providerInfo.authority
+                val root = Uri.Builder().scheme("content").authority(authority).build().toString()
                 val loadLabel = it.loadLabel(packageManager).toString()
 //            val icon = it.loadIcon(packageManager)
-                val contains = savedUris.contains(authority) && getFileInstance("/", this@MainActivity, authority, stoppable()).exists()
+                val contains = savedUris.contains(authority) && getFileInstance("/", this@MainActivity, root, stoppable()).exists()
                 menu.add(loadLabel)
                     .setChecked(contains)
                     .setCheckable(true)
@@ -265,13 +266,19 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     private fun switchRoot(authority: String): Boolean {
         val savedUri = FileSystemUriSaver.getInstance().savedUri(authority, this)
         if (savedUri != null) {
-            val instance = DocumentLocalFileInstance(this, "/", authority, authority)
-            if (instance.exists()) {
-                findNavControl().navigate(R.id.fileListFragment, FileListFragmentArgs(instance.path, authority).toBundle())
-                return true
+            try {
+                val root = Uri.Builder().scheme("content").authority(authority).build().toString()
+                val instance = DocumentLocalFileInstance(this, "/", authority, root)
+                if (instance.exists()) {
+                    findNavControl().navigate(R.id.fileListFragment, FileListFragmentArgs(instance.path, root.reversed()).toBundle())
+                    return true
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "switchRoot: ", e)
             }
+
         }
-        currentKey = authority
+        currentRequestingKey = authority
         requestDocumentProvider.launch(null)
         return false
     }

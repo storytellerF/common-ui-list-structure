@@ -88,7 +88,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     private val args by navArgs<FileListFragmentArgs>()
 
     private val session by vm({ args }) {
-        FileExplorerSession(requireActivity().application, it.path, it.root)
+        FileExplorerSession(requireActivity().application, it.path, it.root.reversed())
     }
     private val temp by keyPrefix({ "temp" }, pvm({}) {
         TempVM()
@@ -118,6 +118,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                     }
                     true
                 }
+
                 R.id.paste_file -> {
                     ContextCompat.getSystemService(requireContext(), ClipboardManager::class.java)?.let { manager ->
                         manager.primaryClip?.let { data ->
@@ -127,10 +128,12 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                     true
 
                 }
+
                 R.id.background_task -> {
                     startActivity(Intent(requireContext(), BackgroundTaskConfigActivity::class.java))
                     true
                 }
+
                 else -> false
             }
         }, owner)
@@ -160,6 +163,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                     filePathMatcher.matches(text) -> {
                         Uri.fromFile(File(text))
                     }
+
                     else -> {
                         Toast.makeText(requireContext(), "正则失败 $text", Toast.LENGTH_LONG).show()
                         null
@@ -274,12 +278,15 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                     R.id.delete -> {
                         fileOperateBinder?.delete(itemHolder.file.item, detectSelected(itemHolder), key)
                     }
+
                     R.id.move_to -> {
                         moveOrCopy(true, itemHolder)
                     }
+
                     R.id.copy_to -> {
                         moveOrCopy(false, itemHolder)
                     }
+
                     R.id.copy_file -> {
                         ContextCompat.getSystemService(requireContext(), ClipboardManager::class.java)?.let { manager ->
                             val map = detectSelected(itemHolder).map {
@@ -293,6 +300,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                             manager.setPrimaryClip(apply)
                         }
                     }
+
                     R.id.properties -> {
                         findNavController().navigate(R.id.action_fileListFragment_to_propertiesDialog, PropertiesDialogArgs(fullPath).toBundle())
                     }

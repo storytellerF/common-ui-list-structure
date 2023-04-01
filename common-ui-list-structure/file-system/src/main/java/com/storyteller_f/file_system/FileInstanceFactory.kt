@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.os.StatFs
 import androidx.annotation.WorkerThread
+import androidx.core.net.toUri
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.RootAccessFileInstance
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
@@ -23,8 +24,9 @@ object FileInstanceFactory {
 
     @SuppressLint("SdCardPath")
     private const val sdcardPath = "/sdcard"
-    const val publicFileSystemRoot = "/"
-    const val rootFileSystemRoot = "root"
+
+    const val publicFileSystemRoot = "file:///"
+    const val rootFileSystemRoot = "root:///"
 
     private val publicPath = listOf("/system", "/mnt")
 
@@ -42,7 +44,10 @@ object FileInstanceFactory {
 
         return when {
             root == rootFileSystemRoot && remote != null -> RootAccessFileInstance(path, remote)
-            root != publicFileSystemRoot -> DocumentLocalFileInstance(context, path, root, root)
+            root.startsWith("content://") -> {
+                val authority = root.toUri().authority
+                DocumentLocalFileInstance(context, path, authority, root)
+            }
             else -> getPublicFileSystemInstance(prefix, context, path, root)
         }
     }
@@ -76,7 +81,7 @@ object FileInstanceFactory {
      * 如果是根目录，返回空。
      */
     @JvmStatic
-    fun getPrefix(unsafePath: String, context: Context, root: String = publicFileSystemRoot, stoppableTask: StoppableTask?): String {
+    fun getPrefix(unsafePath: String, context: Context, root: String = publicFileSystemRoot, stoppableTask: StoppableTask? = StoppableTask.Blocking): String {
         assert(!unsafePath.endsWith("/") || unsafePath.length == 1) {
             unsafePath
         }
