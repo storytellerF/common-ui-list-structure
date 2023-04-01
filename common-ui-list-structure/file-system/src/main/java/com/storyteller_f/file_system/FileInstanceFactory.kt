@@ -76,7 +76,7 @@ object FileInstanceFactory {
      * 如果是根目录，返回空。
      */
     @JvmStatic
-    fun getPrefix(unsafePath: String, context: Context, root: String = publicFileSystemRoot, stoppableTask: StoppableTask): String {
+    fun getPrefix(unsafePath: String, context: Context, root: String = publicFileSystemRoot, stoppableTask: StoppableTask?): String {
         assert(!unsafePath.endsWith("/") || unsafePath.length == 1) {
             unsafePath
         }
@@ -162,7 +162,7 @@ object FileInstanceFactory {
     }
 
     @JvmStatic
-    fun simplyPath(path: String, stoppableTask: StoppableTask): String {
+    fun simplyPath(path: String, stoppableTask: StoppableTask?): String {
         assert(path[0] == '/') {
             "$path is not valid"
         }
@@ -171,6 +171,7 @@ object FileInstanceFactory {
         stack.add("/")
         val nameStack = LinkedList<Char>()
         while (position < path.length) {
+            if (stoppableTask?.needStop() == true) break
             val current = path[position++]
             if (current == '/') {
                 if (stack.last != "/" || nameStack.size != 0) {
