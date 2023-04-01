@@ -81,7 +81,6 @@ class FileCopyOp(
     }
 
     private fun copyFileFaster(f: FileInstance, t: FileInstance): Boolean {
-        Thread.sleep(500)
         try {
             val toChild = FileInstanceFactory.toChild(t, f.name, true, context, true)
             f.fileInputStream.channel.use { int ->
@@ -149,7 +148,6 @@ class FileMoveOpInShell(
         val exec = Runtime.getRuntime().exec("mv ${fileInstance.path} ${target.path}")
         val waitFor = exec.waitFor()
         val cmdFailed = waitFor != 0
-        Thread.sleep(500)
         when {
             cmdFailed -> onError(Message("exec return $waitFor"), 0)
             target.isFile -> onFileDone(target, Message("success"), target.fileLength, 0)
@@ -200,7 +198,6 @@ class FileDeleteOp(
     }
 
     private fun deleteChildDirectory(fileInstance: FileInstance, it: DirectoryItemModel): Boolean {
-        Thread.sleep(500)
         val childDirectory = FileInstanceFactory.toChild(
             fileInstance, it.name, false, context, false
         )
@@ -214,7 +211,6 @@ class FileDeleteOp(
     }
 
     private fun deleteChildFile(fileInstance: FileInstance, it: FileItemModel): Boolean {
-        Thread.sleep(500)
         val childFile = FileInstanceFactory.toChild(fileInstance, it.name, true, context, false)
         val deleteFileOrEmptyDirectory = childFile.deleteFileOrEmptyDirectory()
         if (deleteFileOrEmptyDirectory)
