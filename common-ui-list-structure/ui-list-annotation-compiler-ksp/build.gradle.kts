@@ -1,16 +1,10 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import com.storyteller_f.version_manager.pureKotlinLanguageLevel
 
 plugins {
     kotlin("jvm")
+    id("com.storyteller_f.version_manager")
 }
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-tasks.withType<KotlinCompile>().configureEach {
-    kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
-    kotlinOptions.freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
-}
+pureKotlinLanguageLevel()
 
 dependencies {
     implementation(project(":ui-list-annotation-definition"))

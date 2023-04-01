@@ -11,6 +11,7 @@ import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptions
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 fun DependencyHandlerScope.baseDependency() {
     "implementation"(project(":common-ktx"))
@@ -60,7 +61,7 @@ fun DependencyHandlerScope.dipToPxDependency() {
 }
 
 fun DependencyHandlerScope.dataBindingDependency() {
-    "kapt"("androidx.databinding:databinding-compiler-common:7.2.2")
+    "kapt"("androidx.databinding:databinding-compiler-common:${Versions.dataBindingCompilerVersion}")
 }
 
 fun DependencyHandlerScope.workerDependency() {
@@ -177,13 +178,14 @@ fun Project.baseApp() {
                 proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             }
         }
+        val javaVersion = JavaVersion.VERSION_17
         compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_17
-            targetCompatibility = JavaVersion.VERSION_17
+            sourceCompatibility = javaVersion
+            targetCompatibility = javaVersion
         }
 
         kotlinOptions {
-            jvmTarget = "17"
+            jvmTarget = javaVersion.toString()
         }
         dependenciesInfo {
             includeInBundle = false
@@ -208,12 +210,13 @@ fun Project.baseLibrary() {
                 proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             }
         }
+        val javaVersion = JavaVersion.VERSION_17
         compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_17
-            targetCompatibility = JavaVersion.VERSION_17
+            sourceCompatibility = javaVersion
+            targetCompatibility = javaVersion
         }
         kotlinOptionsLibrary {
-            jvmTarget = "17"
+            jvmTarget = javaVersion.toString()
         }
     }
 }
@@ -243,6 +246,8 @@ fun KotlinJvmOptions.addArgs(arg: String) {
 fun com.android.build.gradle.LibraryExtension.kotlinOptionsLibrary(configure: Action<KotlinJvmOptions>): Unit =
     (this as org.gradle.api.plugins.ExtensionAware).extensions.configure("kotlinOptions", configure)
 
+fun Project.java(configure: Action<org.gradle.api.plugins.JavaPluginExtension>): Unit =
+    (this as org.gradle.api.plugins.ExtensionAware).extensions.configure("java", configure)
 
 fun <T> List<T>.plusWhenNoExists(element: T): List<T> {
     if (this.contains(element)) {
@@ -252,4 +257,16 @@ fun <T> List<T>.plusWhenNoExists(element: T): List<T> {
     result.addAll(this)
     result.add(element)
     return result
+}
+
+fun Project.pureKotlinLanguageLevel() {
+    val javaVersion = JavaVersion.VERSION_17
+    java {
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
+    }
+    tasks.withType<KotlinCompile>().configureEach {
+        kotlinOptions.jvmTarget = javaVersion.toString()
+        kotlinOptions.freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
+    }
 }
