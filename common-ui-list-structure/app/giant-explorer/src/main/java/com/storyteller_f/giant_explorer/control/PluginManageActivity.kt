@@ -12,10 +12,12 @@ import com.storyteller_f.common_ktx.mm
 import com.storyteller_f.common_ui.CommonActivity
 import com.storyteller_f.common_ui.dialog
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.operate.FileCopyOp
 import com.storyteller_f.file_system_ktx.ensureFile
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.databinding.ActivityPluginManageBinding
 import com.storyteller_f.giant_explorer.dialog.RequestPathDialog
+import com.storyteller_f.multi_core.StoppableTask
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -45,9 +47,9 @@ class PluginManageActivity : CommonActivity() {
             dialog(RequestPathDialog::class.java, RequestPathDialog.RequestPathResult::class.java, null) { result ->
                 result.path.mm {
                     getFileInstance(it, this)
-                }.mm { dest ->
+                }.mm { pluginFile ->
                     lifecycleScope.launch {
-                        addPlugin(dest, pluginRoot)
+                        addPlugin(pluginFile, pluginRoot)
                     }
 
                 }
@@ -58,15 +60,15 @@ class PluginManageActivity : CommonActivity() {
         }
     }
 
-    private suspend fun addPlugin(dest: FileInstance, pluginRoot: File) {
-        val name = dest.name
-        val pluginFile = File(pluginRoot, name).ensureFile() ?: return
+    private suspend fun addPlugin(pluginFile: FileInstance, pluginRoot: File) {
+        val name = pluginFile.name
+        val destPluginFile = File(pluginRoot, name).ensureFile() ?: return
         withContext(Dispatchers.IO) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                Files.copy(dest.fileInputStream, pluginFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
-            } else {
-                TODO("VERSION.SDK_INT < O")
-            }
+            FileCopyOp(object : StoppableTask {
+                override fun needStop(): Boolean {
+                    return false
+                }
+            }, pluginFile, getFileInstanceAsync(destPluginFile.absolutePath, this@PluginManageActivity, "/"), this@PluginManageActivity).call()
         }
     }
 
