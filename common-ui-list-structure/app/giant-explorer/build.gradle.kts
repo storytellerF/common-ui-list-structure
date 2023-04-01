@@ -1,4 +1,5 @@
 import com.storyteller_f.version_manager.*
+val filterDebug: String by project
 
 plugins {
     id("com.android.application")
@@ -78,14 +79,19 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.15.0")
 
     implementation(project(":app:giant-explorer-plugin-core"))
-    implementation("androidx.webkit:webkit:1.6.0")
+    implementation("androidx.webkit:webkit:1.6.1")
 
     //filter & sort
-    implementation(project(":filter:config-core"))
-    implementation(project(":filter:sort-core"))
-    implementation(project(":filter:filter-core"))
-    implementation(project(":filter:filter-ui"))
-    implementation(project(":filter:sort-ui"))
+    if (filterDebug.toBoolean()) {
+        implementation(project(":filter:config-core"))
+        implementation(project(":filter:sort-core"))
+        implementation(project(":filter:filter-core"))
+        implementation(project(":filter:filter-ui"))
+        implementation(project(":filter:sort-ui"))
+    } else {
+        implementation("com.github.storytellerF:FilterUIProject:1.0")
+    }
+
 }
 baseApp()
 setupGeneric()
