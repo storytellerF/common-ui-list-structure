@@ -24,6 +24,7 @@ import com.storyteller_f.giant_explorer.filter.FilterDialogManager
 import com.storyteller_f.giant_explorer.filter.buildFilterDialogState
 import com.storyteller_f.giant_explorer.filter.buildSortDialogState
 import com.storyteller_f.giant_explorer.view.PathMan
+import com.storyteller_f.multi_core.StoppableTask
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import com.storyteller_f.ui_list.source.SearchProducer
 import com.storyteller_f.ui_list.source.observerInScope
@@ -94,7 +95,7 @@ class RequestPathDialog : SimpleDialogFragment<DialogRequestPathBinding>(DialogR
                     isEnabled = false
                     @Suppress("DEPRECATION") dialog?.onBackPressed()
                 } else {
-                    session.fileInstance.value = FileInstanceFactory.toParent(value, requireContext())
+                    session.fileInstance.value = FileInstanceFactory.toParent(value, requireContext(), StoppableTask.Blocking)
                 }
             }
         }
@@ -153,7 +154,7 @@ class RequestPathDialog : SimpleDialogFragment<DialogRequestPathBinding>(DialogR
                     binding.pathMan.setPathChangeListener(null)
                 }
             }.flowWithLifecycle(lifecycle).collectLatest {
-                session.fileInstance.value = getFileInstance(it, requireContext())
+                session.fileInstance.value = getFileInstance(it, requireContext(), stoppableTask = StoppableTask.Blocking)
             }
         }
     }
@@ -163,7 +164,7 @@ class RequestPathDialog : SimpleDialogFragment<DialogRequestPathBinding>(DialogR
         if (itemHolder.file.item.isDirectory) {
             val current = session.fileInstance.value ?: return
             session.fileInstance.value = FileInstanceFactory.toChild(
-                current, itemHolder.file.name, false, requireContext(), false
+                current, itemHolder.file.name, false, requireContext(), false, StoppableTask.Blocking
             )
         } else {
             setFragmentResult(RequestPathResult(itemHolder.file.fullPath))

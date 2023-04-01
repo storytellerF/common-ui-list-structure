@@ -52,6 +52,7 @@ import com.storyteller_f.giant_explorer.service.FileOperateBinder
 import com.storyteller_f.giant_explorer.service.FileOperateService
 import com.storyteller_f.giant_explorer.service.FileService
 import com.storyteller_f.giant_explorer.view.PathMan
+import com.storyteller_f.multi_core.StoppableTask
 import com.storyteller_f.sort_ui.SortChain
 import com.storyteller_f.sort_ui.SortDialog
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
@@ -89,14 +90,14 @@ class FileExplorerSession(application: Application, path: String, root: String) 
     }
 }
 
-suspend fun getFileInstanceAsync(path: String, context: Context, root: String) = suspendCancellableCoroutine {
+suspend fun getFileInstanceAsync(path: String, context: Context, root: String = FileInstanceFactory.publicFileSystemRoot) = suspendCancellableCoroutine {
     thread {
-        val result = Result.success(getFileInstance(path, context, root))
+        val result = Result.success(getFileInstance(path, context, root, it.stoppable()))
         it.resumeWith(result)
     }
 }
 
-fun getFileInstance(path: String, context: Context, root: String = FileInstanceFactory.publicFileSystemRoot) = FileInstanceFactory.getFileInstance(path, context, root)
+fun getFileInstance(path: String, context: Context, root: String = FileInstanceFactory.publicFileSystemRoot, stoppableTask: StoppableTask = StoppableTask.Blocking) = FileInstanceFactory.getFileInstance(path, context, root, stoppableTask)
 
 class MainActivity : CommonActivity(), FileOperateService.FileOperateResultContainer {
 
@@ -234,27 +235,30 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         val provider = Intent("android.content.action.DOCUMENTS_PROVIDER")
         val info = packageManager.queryIntentContentProvidersCompat(provider, 0)
         val savedUris = FileSystemUriSaver.getInstance().savedUris(this)
-        info.forEach {
-            val authority = it.providerInfo.authority
-            val loadLabel = it.loadLabel(packageManager).toString()
+        lifecycleScope.launch {
+
+            info.forEach {
+                val authority = it.providerInfo.authority
+                val loadLabel = it.loadLabel(packageManager).toString()
 //            val icon = it.loadIcon(packageManager)
-            val contains = savedUris.contains(authority) && getFileInstance("/", this, authority).exists()
-            menu.add(loadLabel)
-                .setChecked(contains)
-                .setCheckable(true)
+                val contains = savedUris.contains(authority) && getFileInstance("/", this@MainActivity, authority, stoppable()).exists()
+                menu.add(loadLabel)
+                    .setChecked(contains)
+                    .setCheckable(true)
 //                .setActionView(ImageView(this).apply {
 //                    setImageDrawable(icon)
 //                })
-                .apply {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        tooltipText = authority
+                    .apply {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            tooltipText = authority
+                        }
                     }
-                }
-                .setOnMenuItemClickListener {
-                    switchRoot(authority)
-                    true
-                }
+                    .setOnMenuItemClickListener {
+                        switchRoot(authority)
+                        true
+                    }
 
+            }
         }
     }
 

@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.storyteller_f.file_system.instance.FileInstance;
+import com.storyteller_f.multi_core.StoppableTask;
 
 public class EditablePathMan extends PathMan {
     public EditablePathMan(Context context) {
@@ -67,7 +68,7 @@ public class EditablePathMan extends PathMan {
         int length = path.length();
         if (path.endsWith("/") && length != 1) path = path.substring(0, length - 1);
         if (pathChangeListener != null) {
-            FileInstance fileInstance = getFileInstance(path, v.getContext(), pathChangeListener.root());
+            FileInstance fileInstance = getFileInstance(path, v.getContext(), pathChangeListener.root(), StoppableTask.Blocking.INSTANCE);
             if (fileInstance.exists()) {
                 if (pathChangeListener != null) pathChangeListener.onSkipOnPathMan(path);
                 drawPath(path);

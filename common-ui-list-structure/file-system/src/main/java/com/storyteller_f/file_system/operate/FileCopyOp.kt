@@ -60,7 +60,7 @@ class FileCopyOp(
             //新建一个文件
             copyFileFaster(fileInstance, target)
         } else {
-            copyDirectoryFaster(fileInstance, FileInstanceFactory.toChild(target, fileInstance.name, false, context, true))
+            copyDirectoryFaster(fileInstance, FileInstanceFactory.toChild(target, fileInstance.name, false, context, true, task))
         }
     }
 
@@ -68,12 +68,12 @@ class FileCopyOp(
         val listSafe = f.listSafe()
         listSafe.files.forEach {
             if (needStop()) return false
-            copyFileFaster(FileInstanceFactory.toChild(f, it.name, true, context, true), t)
+            copyFileFaster(FileInstanceFactory.toChild(f, it.name, true, context, true, task), t)
         }
         listSafe.directories.forEach {
             if (needStop()) return false
             copyDirectoryFaster(
-                FileInstanceFactory.toChild(f, it.name, false, context, true), FileInstanceFactory.toChild(t, it.name, false, context, true)
+                FileInstanceFactory.toChild(f, it.name, false, context, true, task), FileInstanceFactory.toChild(t, it.name, false, context, true, task)
             )
         }
         onDirectoryDone(fileInstance, Message("${f.name} success"), 0)
@@ -82,7 +82,7 @@ class FileCopyOp(
 
     private fun copyFileFaster(f: FileInstance, t: FileInstance): Boolean {
         try {
-            val toChild = FileInstanceFactory.toChild(t, f.name, true, context, true)
+            val toChild = FileInstanceFactory.toChild(t, f.name, true, context, true, task)
             f.fileInputStream.channel.use { int ->
                 (toChild).fileOutputStream.channel.use { out ->
                     val byteBuffer = ByteBuffer.allocateDirect(1024)
@@ -199,7 +199,7 @@ class FileDeleteOp(
 
     private fun deleteChildDirectory(fileInstance: FileInstance, it: DirectoryItemModel): Boolean {
         val childDirectory = FileInstanceFactory.toChild(
-            fileInstance, it.name, false, context, false
+            fileInstance, it.name, false, context, false, task
         )
         val deleteDirectory = deleteDirectory(childDirectory)
         if (deleteDirectory)
@@ -211,7 +211,7 @@ class FileDeleteOp(
     }
 
     private fun deleteChildFile(fileInstance: FileInstance, it: FileItemModel): Boolean {
-        val childFile = FileInstanceFactory.toChild(fileInstance, it.name, true, context, false)
+        val childFile = FileInstanceFactory.toChild(fileInstance, it.name, true, context, false, task)
         val deleteFileOrEmptyDirectory = childFile.deleteFileOrEmptyDirectory()
         if (deleteFileOrEmptyDirectory)
             onFileDone(

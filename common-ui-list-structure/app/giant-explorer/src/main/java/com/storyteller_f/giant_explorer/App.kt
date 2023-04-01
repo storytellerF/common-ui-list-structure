@@ -3,15 +3,20 @@ package com.storyteller_f.giant_explorer
 import android.app.Application
 import android.content.Context
 import android.util.Log
-import androidx.work.*
+import androidx.work.CoroutineWorker
+import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
+import androidx.work.ListenableWorker
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
 import com.storyteller_f.common_ktx.exceptionMessage
-import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.TorrentFileItemModel
 import com.storyteller_f.giant_explorer.control.adapter_produce.HolderBuilder
-import com.storyteller_f.giant_explorer.control.getFileInstance
+import com.storyteller_f.giant_explorer.control.getFileInstanceAsync
 import com.storyteller_f.giant_explorer.database.FileMDRecord
 import com.storyteller_f.giant_explorer.database.FileSizeRecord
 import com.storyteller_f.giant_explorer.database.FileTorrentRecord
@@ -115,7 +120,7 @@ class FolderWorker(context: Context, workerParams: WorkerParameters) :
     BigTimeWorker(context, workerParams) {
     override suspend fun work(context: Context, path: String): WorkerResult {
         return try {
-            val fileInstance = getFileInstance(path, context)
+            val fileInstance = getFileInstanceAsync(path, context)
             val record = context.requireDatabase.sizeDao().search(path)
             if (record != null && record.lastUpdateTime > fileInstance.directory.lastModifiedTime) return WorkerResult.SizeWorker(
                 record.size
@@ -166,7 +171,7 @@ class MDWorker(context: Context, workerParams: WorkerParameters) :
 
     override suspend fun work(context: Context, path: String): WorkerResult {
         return try {
-            val fileInstance = getFileInstance(path, context)
+            val fileInstance = getFileInstanceAsync(path, context)
             val listSafe = fileInstance.listSafe()
             listSafe.directories.mapNullNull {
                 if (isStopped) return WorkerResult.Stopped
@@ -204,7 +209,7 @@ class TorrentWorker(context: Context, workerParams: WorkerParameters) :
 
     override suspend fun work(context: Context, path: String): WorkerResult {
         return try {
-            val fileInstance = getFileInstance(path, context)
+            val fileInstance = getFileInstanceAsync(path, context)
             val listSafe = fileInstance.listSafe()
             listSafe.directories.mapNullNull {
                 if (isStopped) return WorkerResult.Stopped
@@ -299,4 +304,4 @@ class WorkerStoppableTask(private val worker: ListenableWorker) : StoppableTask 
 
 val ListenableWorker.closeable get() = WorkerStoppableTask(this)
 
-fun <T> Collection<T>?.valid(): Boolean = this != null && !isEmpty()
+fun <T> Collection<T>?.valid(): Boolean = !isNullOrEmpty()

@@ -50,7 +50,7 @@ public class DocumentLocalFileInstance extends LocalFileInstance {
     }
 
     private void updatePrefix() {
-        prefix = FileInstanceFactory.getPrefix(getPath(), context, fileSystemRoot);
+        prefix = FileInstanceFactory.getPrefix(getPath(), context, fileSystemRoot, task);
     }
 
     /**

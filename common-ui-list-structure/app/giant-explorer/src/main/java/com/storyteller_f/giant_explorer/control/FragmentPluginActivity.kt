@@ -13,6 +13,7 @@ import com.storyteller_f.giant_explorer.FileSystemProviderResolver
 import com.storyteller_f.giant_explorer.FragmentPluginConfiguration
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.pluginManagerRegister
+import com.storyteller_f.multi_core.StoppableTask
 import com.storyteller_f.plugin_core.GiantExplorerPlugin
 import com.storyteller_f.plugin_core.GiantExplorerPluginManager
 import com.storyteller_f.plugin_core.GiantExplorerService
@@ -25,19 +26,19 @@ const val giantExplorerPluginIni = "META-INF/giant-explorer-plugin.ini"
 
 abstract class DefaultPluginManager(val context: Context) : GiantExplorerPluginManager {
     override fun fileInputStream(path: String): FileInputStream {
-        return getFileInstance(path, context).apply {
+        return getFileInstance(path, context, stoppableTask = StoppableTask.Blocking).apply {
             createFile()
         }.fileInputStream
     }
 
     override fun fileOutputStream(path: String): FileOutputStream {
-        return getFileInstance(path, context).apply {
+        return getFileInstance(path, context, stoppableTask = StoppableTask.Blocking).apply {
             createFile()
         }.fileOutputStream
     }
 
     override fun listFiles(path: String): List<String> {
-        return getFileInstance(path, context).listSafe().let { filesAndDirectories ->
+        return getFileInstance(path, context, stoppableTask = StoppableTask.Blocking).listSafe().let { filesAndDirectories ->
             filesAndDirectories.files.map {
                 it.fullPath
             } + filesAndDirectories.directories.map {
@@ -65,11 +66,11 @@ abstract class DefaultPluginManager(val context: Context) : GiantExplorerPluginM
     }
 
     override fun ensureDir(child: File) {
-        getFileInstance(child.absolutePath, context).createDirectory()
+        getFileInstance(child.absolutePath, context, stoppableTask = StoppableTask.Blocking).createDirectory()
     }
 
     override fun isFile(path: String): Boolean {
-        return getFileInstance(path, context).isFile
+        return getFileInstance(path, context, stoppableTask = StoppableTask.Blocking).isFile
     }
 }
 

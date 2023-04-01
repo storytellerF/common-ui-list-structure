@@ -12,6 +12,7 @@ import com.storyteller_f.file_system.instance.local.RegularLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.EmulatedLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.FakeDirectoryLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.StorageLocalFileInstance
+import com.storyteller_f.multi_core.StoppableTask
 import java.util.*
 
 object FileInstanceFactory {
@@ -31,19 +32,17 @@ object FileInstanceFactory {
      * @param root 如果是普通文件系统，是/。如果是document provider，是authority。如果有root 权限，是root
      */
     @WorkerThread
-    fun getFileInstance(unsafePath: String, context: Context, root: String = publicFileSystemRoot): FileInstance {
+    fun getFileInstance(unsafePath: String, context: Context, root: String = publicFileSystemRoot, stoppableTask: StoppableTask): FileInstance {
         assert(!unsafePath.endsWith("/") || unsafePath.length == 1) {
             "invalid path [$unsafePath]"
         }
-        val path = simplyPath(unsafePath)
-        val prefix = getPrefix(path, context, root)
+        val path = simplyPath(unsafePath, stoppableTask)
+        val prefix = getPrefix(path, context, root, stoppableTask)
         val remote = FileSystemUriSaver.getInstance().remote
 
         return when {
             root == rootFileSystemRoot && remote != null -> RootAccessFileInstance(path, remote)
-
             root != publicFileSystemRoot -> DocumentLocalFileInstance(context, path, root, root)
-
             else -> getPublicFileSystemInstance(prefix, context, path, root)
         }
     }
@@ -77,11 +76,11 @@ object FileInstanceFactory {
      * 如果是根目录，返回空。
      */
     @JvmStatic
-    fun getPrefix(unsafePath: String, context: Context, root: String = publicFileSystemRoot): String {
+    fun getPrefix(unsafePath: String, context: Context, root: String = publicFileSystemRoot, stoppableTask: StoppableTask): String {
         assert(!unsafePath.endsWith("/") || unsafePath.length == 1) {
             unsafePath
         }
-        val path = simplyPath(unsafePath)
+        val path = simplyPath(unsafePath, stoppableTask)
         /**
          * 只有publicFileSystem 才会有prefix 的区别，其他的都不需要。
          */
@@ -129,7 +128,7 @@ object FileInstanceFactory {
     }
 
     @Throws(Exception::class)
-    fun toChild(fileInstance: FileInstance, name: String, isFile: Boolean, context: Context, createWhenNoExists: Boolean): FileInstance {
+    fun toChild(fileInstance: FileInstance, name: String, isFile: Boolean, context: Context, createWhenNoExists: Boolean, stoppableTask: StoppableTask): FileInstance {
         assert(name.last() != '/') {
             "$name is not a valid name"
         }
@@ -137,33 +136,33 @@ object FileInstanceFactory {
             return fileInstance
         }
         if (name == "..") {
-            return toParent(fileInstance, context)
+            return toParent(fileInstance, context, stoppableTask = stoppableTask)
         }
         val parentPath = fileInstance.path
-        val parentPrefix = getPrefix(parentPath, context)
+        val parentPrefix = getPrefix(parentPath, context, stoppableTask = stoppableTask)
         val unsafePath = "$parentPath/$name"
-        val path = simplyPath(unsafePath)
-        val childPrefix = getPrefix(path, context)
+        val path = simplyPath(unsafePath, stoppableTask)
+        val childPrefix = getPrefix(path, context, stoppableTask = stoppableTask)
         return if (parentPrefix == childPrefix) {
             fileInstance.toChild(name, isFile, createWhenNoExists)
         } else {
-            getFileInstance(path, context)
+            getFileInstance(path, context, stoppableTask = stoppableTask)
         }
     }
 
     @Throws(Exception::class)
-    fun toParent(fileInstance: FileInstance, context: Context): FileInstance {
-        val parentPrefix = getPrefix(fileInstance.parent, context)
-        val childPrefix = getPrefix(fileInstance.path, context)
+    fun toParent(fileInstance: FileInstance, context: Context, stoppableTask: StoppableTask): FileInstance {
+        val parentPrefix = getPrefix(fileInstance.parent, context, stoppableTask = stoppableTask)
+        val childPrefix = getPrefix(fileInstance.path, context, stoppableTask = stoppableTask)
         return if (parentPrefix == childPrefix) {
             fileInstance.toParent()
         } else {
-            getFileInstance(fileInstance.parent, context)
+            getFileInstance(fileInstance.parent, context, stoppableTask = stoppableTask)
         }
     }
 
     @JvmStatic
-    fun simplyPath(path: String): String {
+    fun simplyPath(path: String, stoppableTask: StoppableTask): String {
         assert(path[0] == '/') {
             "$path is not valid"
         }

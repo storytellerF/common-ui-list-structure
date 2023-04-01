@@ -25,7 +25,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.storyteller_f.annotation_defination.BindClickEvent
-import com.storyteller_f.common_ktx.mm
+import com.storyteller_f.common_ktx.nn
 import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
@@ -141,7 +141,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         Log.i(TAG, "handleClipData: key $key")
         viewLifecycleOwner.lifecycleScope.launch {
             val dest = destDirectory?.let {
-                getFileInstance(it, requireContext())
+                getFileInstance(it, requireContext(), stoppableTask = stoppable())
             } ?: session.fileInstance.value ?: kotlin.run {
                 Toast.makeText(requireContext(), "无法确定目的地", Toast.LENGTH_LONG).show()
                 return@launch
@@ -324,13 +324,15 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
     private fun moveOrCopy(move: Boolean, itemHolder: FileItemHolder) {
         dialog(RequestPathDialog(), RequestPathDialog.RequestPathResult::class.java) { result ->
-            result.path.mm {
-                getFileInstance(it, requireContext())
-            }.mm { dest ->
-                val key = uuid.data.value ?: return@mm
-                val detectSelected = detectSelected(itemHolder)
-                Log.i(TAG, "moveOrCopy: uuid: $key")
-                fileOperateBinder?.moveOrCopy(dest, detectSelected, itemHolder.file.item, move, key)
+            scope.launch {
+                result.path.nn {
+                    getFileInstance(it, requireContext(), stoppableTask = stoppable())
+                }.nn { dest ->
+                    val key = uuid.data.value ?: return@nn
+                    val detectSelected = detectSelected(itemHolder)
+                    Log.i(TAG, "moveOrCopy: uuid: $key")
+                    fileOperateBinder?.moveOrCopy(dest, detectSelected, itemHolder.file.item, move, key)
+                }
             }
         }
     }

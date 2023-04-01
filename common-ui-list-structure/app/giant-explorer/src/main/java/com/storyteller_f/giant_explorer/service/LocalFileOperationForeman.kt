@@ -106,7 +106,7 @@ class CopyForemanImpl(
                 emitDetailMessage("已暂停", Log.WARN)
                 return false
             }
-            val fileInstance = getFileInstance(it.fullPath, context)
+            val fileInstance = getFileInstance(it.fullPath, context, stoppableTask = StoppableTask.Blocking)
             emitStateMessage("处理${fileInstance.path}")
             val operationResult = if (isMove) {
                 FileMoveOpInShell(this, fileInstance, target, context).bind(this).call()
@@ -146,7 +146,7 @@ class DeleteForemanImpl(
     override fun call(): Boolean {
         val isSuccess = !detectorTasks.any {//如果有一个失败了，就提前退出
             emitStateMessage("处理${it.fullPath}")
-            !FileDeleteOp(this, getFileInstance(it.fullPath, context), context).apply {
+            !FileDeleteOp(this, getFileInstance(it.fullPath, context, stoppableTask = StoppableTask.Blocking), context).apply {
                 fileOperationListener = this@DeleteForemanImpl
             }.call()
         }
@@ -164,7 +164,7 @@ class CompoundForemanImpl(private val selected: List<DetectedTask>, private val 
             try {
                 when (it) {
                     is DownloadTask -> !executeDownload(okHttpClient, it)
-                    is LocalTask -> !FileCopyOp(this, getFileInstance(it.path, context), target, context).apply {
+                    is LocalTask -> !FileCopyOp(this, getFileInstance(it.path, context, stoppableTask = StoppableTask.Blocking), target, context).apply {
                         fileOperationListener = this@CompoundForemanImpl
                     }.call()
 

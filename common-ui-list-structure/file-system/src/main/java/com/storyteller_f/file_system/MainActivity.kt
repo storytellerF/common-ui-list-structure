@@ -18,6 +18,7 @@ import androidx.fragment.app.Fragment
 import com.storyteller_f.common_ktx.context
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.file_system.util.FileUtility
+import com.storyteller_f.multi_core.StoppableTask
 import kotlinx.coroutines.CompletableDeferred
 
 class MainActivity : AppCompatActivity() {
@@ -76,6 +77,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestForSdcard(fromBundle: Pair<String?, String?>) {
+
+        val prefix = FileInstanceFactory.getPrefix(fromBundle.second!!, this, stoppableTask =  StoppableTask.Blocking)
         registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) {
@@ -90,13 +93,14 @@ class MainActivity : AppCompatActivity() {
             failure()
         }.launch(
             FileUtility.produceSafRequestIntent(
-                FileInstanceFactory.getPrefix(fromBundle.second!!, this),
+                prefix,
                 this
             )
         )
     }
 
     private fun requestForEmulatedSAF(fromBundle: Pair<String?, String?>) {
+        val prefix = FileInstanceFactory.getPrefix(fromBundle.second!!, this, stoppableTask = StoppableTask.Blocking)
         registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) {
@@ -111,7 +115,7 @@ class MainActivity : AppCompatActivity() {
             failure()
         }.launch(
             FileUtility.produceSafRequestIntent(
-                FileInstanceFactory.getPrefix(fromBundle.second!!, this),
+                prefix,
                 this
             )
         )
