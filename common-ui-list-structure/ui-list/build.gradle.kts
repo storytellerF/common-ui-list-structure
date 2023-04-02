@@ -53,7 +53,6 @@ dependencies {
     api("androidx.room:room-runtime:${Versions.roomVersion}")
     api("androidx.room:room-ktx:${Versions.roomVersion}")
     api("androidx.room:room-paging:${Versions.roomVersion}")
-    kapt("androidx.room:room-compiler:${Versions.roomVersion}")
 
     api("androidx.paging:paging-runtime-ktx:${Versions.pagingVersion}")
 

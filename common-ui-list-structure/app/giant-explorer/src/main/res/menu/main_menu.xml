@@ -28,6 +28,9 @@
         android:id="@+id/plugin_manager"
         android:title="@string/plugin_manager" />
     <item
+        android:id="@+id/remote_manager"
+        android:title="远程访问" />
+    <item
         android:id="@+id/open_root_access"
         android:title="@string/root_access" />
     <item

@@ -1,6 +1,19 @@
 import com.storyteller_f.version_manager.*
 val filterDebug: String by project
 
+class RoomSchemaArgProvider(
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    val schemaDir: File
+) : CommandLineArgumentProvider {
+
+    override fun asArguments(): Iterable<String> {
+        // Note: If you're using KSP, you should change the line below to return
+        // listOf("room.schemaLocation=${schemaDir.path}")
+        return listOf("-Aroom.schemaLocation=${schemaDir.path}")
+    }
+}
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -16,6 +29,16 @@ android {
     }
 
     namespace = "com.storyteller_f.giant_explorer"
+    buildFeatures {
+        viewBinding = true
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 
     defaultConfig {
         val fileProviderAuthority = "$applicationId.file-provider"
@@ -49,6 +72,17 @@ android {
             "FILE_SYSTEM_ENCRYPTED_PROVIDER_AUTHORITY",
             "\"${fileSystemProviderEncryptedAuthority}\""
         )
+        javaCompileOptions {
+            annotationProcessorOptions {
+                compilerArgumentProviders(
+                    RoomSchemaArgProvider(File(projectDir, "schemas"))
+                )
+            }
+        }
+    }
+    sourceSets {
+        // Adds exported schema location as test app assets.
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
     }
 }
 
@@ -57,6 +91,8 @@ dependencies {
     implementation("androidx.appcompat:appcompat:${Versions.appcompatVersion}")
     implementation("com.google.android.material:material:${Versions.materialVersion}")
     implementation("androidx.constraintlayout:constraintlayout:${Versions.constraintLayoutVersion}")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.5.3")
+    implementation("androidx.navigation:navigation-ui-ktx:2.5.3")
     fileSystemDependency()
     networkDependency()
     workerDependency()
@@ -96,7 +132,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.mockftpserver/MockFtpServer
     testImplementation("org.mockftpserver:MockFtpServer:3.1.0")
     implementation(project(":compat-ktx"))
-
+    androidTestImplementation("androidx.room:room-testing:2.5.0")
 }
 baseApp()
 setupGeneric()

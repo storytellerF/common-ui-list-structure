@@ -83,9 +83,10 @@ interface BigTimeWorkerDao {
 }
 
 @Database(
-    entities = [FileSizeRecord::class, FileMDRecord::class, FileTorrentRecord::class, BigTimeTask::class],
-    version = 2,
-    exportSchema = false
+    entities = [FileSizeRecord::class, FileMDRecord::class, FileTorrentRecord::class, BigTimeTask::class, RemoteAccessSpec::class],
+    version = 3,
+    exportSchema = true,
+    autoMigrations = [AutoMigration(from = 2, to = 3)]
 )
 abstract class FileSizeRecordDatabase : RoomDatabase() {
 
@@ -93,6 +94,7 @@ abstract class FileSizeRecordDatabase : RoomDatabase() {
     abstract fun mdDao(): FileMDRecordDao
     abstract fun torrentDao(): FileTorrentRecordDao
     abstract fun bigTimeDao(): BigTimeWorkerDao
+    abstract fun remoteAccessDao(): RemoteAccessDao
 
     companion object {
 

@@ -19,8 +19,7 @@
             <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
         </intent>
         <intent>
-            <action android:name=
-                "android.support.customtabs.action.CustomTabsService" />
+            <action android:name="android.support.customtabs.action.CustomTabsService" />
         </intent>
     </queries>
 
@@ -33,6 +32,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Common_ui_list_structure">
+        <activity
+            android:name=".control.remote.RemoteManagerActivity"
+            android:exported="false"
+            android:label="@string/title_activity_remote_manager"
+            android:theme="@style/Theme.Common_ui_list_structure" />
         <activity
             android:name=".control.plugin.PluginManageActivity"
             android:exported="false"
@@ -107,7 +111,6 @@
             android:name=".service.FileSystemProvider"
             android:authorities="${fileSystemProviderAuthority}"
             android:exported="true" />
-
         <provider
             android:name=".service.FileSystemProvider"
             android:authorities="${fileSystemProviderEncryptedAuthority}"

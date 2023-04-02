@@ -158,6 +158,9 @@ class FtpFileInstance(path: String, fileSystemRoot: String, private val spec: Ft
 }
 
 data class FtpSpec(val server: String? = null, val port: Int = 0, val user: String? = null, val password: String? = null) {
+    fun toUri(): String {
+        return "ftp://$user:$password@$server:$port/"
+    }
     companion object {
         fun parse(url: String): FtpSpec {
             val parse = Uri.parse(url)
@@ -167,6 +170,7 @@ data class FtpSpec(val server: String? = null, val port: Int = 0, val user: Stri
             val (loc, port) = split.last().split(":")
             return FtpSpec(loc, port.toInt(), user, pass)
         }
+
     }
 }
 

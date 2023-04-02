@@ -29,7 +29,9 @@ import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.control.plugin.PluginManageActivity
 import com.storyteller_f.giant_explorer.control.plugin.stoppable
+import com.storyteller_f.giant_explorer.control.remote.RemoteManagerActivity
 import com.storyteller_f.giant_explorer.control.root.RootAccessActivity
+import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.ActivityMainBinding
 import com.storyteller_f.giant_explorer.dialog.FileOperationDialog
 import com.storyteller_f.giant_explorer.filter.*
@@ -211,7 +213,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             R.id.open_root_access -> startActivity(Intent(this, RootAccessActivity::class.java))
             R.id.about -> startActivity(Intent(this, AboutActivity::class.java))
             R.id.plugin_manager -> startActivity(Intent(this, PluginManageActivity::class.java))
-
+            R.id.remote_manager -> startActivity(Intent(this, RemoteManagerActivity::class.java))
         }
         return super.onOptionsItemSelected(item)
     }
@@ -227,10 +229,14 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             findNavControl().navigate(R.id.fileListFragment, FileListFragmentArgs("/", FileInstanceFactory.publicFileSystemRoot).toBundle())
             true
         }
-        menu.add("ftp").setOnMenuItemClickListener {
-
-            findNavControl().navigate(R.id.fileListFragment, FileListFragmentArgs("/", "ftp://hdh:hello@localhost:2121/").toBundle())
-            true
+        scope.launch {
+            requireDatabase.remoteAccessDao().listAsync().forEach {
+                val toUri = it.toFtpSpec().toUri()
+                menu.add(toUri).setOnMenuItemClickListener {
+                    findNavControl().navigate(R.id.fileListFragment, FileListFragmentArgs("/", toUri).toBundle())
+                    true
+                }
+            }
         }
         info.forEach {
             val authority = it.providerInfo.authority
