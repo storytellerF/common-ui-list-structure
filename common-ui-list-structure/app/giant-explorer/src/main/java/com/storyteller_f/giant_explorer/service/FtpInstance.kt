@@ -7,6 +7,7 @@ import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.permissions
 import com.storyteller_f.giant_explorer.control.ftpClients
+import com.storyteller_f.giant_explorer.database.RemoteAccessSpec
 import org.apache.commons.net.PrintCommandListener
 import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPFile
@@ -157,9 +158,12 @@ class FtpFileInstance(path: String, fileSystemRoot: String, private val spec: Ft
 
 }
 
-data class FtpSpec(val server: String? = null, val port: Int = 0, val user: String? = null, val password: String? = null) {
+data class FtpSpec(val server: String, val port: Int, val user: String, val password: String) {
     fun toUri(): String {
         return "ftp://$user:$password@$server:$port/"
+    }
+    fun toRemote(): RemoteAccessSpec {
+        return RemoteAccessSpec(server, port, user, password)
     }
     companion object {
         fun parse(url: String): FtpSpec {

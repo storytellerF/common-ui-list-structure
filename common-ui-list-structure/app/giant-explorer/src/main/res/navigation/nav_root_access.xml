@@ -13,10 +13,10 @@
 
         <action
             android:id="@+id/action_RootAccessStatusFragment_to_Second2Fragment"
-            app:destination="@id/Second2Fragment" />
+            app:destination="@id/RootIntroFragment" />
     </fragment>
     <fragment
-        android:id="@+id/Second2Fragment"
+        android:id="@+id/RootIntroFragment"
         android:name="com.storyteller_f.giant_explorer.control.root.RootIntroFragment"
         android:label="@string/second_fragment_label"
         tools:layout="@layout/fragment_root_intro">

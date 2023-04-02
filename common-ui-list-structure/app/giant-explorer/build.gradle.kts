@@ -118,7 +118,9 @@ dependencies {
     implementation("androidx.webkit:webkit:1.6.1")
 
     //filter & sort
-    if (filterDebug.toBoolean()) {
+    val home: String = System.getProperty("user.home")
+    val root = file("$home/AndroidStudioProjects/FilterUIProject/")
+    if (filterDebug.toBoolean() && root.exists()) {
         implementation(project(":filter:config-core"))
         implementation(project(":filter:sort-core"))
         implementation(project(":filter:filter-core"))
@@ -132,7 +134,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.mockftpserver/MockFtpServer
     testImplementation("org.mockftpserver:MockFtpServer:3.1.0")
     implementation(project(":compat-ktx"))
-    androidTestImplementation("androidx.room:room-testing:2.5.0")
+    androidTestImplementation("androidx.room:room-testing:2.5.1")
 }
 baseApp()
 setupGeneric()

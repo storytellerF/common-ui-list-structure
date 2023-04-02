@@ -2,23 +2,21 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/nav_graph2"
-    app:startDestination="@id/FirstFragment">
+    android:id="@+id/nav_remote_access"
+    app:startDestination="@id/RemoteListFragment">
 
     <fragment
-        android:id="@+id/FirstFragment"
+        android:id="@+id/RemoteListFragment"
         android:name="com.storyteller_f.giant_explorer.control.remote.RemoteListFragment"
-        android:label="@string/first_fragment_label"
         tools:layout="@layout/fragment_remote_list">
 
         <action
             android:id="@+id/action_FirstFragment_to_SecondFragment"
-            app:destination="@id/SecondFragment" />
+            app:destination="@id/RemoteDetailFragment" />
     </fragment>
     <fragment
-        android:id="@+id/SecondFragment"
+        android:id="@+id/RemoteDetailFragment"
         android:name="com.storyteller_f.giant_explorer.control.remote.RemoteDetailFragment"
-        android:label="@string/second_fragment_label"
         tools:layout="@layout/fragment_remote_detail">
 
         <action
