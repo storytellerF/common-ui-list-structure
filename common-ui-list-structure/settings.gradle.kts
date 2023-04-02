@@ -1,4 +1,4 @@
-val filterDebug: String by settings
+val filterFolder: String by settings
 pluginManagement {
     includeBuild("version-manager")
     repositories {
@@ -47,12 +47,18 @@ include(":app:giant-explorer-plugin-core")
 include(":slim-ktx")
 
 val home: String = System.getProperty("user.home")
-val root = file("$home/AndroidStudioProjects/FilterUIProject/")
-if (filterDebug.toBoolean() && root.exists()) {
+val debugFilterFolder = file("$home/AndroidStudioProjects/FilterUIProject/")
+val subModuleFilterFolder = file("./FilterUIProject")
+val currentFolder = when (filterFolder) {
+    "local" -> debugFilterFolder
+    "submodule" -> subModuleFilterFolder
+    else -> null
+}
+if (currentFolder?.exists() != true) {
     val l = listOf("config-core", "filter-core", "sort-core", "config_edit", "filter-ui", "sort-ui", "recycleview_ui_extra")
     l.forEach {
         include("filter:$it")
-        project(":filter:$it").projectDir = file("$home/AndroidStudioProjects/FilterUIProject/$it")
+        project(":filter:$it").projectDir = File(currentFolder, it)
     }
 }
 include(":compat-ktx")

@@ -29,7 +29,7 @@ class RemoteManagerActivity : AppCompatActivity() {
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
 
-        binding.fab.setOnClickListener { view ->
+        binding.fab.setOnClickListener {
             navController.navigate(R.id.RemoteDetailFragment)
         }
     }

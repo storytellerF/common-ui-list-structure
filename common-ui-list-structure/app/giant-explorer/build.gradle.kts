@@ -1,5 +1,5 @@
 import com.storyteller_f.version_manager.*
-val filterDebug: String by project
+val filterFolder: String by project
 
 class RoomSchemaArgProvider(
     @get:InputDirectory
@@ -119,8 +119,14 @@ dependencies {
 
     //filter & sort
     val home: String = System.getProperty("user.home")
-    val root = file("$home/AndroidStudioProjects/FilterUIProject/")
-    if (filterDebug.toBoolean() && root.exists()) {
+    val debugFilterFolder = file("$home/AndroidStudioProjects/FilterUIProject/")
+    val subModuleFilterFolder = file("./FilterUIProject")
+    val currentFolder = when (filterFolder) {
+        "local" -> debugFilterFolder
+        "submodule" -> subModuleFilterFolder
+        else -> null
+    }
+    if (currentFolder?.exists() == true) {
         implementation(project(":filter:config-core"))
         implementation(project(":filter:sort-core"))
         implementation(project(":filter:filter-core"))
