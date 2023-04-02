@@ -29,7 +29,7 @@ public class FileInstanceUtility {
         if ("torrent".equals(extension)) {
             fileItemModel = new TorrentFileItemModel(name, absolutePath, hidden, lastModifiedTime, false);
         } else {
-            fileItemModel = new FileItemModel(name, absolutePath, hidden, lastModifiedTime, extension, false);
+            fileItemModel = new FileItemModel(name, absolutePath, hidden, lastModifiedTime, false, extension);
         }
         fileItemModel.setPermissions(permission);
         fileItemModel.setSize(size);

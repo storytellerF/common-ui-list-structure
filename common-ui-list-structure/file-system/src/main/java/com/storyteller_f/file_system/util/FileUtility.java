@@ -25,7 +25,7 @@ public class FileUtility {
         boolean w = file.canWrite();
         boolean e = file.canExecute();
         boolean r = file.canRead();
-        return String.format(Locale.CHINA, "%c%c%c%c", (file.isFile() ? '-' : 'd'), (r ? 'r' : '-'), (w ? 'w' : '-'), (e ? 'e' : '-'));
+        return UtilityKt.permissions(r, w, e, file.isFile());
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)

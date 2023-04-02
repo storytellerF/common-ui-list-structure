@@ -51,6 +51,9 @@ import com.storyteller_f.giant_explorer.pc_end_on
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
 import com.storyteller_f.giant_explorer.service.FileOperateService
 import com.storyteller_f.giant_explorer.service.FileService
+import com.storyteller_f.giant_explorer.service.FtpInstance
+import com.storyteller_f.giant_explorer.service.FtpFileInstance
+import com.storyteller_f.giant_explorer.service.FtpSpec
 import com.storyteller_f.giant_explorer.view.PathMan
 import com.storyteller_f.multi_core.StoppableTask
 import com.storyteller_f.sort_ui.SortChain
@@ -97,8 +100,14 @@ suspend fun getFileInstanceAsync(path: String, context: Context, root: String = 
     }
 }
 
-fun getFileInstance(path: String, context: Context, root: String = FileInstanceFactory.publicFileSystemRoot, stoppableTask: StoppableTask = StoppableTask.Blocking) =
-    FileInstanceFactory.getFileInstance(path, context, root, stoppableTask)
+val ftpClients = mutableMapOf<FtpSpec, FtpInstance>()
+
+fun getFileInstance(path: String, context: Context, root: String = FileInstanceFactory.publicFileSystemRoot, stoppableTask: StoppableTask = StoppableTask.Blocking): FileInstance {
+    if (root.startsWith("ftp://")) {
+        return FtpFileInstance(path, root, FtpSpec.parse(root))
+    }
+    return FileInstanceFactory.getFileInstance(path, context, root, stoppableTask)
+}
 
 class MainActivity : CommonActivity(), FileOperateService.FileOperateResultContainer {
 
@@ -238,36 +247,44 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         val provider = Intent("android.content.action.DOCUMENTS_PROVIDER")
         val info = packageManager.queryIntentContentProvidersCompat(provider, 0)
         val savedUris = FileSystemUriSaver.getInstance().savedUris(this)
-        lifecycleScope.launch {
 
-            info.forEach {
-                val authority = it.providerInfo.authority
-                val root = Uri.Builder().scheme("content").authority(authority).build().toString()
-                val loadLabel = it.loadLabel(packageManager).toString()
+        menu.add("return").setOnMenuItemClickListener {
+            findNavControl().navigate(R.id.fileListFragment, FileListFragmentArgs("/", FileInstanceFactory.publicFileSystemRoot).toBundle())
+            true
+        }
+        menu.add("ftp").setOnMenuItemClickListener {
+
+            findNavControl().navigate(R.id.fileListFragment, FileListFragmentArgs("/", "ftp://hdh:hello@localhost:2121/").toBundle())
+            true
+        }
+        info.forEach {
+            val authority = it.providerInfo.authority
+            val root = Uri.Builder().scheme("content").authority(authority).build().toString()
+            val loadLabel = it.loadLabel(packageManager).toString()
 //            val icon = it.loadIcon(packageManager)
-                val contains = savedUris.contains(authority) && try {
-                    DocumentLocalFileInstance(this@MainActivity, "/", authority, root).exists()
-                } catch (_: Exception) {
-                    false
-                }
-                menu.add(loadLabel)
-                    .setChecked(contains)
-                    .setCheckable(true)
+            val contains = savedUris.contains(authority) && try {
+                DocumentLocalFileInstance(this@MainActivity, "/", authority, root).exists()
+            } catch (_: Exception) {
+                false
+            }
+            menu.add(loadLabel)
+                .setChecked(contains)
+                .setCheckable(true)
 //                .setActionView(ImageView(this).apply {
 //                    setImageDrawable(icon)
 //                })
-                    .apply {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            tooltipText = authority
-                        }
+                .apply {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        tooltipText = authority
                     }
-                    .setOnMenuItemClickListener {
-                        switchRoot(authority)
-                        true
-                    }
+                }
+                .setOnMenuItemClickListener {
+                    switchRoot(authority)
+                    true
+                }
 
-            }
         }
+
     }
 
     private fun switchRoot(authority: String): Boolean {
@@ -277,7 +294,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
                 val root = Uri.Builder().scheme("content").authority(authority).build().toString()
                 val instance = DocumentLocalFileInstance(this, "/", authority, root)
                 if (instance.exists()) {
-                    findNavControl().navigate(R.id.fileListFragment, FileListFragmentArgs(instance.path, root.reversed()).toBundle())
+                    findNavControl().navigate(R.id.fileListFragment, FileListFragmentArgs(instance.path, root).toBundle())
                     return true
                 }
             } catch (e: Exception) {
@@ -532,6 +549,10 @@ fun fileServiceBuilder(
                         if (it is DocumentLocalFileInstance) {
                             if (!it.exists()) {
                                 it.initDocumentFile()
+                            }
+                        } else if (it is FtpFileInstance) {
+                            if (!it.exists()) {
+                                it.initCurrentFile()
                             }
                         }
                     }.listSafe().run {

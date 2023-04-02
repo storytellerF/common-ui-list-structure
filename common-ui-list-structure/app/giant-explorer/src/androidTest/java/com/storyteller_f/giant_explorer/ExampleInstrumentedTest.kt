@@ -22,4 +22,10 @@ class ExampleInstrumentedTest {
         val parse = Uri.parse("https://www.jianshu.com/u/a1f69fa1b85f")
         parse
     }
+
+    @Test
+    fun test() {
+        val parse = Uri.parse("ftp://hdh:hello@localhost:2121/")
+        assert(parse.authority == "hdh:hello@localhost:2121")
+    }
 }

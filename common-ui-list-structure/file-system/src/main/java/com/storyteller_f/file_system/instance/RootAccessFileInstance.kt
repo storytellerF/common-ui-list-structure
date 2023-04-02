@@ -40,7 +40,7 @@ class RootAccessFileInstance(path: String, private val remote: FileSystemManager
         val w = canWrite()
         val e = canExecute()
         val r = canRead()
-        return String.format(Locale.CHINA, "%c%c%c%c", if (isFile) '-' else 'd', if (r) 'r' else '-', if (w) 'w' else '-', if (e) 'e' else '-')
+        return com.storyteller_f.file_system.util.permissions(r, w, e, isFile)
     }
 
     override fun isFile(): Boolean = extendedFile.isFile

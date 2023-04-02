@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.core.content.PackageManagerCompat
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.BaseContextFileInstance
 import com.storyteller_f.file_system.instance.FileInstance
@@ -17,7 +16,7 @@ import java.io.*
  * 标识一个apk 文件
  */
 class AppLocalFileInstance(context: Context, path: String) : BaseContextFileInstance(context, path, FileInstanceFactory.publicFileSystemRoot) {
-    override fun getFile() = FileItemModel(name, path, false, 0, "apk", false)
+    override fun getFile() = FileItemModel(name, path, false, 0, false, "apk")
 
     override fun getDirectory(): DirectoryItemModel {
         TODO("Not yet implemented")

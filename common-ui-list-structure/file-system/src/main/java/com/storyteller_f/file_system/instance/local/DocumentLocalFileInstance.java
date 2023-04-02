@@ -14,6 +14,7 @@ import com.storyteller_f.file_system.model.DirectoryItemModel;
 import com.storyteller_f.file_system.model.FileItemModel;
 import com.storyteller_f.file_system.util.FileInstanceUtility;
 import com.storyteller_f.file_system.util.FileUtility;
+import com.storyteller_f.file_system.util.UtilityKt;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -400,7 +401,7 @@ public class DocumentLocalFileInstance extends LocalFileInstance {
 
     @Override
     public FileItemModel getFile() {
-        return new FileItemModel(getName(), getPath(), false, current.lastModified(), FileUtility.getExtension(getName()), false);
+        return new FileItemModel(getName(), getPath(), false, current.lastModified(), false, FileUtility.getExtension(getName()));
     }
 
     @Override
@@ -411,7 +412,7 @@ public class DocumentLocalFileInstance extends LocalFileInstance {
     public static String getDetailString(DocumentFile file) {
         boolean w = file.canWrite();
         boolean r = file.canRead();
-        return String.format(Locale.CHINA, "%c%c%c%c", (file.isFile() ? '-' : 'd'), (r ? 'r' : '-'), (w ? 'w' : '-'), '-');
+        return UtilityKt.permissions(r, w, false, file.isFile());
     }
 
     public static DocumentLocalFileInstance getEmulated(Context context, String path) {

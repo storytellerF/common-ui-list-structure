@@ -42,7 +42,7 @@ public abstract class FileInstance {
     /**
      * @param path 路径
      */
-    public FileInstance(@NonNull String path, String fileSystemRoot) {
+    public FileInstance(@NonNull String path, @NonNull String fileSystemRoot) {
         assert path.trim().length() != 0;
         file = new File(path);
         this.fileSystemRoot = fileSystemRoot;
@@ -62,7 +62,7 @@ public abstract class FileInstance {
     }
 
     public FileItemModel getFile() {
-        FileItemModel fileItemModel = new FileItemModel(file.getName(), file.getAbsolutePath(), file.isHidden(), file.lastModified(), FileUtility.getExtension(getName()), false);
+        FileItemModel fileItemModel = new FileItemModel(file.getName(), file.getAbsolutePath(), file.isHidden(), file.lastModified(), false, FileUtility.getExtension(getName()));
         fileItemModel.editAccessTime(file);
         return fileItemModel;
     }

@@ -24,8 +24,8 @@ open class FileItemModel : FileSystemItemModel {
         fullPath: String,
         isHidden: Boolean,
         lastModifiedTime: Long,
-        extension: String? = null,
         isSymLink: Boolean,
+        extension: String? = null,
     ) : super(
         name, fullPath, isHidden, lastModifiedTime, isSymLink
     ) {

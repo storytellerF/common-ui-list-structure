@@ -88,7 +88,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     private val args by navArgs<FileListFragmentArgs>()
 
     private val session by vm({ args }) {
-        FileExplorerSession(requireActivity().application, it.path, it.root.reversed())
+        FileExplorerSession(requireActivity().application, it.path, it.root)
     }
     private val temp by keyPrefix({ "temp" }, pvm({}) {
         TempVM()
