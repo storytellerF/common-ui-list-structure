@@ -322,3 +322,23 @@ fun<T1, T2, T3, T4> combineDao(s1: LiveData<T1>, s2: LiveData<T2>, s3: LiveData<
     }
     return mediatorLiveData
 }
+
+/**
+ * @param f 返回是否相等
+ */
+fun <X> LiveData<X>.distinctUntilChangedBy(f: (X, X) -> Boolean): LiveData<X?> {
+    val outputLiveData: MediatorLiveData<X?> = MediatorLiveData<X?>()
+    outputLiveData.addSource(this, object : Observer<X?> {
+        var mFirstTime = true
+        var previous: X? = null
+        override fun onChanged(value: X?) {
+            val previousValue = previous
+            if (mFirstTime || previousValue == null && value != null || previousValue != null && (previousValue != value || !f(previousValue, value))) {
+                mFirstTime = false
+                outputLiveData.value = value
+                previous = value
+            }
+        }
+    })
+    return outputLiveData
+}

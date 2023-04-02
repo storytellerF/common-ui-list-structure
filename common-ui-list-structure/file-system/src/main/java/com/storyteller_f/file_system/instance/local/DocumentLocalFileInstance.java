@@ -30,7 +30,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 
 public class DocumentLocalFileInstance extends LocalFileInstance {
     private static final String TAG = "DocumentLocalFileInstan";
@@ -88,7 +87,7 @@ public class DocumentLocalFileInstance extends LocalFileInstance {
             return null;
         }
         if (!rootFile.canRead()) {
-            Log.e(TAG, "initDocumentFile: 初始化失败(权限过期) 不可读写 " + getPath());
+            Log.e(TAG, "initDocumentFile: 初始化失败(权限过期) 不可读写 " + getPath() + " prefix: " + prefix + "root: " + fileSystemRoot);
             return null;
         }
         String truePath = destination.substring(prefix.length());//获取 SD卡名称后面的路径
