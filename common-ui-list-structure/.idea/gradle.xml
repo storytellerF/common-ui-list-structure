@@ -39,6 +39,7 @@
             <option value="$PROJECT_DIR$/common-pr" />
             <option value="$PROJECT_DIR$/common-ui" />
             <option value="$PROJECT_DIR$/common-vm-ktx" />
+            <option value="$PROJECT_DIR$/compat-ktx" />
             <option value="$PROJECT_DIR$/composite-compiler" />
             <option value="$PROJECT_DIR$/composite-definition" />
             <option value="$PROJECT_DIR$/ext-func-compiler" />

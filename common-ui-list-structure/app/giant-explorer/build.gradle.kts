@@ -95,6 +95,7 @@ dependencies {
     implementation("commons-net:commons-net:3.9.0")
     // https://mvnrepository.com/artifact/org.mockftpserver/MockFtpServer
     testImplementation("org.mockftpserver:MockFtpServer:3.1.0")
+    implementation(project(":compat-ktx"))
 
 }
 baseApp()

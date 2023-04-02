@@ -54,3 +54,4 @@ if (filterDebug.toBoolean()) {
         project(":filter:$it").projectDir = file("$home/AndroidStudioProjects/FilterUIProject/$it")
     }
 }
+include(":compat-ktx")

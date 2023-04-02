@@ -1,14 +1,13 @@
 package com.storyteller_f.giant_explorer.control.plugin
 
 import android.content.Context
-import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.storyteller_f.compat_ktx.packageInfoCompat
 import com.storyteller_f.giant_explorer.FileSystemProviderResolver
 import com.storyteller_f.giant_explorer.FragmentPluginConfiguration
 import com.storyteller_f.giant_explorer.R
@@ -82,11 +81,7 @@ class FragmentPluginActivity : AppCompatActivity() {
 
     private val pluginResources by lazy {
         val absolutePath = pluginFile.absolutePath
-        val packageArchiveInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            packageManager.getPackageArchiveInfo(absolutePath, PackageManager.PackageInfoFlags.of(0))
-        } else {
-            packageManager.getPackageArchiveInfo(absolutePath, 0)
-        }
+        val packageArchiveInfo = packageManager.packageInfoCompat(absolutePath)
         val applicationInfo = packageArchiveInfo?.applicationInfo
         if (applicationInfo != null) {
             applicationInfo.publicSourceDir = absolutePath
