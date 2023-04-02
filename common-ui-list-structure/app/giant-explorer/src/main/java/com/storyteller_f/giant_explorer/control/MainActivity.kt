@@ -27,6 +27,9 @@ import com.storyteller_f.file_system.FileSystemUriSaver
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.giant_explorer.R
+import com.storyteller_f.giant_explorer.control.plugin.PluginManageActivity
+import com.storyteller_f.giant_explorer.control.plugin.stoppable
+import com.storyteller_f.giant_explorer.control.root.RootAccessActivity
 import com.storyteller_f.giant_explorer.databinding.ActivityMainBinding
 import com.storyteller_f.giant_explorer.dialog.FileOperationDialog
 import com.storyteller_f.giant_explorer.filter.*

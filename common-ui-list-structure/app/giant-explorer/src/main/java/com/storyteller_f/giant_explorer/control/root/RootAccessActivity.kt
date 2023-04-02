@@ -1,4 +1,4 @@
-package com.storyteller_f.giant_explorer.control
+package com.storyteller_f.giant_explorer.control.root
 
 import android.content.ComponentName
 import android.net.Uri

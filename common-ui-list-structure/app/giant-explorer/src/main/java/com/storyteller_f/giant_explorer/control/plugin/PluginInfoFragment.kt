@@ -1,4 +1,4 @@
-package com.storyteller_f.giant_explorer.control
+package com.storyteller_f.giant_explorer.control.plugin
 
 import android.os.Bundle
 import android.view.View
@@ -6,7 +6,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.navArgs
 import com.storyteller_f.common_ui.SimpleFragment
-import com.storyteller_f.common_ui.cycle
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.giant_explorer.FragmentPluginConfiguration
 import com.storyteller_f.giant_explorer.HtmlPluginConfiguration

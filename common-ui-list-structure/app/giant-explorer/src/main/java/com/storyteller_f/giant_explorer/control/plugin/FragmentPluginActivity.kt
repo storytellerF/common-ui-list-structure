@@ -1,4 +1,4 @@
-package com.storyteller_f.giant_explorer.control
+package com.storyteller_f.giant_explorer.control.plugin
 
 import android.content.Context
 import android.content.pm.PackageManager
@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import com.storyteller_f.giant_explorer.FileSystemProviderResolver
 import com.storyteller_f.giant_explorer.FragmentPluginConfiguration
 import com.storyteller_f.giant_explorer.R
+import com.storyteller_f.giant_explorer.control.getFileInstance
 import com.storyteller_f.giant_explorer.pluginManagerRegister
 import com.storyteller_f.multi_core.StoppableTask
 import com.storyteller_f.plugin_core.GiantExplorerPlugin

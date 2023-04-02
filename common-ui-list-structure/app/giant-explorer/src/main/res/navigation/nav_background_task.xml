@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/BackgroundTaskListFragment"
-        android:name="com.storyteller_f.giant_explorer.control.BackgroundTaskListFragment"
+        android:name="com.storyteller_f.giant_explorer.control.task.BackgroundTaskListFragment"
         android:label="@string/first_fragment_label"
         tools:layout="@layout/fragment_task_list">
 
@@ -17,7 +17,7 @@
     </fragment>
     <fragment
         android:id="@+id/AddTaskFragment"
-        android:name="com.storyteller_f.giant_explorer.control.AddTaskFragment"
+        android:name="com.storyteller_f.giant_explorer.control.task.AddTaskFragment"
         android:label="@string/second_fragment_label"
         tools:layout="@layout/fragment_add_task">
         <action

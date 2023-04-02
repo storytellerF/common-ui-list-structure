@@ -4,8 +4,8 @@ import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import androidx.annotation.WorkerThread
-import com.storyteller_f.giant_explorer.control.ensureExtract
-import com.storyteller_f.giant_explorer.control.giantExplorerPluginIni
+import com.storyteller_f.giant_explorer.control.plugin.ensureExtract
+import com.storyteller_f.giant_explorer.control.plugin.giantExplorerPluginIni
 import com.storyteller_f.ui_list.core.Model
 import dalvik.system.DexClassLoader
 import kotlinx.coroutines.runBlocking

@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/FirstFragment"
-        android:name="com.storyteller_f.giant_explorer.control.PluginListFragment"
+        android:name="com.storyteller_f.giant_explorer.control.plugin.PluginListFragment"
         android:label="@string/first_fragment_label"
         tools:layout="@layout/fragment_plugin_list">
         <action
@@ -16,7 +16,7 @@
     </fragment>
     <fragment
         android:id="@+id/SecondFragment"
-        android:name="com.storyteller_f.giant_explorer.control.PluginInfoFragment"
+        android:name="com.storyteller_f.giant_explorer.control.plugin.PluginInfoFragment"
         android:label="@string/second_fragment_label"
         tools:layout="@layout/fragment_plugin_info">
 

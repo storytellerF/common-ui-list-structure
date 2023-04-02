@@ -1,4 +1,4 @@
-package com.storyteller_f.giant_explorer.control
+package com.storyteller_f.giant_explorer.control.plugin
 
 import android.os.Bundle
 import android.view.View
@@ -7,21 +7,16 @@ import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.common_ui.owner
-import com.storyteller_f.common_ui.scope
 import com.storyteller_f.giant_explorer.*
 import com.storyteller_f.giant_explorer.databinding.FragmentPluginListBinding
 import com.storyteller_f.giant_explorer.databinding.ViewHolderPluginBinding
-import com.storyteller_f.ui_list.adapter.ManualAdapter
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
-import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.AdapterViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.core.Model
 import com.storyteller_f.ui_list.data.SimpleResponse
 import com.storyteller_f.ui_list.source.*
 import com.storyteller_f.ui_list.ui.ListWithState
-import kotlinx.coroutines.launch
-import java.io.File
 
 class SimplePlugin(val path: String) : Model {
     override fun commonId(): String {

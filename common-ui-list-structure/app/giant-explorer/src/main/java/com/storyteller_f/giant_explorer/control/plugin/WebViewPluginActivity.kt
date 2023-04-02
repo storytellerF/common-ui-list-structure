@@ -1,4 +1,4 @@
-package com.storyteller_f.giant_explorer.control
+package com.storyteller_f.giant_explorer.control.plugin
 
 import android.annotation.SuppressLint
 import android.net.Uri

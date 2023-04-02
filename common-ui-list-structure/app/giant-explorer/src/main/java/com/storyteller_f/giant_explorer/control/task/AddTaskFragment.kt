@@ -1,4 +1,4 @@
-package com.storyteller_f.giant_explorer.control
+package com.storyteller_f.giant_explorer.control.task
 
 import android.os.Parcelable
 import android.widget.ArrayAdapter

@@ -34,7 +34,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Common_ui_list_structure">
         <activity
-            android:name=".control.PluginManageActivity"
+            android:name=".control.plugin.PluginManageActivity"
             android:exported="false"
             android:label="@string/title_activity_plugin_manage"
             android:theme="@style/Theme.Common_ui_list_structure">
@@ -43,21 +43,21 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".control.WebViewPluginActivity"
+            android:name=".control.plugin.WebViewPluginActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
         <activity
-            android:name=".control.FragmentPluginActivity"
+            android:name=".control.plugin.FragmentPluginActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
         <activity
-            android:name=".control.RootAccessActivity"
+            android:name=".control.root.RootAccessActivity"
             android:configChanges="keyboard|keyboardHidden"
             android:exported="false"
             android:label="@string/title_activity_root_access"
@@ -68,7 +68,7 @@
             android:exported="false"
             android:label="@string/title_activity_settings" />
         <activity
-            android:name=".control.BackgroundTaskConfigActivity"
+            android:name=".control.task.BackgroundTaskConfigActivity"
             android:configChanges="keyboard|keyboardHidden"
             android:exported="false"
             android:label="@string/title_activity_background_task_config"

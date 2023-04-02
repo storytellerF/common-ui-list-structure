@@ -1,4 +1,4 @@
-package com.storyteller_f.giant_explorer.control
+package com.storyteller_f.giant_explorer.control.plugin
 
 import android.os.Bundle
 import androidx.core.view.WindowCompat
@@ -14,6 +14,8 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.operate.FileCopyOp
 import com.storyteller_f.file_system_ktx.ensureFile
 import com.storyteller_f.giant_explorer.R
+import com.storyteller_f.giant_explorer.control.getFileInstance
+import com.storyteller_f.giant_explorer.control.getFileInstanceAsync
 import com.storyteller_f.giant_explorer.databinding.ActivityPluginManageBinding
 import com.storyteller_f.giant_explorer.dialog.RequestPathDialog
 import com.storyteller_f.multi_core.StoppableTask

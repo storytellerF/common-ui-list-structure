@@ -1,4 +1,4 @@
-package com.storyteller_f.giant_explorer.control
+package com.storyteller_f.giant_explorer.control.root
 
 import androidx.navigation.fragment.findNavController
 import com.storyteller_f.common_ui.SimpleFragment

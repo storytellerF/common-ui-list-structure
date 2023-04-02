@@ -1,4 +1,4 @@
-package com.storyteller_f.giant_explorer.control
+package com.storyteller_f.giant_explorer.control.task
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Row

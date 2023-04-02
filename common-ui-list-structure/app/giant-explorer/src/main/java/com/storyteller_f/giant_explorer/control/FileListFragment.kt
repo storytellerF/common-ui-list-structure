@@ -35,6 +35,11 @@ import com.storyteller_f.filter_core.Filter
 import com.storyteller_f.giant_explorer.*
 import com.storyteller_f.giant_explorer.BuildConfig
 import com.storyteller_f.giant_explorer.R
+import com.storyteller_f.giant_explorer.control.plugin.DefaultPluginManager
+import com.storyteller_f.giant_explorer.control.plugin.FragmentPluginActivity
+import com.storyteller_f.giant_explorer.control.plugin.WebViewPluginActivity
+import com.storyteller_f.giant_explorer.control.plugin.stoppable
+import com.storyteller_f.giant_explorer.control.task.BackgroundTaskConfigActivity
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentFileListBinding
 import com.storyteller_f.giant_explorer.dialog.*

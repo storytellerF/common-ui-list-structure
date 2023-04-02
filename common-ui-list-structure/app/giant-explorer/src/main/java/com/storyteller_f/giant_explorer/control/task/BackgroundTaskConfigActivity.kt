@@ -1,4 +1,4 @@
-package com.storyteller_f.giant_explorer.control
+package com.storyteller_f.giant_explorer.control.task
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
