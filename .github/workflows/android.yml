@@ -2,9 +2,9 @@ name: Android CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "master" ]
 
 jobs:
   build:
@@ -19,20 +19,26 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: gradle
-    - name: to app
-      run: cd common-ui-list-structure
+    - name: test
+      run: pwd
+    - name: Grant sml execute permission for gradlew
+      run: chmod +x sml/gradlew
+    - name: Build sml with Gradle
+      run: ./sml/gradlew publish -p sml
       
     - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+      run: chmod +x common-ui-list-structure/gradlew
     - name: Build with Gradle
-      run: ./gradlew buildRelease
+      run: ./common-ui-list-structure/gradlew build -p common-ui-list-structure
       
+    - name: test2
+      run: ls -R
     - uses: noriban/sign-android-release@v3
       name: Sign app APK
       # ID used to access action output
       id: sign_app
       with:
-        releaseDirectory: app/giant-explorer/build/outputs/apk/release
+        releaseDirectory: common-ui-list-structure/app/giant-explorer/build/outputs/apk/release
         signingKeyBase64: ${{ secrets.SIGNING_KEY }}
         alias: ${{ secrets.ALIAS }}
         keyStorePassword: ${{ secrets.STORE_PASSWORD }}
@@ -45,7 +51,7 @@ jobs:
       # ID used to access action output
       id: sign_ping_app
       with:
-        releaseDirectory: app/ping/build/outputs/apk/release
+        releaseDirectory: common-ui-list-structure/app/ping/build/outputs/apk/release
         signingKeyBase64: ${{ secrets.SIGNING_KEY }}
         alias: ${{ secrets.ALIAS }}
         keyStorePassword: ${{ secrets.STORE_PASSWORD }}
