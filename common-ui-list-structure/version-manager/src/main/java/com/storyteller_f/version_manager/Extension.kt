@@ -172,11 +172,28 @@ fun Project.baseApp() {
             targetSdk = Versions.targetSdkVersion
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         }
+        signingConfigs {
+            val path = System.getenv("storyteller_f_sign_path")
+            val alias = System.getenv("storyteller_f_sign_alias")
+            val storePassword = System.getenv("storyteller_f_sign_store_password")
+            val keyPassword = System.getenv("storyteller_f_sign_key_password")
+            if (path != null && alias != null && storePassword != null && keyPassword != null) {
+                create("release") {
+                    keyAlias = alias
+                    this.keyPassword = keyPassword
+                    storeFile = file(path)
+                    this.storePassword = storePassword
+                }
+            }
+        }
         buildTypes {
             release {
                 isMinifyEnabled = true
                 isShrinkResources = true
                 proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+                val releaseSignConfig = signingConfigs.findByName("release")
+                if (releaseSignConfig != null)
+                    signingConfig = releaseSignConfig
             }
         }
         val javaVersion = JavaVersion.VERSION_17

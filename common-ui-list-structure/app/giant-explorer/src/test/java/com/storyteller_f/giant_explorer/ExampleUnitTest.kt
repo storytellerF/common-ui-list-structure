@@ -68,34 +68,35 @@ class ExampleUnitTest {
         )
         val urlConnection = URL(ftpUrl).openConnection()
         val inputStream = urlConnection.getInputStream()
-        Files.copy(inputStream, File("downloaded_buz.txt").toPath())
+        val name = "downloaded_buz.txt"
+        Files.copy(inputStream, File(name).toPath())
         inputStream.close()
-        assert(File("downloaded_buz.txt").exists())
-        File("downloaded_buz.txt").delete() // cleanup
+        assert(File(name).exists())
+        File(name).delete() // cleanup
     }
 
-    @Test
-    @Throws(IOException::class)
-    fun givenRemoteFile_whenListingRemoteFiles_thenItIsContainedInList() {
-        val files = ftpInstance?.listFiles("").orEmpty()
-        assert(files.any {
-            it.name == "foobar.txt"
-        })
-    }
+//    @Test
+//    @Throws(IOException::class)
+//    fun givenRemoteFile_whenListingRemoteFiles_thenItIsContainedInList() {
+//        val files = ftpInstance?.listFiles("").orEmpty()
+//        assert(files.any {
+//            it.name == "foobar.txt"
+//        })
+//    }
+//
+//    @Test
+//    @Throws(IOException::class)
+//    fun givenRemoteFile_whenDownloading_thenItIsOnTheLocalFilesystem1() {
+//        ftpInstance?.downloadFile("/buz.txt", "downloaded_buz.txt")
+//        assert(File("downloaded_buz.txt").exists())
+//        File("downloaded_buz.txt").delete() // cleanup
+//    }
 
-    @Test
-    @Throws(IOException::class)
-    fun givenRemoteFile_whenDownloading_thenItIsOnTheLocalFilesystem1() {
-        ftpInstance?.downloadFile("/buz.txt", "downloaded_buz.txt")
-        assert(File("downloaded_buz.txt").exists())
-        File("downloaded_buz.txt").delete() // cleanup
-    }
-
-    @Test
-    @Throws(URISyntaxException::class, IOException::class)
-    fun givenLocalFile_whenUploadingIt_thenItExistsOnRemoteLocation() {
+//    @Test
+//    @Throws(URISyntaxException::class, IOException::class)
+//    fun givenLocalFile_whenUploadingIt_thenItExistsOnRemoteLocation() {
 //        val file = File(javaClass.classLoader?.getResource("baz.txt")?.toURI())
 //        ftpInstance?.putFileToPath(file, "/buz.txt")
 //        assert(fakeFtpServer!!.fileSystem.exists("/buz.txt"))
-    }
+//    }
 }

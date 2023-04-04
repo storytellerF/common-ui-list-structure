@@ -3,8 +3,13 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
+        if (songFolder == "local") {
+            maven {
+                url "../../../../IdeaProjects/song/repo"
+            }
+        }
         maven {
-            url "../../../../IdeaProjects/song/repo"
+            url "https://jitpack.io"
         }
     }
 }

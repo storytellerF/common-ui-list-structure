@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.google.gson.typeadapters.RuntimeTypeAdapterFactory
+import com.storyteller_f.compat_ktx.getSerializableCompat
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.filter_core.Filter
 import com.storyteller_f.filter_core.config.FilterConfigItem
@@ -14,6 +15,7 @@ import com.storyteller_f.filter_ui.FilterDialog
 import com.storyteller_f.sort_core.config.SortConfigItem
 import com.storyteller_f.sort_ui.SortChain
 import com.storyteller_f.sort_ui.SortDialog
+import java.io.Serializable
 
 val factory: RuntimeTypeAdapterFactory<FilterConfigItem> = RuntimeTypeAdapterFactory.of(FilterConfigItem::class.java, "config-item-key").registerSubtype(NameFilter.Config::class.java, "name")!!
 
@@ -83,14 +85,18 @@ fun List<SortConfigItem>?.buildSortActive(): List<SortChain<FileSystemItemModel>
     NameSort(NameSort.Item())
 }.orEmpty()
 
+class FilterDataWrapper(val list: List<FilterConfigItem>) : Serializable
+class SortDataWrapper(val list: List<SortConfigItem>) : Serializable
+
 class FilterViewModel(handle: SavedStateHandle, defaultValue: List<Filter<FileSystemItemModel>>) : ViewModel() {
     val data = MutableLiveData<List<Filter<FileSystemItemModel>>>()
 
     init {
-        val cache = handle.get<Bundle>("filter")?.getSerializable("data") as? List<FilterConfigItem>
-        data.value = cache?.buildFilterActive() ?: defaultValue
+        val bundle = handle.get<Bundle>("filter")
+        val cache = bundle?.getSerializableCompat("data", FilterDataWrapper::class.java)
+        data.value = cache?.list?.buildFilterActive() ?: defaultValue
         handle.setSavedStateProvider("filter") {
-            bundleOf("data" to data.value.saveFilterItem())
+            bundleOf("data" to FilterDataWrapper(data.value.saveFilterItem()))
         }
     }
 }
@@ -99,10 +105,10 @@ class SortViewModel(handle: SavedStateHandle, defaultValue: List<SortChain<FileS
     val data = MutableLiveData<List<SortChain<FileSystemItemModel>>>()
 
     init {
-        val cache = handle.get<Bundle>("sort")?.getSerializable("data") as? List<SortConfigItem>
-        data.value = cache?.buildSortActive() ?: defaultValue
+        val cache = handle.get<Bundle>("sort")?.getSerializableCompat("data", SortDataWrapper::class.java)
+        data.value = cache?.list?.buildSortActive() ?: defaultValue
         handle.setSavedStateProvider("sort") {
-            bundleOf("data" to data.value.saveSortItem())
+            bundleOf("data" to SortDataWrapper(data.value.saveSortItem()))
         }
     }
 }

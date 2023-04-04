@@ -31,22 +31,22 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
 
-    - name: Grant sml execute permission for gradlew
-      run: chmod +x sml/gradlew
-    - name: Build sml with Gradle
-      run: ./sml/gradlew publish -p sml
-      
-    - name: Grant execute permission for gradlew
-      run: chmod +x common-ui-list-structure/gradlew
-    - name: Build with Gradle
-      run: ./common-ui-list-structure/gradlew build -p common-ui-list-structure
+    - name: build all
+      run: bash build_all.sh
 
+    - name: test
+      run: ls -R build
+
+
+    #签名开始
+
+    #签名app
     - uses: noriban/sign-android-release@v3
       name: Sign app APK
       # ID used to access action output
       id: sign_app
       with:
-        releaseDirectory: common-ui-list-structure/app/giant-explorer/build/outputs/apk/release
+        releaseDirectory: build/app
         signingKeyBase64: ${{ secrets.SIGNING_KEY }}
         alias: ${{ secrets.ALIAS }}
         keyStorePassword: ${{ secrets.STORE_PASSWORD }}
@@ -54,12 +54,29 @@ jobs:
       env:
         # override default build-tools version (29.0.3) -- optional
         BUILD_TOOLS_VERSION: "33.0.1"
+
+    #签名giant explorer
     - uses: noriban/sign-android-release@v3
-      name: Sign app APK
+      name: Sign giant explorer app APK
+      # ID used to access action output
+      id: sign_giant_explorer_app
+      with:
+        releaseDirectory: build/giant-explorer
+        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+        alias: ${{ secrets.ALIAS }}
+        keyStorePassword: ${{ secrets.STORE_PASSWORD }}
+        keyPassword: ${{ secrets.KEY_PASSWORD }}
+      env:
+        # override default build-tools version (29.0.3) -- optional
+        BUILD_TOOLS_VERSION: "33.0.1"
+
+    #签名ping
+    - uses: noriban/sign-android-release@v3
+      name: Sign ping app APK
       # ID used to access action output
       id: sign_ping_app
       with:
-        releaseDirectory: common-ui-list-structure/app/ping/build/outputs/apk/release
+        releaseDirectory: build/ping
         signingKeyBase64: ${{ secrets.SIGNING_KEY }}
         alias: ${{ secrets.ALIAS }}
         keyStorePassword: ${{ secrets.STORE_PASSWORD }}
@@ -67,6 +84,36 @@ jobs:
       env:
         # override default build-tools version (29.0.3) -- optional
         BUILD_TOOLS_VERSION: "33.0.1"
+    #签名li
+    - uses: noriban/sign-android-release@v3
+      name: Sign li app APK
+      # ID used to access action output
+      id: sign_li_app
+      with:
+        releaseDirectory: build/li
+        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+        alias: ${{ secrets.ALIAS }}
+        keyStorePassword: ${{ secrets.STORE_PASSWORD }}
+        keyPassword: ${{ secrets.KEY_PASSWORD }}
+      env:
+        # override default build-tools version (29.0.3) -- optional
+        BUILD_TOOLS_VERSION: "33.0.1"
+    #签名yue
+    - uses: noriban/sign-android-release@v3
+      name: Sign yue app APK
+      # ID used to access action output
+      id: sign_yue_app
+      with:
+        releaseDirectory: build/yue
+        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+        alias: ${{ secrets.ALIAS }}
+        keyStorePassword: ${{ secrets.STORE_PASSWORD }}
+        keyPassword: ${{ secrets.KEY_PASSWORD }}
+      env:
+        # override default build-tools version (29.0.3) -- optional
+        BUILD_TOOLS_VERSION: "33.0.1"
+    #签名结束
+
 
     # Example use of `signedReleaseFile` output -- not needed
     - uses: actions/upload-artifact@v3
@@ -75,3 +122,7 @@ jobs:
         path: |
           ${{steps.sign_app.outputs.signedReleaseFile}}
           ${{steps.sign_ping_app.outputs.signedReleaseFile}}
+          ${{steps.sign_giant_explorer_app.outputs.signedReleaseFile}}
+          ${{steps.sign_li_app.outputs.signedReleaseFile}}
+          ${{steps.sign_yue_app.outputs.signedReleaseFile}}
+          build/yue-html/*.zip
