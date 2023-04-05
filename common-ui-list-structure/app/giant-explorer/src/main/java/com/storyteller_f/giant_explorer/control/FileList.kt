@@ -22,7 +22,6 @@ import com.storyteller_f.common_vm_ktx.combineDao
 import com.storyteller_f.common_vm_ktx.distinctUntilChangedBy
 import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
-import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.model.TorrentFileItemModel
@@ -31,7 +30,7 @@ import com.storyteller_f.file_system_ktx.fileIcon
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.filter_core.Filter
 import com.storyteller_f.giant_explorer.R
-import com.storyteller_f.giant_explorer.database.FileSizeRecordDatabase
+import com.storyteller_f.giant_explorer.database.LocalDatabase
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileBinding
 import com.storyteller_f.giant_explorer.model.FileModel
 import com.storyteller_f.giant_explorer.pc_end_on
@@ -199,7 +198,7 @@ fun format1024(args: Long): String {
 class FileExplorerSearch(val path: FileInstance, val filterHiddenFile: Boolean, val filters: List<Filter<FileSystemItemModel>>, val sort: List<SortChain<FileSystemItemModel>>)
 
 fun fileServiceBuilder(
-    database: FileSizeRecordDatabase
+    database: LocalDatabase
 ): suspend (searchQuery: FileExplorerSearch, start: Int, count: Int) -> SimpleResponse<FileModel> {
     return { searchQuery: FileExplorerSearch, start: Int, count: Int ->
         val listSafe = suspendCancellableCoroutine { continuation ->
@@ -252,7 +251,7 @@ fun fileServiceBuilder(
 
 private suspend fun fileModelBuilder(
     model: FileSystemItemModel,
-    database: FileSizeRecordDatabase
+    database: LocalDatabase
 ): FileModel {
     val length = if (model is FileItemModel) {
         database.mdDao().search(model.fullPath)?.let {

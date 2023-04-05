@@ -91,7 +91,6 @@ dependencies {
     workerDependency()
     implementation("androidx.preference:preference:1.2.0")
     implementation("com.j256.simplemagic:simplemagic:1.17")
-    implementation("com.github.osama-raddad:FireCrasher:2.0.0")
     implementation("androidx.browser:browser:1.5.0")
 
     val libsuVersion = "5.0.3"
@@ -137,7 +136,10 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.hierynomus/smbj
     implementation("com.hierynomus:smbj:0.11.5")
-
+    // https://mvnrepository.com/artifact/com.hierynomus/sshj
+    implementation("com.hierynomus:sshj:0.35.0")
+    implementation("com.madgag.spongycastle:core:1.58.0.0")
+    implementation("com.madgag.spongycastle:prov:1.58.0.0")
 }
 baseApp()
 setupGeneric()

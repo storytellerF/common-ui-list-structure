@@ -7,14 +7,22 @@ import androidx.room.Entity
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.storyteller_f.giant_explorer.control.remote.RemoteAccessType
 import com.storyteller_f.giant_explorer.service.FtpSpec
 import com.storyteller_f.giant_explorer.service.SmbSpec
 import kotlinx.coroutines.flow.Flow
 
 @Entity(tableName = "remote-access", primaryKeys = ["server", "port", "user", "password", "share"])
-class RemoteAccessSpec(val server: String = "", val port: Int = 0, val user: String = "", val password: String = "", @ColumnInfo(defaultValue = "") val share: String = "") {
+class RemoteAccessSpec(
+    val server: String = "",
+    val port: Int = 0,
+    val user: String = "",
+    val password: String = "",
+    @ColumnInfo(defaultValue = "") val share: String = "",
+    @ColumnInfo(defaultValue = RemoteAccessType.ftp) val type: String
+) {
     fun toFtpSpec(): FtpSpec {
-        return FtpSpec(server, port, user, password)
+        return FtpSpec(server, port, user, password, type == RemoteAccessType.sftp)
     }
 
     fun toSmbSpec(): SmbSpec {

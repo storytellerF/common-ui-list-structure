@@ -6,7 +6,7 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.storyteller_f.giant_explorer.database.FileSizeRecordDatabase
+import com.storyteller_f.giant_explorer.database.LocalDatabase
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,7 +25,7 @@ class MigrationTest {
     @get:Rule
     val helper: MigrationTestHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
-        FileSizeRecordDatabase::class.java,
+        LocalDatabase::class.java,
         mutableListOf(elements)
     )
 
@@ -41,7 +41,7 @@ class MigrationTest {
         // once all migrations execute.
         Room.databaseBuilder(
             InstrumentationRegistry.getInstrumentation().targetContext,
-            FileSizeRecordDatabase::class.java,
+            LocalDatabase::class.java,
             TEST_DB
         ).build().apply {
             openHelper.writableDatabase.close()

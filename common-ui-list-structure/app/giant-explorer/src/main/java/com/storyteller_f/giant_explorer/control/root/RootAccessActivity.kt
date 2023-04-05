@@ -65,6 +65,11 @@ class RootAccessActivity : AppCompatActivity() {
         Log.i(TAG, "onCreate: bind $bindCustomTabsService")
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        unbindService(connection)
+    }
+
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment_content_root_access)
         return navController.navigateUp(appBarConfiguration)

@@ -19,9 +19,6 @@ import androidx.lifecycle.*
 import androidx.lifecycle.Observer
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import com.hierynomus.smbj.SMBClient
-import com.hierynomus.smbj.auth.AuthenticationContext
-import com.hierynomus.smbj.share.DiskShare
 import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.*
@@ -32,6 +29,7 @@ import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.control.plugin.PluginManageActivity
 import com.storyteller_f.giant_explorer.control.plugin.stoppable
+import com.storyteller_f.giant_explorer.control.remote.RemoteAccessType
 import com.storyteller_f.giant_explorer.control.remote.RemoteManagerActivity
 import com.storyteller_f.giant_explorer.control.root.RootAccessActivity
 import com.storyteller_f.giant_explorer.database.requireDatabase
@@ -42,8 +40,8 @@ import com.storyteller_f.giant_explorer.service.FileOperateBinder
 import com.storyteller_f.giant_explorer.service.FileOperateService
 import com.storyteller_f.giant_explorer.service.FileService
 import com.storyteller_f.giant_explorer.service.FtpFileInstance
-import com.storyteller_f.giant_explorer.service.FtpInstance
 import com.storyteller_f.giant_explorer.service.FtpSpec
+import com.storyteller_f.giant_explorer.service.SFtpFileInstance
 import com.storyteller_f.giant_explorer.service.SmbFileInstance
 import com.storyteller_f.giant_explorer.service.SmbSpec
 import com.storyteller_f.giant_explorer.view.PathMan
@@ -53,7 +51,6 @@ import com.storyteller_f.ui_list.event.viewBinding
 import com.topjohnwu.superuser.Shell
 import com.topjohnwu.superuser.ipc.RootService
 import com.topjohnwu.superuser.nio.FileSystemManager
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -89,6 +86,9 @@ fun getFileInstance(path: String, context: Context, root: String = FileInstanceF
     }
     if (root.startsWith("smb://")) {
         return SmbFileInstance(path, root, SmbSpec.parse(root))
+    }
+    if (root.startsWith("sftp://")) {
+        return SFtpFileInstance(path, root, FtpSpec.parse(root))
     }
     return FileInstanceFactory.getFileInstance(path, context, root, stoppableTask)
 }
@@ -238,7 +238,8 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         }
         scope.launch {
             requireDatabase.remoteAccessDao().listAsync().forEach {
-                if (it.share.isNotEmpty()) {
+
+                if (it.type == RemoteAccessType.smb) {
                     val toUri = it.toSmbSpec().toUri()
                     menu.add(toUri).setOnMenuItemClickListener {
                         findNavControl().navigate(R.id.fileListFragment, FileListFragmentArgs("/", toUri).toBundle())

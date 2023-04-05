@@ -2,6 +2,7 @@ package com.storyteller_f.file_system.instance;
 
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 import androidx.core.util.ObjectsCompat;
 
@@ -133,7 +134,7 @@ public abstract class FileInstance {
      * 应该仅用于目录。可能会抛出异常，内部不会处理。
      */
     @WorkerThread
-    protected abstract void listInternal(List<FileItemModel> fileItems, List<DirectoryItemModel> directoryItems) throws Exception;
+    protected abstract void listInternal(@NonNull List<FileItemModel> fileItems, @NonNull List<DirectoryItemModel> directoryItems) throws Exception;
 
     public FilesAndDirectories list() throws Exception {
         FilesAndDirectories filesAndDirectories = new FilesAndDirectories(buildFilesContainer(), buildDirectoryContainer());

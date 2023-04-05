@@ -245,7 +245,7 @@ public class DocumentLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
-    public void listInternal(List<FileItemModel> files, List<DirectoryItemModel> directories) throws Exception {
+    public void listInternal(@NonNull List<FileItemModel> files, @NonNull List<DirectoryItemModel> directories) throws Exception {
         DocumentFile c = current;
         if (c == null) initDocumentFile();
         if (c == null) throw new Exception("no permission");

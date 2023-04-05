@@ -8,6 +8,7 @@ import com.hierynomus.smbj.share.DiskShare
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
+import com.storyteller_f.giant_explorer.control.remote.RemoteAccessType
 import com.storyteller_f.giant_explorer.database.RemoteAccessSpec
 import java.io.BufferedReader
 import java.io.BufferedWriter
@@ -78,7 +79,7 @@ class SmbFileInstance(path: String, fileSystemRoot: String, val smbSpec: SmbSpec
         TODO("Not yet implemented")
     }
 
-    override fun listInternal(fileItems: MutableList<FileItemModel>?, directoryItems: MutableList<DirectoryItemModel>?) {
+    override fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
         val (share, _) = reconnectIfNeed()
         share.list(path).filter {
             it.fileName != "." && it.fileName != ".."
@@ -87,9 +88,9 @@ class SmbFileInstance(path: String, fileSystemRoot: String, val smbSpec: SmbSpec
             val fileInformation = share.getFileInformation(child.absolutePath)
             val lastModifiedTime = fileInformation.basicInformation.changeTime.windowsTimeStamp
             if (fileInformation.standardInformation.isDirectory) {
-                directoryItems?.add(DirectoryItemModel(it.fileName, child.absolutePath, false, lastModifiedTime, false))
+                directoryItems.add(DirectoryItemModel(it.fileName, child.absolutePath, false, lastModifiedTime, false))
             } else {
-                fileItems?.add(FileItemModel(it.fileName, child.absolutePath, false, lastModifiedTime, false, file.extension))
+                fileItems.add(FileItemModel(it.fileName, child.absolutePath, false, lastModifiedTime, false, file.extension))
             }
         }
     }
@@ -158,7 +159,7 @@ data class SmbSpec(val server: String, val port: Int, val user: String, val pass
     }
 
     fun toRemote(): RemoteAccessSpec {
-        return RemoteAccessSpec(server, port, user, password, share)
+        return RemoteAccessSpec(server, port, user, password, share, RemoteAccessType.smb)
     }
 
     companion object {

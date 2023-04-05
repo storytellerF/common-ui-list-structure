@@ -6,6 +6,7 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.permissions
+import com.storyteller_f.giant_explorer.control.remote.RemoteAccessType
 import com.storyteller_f.giant_explorer.database.RemoteAccessSpec
 import org.apache.commons.net.PrintCommandListener
 import org.apache.commons.net.ftp.FTPClient
@@ -70,23 +71,23 @@ class FtpFileInstance(path: String, fileSystemRoot: String, private val spec: Ft
         TODO("Not yet implemented")
     }
 
-    override fun listInternal(fileItems: MutableList<FileItemModel>?, directoryItems: MutableList<DirectoryItemModel>?) {
+    override fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
 
         val listFiles = getInstance()?.listFiles(path)
         listFiles?.forEach {
             val name = it.name
-            val path = "$path/$name"
+            val path = File(path, name).absolutePath
             val lastModifiedTime = it.timestamp.timeInMillis
             val canRead = it.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
             val canWrite = it.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)
             val canExecute = it.hasPermission(FTPFile.USER_ACCESS, FTPFile.EXECUTE_PERMISSION)
             val permission = permissions(canRead, canWrite, canExecute, it.isFile)
             if (it.isFile) {
-                fileItems?.add(FileItemModel(name, path, false, lastModifiedTime, it.isSymbolicLink, File(path).extension).apply {
+                fileItems.add(FileItemModel(name, path, false, lastModifiedTime, it.isSymbolicLink, File(path).extension).apply {
                     permissions = permission
                 })
             } else {
-                directoryItems?.add(DirectoryItemModel(name, path, false, lastModifiedTime, it.isSymbolicLink).apply {
+                directoryItems.add(DirectoryItemModel(name, path, false, lastModifiedTime, it.isSymbolicLink).apply {
                     permissions = permission
                 })
             }
@@ -160,13 +161,18 @@ class FtpFileInstance(path: String, fileSystemRoot: String, private val spec: Ft
 
 }
 
-data class FtpSpec(val server: String, val port: Int, val user: String, val password: String) {
+data class FtpSpec(val server: String, val port: Int, val user: String, val password: String, val isSftp: Boolean) {
     fun toUri(): String {
-        return "ftp://$user:$password@$server:$port/"
+        val scheme = if (isSftp) {
+            "sftp"
+        } else "ftp"
+        return "$scheme://$user:$password@$server:$port/"
     }
+
     fun toRemote(): RemoteAccessSpec {
-        return RemoteAccessSpec(server, port, user, password)
+        return RemoteAccessSpec(server, port, user, password, type = if (isSftp) RemoteAccessType.sftp else RemoteAccessType.ftp)
     }
+
     companion object {
         fun parse(url: String): FtpSpec {
             val parse = Uri.parse(url)
@@ -174,7 +180,7 @@ data class FtpSpec(val server: String, val port: Int, val user: String, val pass
             val split = authority.split("@")
             val (user, pass) = split.first().split(":")
             val (loc, port) = split.last().split(":")
-            return FtpSpec(loc, port.toInt(), user, pass)
+            return FtpSpec(loc, port.toInt(), user, pass, url.startsWith("s"))
         }
 
     }

@@ -64,7 +64,7 @@ public class EmulatedLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
-    public void listInternal(List<FileItemModel> fileItems, List<DirectoryItemModel> directoryItems) {
+    public void listInternal(@NonNull List<FileItemModel> fileItems, @NonNull List<DirectoryItemModel> directoryItems) {
         directoryItems.add(new DirectoryItemModel("0", getPath() + "/0", false, new File(FileInstanceFactory.rootUserEmulatedPath).lastModified(), false));
     }
 

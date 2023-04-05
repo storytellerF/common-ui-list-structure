@@ -27,15 +27,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.spongycastle.jce.provider.BouncyCastleProvider
 import java.io.File
 import java.math.BigInteger
 import java.security.MessageDigest
+import java.security.Security
+
 
 val pluginManagerRegister = PluginManager()
 
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
+        setupBouncyCastle()
         listOf(HolderBuilder::add).fold(0) { acc, kFunction1 ->
             kFunction1(acc)
         }
@@ -58,17 +62,12 @@ class App : Application() {
             }
             refreshPlugin(this@App)
         }
-//        FireCrasher.install(this, object : CrashListener() {
-//
-//            override fun onCrash(throwable: Throwable) {
-//                Toast.makeText(this@App, throwable.exceptionMessage, Toast.LENGTH_LONG).show()
-//                // start the recovering process
-//                recover()
-//                //you need to add your crash reporting tool here
-//                //Ex: Crashlytics.logException(throwable);
-//            }
-//        })
 
+    }
+
+    private fun setupBouncyCastle() {
+        Security.removeProvider("BC")
+        Security.insertProviderAt(BouncyCastleProvider(), 1)
     }
 
 

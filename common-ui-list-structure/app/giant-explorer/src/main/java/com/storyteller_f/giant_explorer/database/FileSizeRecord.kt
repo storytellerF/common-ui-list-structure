@@ -1,9 +1,6 @@
 package com.storyteller_f.giant_explorer.database
 
-import android.content.Context
 import androidx.room.*
-import com.storyteller_f.ext_func_definition.ExtFuncFlat
-import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 import kotlinx.coroutines.flow.Flow
 
 @Entity(tableName = "file-size-record")
@@ -81,41 +78,3 @@ interface BigTimeWorkerDao {
     @Update
     fun update(task: BigTimeTask)
 }
-
-@Database(
-    entities = [FileSizeRecord::class, FileMDRecord::class, FileTorrentRecord::class, BigTimeTask::class, RemoteAccessSpec::class],
-    version = 4,
-    exportSchema = true,
-    autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4)]
-)
-abstract class FileSizeRecordDatabase : RoomDatabase() {
-
-    abstract fun sizeDao(): FileSizeRecordDao
-    abstract fun mdDao(): FileMDRecordDao
-    abstract fun torrentDao(): FileTorrentRecordDao
-    abstract fun bigTimeDao(): BigTimeWorkerDao
-    abstract fun remoteAccessDao(): RemoteAccessDao
-
-    companion object {
-
-        @Volatile
-        private var INSTANCE: FileSizeRecordDatabase? = null
-
-        fun getInstance(context: Context): FileSizeRecordDatabase =
-            INSTANCE ?: synchronized(this) {
-                INSTANCE ?: buildDatabase(context).also { INSTANCE = it }
-            }
-
-        private fun buildDatabase(context: Context) =
-            Room.databaseBuilder(
-                context.applicationContext,
-                FileSizeRecordDatabase::class.java, "file-record.db"
-            )
-                .fallbackToDestructiveMigration()
-                .build()
-    }
-}
-
-@ExtFuncFlat(type = ExtFuncFlatType.V2)
-val Context.requireDatabase
-    get() = FileSizeRecordDatabase.getInstance(this)

@@ -1,15 +1,14 @@
 package com.storyteller_f.giant_explorer.control.remote
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.distinctUntilChanged
 import com.hierynomus.smbj.SMBClient
-import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.common_ui.owner
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui.setOnClick
@@ -23,14 +22,27 @@ import com.storyteller_f.giant_explorer.service.FtpInstance
 import com.storyteller_f.giant_explorer.service.FtpSpec
 import com.storyteller_f.giant_explorer.service.SmbSpec
 import com.storyteller_f.giant_explorer.service.requireDiskShare
+import com.storyteller_f.giant_explorer.service.sftpClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+object RemoteAccessType {
+    const val ftp = "ftp"
+    const val sftp = "sftp"
+    const val smb = "smb"
+
+    val list = listOf("", smb, sftp, ftp)
+}
+
 
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.
  */
 class RemoteDetailFragment : Fragment() {
+    companion object {
+        private const val TAG = "RemoteDetailFragment"
+    }
 
     private var _binding: FragmentRemoteDetailBinding? = null
 
@@ -43,7 +55,9 @@ class RemoteDetailFragment : Fragment() {
 
     //is smb
     private val mode by vm({}) {
-        GenericValueModel<Boolean>()
+        GenericValueModel<String>().apply {
+            data.value = RemoteAccessType.smb
+        }
     }
 
     override fun onCreateView(
@@ -60,43 +74,52 @@ class RemoteDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         mode.data.observe(owner) {
-            binding.shareInput.isVisible = it
-        }
-        binding.smbCheckbox.setOnCheckedChangeListener { buttonView, isChecked ->
-            mode.data.value = isChecked
-            if (isChecked) {
-                if (binding.portInput.text.isEmpty()) {
-                    binding.portInput.setText(SMBClient.DEFAULT_PORT.toString())
-                }
+            Log.i(TAG, "onViewCreated: mode $it")
+            binding.shareInput.isVisible = it == RemoteAccessType.smb
+            val i = RemoteAccessType.list.indexOf(it)
+            if (binding.typeGroup.checkedRadioButtonId != i) {
+                binding.typeGroup.check(i)
             }
         }
-        mode.data.distinctUntilChanged().observe(owner) {
-            binding.smbCheckbox.isChecked = it
+        binding.typeGroup.setOnCheckedChangeListener { group, checkedId ->
+            Log.i(TAG, "onViewCreated: $checkedId")
+            mode.data.value = RemoteAccessType.list[checkedId]
+            if (binding.portInput.text.isEmpty()) {
+                binding.portInput.setText(
+                    when (checkedId - 1) {
+                        2 -> SMBClient.DEFAULT_PORT.toString()
+                        0 -> "22"
+                        1 -> "22"
+                        else -> null
+                    }
+                )
+            }
         }
         binding.testConnection.setOnClick {
             scope.launch {
-                val isSmb = mode.data.value == true
-                if (isSmb) {
-                    waitingDialog {
-                        withContext(Dispatchers.IO) {
+                waitingDialog {
+                    when (mode.data.value) {
+                        RemoteAccessType.smb -> withContext(Dispatchers.IO) {
                             val requireDiskShare = smbSpec().requireDiskShare()
                             requireDiskShare.close()
                         }
-                        Toast.makeText(requireContext(), "success", Toast.LENGTH_SHORT).show()
-                    }
-                } else {
-                    waitingDialog {
-                        withContext(Dispatchers.IO) {
+
+                        RemoteAccessType.ftp -> withContext(Dispatchers.IO) {
                             FtpInstance(spec()).open()
                         }
-                        Toast.makeText(requireContext(), "success", Toast.LENGTH_SHORT).show()
+
+                        else -> withContext(Dispatchers.IO) {
+                            spec().sftpClient()
+                        }
                     }
+                    Toast.makeText(requireContext(), "success", Toast.LENGTH_SHORT).show()
                 }
+
             }
         }
         binding.buttonSecond.setOnClickListener {
             scope.launch {
-                val isSmb = mode.data.value == true
+                val isSmb = mode.data.value == RemoteAccessType.smb
                 withContext(Dispatchers.IO) {
                     val dao = requireDatabase.remoteAccessDao()
                     if (isSmb) dao.add(smbSpec().toRemote()) else dao.add(spec().toRemote())
@@ -107,7 +130,13 @@ class RemoteDetailFragment : Fragment() {
     }
 
     private fun spec(): FtpSpec {
-        return FtpSpec(binding.serverInput.text.toString(), binding.portInput.text.toString().toInt(), binding.userInput.text.toString(), binding.passwordInput.text.toString())
+        return FtpSpec(
+            binding.serverInput.text.toString(),
+            binding.portInput.text.toString().toInt(),
+            binding.userInput.text.toString(),
+            binding.passwordInput.text.toString(),
+            mode.data.value == RemoteAccessType.sftp
+        )
     }
 
     private fun smbSpec(): SmbSpec {

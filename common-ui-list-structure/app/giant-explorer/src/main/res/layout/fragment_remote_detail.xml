@@ -4,27 +4,43 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".control.remote.RemoteManagerActivity">
+    tools:context=".control.remote.RemoteDetailFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="16dp">
 
-        <CheckBox
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:id="@+id/smb_checkbox"
-            android:text="is smb"
+        <RadioGroup
+            android:id="@+id/type_group"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="is smb" />
+
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="is sftp" />
+
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="is ftp" />
+        </RadioGroup>
 
         <EditText
-            app:layout_constraintTop_toBottomOf="@id/smb_checkbox"
             android:id="@+id/server_input"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:hint="server" />
+            android:hint="server"
+            app:layout_constraintTop_toBottomOf="@id/type_group" />
 
         <EditText
             android:id="@+id/port_input"
