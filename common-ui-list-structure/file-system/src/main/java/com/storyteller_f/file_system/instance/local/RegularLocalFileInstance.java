@@ -109,7 +109,7 @@ public class RegularLocalFileInstance extends LocalFileInstance {
 
     @Override
     @WorkerThread
-    public void list(List<FileItemModel> fileItems, List<DirectoryItemModel> directoryItems) {
+    public void listInternal(List<FileItemModel> fileItems, List<DirectoryItemModel> directoryItems) {
         File[] listFiles = file.listFiles();//获取子文件
 
         if (listFiles != null) {

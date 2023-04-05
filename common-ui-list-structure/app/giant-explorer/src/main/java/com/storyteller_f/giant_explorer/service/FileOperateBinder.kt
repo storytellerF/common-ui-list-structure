@@ -254,7 +254,7 @@ class TaskAssessor(private val detectorTasks: List<FileSystemItemModel>, val con
     private fun getDirectorySize(file: FileSystemItemModel): Long {
         folderCount++
         val fileInstance = getFileInstance(file.fullPath, context)
-        val listSafe = fileInstance.listSafe()
+        val listSafe = fileInstance.list()
 
         val fileSize = listSafe.files.map {
             count++

@@ -21,7 +21,7 @@ class RootAccessFileInstance(path: String, private val remote: FileSystemManager
 
     override fun getFileOutputStream(): FileOutputStream = extendedFile.outputStream()
 
-    override fun list(
+    override fun listInternal(
         fileItems: MutableList<FileItemModel>,
         directoryItems: MutableList<DirectoryItemModel>
     ) {

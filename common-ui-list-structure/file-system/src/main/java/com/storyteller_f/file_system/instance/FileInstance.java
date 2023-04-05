@@ -133,11 +133,11 @@ public abstract class FileInstance {
      * 应该仅用于目录。可能会抛出异常，内部不会处理。
      */
     @WorkerThread
-    protected abstract void list(List<FileItemModel> fileItems, List<DirectoryItemModel> directoryItems);
+    protected abstract void listInternal(List<FileItemModel> fileItems, List<DirectoryItemModel> directoryItems) throws Exception;
 
-    public FilesAndDirectories listSafe() {
+    public FilesAndDirectories list() throws Exception {
         FilesAndDirectories filesAndDirectories = new FilesAndDirectories(buildFilesContainer(), buildDirectoryContainer());
-        list(filesAndDirectories.getFiles(), filesAndDirectories.getDirectories());
+        listInternal(filesAndDirectories.getFiles(), filesAndDirectories.getDirectories());
         return filesAndDirectories;
     }
 

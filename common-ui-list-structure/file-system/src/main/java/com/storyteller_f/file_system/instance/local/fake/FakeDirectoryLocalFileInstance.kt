@@ -47,7 +47,7 @@ class FakeDirectoryLocalFileInstance(path: String, val context: Context) :
     override fun getFileLength() = -1L
 
     @WorkerThread
-    override fun list(
+    override fun listInternal(
         fileItems: MutableList<FileItemModel>,
         directoryItems: MutableList<DirectoryItemModel>
     ) {

@@ -35,7 +35,6 @@ import com.storyteller_f.giant_explorer.database.FileSizeRecordDatabase
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileBinding
 import com.storyteller_f.giant_explorer.model.FileModel
 import com.storyteller_f.giant_explorer.pc_end_on
-import com.storyteller_f.giant_explorer.service.FtpFileInstance
 import com.storyteller_f.sort_ui.SortChain
 import com.storyteller_f.sort_ui.SortDialog
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
@@ -206,17 +205,7 @@ fun fileServiceBuilder(
         val listSafe = suspendCancellableCoroutine { continuation ->
             thread {
                 try {
-                    searchQuery.path.also {
-                        if (it is DocumentLocalFileInstance) {
-                            if (!it.exists()) {
-                                it.initDocumentFile()
-                            }
-                        } else if (it is FtpFileInstance) {
-                            if (!it.exists()) {
-                                it.initCurrentFile()
-                            }
-                        }
-                    }.listSafe().run {
+                    searchQuery.path.list().run {
                         continuation.resumeWith(Result.success(this))
                     }
                 } catch (e: Exception) {

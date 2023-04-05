@@ -245,8 +245,11 @@ public class DocumentLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
-    public void list(List<FileItemModel> files, List<DirectoryItemModel> directories) {
-        DocumentFile[] documentFiles = current.listFiles();
+    public void listInternal(List<FileItemModel> files, List<DirectoryItemModel> directories) throws Exception {
+        DocumentFile c = current;
+        if (c == null) initDocumentFile();
+        if (c == null) throw new Exception("no permission");
+        DocumentFile[] documentFiles = c.listFiles();
         for (DocumentFile documentFile : documentFiles) {
             if (needStop()) break;
             String documentFileName = documentFile.getName();

@@ -34,7 +34,7 @@ class AppLocalFileInstance(context: Context, path: String) : BaseContextFileInst
 
     override fun getFileOutputStream() = FileOutputStream(publicSourceDir)
 
-    override fun list(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
+    override fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
         TODO("Not yet implemented")
     }
 

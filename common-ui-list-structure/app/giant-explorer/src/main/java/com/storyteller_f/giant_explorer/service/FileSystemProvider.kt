@@ -43,7 +43,7 @@ class FileSystemProvider : ContentProvider() {
     }
 
     private fun queryFileInstanceChild(fileInstance: FileInstance): MatrixCursor {
-        val list = fileInstance.listSafe()
+        val list = fileInstance.list()
         Log.i(TAG, "queryFileInstance: ${fileInstance.path} ${list.directories.size} ${list.files.size}")
         val matrixCursor = MatrixCursor(fileProjection)
         val singleton = MimeTypeMap.getSingleton()

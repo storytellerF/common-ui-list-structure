@@ -65,7 +65,7 @@ class FileCopyOp(
     }
 
     private fun copyDirectoryFaster(f: FileInstance, t: FileInstance): Boolean {
-        val listSafe = f.listSafe()
+        val listSafe = f.list()
         listSafe.files.forEach {
             if (needStop()) return false
             copyFileFaster(FileInstanceFactory.toChild(f, it.name, true, context, true, task), t)
@@ -170,7 +170,7 @@ class FileDeleteOp(
      */
     private fun deleteDirectory(fileInstance: FileInstance): Boolean {
         try {
-            val listSafe = fileInstance.listSafe()
+            val listSafe = fileInstance.list()
             if (listSafe.files.any {
                     !deleteChildFile(fileInstance, it)
                 }) {

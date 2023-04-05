@@ -38,7 +38,7 @@ abstract class DefaultPluginManager(val context: Context) : GiantExplorerPluginM
     }
 
     override fun listFiles(path: String): List<String> {
-        return getFileInstance(path, context, stoppableTask = StoppableTask.Blocking).listSafe().let { filesAndDirectories ->
+        return getFileInstance(path, context, stoppableTask = StoppableTask.Blocking).list().let { filesAndDirectories ->
             filesAndDirectories.files.map {
                 it.fullPath
             } + filesAndDirectories.directories.map {

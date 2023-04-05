@@ -31,7 +31,7 @@ class StorageLocalFileInstance(val context: Context) :
     override fun getFileLength(): Long = -1L
 
 
-    override fun list(
+    override fun listInternal(
         fileItems: MutableList<FileItemModel>,
         directoryItems: MutableList<DirectoryItemModel>
     ) {

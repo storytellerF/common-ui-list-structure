@@ -6,7 +6,6 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.permissions
-import com.storyteller_f.giant_explorer.control.ftpClients
 import com.storyteller_f.giant_explorer.database.RemoteAccessSpec
 import org.apache.commons.net.PrintCommandListener
 import org.apache.commons.net.ftp.FTPClient
@@ -19,6 +18,8 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.PrintWriter
+
+val ftpClients = mutableMapOf<FtpSpec, FtpInstance>()
 
 class FtpFileInstance(path: String, fileSystemRoot: String, private val spec: FtpSpec) : FileInstance(path, fileSystemRoot) {
     var ftpFile: FTPFile? = null
@@ -69,7 +70,8 @@ class FtpFileInstance(path: String, fileSystemRoot: String, private val spec: Ft
         TODO("Not yet implemented")
     }
 
-    override fun list(fileItems: MutableList<FileItemModel>?, directoryItems: MutableList<DirectoryItemModel>?) {
+    override fun listInternal(fileItems: MutableList<FileItemModel>?, directoryItems: MutableList<DirectoryItemModel>?) {
+
         val listFiles = getInstance()?.listFiles(path)
         listFiles?.forEach {
             val name = it.name

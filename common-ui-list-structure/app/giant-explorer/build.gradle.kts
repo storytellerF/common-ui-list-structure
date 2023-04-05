@@ -134,6 +134,10 @@ dependencies {
     testImplementation("org.mockftpserver:MockFtpServer:3.1.0")
     implementation(project(":compat-ktx"))
     androidTestImplementation("androidx.room:room-testing:2.5.1")
+
+    // https://mvnrepository.com/artifact/com.hierynomus/smbj
+    implementation("com.hierynomus:smbj:0.11.5")
+
 }
 baseApp()
 setupGeneric()

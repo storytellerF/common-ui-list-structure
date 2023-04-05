@@ -1,5 +1,6 @@
 package com.storyteller_f.giant_explorer.database
 
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Entity
@@ -7,13 +8,19 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.storyteller_f.giant_explorer.service.FtpSpec
+import com.storyteller_f.giant_explorer.service.SmbSpec
 import kotlinx.coroutines.flow.Flow
 
-@Entity(tableName = "remote-access", primaryKeys = ["server", "port", "user", "password"])
-class RemoteAccessSpec(val server: String = "", val port: Int = 0, val user: String = "", val password: String = "") {
+@Entity(tableName = "remote-access", primaryKeys = ["server", "port", "user", "password", "share"])
+class RemoteAccessSpec(val server: String = "", val port: Int = 0, val user: String = "", val password: String = "", @ColumnInfo(defaultValue = "") val share: String = "") {
     fun toFtpSpec(): FtpSpec {
         return FtpSpec(server, port, user, password)
     }
+
+    fun toSmbSpec(): SmbSpec {
+        return SmbSpec(server, port, user, password, share)
+    }
+
 }
 
 @Dao

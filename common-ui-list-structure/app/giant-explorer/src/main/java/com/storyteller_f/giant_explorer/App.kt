@@ -125,7 +125,7 @@ class FolderWorker(context: Context, workerParams: WorkerParameters) :
             if (record != null && record.lastUpdateTime > fileInstance.directory.lastModifiedTime) return WorkerResult.SizeWorker(
                 record.size
             )
-            val listSafe = fileInstance.listSafe()
+            val listSafe = fileInstance.list()
             val mapNullNull = listSafe.directories.map {
                 if (isStopped) return WorkerResult.Stopped
                 work(context, it.fullPath)
@@ -172,7 +172,7 @@ class MDWorker(context: Context, workerParams: WorkerParameters) :
     override suspend fun work(context: Context, path: String): WorkerResult {
         return try {
             val fileInstance = getFileInstanceAsync(path, context)
-            val listSafe = fileInstance.listSafe()
+            val listSafe = fileInstance.list()
             listSafe.directories.mapNullNull {
                 if (isStopped) return WorkerResult.Stopped
                 work(context, it.fullPath)
@@ -210,7 +210,7 @@ class TorrentWorker(context: Context, workerParams: WorkerParameters) :
     override suspend fun work(context: Context, path: String): WorkerResult {
         return try {
             val fileInstance = getFileInstanceAsync(path, context)
-            val listSafe = fileInstance.listSafe()
+            val listSafe = fileInstance.list()
             listSafe.directories.mapNullNull {
                 if (isStopped) return WorkerResult.Stopped
                 work(context, it.fullPath)
