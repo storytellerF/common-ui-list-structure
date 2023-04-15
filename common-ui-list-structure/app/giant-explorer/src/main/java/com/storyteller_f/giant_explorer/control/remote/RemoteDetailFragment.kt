@@ -16,11 +16,12 @@ import com.storyteller_f.common_ui.waitingDialog
 import com.storyteller_f.common_vm_ktx.GenericValueModel
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.giant_explorer.database.RemoteAccessSpec
+import com.storyteller_f.giant_explorer.database.RemoteSpec
+import com.storyteller_f.giant_explorer.database.SmbSpec
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentRemoteDetailBinding
 import com.storyteller_f.giant_explorer.service.FtpInstance
-import com.storyteller_f.giant_explorer.service.FtpSpec
-import com.storyteller_f.giant_explorer.service.SmbSpec
+import com.storyteller_f.giant_explorer.service.FtpsInstance
 import com.storyteller_f.giant_explorer.service.requireDiskShare
 import com.storyteller_f.giant_explorer.service.sftpClient
 import kotlinx.coroutines.Dispatchers
@@ -31,14 +32,13 @@ object RemoteAccessType {
     const val ftp = "ftp"
     const val sftp = "sftp"
     const val smb = "smb"
+    const val ftpes = "ftpes"
+    const val ftps = "ftps"
 
-    val list = listOf("", smb, sftp, ftp)
+    val list = listOf("", smb, sftp, ftp, ftpes, ftps)
 }
 
 
-/**
- * A simple [Fragment] subclass as the second destination in the navigation.
- */
 class RemoteDetailFragment : Fragment() {
     companion object {
         private const val TAG = "RemoteDetailFragment"
@@ -46,8 +46,6 @@ class RemoteDetailFragment : Fragment() {
 
     private var _binding: FragmentRemoteDetailBinding? = null
 
-    // This property is only valid between onCreateView and
-    // onDestroyView.
     private val binding get() = _binding!!
     private val model by vm({}) {
         GenericValueModel<RemoteAccessSpec>()
@@ -81,7 +79,7 @@ class RemoteDetailFragment : Fragment() {
                 binding.typeGroup.check(i)
             }
         }
-        binding.typeGroup.setOnCheckedChangeListener { group, checkedId ->
+        binding.typeGroup.setOnCheckedChangeListener { _, checkedId ->
             Log.i(TAG, "onViewCreated: $checkedId")
             mode.data.value = RemoteAccessType.list[checkedId]
             if (binding.portInput.text.isEmpty()) {
@@ -107,6 +105,12 @@ class RemoteDetailFragment : Fragment() {
                         RemoteAccessType.ftp -> withContext(Dispatchers.IO) {
                             FtpInstance(spec()).open()
                         }
+                        RemoteAccessType.ftpes -> withContext(Dispatchers.IO) {
+                            FtpsInstance(spec()).open()
+                        }
+                        RemoteAccessType.ftps -> withContext(Dispatchers.IO) {
+                            FtpsInstance(spec()).open()
+                        }
 
                         else -> withContext(Dispatchers.IO) {
                             spec().sftpClient()
@@ -129,13 +133,13 @@ class RemoteDetailFragment : Fragment() {
         }
     }
 
-    private fun spec(): FtpSpec {
-        return FtpSpec(
+    private fun spec(): RemoteSpec {
+        return RemoteSpec(
             binding.serverInput.text.toString(),
             binding.portInput.text.toString().toInt(),
             binding.userInput.text.toString(),
             binding.passwordInput.text.toString(),
-            mode.data.value == RemoteAccessType.sftp
+            mode.data.value.toString()
         )
     }
 

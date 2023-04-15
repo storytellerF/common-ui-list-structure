@@ -3,6 +3,7 @@ package com.storyteller_f.giant_explorer.service
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
+import com.storyteller_f.giant_explorer.database.RemoteSpec
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.sftp.FileAttributes
 import net.schmizz.sshj.sftp.FileMode
@@ -15,9 +16,9 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
-val sftpChannels = mutableMapOf<FtpSpec, SFTPClient>()
+val sftpChannels = mutableMapOf<RemoteSpec, SFTPClient>()
 
-class SFtpFileInstance(path: String, fileSystemRoot: String, val spec: FtpSpec) : FileInstance(path, fileSystemRoot) {
+class SFtpFileInstance(path: String, fileSystemRoot: String, val spec: RemoteSpec) : FileInstance(path, fileSystemRoot) {
     var remoteFile: RemoteFile? = null
     var attribute: FileAttributes? = null
     init {
@@ -143,7 +144,7 @@ class SFtpFileInstance(path: String, fileSystemRoot: String, val spec: FtpSpec) 
     }
 }
 
-fun FtpSpec.sftpClient(): SFTPClient {
+fun RemoteSpec.sftpClient(): SFTPClient {
     val sshClient = SSHClient()
     sshClient.addHostKeyVerifier(PromiscuousVerifier())
     sshClient.connect(server, port)

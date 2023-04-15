@@ -5,11 +5,15 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.permissions
+import com.storyteller_f.giant_explorer.control.remote.RemoteAccessType
 import com.storyteller_f.giant_explorer.database.RemoteSpec
 import org.apache.commons.net.PrintCommandListener
-import org.apache.commons.net.ftp.FTPClient
+import org.apache.commons.net.ftp.FTP
+import org.apache.commons.net.ftp.FTPClientConfig
 import org.apache.commons.net.ftp.FTPFile
 import org.apache.commons.net.ftp.FTPReply
+import org.apache.commons.net.ftp.FTPSClient
+import org.apache.commons.net.util.TrustManagerUtils
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.File
@@ -18,9 +22,9 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.PrintWriter
 
-val ftpClients = mutableMapOf<RemoteSpec, FtpInstance>()
+val ftpsClients = mutableMapOf<RemoteSpec, FtpsInstance>()
 
-class FtpFileInstance(path: String, fileSystemRoot: String, private val spec: RemoteSpec) : FileInstance(path, fileSystemRoot) {
+class FtpsFileInstance(path: String, fileSystemRoot: String, private val spec: RemoteSpec) : FileInstance(path, fileSystemRoot) {
     var ftpFile: FTPFile? = null
 
     companion object {
@@ -43,9 +47,9 @@ class FtpFileInstance(path: String, fileSystemRoot: String, private val spec: Re
         }
     }
 
-    private fun getInstance(): FtpInstance? {
-        val ftpInstance = ftpClients.getOrPut(spec) {
-            FtpInstance(spec)
+    private fun getInstance(): FtpsInstance? {
+        val ftpInstance = ftpsClients.getOrPut(spec) {
+            FtpsInstance(spec)
         }
         if (ftpInstance.connectIfNeed()) {
             return ftpInstance
@@ -159,49 +163,58 @@ class FtpFileInstance(path: String, fileSystemRoot: String, private val spec: Re
 
 }
 
-class FtpInstance(private val spec: RemoteSpec) {
-    private val ftp: FTPClient = FTPClient().apply {
+class FtpsInstance(private val spec: RemoteSpec) {
+    private val ftps: FTPSClient = FTPSClient(spec.type == RemoteAccessType.ftps).apply {
         addProtocolCommandListener(PrintCommandListener(PrintWriter(System.out)))
+        val ftpClientConfig = FTPClientConfig()
+        configure(ftpClientConfig)
     }
 
     @Throws(IOException::class)
     fun open(): Boolean {
-        ftp.connect(spec.server, spec.port)
-        val reply = ftp.replyCode
+        connect()
+        val login = ftps.login(spec.user, spec.password)
+        ftps.enterLocalPassiveMode()
+        return login
+    }
+
+    private fun connect() {
+        if (ftps.isConnected) return
+        ftps.connect(spec.server, spec.port)
+        val reply = ftps.replyCode
         if (!FTPReply.isPositiveCompletion(reply)) {
-            ftp.disconnect()
+            ftps.disconnect()
             throw IOException("Exception in connecting to FTP Server")
         }
-        return ftp.login(spec.user, spec.password)
     }
 
     fun get(path: String?): FTPFile? {
-        return ftp.mlistFile(path)
+        return ftps.mlistFile(path)
     }
 
     @Throws(IOException::class)
     fun close() {
-        ftp.disconnect()
+        ftps.disconnect()
     }
 
     @Throws(IOException::class)
     fun listFiles(path: String?): Array<out FTPFile>? {
-        return ftp.listFiles(path)
+        return ftps.listFiles(path)
     }
 
     @Throws(IOException::class)
     fun downloadFile(source: String?, destination: String?) {
         val out = FileOutputStream(destination)
-        ftp.retrieveFile(source, out)
+        ftps.retrieveFile(source, out)
     }
 
     @Throws(IOException::class)
     fun putFileToPath(file: File?, path: String?) {
-        ftp.storeFile(path, FileInputStream(file))
+        ftps.storeFile(path, FileInputStream(file))
     }
 
     fun connectIfNeed(): Boolean {
-        return if (ftp.isConnected) true
+        return if (ftps.isAvailable) true
         else try {
             open()
         } catch (e: Exception) {

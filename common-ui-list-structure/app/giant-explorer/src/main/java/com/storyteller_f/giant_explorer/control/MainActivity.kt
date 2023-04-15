@@ -32,6 +32,8 @@ import com.storyteller_f.giant_explorer.control.plugin.stoppable
 import com.storyteller_f.giant_explorer.control.remote.RemoteAccessType
 import com.storyteller_f.giant_explorer.control.remote.RemoteManagerActivity
 import com.storyteller_f.giant_explorer.control.root.RootAccessActivity
+import com.storyteller_f.giant_explorer.database.RemoteSpec
+import com.storyteller_f.giant_explorer.database.SmbSpec
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.ActivityMainBinding
 import com.storyteller_f.giant_explorer.dialog.FileOperationDialog
@@ -40,10 +42,9 @@ import com.storyteller_f.giant_explorer.service.FileOperateBinder
 import com.storyteller_f.giant_explorer.service.FileOperateService
 import com.storyteller_f.giant_explorer.service.FileService
 import com.storyteller_f.giant_explorer.service.FtpFileInstance
-import com.storyteller_f.giant_explorer.service.FtpSpec
+import com.storyteller_f.giant_explorer.service.FtpsFileInstance
 import com.storyteller_f.giant_explorer.service.SFtpFileInstance
 import com.storyteller_f.giant_explorer.service.SmbFileInstance
-import com.storyteller_f.giant_explorer.service.SmbSpec
 import com.storyteller_f.giant_explorer.view.PathMan
 import com.storyteller_f.multi_core.StoppableTask
 import com.storyteller_f.ui_list.core.*
@@ -82,13 +83,16 @@ suspend fun getFileInstanceAsync(path: String, context: Context, root: String = 
 
 fun getFileInstance(path: String, context: Context, root: String = FileInstanceFactory.publicFileSystemRoot, stoppableTask: StoppableTask = StoppableTask.Blocking): FileInstance {
     if (root.startsWith("ftp://")) {
-        return FtpFileInstance(path, root, FtpSpec.parse(root))
+        return FtpFileInstance(path, root, RemoteSpec.parse(root))
     }
     if (root.startsWith("smb://")) {
         return SmbFileInstance(path, root, SmbSpec.parse(root))
     }
     if (root.startsWith("sftp://")) {
-        return SFtpFileInstance(path, root, FtpSpec.parse(root))
+        return SFtpFileInstance(path, root, RemoteSpec.parse(root))
+    }
+    if (root.startsWith("ftpes://") || root.startsWith("ftps://")) {
+        return FtpsFileInstance(path, root, RemoteSpec.parse(root))
     }
     return FileInstanceFactory.getFileInstance(path, context, root, stoppableTask)
 }

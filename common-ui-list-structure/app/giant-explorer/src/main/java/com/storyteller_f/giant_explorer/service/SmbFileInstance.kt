@@ -1,6 +1,5 @@
 package com.storyteller_f.giant_explorer.service
 
-import android.net.Uri
 import com.hierynomus.msfscc.fileinformation.FileAllInformation
 import com.hierynomus.smbj.SMBClient
 import com.hierynomus.smbj.auth.AuthenticationContext
@@ -8,8 +7,7 @@ import com.hierynomus.smbj.share.DiskShare
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.giant_explorer.control.remote.RemoteAccessType
-import com.storyteller_f.giant_explorer.database.RemoteAccessSpec
+import com.storyteller_f.giant_explorer.database.SmbSpec
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.File
@@ -150,27 +148,5 @@ class SmbFileInstance(path: String, fileSystemRoot: String, val smbSpec: SmbSpec
 
     override fun changeTo(path: String) {
         TODO("Not yet implemented")
-    }
-}
-
-data class SmbSpec(val server: String, val port: Int, val user: String, val password: String, val share: String) {
-    fun toUri(): String {
-        return "smb://$user:$password@$server:$port:$share"
-    }
-
-    fun toRemote(): RemoteAccessSpec {
-        return RemoteAccessSpec(server, port, user, password, share, RemoteAccessType.smb)
-    }
-
-    companion object {
-        fun parse(url: String): SmbSpec {
-            val parse = Uri.parse(url)
-            val authority = parse.authority!!
-            val split = authority.split("@")
-            val (user, pass) = split.first().split(":")
-            val (loc, port, share) = split.last().split(":")
-            return SmbSpec(loc, port.toInt(), user, pass, share)
-        }
-
     }
 }

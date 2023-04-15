@@ -2,7 +2,7 @@ package com.storyteller_f.giant_explorer
 
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.giant_explorer.service.FtpInstance
-import com.storyteller_f.giant_explorer.service.FtpSpec
+import com.storyteller_f.giant_explorer.service.RemoteSpec
 import com.storyteller_f.multi_core.StoppableTask
 import org.junit.After
 import org.junit.Before
@@ -15,7 +15,6 @@ import org.mockftpserver.fake.filesystem.FileSystem
 import org.mockftpserver.fake.filesystem.UnixFakeFileSystem
 import java.io.File
 import java.io.IOException
-import java.net.URISyntaxException
 import java.net.URL
 import java.nio.file.Files
 
@@ -42,7 +41,7 @@ class ExampleUnitTest {
             start()
         }
 
-        ftpInstance = FtpInstance(FtpSpec("localhost", fakeFtpServer!!.serverControlPort, "user", "password")).apply {
+        ftpInstance = FtpInstance(RemoteSpec("localhost", fakeFtpServer!!.serverControlPort, "user", "password")).apply {
             open()
         }
     }
