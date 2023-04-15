@@ -22,6 +22,8 @@ import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentRemoteDetailBinding
 import com.storyteller_f.giant_explorer.service.FtpInstance
 import com.storyteller_f.giant_explorer.service.FtpsInstance
+import com.storyteller_f.giant_explorer.service.WebDavFileInstance
+import com.storyteller_f.giant_explorer.service.WebDavInstance
 import com.storyteller_f.giant_explorer.service.requireDiskShare
 import com.storyteller_f.giant_explorer.service.sftpClient
 import kotlinx.coroutines.Dispatchers
@@ -34,8 +36,9 @@ object RemoteAccessType {
     const val smb = "smb"
     const val ftpes = "ftpes"
     const val ftps = "ftps"
+    const val webDav = "webdav"
 
-    val list = listOf("", smb, sftp, ftp, ftpes, ftps)
+    val list = listOf("", smb, sftp, ftp, ftpes, ftps, webDav)
 }
 
 
@@ -110,6 +113,9 @@ class RemoteDetailFragment : Fragment() {
                         }
                         RemoteAccessType.ftps -> withContext(Dispatchers.IO) {
                             FtpsInstance(spec()).open()
+                        }
+                        RemoteAccessType.webDav -> withContext(Dispatchers.IO) {
+                            WebDavInstance(spec()).instance
                         }
 
                         else -> withContext(Dispatchers.IO) {

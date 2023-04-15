@@ -104,7 +104,7 @@ dependencies {
     // Optional: Provides remote file system support
     implementation("com.github.topjohnwu.libsu:nio:${libsuVersion}")
 
-    implementation("com.github.bumptech.glide:glide:4.15.0")
+    implementation("com.github.bumptech.glide:glide:4.15.1")
 
     implementation(project(":app:giant-explorer-plugin-core"))
     implementation("androidx.webkit:webkit:1.6.1")
@@ -140,6 +140,7 @@ dependencies {
     implementation("com.hierynomus:sshj:0.35.0")
     implementation("com.madgag.spongycastle:core:1.58.0.0")
     implementation("com.madgag.spongycastle:prov:1.58.0.0")
+    implementation("com.github.thegrizzlylabs:sardine-android:v0.8")
 }
 baseApp()
 setupGeneric()

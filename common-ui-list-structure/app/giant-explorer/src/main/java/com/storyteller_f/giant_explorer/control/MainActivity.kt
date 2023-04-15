@@ -45,6 +45,7 @@ import com.storyteller_f.giant_explorer.service.FtpFileInstance
 import com.storyteller_f.giant_explorer.service.FtpsFileInstance
 import com.storyteller_f.giant_explorer.service.SFtpFileInstance
 import com.storyteller_f.giant_explorer.service.SmbFileInstance
+import com.storyteller_f.giant_explorer.service.WebDavFileInstance
 import com.storyteller_f.giant_explorer.view.PathMan
 import com.storyteller_f.multi_core.StoppableTask
 import com.storyteller_f.ui_list.core.*
@@ -52,6 +53,7 @@ import com.storyteller_f.ui_list.event.viewBinding
 import com.topjohnwu.superuser.Shell
 import com.topjohnwu.superuser.ipc.RootService
 import com.topjohnwu.superuser.nio.FileSystemManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -93,6 +95,9 @@ fun getFileInstance(path: String, context: Context, root: String = FileInstanceF
     }
     if (root.startsWith("ftpes://") || root.startsWith("ftps://")) {
         return FtpsFileInstance(path, root, RemoteSpec.parse(root))
+    }
+    if (root.startsWith("webdav://")) {
+        return WebDavFileInstance(path, root, RemoteSpec.parse(root))
     }
     return FileInstanceFactory.getFileInstance(path, context, root, stoppableTask)
 }

@@ -11,45 +11,57 @@
         android:layout_height="match_parent"
         android:padding="16dp">
 
-        <RadioGroup
-            android:id="@+id/type_group"
-            android:layout_width="wrap_content"
+        <HorizontalScrollView
+            android:id="@+id/radio_group"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <RadioButton
+            <RadioGroup
+                android:id="@+id/type_group"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="is smb" />
+                android:orientation="horizontal">
 
-            <RadioButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="is sftp" />
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="is smb" />
 
-            <RadioButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="is ftp" />
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="is sftp" />
 
-            <RadioButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="is ftps explicit" />
-            <RadioButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="is ftps implicit" />
-        </RadioGroup>
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="is ftp" />
+
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="is ftps explicit" />
+
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="is ftps implicit" />
+
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="is webdav" />
+            </RadioGroup>
+        </HorizontalScrollView>
 
         <EditText
             android:id="@+id/server_input"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:hint="server"
-            app:layout_constraintTop_toBottomOf="@id/type_group" />
+            app:layout_constraintTop_toBottomOf="@id/radio_group" />
 
         <EditText
             android:id="@+id/port_input"
