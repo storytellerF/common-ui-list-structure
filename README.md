@@ -116,3 +116,9 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
     }
 }
 ```
+
+## Build
+
+```shell
+bash build_all.sh
+```
