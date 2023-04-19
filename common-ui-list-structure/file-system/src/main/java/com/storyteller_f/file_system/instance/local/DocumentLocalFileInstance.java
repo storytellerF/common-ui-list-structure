@@ -10,6 +10,7 @@ import androidx.documentfile.provider.DocumentFile;
 
 import com.storyteller_f.file_system.FileInstanceFactory;
 import com.storyteller_f.file_system.FileSystemUriSaver;
+import com.storyteller_f.file_system.instance.BaseContextFileInstance;
 import com.storyteller_f.file_system.model.DirectoryItemModel;
 import com.storyteller_f.file_system.model.FileItemModel;
 import com.storyteller_f.file_system.util.FileInstanceUtility;
@@ -31,7 +32,7 @@ import java.io.OutputStreamWriter;
 import java.util.Arrays;
 import java.util.List;
 
-public class DocumentLocalFileInstance extends LocalFileInstance {
+public class DocumentLocalFileInstance extends BaseContextFileInstance {
     private static final String TAG = "DocumentLocalFileInstan";
     public static final String mountedKey = "mounted";
     public static final String emulatedKey = "emulated";
@@ -173,7 +174,7 @@ public class DocumentLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
-    public LocalFileInstance toChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) throws Exception {
+    public BaseContextFileInstance toChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) throws Exception {
         if (!exists()) {
             Log.e(TAG, "toChild: 未经过初始化或者文件不存在：" + getPath());
             return null;
@@ -278,7 +279,7 @@ public class DocumentLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
-    public LocalFileInstance toParent() throws Exception {
+    public BaseContextFileInstance toParent() throws Exception {
         File parentFile = file.getParentFile();
         if (parentFile == null) {
             throw new Exception("到头了，无法继续向上寻找");

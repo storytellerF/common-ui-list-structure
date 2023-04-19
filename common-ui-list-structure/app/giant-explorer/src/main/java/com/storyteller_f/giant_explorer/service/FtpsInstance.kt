@@ -57,6 +57,14 @@ class FtpsFileInstance(path: String, fileSystemRoot: String, private val spec: R
         return null
     }
 
+    override fun getFile(): FileItemModel {
+        TODO("Not yet implemented")
+    }
+
+    override fun getDirectory(): DirectoryItemModel {
+        TODO("Not yet implemented")
+    }
+
     override fun getBufferedReader(): BufferedReader {
         TODO("Not yet implemented")
     }

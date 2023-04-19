@@ -21,9 +21,6 @@ val sftpChannels = mutableMapOf<RemoteSpec, SFTPClient>()
 class SFtpFileInstance(path: String, fileSystemRoot: String, val spec: RemoteSpec) : FileInstance(path, fileSystemRoot) {
     var remoteFile: RemoteFile? = null
     var attribute: FileAttributes? = null
-    init {
-        initCurrent()
-    }
 
     private fun initCurrent(): Pair<RemoteFile, FileAttributes> {
         val orPut = getInstance()
@@ -50,6 +47,14 @@ class SFtpFileInstance(path: String, fileSystemRoot: String, val spec: RemoteSpe
             attributes= initCurrent.second
         }
         return c to attributes
+    }
+
+    override fun getFile(): FileItemModel {
+        TODO("Not yet implemented")
+    }
+
+    override fun getDirectory(): DirectoryItemModel {
+        TODO("Not yet implemented")
     }
 
     override fun getBufferedReader(): BufferedReader {

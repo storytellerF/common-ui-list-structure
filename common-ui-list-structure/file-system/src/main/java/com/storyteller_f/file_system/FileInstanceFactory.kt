@@ -7,7 +7,7 @@ import android.os.StatFs
 import androidx.annotation.WorkerThread
 import androidx.core.net.toUri
 import com.storyteller_f.file_system.instance.FileInstance
-import com.storyteller_f.file_system.instance.RootAccessFileInstance
+import com.storyteller_f.file_system.instance.local.RootAccessFileInstance
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.file_system.instance.local.RegularLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.EmulatedLocalFileInstance

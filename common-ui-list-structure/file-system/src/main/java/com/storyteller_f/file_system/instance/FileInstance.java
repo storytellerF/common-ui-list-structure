@@ -2,7 +2,6 @@ package com.storyteller_f.file_system.instance;
 
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 import androidx.core.util.ObjectsCompat;
 
@@ -10,7 +9,6 @@ import com.storyteller_f.file_system.model.DirectoryItemModel;
 import com.storyteller_f.file_system.model.FileItemModel;
 import com.storyteller_f.file_system.model.FileSystemItemModel;
 import com.storyteller_f.file_system.model.FilesAndDirectories;
-import com.storyteller_f.file_system.util.FileUtility;
 import com.storyteller_f.multi_core.StoppableTask;
 
 import java.io.BufferedInputStream;
@@ -62,18 +60,11 @@ public abstract class FileInstance {
         return ObjectsCompat.hash(file.getAbsolutePath());
     }
 
-    public FileItemModel getFile() {
-        FileItemModel fileItemModel = new FileItemModel(file.getName(), file.getAbsolutePath(), file.isHidden(), file.lastModified(), false, FileUtility.getExtension(getName()));
-        fileItemModel.editAccessTime(file);
-        return fileItemModel;
-    }
-
-    public DirectoryItemModel getDirectory() {
-        DirectoryItemModel directoryItemModel = new DirectoryItemModel(file.getName(), file.getAbsolutePath(), file.isHidden(), file.lastModified(), false);
-        directoryItemModel.editAccessTime(file);
-        return directoryItemModel;
-    }
-
+    @WorkerThread
+    public abstract FileItemModel getFile();
+    @WorkerThread
+    public abstract DirectoryItemModel getDirectory();
+    @WorkerThread
     public FileSystemItemModel getFileSystemItem() throws Exception {
         if (isFile()) return getFile();
         else return getDirectory();
@@ -88,6 +79,7 @@ public abstract class FileInstance {
      *
      * @return 文件字节长度
      */
+    @WorkerThread
     public long getFileLength() {
         return file.length();
     }
@@ -95,18 +87,19 @@ public abstract class FileInstance {
     /**
      * 应该仅用于文件，可以使用readLine 方法
      */
+    @WorkerThread
     public abstract BufferedReader getBufferedReader() throws Exception;
-
+    @WorkerThread
     public abstract BufferedWriter getBufferedWriter() throws Exception;
-
+    @WorkerThread
     public abstract FileInputStream getFileInputStream() throws FileNotFoundException;
-
+    @WorkerThread
     public abstract FileOutputStream getFileOutputStream() throws FileNotFoundException;
-
+    @WorkerThread
     public InputStreamReader getInputStreamReader(String charset) throws Exception {
         return new InputStreamReader(getBufferedInputSteam(), charset);
     }
-
+    @WorkerThread
     public OutputStreamWriter getOutputStreamWriter(String charset) throws Exception {
         return new OutputStreamWriter(getBufferedOutputStream(), charset);
     }
@@ -114,15 +107,15 @@ public abstract class FileInstance {
     public InputStreamReader getInputStreamReader(Charset charset) throws Exception {
         return new InputStreamReader(getBufferedInputSteam(), charset);
     }
-
+    @WorkerThread
     public OutputStreamWriter getOutputStreamWriter(Charset charset) throws Exception {
         return new OutputStreamWriter(getBufferedOutputStream(), charset);
     }
-
+    @WorkerThread
     public BufferedOutputStream getBufferedOutputStream() throws Exception {
         return new BufferedOutputStream(getFileOutputStream());
     }
-
+    @WorkerThread
     public BufferedInputStream getBufferedInputSteam() throws Exception {
         return new BufferedInputStream(new FileInputStream(file.getAbsolutePath()));
     }
@@ -136,6 +129,7 @@ public abstract class FileInstance {
     @WorkerThread
     protected abstract void listInternal(@NonNull List<FileItemModel> fileItems, @NonNull List<DirectoryItemModel> directoryItems) throws Exception;
 
+    @WorkerThread
     public FilesAndDirectories list() throws Exception {
         FilesAndDirectories filesAndDirectories = new FilesAndDirectories(buildFilesContainer(), buildDirectoryContainer());
         listInternal(filesAndDirectories.getFiles(), filesAndDirectories.getDirectories());
@@ -157,7 +151,12 @@ public abstract class FileInstance {
 
             @Override
             public boolean addAll(@NonNull Collection<? extends FileItemModel> c) {
-                return false;
+                for (FileItemModel fileItemModel : c) {
+                    if (!add(fileItemModel)) {
+                        return false;
+                    }
+                }
+                return true;
             }
 
             @Override
@@ -199,6 +198,7 @@ public abstract class FileInstance {
      *
      * @return true 代表是文件
      */
+    @WorkerThread
     public abstract boolean isFile() throws Exception;
 
     protected boolean needStop() {
@@ -212,8 +212,9 @@ public abstract class FileInstance {
      *
      * @return true代表存在
      */
+    @WorkerThread
     public abstract boolean exists();
-
+    @WorkerThread
     public abstract boolean isDirectory() throws Exception;
 
     /**
@@ -221,6 +222,7 @@ public abstract class FileInstance {
      *
      * @return 返回是否删除成功
      */
+    @WorkerThread
     public abstract boolean deleteFileOrEmptyDirectory() throws Exception;
 
     /**
@@ -229,6 +231,7 @@ public abstract class FileInstance {
      * @param newName 新的文件名，不包含路径
      * @return 返回是否重命名成功
      */
+    @WorkerThread
     public abstract boolean rename(String newName);
 
     /**
@@ -238,6 +241,7 @@ public abstract class FileInstance {
      * @return 返回他的文件夹
      * @throws Exception 无法获得父文件夹
      */
+    @WorkerThread
     public abstract FileInstance toParent() throws Exception;
 
     /**
@@ -246,19 +250,21 @@ public abstract class FileInstance {
      *
      * @throws Exception 无法变成父文件夹
      */
+    @WorkerThread
     public abstract void changeToParent() throws Exception;
 
     @WorkerThread
     public abstract long getDirectorySize();
 
+    @WorkerThread
     public String getPath() {
         return file.getAbsolutePath();
     }
-
+    @WorkerThread
     public abstract boolean createFile() throws IOException;
-
+    @WorkerThread
     public abstract boolean isHidden();
-
+    @WorkerThread
     public abstract boolean createDirectory() throws IOException;
 
 
@@ -271,11 +277,13 @@ public abstract class FileInstance {
      * @param createWhenNotExists 是否创建
      * @return 返回子对象
      */
+    @WorkerThread
     public abstract FileInstance toChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) throws Exception;
 
     /**
      * 不应该考虑能否转换成功
      */
+    @WorkerThread
     public abstract void changeToChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) throws Exception;
 
     /**
@@ -285,6 +293,7 @@ public abstract class FileInstance {
      *
      * @param path 新的文件路径，路径的根应该和当前对象符合，如果需要跨根跳转，需要使用FileInstanceFactory完成
      */
+    @WorkerThread
     public abstract void changeTo(@NonNull String path);
 
     /**
@@ -292,6 +301,7 @@ public abstract class FileInstance {
      *
      * @return 父路径
      */
+    @WorkerThread
     public String getParent() {
         return file.getParent();
     }
@@ -300,14 +310,17 @@ public abstract class FileInstance {
         return true;
     }
 
+    @WorkerThread
     public boolean isSymbolicLink() {
         return false;
     }
 
+    @WorkerThread
     public boolean isSoftLink() {
         return false;
     }
 
+    @WorkerThread
     public boolean isHardLink() {
         return false;
     }

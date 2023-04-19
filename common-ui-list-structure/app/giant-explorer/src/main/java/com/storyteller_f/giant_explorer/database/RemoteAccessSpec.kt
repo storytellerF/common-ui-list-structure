@@ -11,23 +11,23 @@ import androidx.room.Query
 import com.storyteller_f.giant_explorer.control.remote.RemoteAccessType
 import kotlinx.coroutines.flow.Flow
 
-data class SmbSpec(val server: String, val port: Int, val user: String, val password: String, val share: String) {
+data class ShareSpec(val server: String, val port: Int, val user: String, val password: String, val type: String, val share: String) {
     fun toUri(): String {
-        return "smb://$user:$password@$server:$port:$share"
+        return "$type://$user:$password@$server:$port:$share"
     }
 
     fun toRemote(): RemoteAccessSpec {
-        return RemoteAccessSpec(server, port, user, password, share, RemoteAccessType.smb)
+        return RemoteAccessSpec(server, port, user, password, share, type)
     }
 
     companion object {
-        fun parse(url: String): SmbSpec {
+        fun parse(url: String): ShareSpec {
             val parse = Uri.parse(url)
             val authority = parse.authority!!
             val split = authority.split("@")
             val (user, pass) = split.first().split(":")
             val (loc, port, share) = split.last().split(":")
-            return SmbSpec(loc, port.toInt(), user, pass, share)
+            return ShareSpec(loc, port.toInt(), user, pass, parse.scheme!!, share)
         }
 
     }
@@ -70,8 +70,8 @@ class RemoteAccessSpec(
         return RemoteSpec(server, port, user, password, type)
     }
 
-    fun toSmbSpec(): SmbSpec {
-        return SmbSpec(server, port, user, password, share)
+    fun toShareSpec(): ShareSpec {
+        return ShareSpec(server, port, user, password, type, share)
     }
 
 }

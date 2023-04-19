@@ -107,6 +107,18 @@ public class RegularLocalFileInstance extends LocalFileInstance {
         return new FileOutputStream(file);
     }
 
+    public FileItemModel getFile() {
+        FileItemModel fileItemModel = new FileItemModel(file.getName(), file.getAbsolutePath(), file.isHidden(), file.lastModified(), false, FileUtility.getExtension(getName()));
+        fileItemModel.editAccessTime(file);
+        return fileItemModel;
+    }
+
+    public DirectoryItemModel getDirectory() {
+        DirectoryItemModel directoryItemModel = new DirectoryItemModel(file.getName(), file.getAbsolutePath(), file.isHidden(), file.lastModified(), false);
+        directoryItemModel.editAccessTime(file);
+        return directoryItemModel;
+    }
+
     @Override
     @WorkerThread
     public void listInternal(@NonNull List<FileItemModel> fileItems, @NonNull List<DirectoryItemModel> directoryItems) {

@@ -1,4 +1,5 @@
 import com.storyteller_f.version_manager.*
+
 val filterFolder: String by project
 
 class RoomSchemaArgProvider(
@@ -140,7 +141,6 @@ dependencies {
     implementation("com.hierynomus:sshj:0.35.0")
     implementation("com.madgag.spongycastle:core:1.58.0.0")
     implementation("com.madgag.spongycastle:prov:1.58.0.0")
-    implementation("com.github.thegrizzlylabs:sardine-android:v0.8")
 }
 baseApp()
 setupGeneric()

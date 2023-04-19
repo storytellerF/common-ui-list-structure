@@ -14,12 +14,14 @@ import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.navArgs
 import com.storyteller_f.common_ui.SimpleDialogFragment
+import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui.setOnClick
 import com.storyteller_f.common_ui.setVisible
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.giant_explorer.control.getFileInstance
 import com.storyteller_f.giant_explorer.databinding.DialogFilePropertiesBinding
 import com.storyteller_f.giant_explorer.model.FileModel
+import kotlinx.coroutines.launch
 
 class PropertiesDialog : SimpleDialogFragment<DialogFilePropertiesBinding>(DialogFilePropertiesBinding::inflate) {
     private val args by navArgs<PropertiesDialogArgs>()
@@ -33,19 +35,21 @@ class PropertiesDialog : SimpleDialogFragment<DialogFilePropertiesBinding>(Dialo
         super.onViewCreated(view, savedInstanceState)
         binding.lifecycleOwner = viewLifecycleOwner
         val fileInstance = getFileInstance(args.path, requireContext())
-        val length = if (fileInstance.isFile) fileInstance.fileLength
-        else 0
-        binding.model = FileModel(fileInstance.name, fileInstance.path, length, fileInstance.isHidden, fileInstance.fileSystemItem, fileInstance.isSymbolicLink)
-        if (fileInstance.isFile) {
-            binding.videoInfo.setVisible(fileInstance.file.extension == "mp4") {
-                val trimIndent = videoInfo(fileInstance)
-                binding.videoInfo.text = trimIndent
-            }
-            binding.audioInfo.setVisible(fileInstance.file.extension == "mp3") {
-                val mediaMetadataRetriever = MediaMetadataRetriever()
-                mediaMetadataRetriever.setDataSource(fileInstance.path)
-                val duration = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-                binding.audioInfo.text = "duration: $duration ms"
+        scope.launch {
+            val length = if (fileInstance.isFile) fileInstance.fileLength
+            else 0
+            binding.model = FileModel(fileInstance.name, fileInstance.path, length, fileInstance.isHidden, fileInstance.fileSystemItem, fileInstance.isSymbolicLink)
+            if (fileInstance.isFile) {
+                binding.videoInfo.setVisible(fileInstance.file.extension == "mp4") {
+                    val trimIndent = videoInfo(fileInstance)
+                    binding.videoInfo.text = trimIndent
+                }
+                binding.audioInfo.setVisible(fileInstance.file.extension == "mp3") {
+                    val mediaMetadataRetriever = MediaMetadataRetriever()
+                    mediaMetadataRetriever.setDataSource(fileInstance.path)
+                    val duration = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                    binding.audioInfo.text = "duration: $duration ms"
+                }
             }
         }
 

@@ -17,12 +17,11 @@ import com.storyteller_f.common_vm_ktx.GenericValueModel
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.giant_explorer.database.RemoteAccessSpec
 import com.storyteller_f.giant_explorer.database.RemoteSpec
-import com.storyteller_f.giant_explorer.database.SmbSpec
+import com.storyteller_f.giant_explorer.database.ShareSpec
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentRemoteDetailBinding
 import com.storyteller_f.giant_explorer.service.FtpInstance
 import com.storyteller_f.giant_explorer.service.FtpsInstance
-import com.storyteller_f.giant_explorer.service.WebDavFileInstance
 import com.storyteller_f.giant_explorer.service.WebDavInstance
 import com.storyteller_f.giant_explorer.service.requireDiskShare
 import com.storyteller_f.giant_explorer.service.sftpClient
@@ -76,7 +75,7 @@ class RemoteDetailFragment : Fragment() {
 
         mode.data.observe(owner) {
             Log.i(TAG, "onViewCreated: mode $it")
-            binding.shareInput.isVisible = it == RemoteAccessType.smb
+            binding.shareInput.isVisible = it == RemoteAccessType.smb || it == RemoteAccessType.webDav
             val i = RemoteAccessType.list.indexOf(it)
             if (binding.typeGroup.checkedRadioButtonId != i) {
                 binding.typeGroup.check(i)
@@ -101,7 +100,7 @@ class RemoteDetailFragment : Fragment() {
                 waitingDialog {
                     when (mode.data.value) {
                         RemoteAccessType.smb -> withContext(Dispatchers.IO) {
-                            val requireDiskShare = smbSpec().requireDiskShare()
+                            val requireDiskShare = shareSpec().requireDiskShare()
                             requireDiskShare.close()
                         }
 
@@ -115,7 +114,7 @@ class RemoteDetailFragment : Fragment() {
                             FtpsInstance(spec()).open()
                         }
                         RemoteAccessType.webDav -> withContext(Dispatchers.IO) {
-                            WebDavInstance(spec()).instance
+                            WebDavInstance(shareSpec()).instance
                         }
 
                         else -> withContext(Dispatchers.IO) {
@@ -132,7 +131,7 @@ class RemoteDetailFragment : Fragment() {
                 val isSmb = mode.data.value == RemoteAccessType.smb
                 withContext(Dispatchers.IO) {
                     val dao = requireDatabase.remoteAccessDao()
-                    if (isSmb) dao.add(smbSpec().toRemote()) else dao.add(spec().toRemote())
+                    if (isSmb) dao.add(shareSpec().toRemote()) else dao.add(spec().toRemote())
                 }
                 Toast.makeText(requireContext(), "success", Toast.LENGTH_SHORT).show()
             }
@@ -149,12 +148,13 @@ class RemoteDetailFragment : Fragment() {
         )
     }
 
-    private fun smbSpec(): SmbSpec {
-        return SmbSpec(
+    private fun shareSpec(): ShareSpec {
+        return ShareSpec(
             binding.serverInput.text.toString(),
             binding.portInput.text.toString().toInt(),
             binding.userInput.text.toString(),
             binding.passwordInput.text.toString(),
+            mode.data.value.toString(),
             binding.shareInput.text.toString()
         )
     }

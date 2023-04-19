@@ -7,7 +7,7 @@ import com.hierynomus.smbj.share.DiskShare
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.giant_explorer.database.SmbSpec
+import com.storyteller_f.giant_explorer.database.ShareSpec
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.File
@@ -18,22 +18,18 @@ val smbClient by lazy {
     SMBClient()
 }
 
-fun SmbSpec.requireDiskShare(): DiskShare {
+fun ShareSpec.requireDiskShare(): DiskShare {
     val connect = smbClient.connect(server, port)
     val authenticationContext = AuthenticationContext(user, password.toCharArray(), "")
     val session = connect.authenticate(authenticationContext)
     return session.connectShare(share) as DiskShare
 }
 
-val smbSessions = mutableMapOf<SmbSpec, DiskShare>()
+val smbSessions = mutableMapOf<ShareSpec, DiskShare>()
 
-class SmbFileInstance(path: String, fileSystemRoot: String, val smbSpec: SmbSpec) : FileInstance(path, fileSystemRoot) {
+class SmbFileInstance(path: String, fileSystemRoot: String, val shareSpec: ShareSpec) : FileInstance(path, fileSystemRoot) {
     var information: FileAllInformation? = null
     var share: DiskShare? = null
-
-    init {
-        initCurrentFile()
-    }
 
     private fun initCurrentFile(): Pair<DiskShare, FileAllInformation> {
         val connectShare = getDiskShare()
@@ -44,8 +40,8 @@ class SmbFileInstance(path: String, fileSystemRoot: String, val smbSpec: SmbSpec
     }
 
     private fun getDiskShare(): DiskShare {
-        val orPut = smbSessions.getOrPut(smbSpec) {
-            smbSpec.requireDiskShare()
+        val orPut = smbSessions.getOrPut(shareSpec) {
+            shareSpec.requireDiskShare()
         }
         return orPut
     }
@@ -59,6 +55,14 @@ class SmbFileInstance(path: String, fileSystemRoot: String, val smbSpec: SmbSpec
             information = initCurrentFile.second
         }
         return share to information
+    }
+
+    override fun getFile(): FileItemModel {
+        TODO("Not yet implemented")
+    }
+
+    override fun getDirectory(): DirectoryItemModel {
+        TODO("Not yet implemented")
     }
 
     override fun getBufferedReader(): BufferedReader {

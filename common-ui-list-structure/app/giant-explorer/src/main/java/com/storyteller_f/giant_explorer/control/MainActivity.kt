@@ -33,7 +33,7 @@ import com.storyteller_f.giant_explorer.control.remote.RemoteAccessType
 import com.storyteller_f.giant_explorer.control.remote.RemoteManagerActivity
 import com.storyteller_f.giant_explorer.control.root.RootAccessActivity
 import com.storyteller_f.giant_explorer.database.RemoteSpec
-import com.storyteller_f.giant_explorer.database.SmbSpec
+import com.storyteller_f.giant_explorer.database.ShareSpec
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.ActivityMainBinding
 import com.storyteller_f.giant_explorer.dialog.FileOperationDialog
@@ -53,7 +53,6 @@ import com.storyteller_f.ui_list.event.viewBinding
 import com.topjohnwu.superuser.Shell
 import com.topjohnwu.superuser.ipc.RootService
 import com.topjohnwu.superuser.nio.FileSystemManager
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -88,7 +87,7 @@ fun getFileInstance(path: String, context: Context, root: String = FileInstanceF
         return FtpFileInstance(path, root, RemoteSpec.parse(root))
     }
     if (root.startsWith("smb://")) {
-        return SmbFileInstance(path, root, SmbSpec.parse(root))
+        return SmbFileInstance(path, root, ShareSpec.parse(root))
     }
     if (root.startsWith("sftp://")) {
         return SFtpFileInstance(path, root, RemoteSpec.parse(root))
@@ -97,7 +96,7 @@ fun getFileInstance(path: String, context: Context, root: String = FileInstanceF
         return FtpsFileInstance(path, root, RemoteSpec.parse(root))
     }
     if (root.startsWith("webdav://")) {
-        return WebDavFileInstance(path, root, RemoteSpec.parse(root))
+        return WebDavFileInstance(path, root, ShareSpec.parse(root))
     }
     return FileInstanceFactory.getFileInstance(path, context, root, stoppableTask)
 }
@@ -248,8 +247,8 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         scope.launch {
             requireDatabase.remoteAccessDao().listAsync().forEach {
 
-                if (it.type == RemoteAccessType.smb) {
-                    val toUri = it.toSmbSpec().toUri()
+                if (it.type == RemoteAccessType.smb || it.type == RemoteAccessType.webDav) {
+                    val toUri = it.toShareSpec().toUri()
                     menu.add(toUri).setOnMenuItemClickListener {
                         findNavControl().navigate(R.id.fileListFragment, FileListFragmentArgs("/", toUri).toBundle())
                         true

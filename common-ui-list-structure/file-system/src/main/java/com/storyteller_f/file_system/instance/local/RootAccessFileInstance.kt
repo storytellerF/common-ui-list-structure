@@ -1,17 +1,24 @@
-package com.storyteller_f.file_system.instance
+package com.storyteller_f.file_system.instance.local
 
 import com.storyteller_f.file_system.FileInstanceFactory
+import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.FileInstanceUtility
 import com.topjohnwu.superuser.nio.ExtendedFile
 import com.topjohnwu.superuser.nio.FileSystemManager
 import java.io.*
-import java.util.*
 
 class RootAccessFileInstance(path: String, private val remote: FileSystemManager) : FileInstance(path, FileInstanceFactory.rootFileSystemRoot) {
 
     private var extendedFile = remote.getFile(path)
+    override fun getFile(): FileItemModel {
+        return FileItemModel(extendedFile.name, extendedFile.absolutePath, extendedFile.isHidden, extendedFile.lastModified(), extendedFile.isSymlink, extendedFile.extension)
+    }
+
+    override fun getDirectory(): DirectoryItemModel {
+        return DirectoryItemModel(extendedFile.name, extendedFile.absolutePath, extendedFile.isHidden, extendedFile.lastModified(), extendedFile.isSymlink)
+    }
 
     override fun getBufferedReader(): BufferedReader = extendedFile.bufferedReader()
 

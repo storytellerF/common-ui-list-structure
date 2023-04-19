@@ -3,26 +3,32 @@ package com.storyteller_f.giant_explorer.service
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.giant_explorer.database.RemoteSpec
-import com.thegrizzlylabs.sardineandroid.DavResource
-import com.thegrizzlylabs.sardineandroid.Sardine
-import com.thegrizzlylabs.sardineandroid.impl.OkHttpSardine
+import com.storyteller_f.giant_explorer.database.ShareSpec
+import kotlinx.coroutines.runBlocking
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
-val sardines = mutableMapOf<RemoteSpec, WebDavInstance>()
+val webdavInstances = mutableMapOf<ShareSpec, WebDavInstance>()
 
-class WebDavFileInstance(path: String, fileSystemRoot: String, val spec: RemoteSpec) : FileInstance(path, fileSystemRoot) {
+class WebDavFileInstance(path: String, fileSystemRoot: String, val spec: ShareSpec) : FileInstance(path, fileSystemRoot) {
 
     val instance = getWebDavInstance()
 
     private fun getWebDavInstance(): WebDavInstance {
-        return sardines.getOrPut(spec) {
+        return webdavInstances.getOrPut(spec) {
             WebDavInstance(spec)
         }
+    }
+
+    override fun getFile(): FileItemModel {
+        TODO("Not yet implemented")
+    }
+
+    override fun getDirectory(): DirectoryItemModel {
+        TODO("Not yet implemented")
     }
 
     override fun getBufferedReader(): BufferedReader {
@@ -42,10 +48,11 @@ class WebDavFileInstance(path: String, fileSystemRoot: String, val spec: RemoteS
     }
 
     override fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
-        instance.list("http://${spec.server}:${spec.port}$path")?.forEach {
-            if (it.isDirectory) {
-                directoryItems.add(DirectoryItemModel(it.name, it.path, false, it.modified.time, false))
-            } else fileItems.add(FileItemModel(it.name, it.path, false, it.modified.time, false, File(it.path).extension))
+        instance.list(path).forEach {
+            if (it.isFile) fileItems.add(FileItemModel(it.name, it.path, false, it.lastModified, false, File(it.path).extension))
+            else {
+                directoryItems.add(DirectoryItemModel(it.name, it.path, false, it.lastModified, false))
+            }
         }
     }
 
@@ -106,13 +113,13 @@ class WebDavFileInstance(path: String, fileSystemRoot: String, val spec: RemoteS
     }
 }
 
-class WebDavInstance(spec: RemoteSpec) {
-    val instance = OkHttpSardine().apply {
-        setCredentials(spec.user, spec.password)
-    }
+class WebDavInstance(spec: ShareSpec) {
+    val instance = WebDavClient("http://${spec.server}:${spec.port}/${spec.share}", spec.user, spec.password)
 
-    fun list(path: String): MutableList<DavResource>? {
-        return instance.list(path)
+    fun list(path: String): MutableList<WebDavDatum> {
+        return runBlocking {
+            instance.list(path)
+        }
     }
 
 }
