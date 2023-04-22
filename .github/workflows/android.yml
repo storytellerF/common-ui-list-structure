@@ -31,10 +31,10 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
 
-    - name: build all
-      run: bash build_all.sh
+    - name: build app
+      run: bash build_app.sh
 
-    - name: test
+    - name: print list tree
       run: ls -R build
 
 

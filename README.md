@@ -10,9 +10,9 @@
 
 2. **ui-list**： 封装**Jetpack Paging**， **PagingAdapter**
 
-3. **ext-func-***：对自动为Context 的扩展函数扩充为Activitey，Fragment 的同名扩展函数。
+3. **ext-func-***：对自动为Context 的扩展函数扩充为View，Fragment 的同名扩展函数。
 
-4. **Sml**：[自动生成color， drawable的xml 文件](sml)
+4. **Sml**：[自动生成color、drawable的xml 文件](sml)
 
 ## 示例模块
 
@@ -37,24 +37,22 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("kotlin-android")
     id("kotlin-parcelize")
+    id("com.storyteller_f.version_manager")
 }
 
 android {
     defaultConfig {
-        applicationId = "com.storyteller_f.fapiao"
+        applicationId = "com.storyteller_f.**"
     }
-    namespace = "com.storyteller_f.fapiao"
+    namespace = "com.storyteller_f.**"
 }
 
 dependencies {
     implementation(fileTree("libs"))
-    implementation(project(":fapiao-reader"))
     //根据需要添加
     networkDependency()
     fileSystemDependency()
     workerDependency()
-
-    implementation("com.tom-roush:pdfbox-android:2.0.25.0")
 }
 //必须添加
 baseApp()
