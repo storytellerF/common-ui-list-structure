@@ -84,36 +84,8 @@ jobs:
       env:
         # override default build-tools version (29.0.3) -- optional
         BUILD_TOOLS_VERSION: "33.0.1"
-    #签名li
-    - uses: noriban/sign-android-release@v3
-      name: Sign li app APK
-      # ID used to access action output
-      id: sign_li_app
-      with:
-        releaseDirectory: build/li
-        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-        alias: ${{ secrets.ALIAS }}
-        keyStorePassword: ${{ secrets.STORE_PASSWORD }}
-        keyPassword: ${{ secrets.KEY_PASSWORD }}
-      env:
-        # override default build-tools version (29.0.3) -- optional
-        BUILD_TOOLS_VERSION: "33.0.1"
-    #签名yue
-    - uses: noriban/sign-android-release@v3
-      name: Sign yue app APK
-      # ID used to access action output
-      id: sign_yue_app
-      with:
-        releaseDirectory: build/yue
-        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-        alias: ${{ secrets.ALIAS }}
-        keyStorePassword: ${{ secrets.STORE_PASSWORD }}
-        keyPassword: ${{ secrets.KEY_PASSWORD }}
-      env:
-        # override default build-tools version (29.0.3) -- optional
-        BUILD_TOOLS_VERSION: "33.0.1"
-    #签名结束
 
+    #签名结束
 
     # Example use of `signedReleaseFile` output -- not needed
     - uses: actions/upload-artifact@v3
@@ -123,6 +95,3 @@ jobs:
           ${{steps.sign_app.outputs.signedReleaseFile}}
           ${{steps.sign_ping_app.outputs.signedReleaseFile}}
           ${{steps.sign_giant_explorer_app.outputs.signedReleaseFile}}
-          ${{steps.sign_li_app.outputs.signedReleaseFile}}
-          ${{steps.sign_yue_app.outputs.signedReleaseFile}}
-          build/yue-html/*.zip
