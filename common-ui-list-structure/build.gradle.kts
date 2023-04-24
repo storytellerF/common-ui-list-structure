@@ -7,9 +7,9 @@ buildscript {
     }
 }
 plugins {
-    val androidVersion = "8.0.0-rc01"
+    val androidVersion = "8.0.0"
     val kotlinVersion = "1.8.0"
-    id("com.android.application") version "8.0.0-rc01" apply false
+    id("com.android.application") version "8.0.0" apply false
     id("com.android.library") version androidVersion apply false
     id("org.jetbrains.kotlin.android") version kotlinVersion apply false
     id("org.jetbrains.kotlin.jvm") version kotlinVersion apply false

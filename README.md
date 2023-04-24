@@ -1,6 +1,7 @@
 # 一个Android 软件架构
 
 [![Android CI](https://github.com/storytellerF/common-ui-list-structure/actions/workflows/android.yml/badge.svg)](https://github.com/storytellerF/common-ui-list-structure/actions/workflows/android.yml)
+[![Android Plugin CI](https://github.com/storytellerF/common-ui-list-structure/actions/workflows/android-plugins.yml/badge.svg)](https://github.com/storytellerF/common-ui-list-structure/actions/workflows/android-plugins.yml)
 
 整合了Jetpack Paging，View Model，Navigation，Compose
 

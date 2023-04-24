@@ -5,7 +5,6 @@ import android.os.Parcelable
 import android.view.View
 import androidx.activity.ComponentDialog
 import androidx.activity.addCallback
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.flowWithLifecycle
 import androidx.paging.PagingData
@@ -53,7 +52,7 @@ class RequestPathDialog : SimpleDialogFragment<DialogRequestPathBinding>(DialogR
 
     private val data by search({ requireDatabase }, {
         SearchProducer(fileServiceBuilder(it)) { fileModel, _ ->
-            FileItemHolder(fileModel, MutableLiveData(mutableListOf()))
+            FileItemHolder(fileModel, mutableListOf())
         }
     }
 

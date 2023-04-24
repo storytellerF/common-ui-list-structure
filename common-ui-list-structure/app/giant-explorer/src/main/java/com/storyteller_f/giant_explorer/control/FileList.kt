@@ -94,7 +94,7 @@ fun LifecycleOwner.supportDirectoryContent(
 
 class FileItemHolder(
     val file: FileModel,
-    val selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>
+    val selected: List<Pair<DataItemHolder, Int>>
 ) : DataItemHolder {
     override fun areItemsTheSame(other: DataItemHolder) =
         (other as FileItemHolder).file.fullPath == file.fullPath
@@ -112,7 +112,7 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
         binding.fileName.text = itemHolder.file.name
         binding.fileIcon.fileIcon(itemHolder.file.item)
         val item = itemHolder.file.item
-        binding.root.isSelected = itemHolder.selected.value?.valueContains(
+        binding.root.isSelected = itemHolder.selected.valueContains(
             Pair(itemHolder, 0)
         ) == true
         binding.root.setBackgroundResource(

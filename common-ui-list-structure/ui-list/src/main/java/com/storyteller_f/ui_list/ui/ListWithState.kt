@@ -402,7 +402,7 @@ fun MutableList<Pair<DataItemHolder, Int>>?.toggleSpecial(pair: Pair<DataItemHol
     }
 }
 
-fun MutableList<Pair<DataItemHolder, Int>>.valueContains(pair: Pair<DataItemHolder, Int>): Boolean {
+fun List<Pair<DataItemHolder, Int>>.valueContains(pair: Pair<DataItemHolder, Int>): Boolean {
     val firstOrNull = firstOrNull {
         it.first.areItemsTheSame(pair.first)
     }

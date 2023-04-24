@@ -82,7 +82,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
     private val data by search({ requireDatabase to session.selected }, { (database, selected) ->
         SearchProducer(fileServiceBuilder(database)) { fileModel, _ ->
-            FileItemHolder(fileModel, selected)
+            FileItemHolder(fileModel, selected.value.orEmpty())
         }
     })
 

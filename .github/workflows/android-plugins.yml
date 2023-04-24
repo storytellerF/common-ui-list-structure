@@ -1,4 +1,4 @@
-name: Android CI
+name: Android Plugins CI
 
 on:
   push:
@@ -31,8 +31,8 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
 
-    - name: build app
-      run: bash build_app.sh
+    - name: build plugins
+      run: bash build_plugins.sh
 
     - name: print list tree
       run: ls -R build
@@ -40,13 +40,13 @@ jobs:
 
     #签名开始
 
-    #签名app
+    #签名li
     - uses: noriban/sign-android-release@v3
-      name: Sign app APK
+      name: Sign li app APK
       # ID used to access action output
-      id: sign_app
+      id: sign_li_app
       with:
-        releaseDirectory: build/app
+        releaseDirectory: build/li
         signingKeyBase64: ${{ secrets.SIGNING_KEY }}
         alias: ${{ secrets.ALIAS }}
         keyStorePassword: ${{ secrets.STORE_PASSWORD }}
@@ -54,29 +54,13 @@ jobs:
       env:
         # override default build-tools version (29.0.3) -- optional
         BUILD_TOOLS_VERSION: "33.0.1"
-
-    #签名giant explorer
+    #签名yue
     - uses: noriban/sign-android-release@v3
-      name: Sign giant explorer app APK
+      name: Sign yue app APK
       # ID used to access action output
-      id: sign_giant_explorer_app
+      id: sign_yue_app
       with:
-        releaseDirectory: build/giant-explorer
-        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-        alias: ${{ secrets.ALIAS }}
-        keyStorePassword: ${{ secrets.STORE_PASSWORD }}
-        keyPassword: ${{ secrets.KEY_PASSWORD }}
-      env:
-        # override default build-tools version (29.0.3) -- optional
-        BUILD_TOOLS_VERSION: "33.0.1"
-
-    #签名ping
-    - uses: noriban/sign-android-release@v3
-      name: Sign ping app APK
-      # ID used to access action output
-      id: sign_ping_app
-      with:
-        releaseDirectory: build/ping
+        releaseDirectory: build/yue
         signingKeyBase64: ${{ secrets.SIGNING_KEY }}
         alias: ${{ secrets.ALIAS }}
         keyStorePassword: ${{ secrets.STORE_PASSWORD }}
@@ -92,6 +76,6 @@ jobs:
       with:
         name: Signed app bundle
         path: |
-          ${{steps.sign_app.outputs.signedReleaseFile}}
-          ${{steps.sign_ping_app.outputs.signedReleaseFile}}
-          ${{steps.sign_giant_explorer_app.outputs.signedReleaseFile}}
+          ${{steps.sign_li_app.outputs.signedReleaseFile}}
+          ${{steps.sign_yue_app.outputs.signedReleaseFile}}
+          build/yue-html/*.zip
