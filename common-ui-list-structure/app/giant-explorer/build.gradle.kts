@@ -141,6 +141,7 @@ dependencies {
     implementation("com.hierynomus:sshj:0.35.0")
     implementation("com.madgag.spongycastle:core:1.58.0.0")
     implementation("com.madgag.spongycastle:prov:1.58.0.0")
+    implementation("com.github.storytellerF.Bao:startup:2.1.2")
 }
 baseApp()
 setupGeneric()

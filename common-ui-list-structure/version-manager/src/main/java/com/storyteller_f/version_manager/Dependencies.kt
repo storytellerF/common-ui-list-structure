@@ -8,7 +8,7 @@ object Versions {
     const val coreVersion = "1.9.0"
     const val recyclerViewVersion = "1.2.1"
     const val constraintLayoutVersion = "2.1.4"
-    const val materialVersion = "1.7.0"
+    const val materialVersion = "1.8.0"
     const val ktxVersion = "1.6.1"
     const val fragmentKtxVersion = "1.5.2"
     const val lifecycleVersion = "2.5.1"

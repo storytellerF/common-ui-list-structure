@@ -1,7 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     dependencies {
-        val navVersion = "2.5.0"
+        val navVersion = "2.5.3"
         classpath("androidx.navigation:navigation-safe-args-gradle-plugin:$navVersion")
         classpath("app.cash.licensee:licensee-gradle-plugin:1.6.0")
     }
@@ -55,4 +55,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = freeCompilerArgs + listOf("-Xlint:deprecation", "-Xlint:unchecked")
     }
+}
+tasks.withType<JavaCompile> {
+    options.compilerArgs = options.compilerArgs + listOf("-Xlint:deprecation", "-Xlint:unchecked")
 }
