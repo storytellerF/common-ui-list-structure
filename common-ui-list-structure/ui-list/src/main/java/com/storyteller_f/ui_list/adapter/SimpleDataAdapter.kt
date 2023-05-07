@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.ListAdapter
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.core.DefaultAdapter
+import com.storyteller_f.ui_list.core.DefaultAdapter.Companion.common_diff_util
 import com.storyteller_f.ui_list.source.SimpleDataViewModel
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -15,24 +16,18 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 @Suppress("UNCHECKED_CAST")
 class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val key: String? = null) :
-    ListAdapter<IH, VH>(SimpleSourceAdapter.common_diff_util as DiffUtil.ItemCallback<IH>) {
-    var last = mutableListOf<IH>()
+    ListAdapter<IH, VH>(common_diff_util as DiffUtil.ItemCallback<IH>) {
+    private var last = mutableListOf<IH>()
 
     /**
      * 下一次的observe 不处理
      */
-    private val mPending: AtomicBoolean = AtomicBoolean(true)
+    private val receiveDataChange: AtomicBoolean = AtomicBoolean(true)
 
-    var dataHook: SimpleDataViewModel.DataHook<*, IH, *>? = null
+    private var fatData: SimpleDataViewModel.FatData<*, IH, *>? = null
     val d = DefaultAdapter<IH, VH>(key).apply {
         target = this@SimpleDataAdapter
     }
-
-    var type: String
-        get() = d.type
-        set(value) {
-            d.type = value
-        }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH = d.onCreateViewHolder(parent, viewType)
 
@@ -47,19 +42,19 @@ class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val ke
         }
     }
 
-    fun submitData(dataHook: SimpleDataViewModel.DataHook<*, IH, *>) {
-        if (mPending.get()) {
-            this.dataHook = dataHook
-            submitList(dataHook.list.toMutableList())
+    fun submitData(fatData: SimpleDataViewModel.FatData<*, IH, *>) {
+        if (receiveDataChange.get()) {
+            this.fatData = fatData
+            submitList(fatData.list.toMutableList())
         }
-        mPending.compareAndSet(false, true)
+        receiveDataChange.compareAndSet(false, true)
     }
 
     fun swap(from: Int, to: Int) {
         Collections.swap(last, from, to)
-        dataHook?.swap(from, to)
-        mPending.set(false)
-        dataHook?.viewModel?.reset(last)
+        fatData?.swap(from, to)
+        receiveDataChange.set(false)
+        fatData?.viewModel?.reset(last)
         notifyItemMoved(from, to)
     }
 

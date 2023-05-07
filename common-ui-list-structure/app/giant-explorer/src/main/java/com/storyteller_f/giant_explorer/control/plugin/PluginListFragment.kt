@@ -11,7 +11,7 @@ import com.storyteller_f.giant_explorer.*
 import com.storyteller_f.giant_explorer.databinding.FragmentPluginListBinding
 import com.storyteller_f.giant_explorer.databinding.ViewHolderPluginBinding
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
-import com.storyteller_f.ui_list.core.AdapterViewHolder
+import com.storyteller_f.ui_list.core.BindingViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.core.Model
 import com.storyteller_f.ui_list.data.SimpleResponse
@@ -35,7 +35,7 @@ class PluginListFragment : SimpleFragment<FragmentPluginListBinding>(FragmentPlu
             SimplePlugin(it)
         }
         SimpleResponse(toList.size, data)
-    }, processFactory = { p, _ ->
+    }, processFactory = { p, _, _ ->
         PluginHolder(p.path)
     }))
 
@@ -70,7 +70,7 @@ class PluginHolder(val name: String) : DataItemHolder {
 }
 
 @BindItemHolder(PluginHolder::class)
-class PluginViewHolder(private val binding: ViewHolderPluginBinding) : AdapterViewHolder<PluginHolder>(binding) {
+class PluginViewHolder(private val binding: ViewHolderPluginBinding) : BindingViewHolder<PluginHolder>(binding) {
     override fun bindData(itemHolder: PluginHolder) {
         binding.pluginName.text = itemHolder.name
     }

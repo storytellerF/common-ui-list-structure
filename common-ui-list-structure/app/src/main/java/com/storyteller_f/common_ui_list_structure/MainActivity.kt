@@ -33,7 +33,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import com.storyteller_f.annotation_defination.BindClickEvent
@@ -213,7 +212,7 @@ class RepoItemHolder(val repo: Repo) : DataItemHolder {
 
 @BindItemHolder(RepoItemHolder::class, type = "linear")
 class Repo2ViewHolder(private val binding: RepoViewItemBinding) :
-    AdapterViewHolder<RepoItemHolder>(binding) {
+    BindingViewHolder<RepoItemHolder>(binding) {
     override fun bindData(itemHolder: RepoItemHolder) {
         binding.repoName.text = itemHolder.repo.name
         // if the description is missing, hide the TextView
@@ -245,7 +244,7 @@ class Repo2ViewHolder(private val binding: RepoViewItemBinding) :
 
 @BindItemHolder(RepoItemHolder::class)
 class Repo2ViewHolder2(private val binding: RepoViewItemBinding) :
-    AdapterViewHolder<RepoItemHolder>(binding) {
+    BindingViewHolder<RepoItemHolder>(binding) {
     override fun bindData(itemHolder: RepoItemHolder) {
         binding.repoName.text = itemHolder.repo.name
         // if the description is missing, hide the TextView

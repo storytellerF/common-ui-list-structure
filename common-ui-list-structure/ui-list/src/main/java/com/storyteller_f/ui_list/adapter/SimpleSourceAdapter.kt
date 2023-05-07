@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.core.DefaultAdapter
+import com.storyteller_f.ui_list.core.DefaultAdapter.Companion.common_diff_util
 
 @Suppress("UNCHECKED_CAST")
 open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val key: String? = null) :
@@ -18,38 +19,9 @@ open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>
         target = this@SimpleSourceAdapter
     }
 
-    var type: String
-        get() = proxy.type
-        set(value) {
-            proxy.type = value
-        }
-
     override fun onBindViewHolder(holder: VH, position: Int) = proxy.onBindViewHolder(holder, position)
 
     override fun getItemViewType(position: Int) = proxy.getItemViewType(position)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = proxy.onCreateViewHolder(parent, viewType)
-
-    companion object {
-        val common_diff_util = object : DiffUtil.ItemCallback<DataItemHolder>() {
-            override fun areItemsTheSame(
-                oldItem: DataItemHolder,
-                newItem: DataItemHolder
-            ): Boolean {
-                return when {
-                    oldItem === newItem -> true
-                    oldItem.javaClass == newItem.javaClass -> {
-                        oldItem.areItemsTheSame(newItem)
-                    }
-                    else -> false
-                }
-            }
-
-            override fun areContentsTheSame(
-                oldItem: DataItemHolder,
-                newItem: DataItemHolder
-            ): Boolean =
-                oldItem.areContentsTheSame(newItem)
-        }
-    }
 }

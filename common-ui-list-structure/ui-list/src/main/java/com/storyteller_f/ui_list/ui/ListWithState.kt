@@ -3,7 +3,6 @@ package com.storyteller_f.ui_list.ui
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Paint
 import android.graphics.Rect
 import android.text.SpannableString
 import android.util.AttributeSet
@@ -11,7 +10,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import androidx.core.view.isVisible
-import androidx.lifecycle.*
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.map
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.ConcatAdapter
@@ -29,7 +34,11 @@ import com.storyteller_f.ui_list.source.isError
 import com.storyteller_f.ui_list.source.isLoading
 import com.storyteller_f.ui_list.source.isNotLoading
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class ListWithState @JvmOverloads constructor(
@@ -60,11 +69,12 @@ class ListWithState @JvmOverloads constructor(
         lifecycleOwner: LifecycleOwner,
         selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>? = null,
         refresh: (() -> Unit) = { },
-        flash: ((CombinedLoadStates, Int) -> UIState) = Companion::simple
+        flash: ((CombinedLoadStates, Int) -> UIState) = Companion::simple,
+        plugLayoutManager: Boolean = true,
     ) {
         setAdapter(
             adapter.withLoadStateHeaderAndFooter(header = SimpleLoadStateAdapter { adapter.retry() },
-                footer = SimpleLoadStateAdapter { adapter.retry() }), adapter, refresh
+                footer = SimpleLoadStateAdapter { adapter.retry() }), adapter, refresh, plugLayoutManager
         )
         val callbackFlow = callbackFlow {
             val listener: (CombinedLoadStates) -> Unit = {
@@ -105,9 +115,11 @@ class ListWithState @JvmOverloads constructor(
     private fun setAdapter(
         concatAdapter: ConcatAdapter,
         adapter: SimpleSourceAdapter<out DataItemHolder, out AbstractViewHolder<*>>,
-        refresh: () -> Unit
+        refresh: () -> Unit,
+        plugLayoutManager: Boolean = true,
     ) {
-        setupLinearLayoutManager()
+        if (plugLayoutManager)
+            setupLinearLayoutManager()
         binding.list.adapter = concatAdapter
         setupRefresh(adapter, refresh)
     }
@@ -154,14 +166,7 @@ class ListWithState @JvmOverloads constructor(
 
         ItemTouchHelper(object :
             ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.START or ItemTouchHelper.END) {
-            val paint = Paint()
             private var swipeEvent = false
-
-            init {
-                paint.textSize = 40f
-                paint.isAntiAlias = true
-            }
-
 
             override fun getSwipeEscapeVelocity(defaultValue: Float) = 1000000F
 
@@ -183,29 +188,30 @@ class ListWithState @JvmOverloads constructor(
 
             private fun swipeViewHolder(viewHolder: RecyclerView.ViewHolder) {
                 val adapterViewHolder = viewHolder as AbstractViewHolder<out DataItemHolder>
-                val toggleSpecial =
-                    selected.value.toggleSpecial(adapterViewHolder.itemHolder to viewHolder.absoluteAdapterPosition)
-                selected.value =
-                    toggleSpecial.let {
-                        viewHolder.view.isSelected = it.second
-                        it.first
-                    }
+                val (currentSelectedHolders, currentHolderSelected) =
+                    selected.value.toggle(adapterViewHolder.itemHolder to viewHolder.absoluteAdapterPosition)
+                viewHolder.view.isSelected = currentHolderSelected
+                selected.value = currentSelectedHolders
             }
 
             override fun onChildDraw(c: Canvas, recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean) {
                 if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
                     val firstLine = 200
-                    if (dX < firstLine) {
-                        if (swipeEvent) {
-                            swipeEvent = false
+                    val secondLine = firstLine + 100
+                    when {
+                        dX < firstLine -> {
+                            if (swipeEvent) {
+                                swipeEvent = false
+                            }
+                            super.onChildDraw(c, recyclerView, viewHolder, dX / 2, dY, actionState, isCurrentlyActive)
                         }
-                        super.onChildDraw(c, recyclerView, viewHolder, dX / 2, dY, actionState, isCurrentlyActive)
-                    } else {
-                        val secondLine = firstLine + 100
-                        if (dX < secondLine) {
+
+                        dX < secondLine -> {
                             val firstMax = firstLine / 2
                             super.onChildDraw(c, recyclerView, viewHolder, firstMax + (dX - firstLine) / 4, dY, actionState, isCurrentlyActive)
-                        } else if (dX >= secondLine) {
+                        }
+
+                        dX >= secondLine -> {
                             if (!swipeEvent) {
                                 swipeViewHolder(viewHolder)
                                 swipeEvent = true
@@ -392,14 +398,17 @@ class ListWithState @JvmOverloads constructor(
     }
 }
 
-fun MutableList<Pair<DataItemHolder, Int>>?.toggleSpecial(pair: Pair<DataItemHolder, Int>): Pair<MutableList<Pair<DataItemHolder, Int>>, Boolean> {
-    val mutableList = this ?: mutableListOf()
-    val filter = mutableList.filter {
+/**
+ * 反选
+ */
+fun MutableList<Pair<DataItemHolder, Int>>?.toggle(pair: Pair<DataItemHolder, Int>): Pair<MutableList<Pair<DataItemHolder, Int>>, Boolean> {
+    val oldSelectedHolders = this ?: mutableListOf()
+    val otherHolders = oldSelectedHolders.filter {
         !it.first.areItemsTheSame(pair.first)
     }.toMutableList()
-    return filter to (filter.size == mutableList.size).apply {
-        if (this) filter.add(pair)
-    }
+    val stateSelected = otherHolders.size == oldSelectedHolders.size
+    if (stateSelected) otherHolders.add(pair)
+    return otherHolders to stateSelected
 }
 
 fun List<Pair<DataItemHolder, Int>>.valueContains(pair: Pair<DataItemHolder, Int>): Boolean {

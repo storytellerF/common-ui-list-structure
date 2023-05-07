@@ -18,6 +18,7 @@ import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui.setOnClick
 import com.storyteller_f.common_ui.setVisible
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.control.getFileInstance
 import com.storyteller_f.giant_explorer.databinding.DialogFilePropertiesBinding
 import com.storyteller_f.giant_explorer.model.FileModel
@@ -39,17 +40,15 @@ class PropertiesDialog : SimpleDialogFragment<DialogFilePropertiesBinding>(Dialo
             val length = if (fileInstance.isFile) fileInstance.fileLength
             else 0
             binding.model = FileModel(fileInstance.name, fileInstance.path, length, fileInstance.isHidden, fileInstance.fileSystemItem, fileInstance.isSymbolicLink)
-            if (fileInstance.isFile) {
-                binding.videoInfo.setVisible(fileInstance.file.extension == "mp4") {
-                    val trimIndent = videoInfo(fileInstance)
-                    binding.videoInfo.text = trimIndent
-                }
-                binding.audioInfo.setVisible(fileInstance.file.extension == "mp3") {
-                    val mediaMetadataRetriever = MediaMetadataRetriever()
-                    mediaMetadataRetriever.setDataSource(fileInstance.path)
-                    val duration = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-                    binding.audioInfo.text = "duration: $duration ms"
-                }
+            binding.videoInfo.setVisible(fileInstance.file.extension == "mp4" && fileInstance.isFile) {
+                val trimIndent = videoInfo(fileInstance)
+                binding.videoInfo.text = trimIndent
+            }
+            binding.audioInfo.setVisible(fileInstance.file.extension == "mp3" && fileInstance.isFile) {
+                val mediaMetadataRetriever = MediaMetadataRetriever()
+                mediaMetadataRetriever.setDataSource(fileInstance.path)
+                val duration = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                binding.audioInfo.text = getString(R.string.duration_ms, duration)
             }
         }
 

@@ -11,7 +11,7 @@
 
 2. **ui-list**： 封装**Jetpack Paging**， **PagingAdapter**
 
-3. **ext-func-***：对自动为Context 的扩展函数扩充为View，Fragment 的同名扩展函数。
+3. **ext-func**：对自动为Context 的扩展函数扩充为View，Fragment 的同名扩展函数。
 
 4. **Sml**：[自动生成color、drawable的xml 文件](sml)
 

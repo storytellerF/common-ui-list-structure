@@ -31,12 +31,13 @@ import com.storyteller_f.filter_core.Filter
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.LocalDatabase
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileBinding
+import com.storyteller_f.giant_explorer.databinding.ViewHolderFileGridBinding
 import com.storyteller_f.giant_explorer.model.FileModel
 import com.storyteller_f.giant_explorer.pc_end_on
 import com.storyteller_f.sort_ui.SortChain
 import com.storyteller_f.sort_ui.SortDialog
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
-import com.storyteller_f.ui_list.core.AdapterViewHolder
+import com.storyteller_f.ui_list.core.BindingViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.data.SimpleResponse
 import com.storyteller_f.ui_list.event.findActionReceiverOrNull
@@ -50,31 +51,28 @@ import java.util.Locale
 import kotlin.concurrent.thread
 import kotlin.coroutines.resumeWithException
 
-fun LifecycleOwner.supportDirectoryContent(
+fun LifecycleOwner.fileList(
     listWithState: ListWithState,
     adapter: SimpleSourceAdapter<FileItemHolder, FileViewHolder>,
-    data: SimpleSearchViewModel<FileModel, FileExplorerSearch, FileItemHolder>,
+    viewModel: SimpleSearchViewModel<FileModel, FileExplorerSearch, FileItemHolder>,
     session: FileExplorerSession,
     filterHiddenFileLiveData: LiveData<Boolean>,
-    filtersLiveData: LiveData<MutableList<Filter<FileSystemItemModel>>>,
-    sortLivedata: LiveData<MutableList<SortChain<FileSystemItemModel>>>,
-    updatePathMan: (String) -> Unit
+    filtersLiveData: LiveData<List<Filter<FileSystemItemModel>>>,
+    sortLivedata: LiveData<List<SortChain<FileSystemItemModel>>>,
+    display: LiveData<Boolean>,
+    updatePath: (String) -> Unit
 ) {
     val owner = if (this is Fragment) viewLifecycleOwner else this
     context {
-        listWithState.sourceUp(adapter, owner, session.selected, flash = ListWithState.Companion::remote)
+        listWithState.sourceUp(adapter, owner, session.selected, flash = ListWithState.Companion::remote, plugLayoutManager = false)
         session.fileInstance.observe(owner) {
-            updatePathMan(it.path)
+            updatePath(it.path)
         }
-        combineDao(session.fileInstance, filterHiddenFileLiveData, filtersLiveData.distinctUntilChangedBy { filters1, filters2 ->
-            filters1.same(filters2)
-        }, sortLivedata.distinctUntilChangedBy { sort1, sort2 ->
-            sort1.same(sort2)
-        }).observe(owner, Observer {
+        combineDao(session.fileInstance, filterHiddenFileLiveData, filtersLiveData.same, sortLivedata.same, display).observe(owner, Observer {
             val fileInstance = it.d1 ?: return@Observer
             val filterHiddenFile = it.d2 ?: return@Observer
             val filters = it.d3 ?: return@Observer
-            val sort = it.d4 ?: return@Observer
+            val sortChains = it.d4 ?: return@Observer
             val path = fileInstance.path
             //检查权限
             owner.lifecycleScope.launch {
@@ -83,7 +81,7 @@ fun LifecycleOwner.supportDirectoryContent(
                 }
             }
 
-            data.observerInScope(owner, FileExplorerSearch(fileInstance, filterHiddenFile, filters, sort)) { pagingData ->
+            viewModel.observerInScope(owner, FileExplorerSearch(fileInstance, filterHiddenFile, filters, sortChains, if (it.d5 == true) "grid" else "")) { pagingData ->
                 adapter.submitData(pagingData)
             }
         })
@@ -91,9 +89,15 @@ fun LifecycleOwner.supportDirectoryContent(
     }
 }
 
+private val <T> LiveData<List<T>>.same
+    get() = distinctUntilChangedBy { sort1, sort2 ->
+        sort1.same(sort2)
+    }
+
 class FileItemHolder(
     val file: FileModel,
-    val selected: List<Pair<DataItemHolder, Int>>
+    val selected: List<Pair<DataItemHolder, Int>>,
+    override val type: String
 ) : DataItemHolder {
     override fun areItemsTheSame(other: DataItemHolder) =
         (other as FileItemHolder).file.fullPath == file.fullPath
@@ -104,9 +108,19 @@ class FileItemHolder(
 
 }
 
+@BindItemHolder(FileItemHolder::class, type = "grid")
+class FileGridViewHolder(private val binding: ViewHolderFileGridBinding) : BindingViewHolder<FileItemHolder>(binding) {
+    override fun bindData(itemHolder: FileItemHolder) {
+        binding.fileName.text = itemHolder.file.name
+        binding.fileIcon.fileIcon(itemHolder.file.item)
+        binding.symLink.isVisible = itemHolder.file.isSymLink
+    }
+
+}
+
 @BindItemHolder(FileItemHolder::class)
 class FileViewHolder(private val binding: ViewHolderFileBinding) :
-    AdapterViewHolder<FileItemHolder>(binding) {
+    BindingViewHolder<FileItemHolder>(binding) {
     override fun bindData(itemHolder: FileItemHolder) {
         binding.fileName.text = itemHolder.file.name
         binding.fileIcon.fileIcon(itemHolder.file.item)
@@ -194,7 +208,7 @@ fun format1024(args: Long): String {
     return String.format(Locale.CHINA, "%.2f %s", size, flags[flag])
 }
 
-class FileExplorerSearch(val path: FileInstance, val filterHiddenFile: Boolean, val filters: List<Filter<FileSystemItemModel>>, val sort: List<SortChain<FileSystemItemModel>>)
+class FileExplorerSearch(val path: FileInstance, val filterHiddenFile: Boolean, val filters: List<Filter<FileSystemItemModel>>, val sort: List<SortChain<FileSystemItemModel>>, val display: String)
 
 fun fileServiceBuilder(
     database: LocalDatabase

@@ -114,10 +114,11 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     private val sort by keyPrefix({ "sort" }, svm({ dialogImpl.sortDialog }, vmProducer = buildSortDialogState))
 
     private val uuid by vm({}) {
-        GenericValueModel<String>().apply {
-            data.value = UUID.randomUUID().toString()
-        }
+        genericValueModel(UUID.randomUUID().toString())
     }
+    private val displayGrid by keyPrefix("display", vm({}) { _ ->
+        genericValueModel(false)
+    })
 
     private var currentRequestingKey: String? = null
     private val requestDocumentProvider = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) {
@@ -141,6 +142,9 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         uuid
+        displayGrid.data.distinctUntilChanged().observe(owner, Observer {
+            binding.switchDisplay.isActivated = it
+        })
         setSupportActionBar(binding.toolbar)
         supportNavigatorBarImmersive(binding.root)
         dialogImpl.init(this, {
@@ -166,6 +170,9 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         }
         binding.switchRoot.setOnClick {
             openContextMenu(it)
+        }
+        binding.switchDisplay.setOnClick {
+            displayGrid.data.value = it.isChecked
         }
         registerForContextMenu(binding.switchRoot)
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_main) as NavHostFragment

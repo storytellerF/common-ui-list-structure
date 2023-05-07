@@ -27,7 +27,7 @@ import com.storyteller_f.ping.databinding.FragmentWallpaperListBinding
 import com.storyteller_f.ping.databinding.ViewHolderWallpaperBinding
 import com.storyteller_f.ui_list.adapter.ManualAdapter
 import com.storyteller_f.ui_list.core.AbstractViewHolder
-import com.storyteller_f.ui_list.core.AdapterViewHolder
+import com.storyteller_f.ui_list.core.BindingViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.ui.ListWithState
 import kotlinx.coroutines.flow.*
@@ -106,7 +106,7 @@ class WallpaperHolder(val wallpaper: Wallpaper) : DataItemHolder {
 }
 
 @BindItemHolder(WallpaperHolder::class)
-class WallpaperViewHolder(private val binding: ViewHolderWallpaperBinding) : AdapterViewHolder<WallpaperHolder>(binding) {
+class WallpaperViewHolder(private val binding: ViewHolderWallpaperBinding) : BindingViewHolder<WallpaperHolder>(binding) {
     override fun bindData(itemHolder: WallpaperHolder) {
         binding.flash(itemHolder.wallpaper)
         ViewCompat.setTransitionName(binding.wallpaperPreview, "wallpaper-${itemHolder.wallpaper.uri}")

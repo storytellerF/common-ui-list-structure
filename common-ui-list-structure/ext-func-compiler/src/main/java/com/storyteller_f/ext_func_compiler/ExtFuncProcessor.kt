@@ -36,9 +36,11 @@ val ViewBinding.$name get() = binding.root.context.$name"""
                 is KSPropertyDeclaration -> {
                     ksAnnotated.packageName.asString() to Task(ksAnnotated.simpleName.getShortName(), first, ksAnnotated)
                 }
+
                 is KSFunctionDeclaration -> {
                     ksAnnotated.packageName.asString() to Task(ksAnnotated.simpleName.getShortName(), first, ksAnnotated)
                 }
+
                 else -> null
             }
         }.groupBy { it.first }
@@ -98,7 +100,7 @@ get() = toFloat().dipToInt"""
             writer.write("package $packageName\n")
 
             writer.write("//${value.count()}\n")
-            writer.write("//${value.map { "${it.ksAnnotated}" }.joinToString("##")}\n")
+            writer.write("//${value.joinToString("##") { "${it.ksAnnotated}" }}\n")
 
             val imports = value.map { "$packageName.${it.name}" }
             val contents = value.map {
@@ -108,15 +110,23 @@ get() = toFloat().dipToInt"""
                     ExtFuncFlatType.V2 -> {
                         libraryForContext to generatePropertyV2(name)
                     }
+
                     ExtFuncFlatType.V3 -> {
                         libraryForContext + "androidx.viewbinding.ViewBinding" to generatePropertyV3(name)
                     }
+
                     ExtFuncFlatType.V4 -> {
                         setOf("android.content.Context") to generatePropertyV4(name, type)
                     }
+
                     ExtFuncFlatType.V5 -> {
                         generatePropertyV5(it)
                     }
+
+                    ExtFuncFlatType.V6 -> {
+                        setOf("androidx.lifecycle.LiveData", "androidx.lifecycle.MediatorLiveData") to generateForV6()
+                    }
+
                     else -> setOf<String>() to ""
                 }
             }
@@ -127,6 +137,39 @@ get() = toFloat().dipToInt"""
             writer.write("\n\n")
             writer.write(contents.joinToString("\n") { it.second })
         }
+    }
+
+    private fun generateForV6(): String {
+        return MutableList(4) {
+            val count = 3 + it
+            val genericList = repeat("T1?", count)
+            val type = """MediatorLiveData<Dao$count<$genericList>>"""
+
+            val s = MutableList(count) {
+                val current = it + 1
+                """
+                 mediatorLiveData.addSource(s${current}) {
+                     d${current} = it
+                     mediatorLiveData.value = Dao$count(${repeat("d1", current - 1, end = ", ")}it, ${repeat("d1", count - current, current + 1)})
+                 }
+             """.trimIndent()
+            }.joinToString("\n")
+            """
+            fun<${repeat("T1", count)}> combineDao(${repeat("s1: LiveData<T1>", count)}): $type {
+                val mediatorLiveData = $type()
+                ${repeat("var d1 = s1.value\n", count, sp = "\n")}
+                $s
+                return mediatorLiveData
+            }
+            """.trimIndent()
+        }.joinToString("\n")
+    }
+
+    private fun repeat(template: String, count: Int, start: Int = 1, sp: String = ", ", end: String = ""): String {
+        val s = MutableList(count) {
+            template.replace("1", (it + start).toString())
+        }.joinToString(sp)
+        return s + if (s.isNotEmpty()) end else ""
     }
 
     private val setFold: (acc: Set<String>, Set<String>) -> Set<String> = { i, n ->
@@ -141,6 +184,7 @@ get() = toFloat().dipToInt"""
                     getImports(it)
                 }.fold(setOf(), setFold)
             }
+
             else -> {
                 emptySet()
             }
@@ -163,18 +207,23 @@ get() = toFloat().dipToInt"""
                     annotated.parameters.map {
                         getImports(it)
                     }.fold(setOf(), setFold)
+
             is KSTypeParameter -> annotated.bounds.map { reference ->
                 getImports(reference)
             }.fold(setOf(), setFold)
+
             is KSTypeReference -> {
                 (annotated.resolve().takeIf { it.declaration.closestClassDeclaration() != null }?.declaration?.qualifiedName?.asString()?.let { setOf(it) } ?: setOf()) + getImports(annotated.element)
             }
+
             is KSValueParameter -> {
                 getImports(annotated.type)
             }
+
             is KSTypeArgument -> {
                 annotated.type?.let { getImports(it) } ?: setOf()
             }
+
             else -> setOf()
         }
     }

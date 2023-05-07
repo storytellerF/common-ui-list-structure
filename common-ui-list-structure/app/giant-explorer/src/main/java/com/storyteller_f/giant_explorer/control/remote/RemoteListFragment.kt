@@ -9,19 +9,16 @@ import androidx.lifecycle.flowWithLifecycle
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.annotation_defination.ItemHolder
 import com.storyteller_f.common_ui.scope
-import com.storyteller_f.giant_explorer.control.task.BigTimeTaskItemHolder
-import com.storyteller_f.giant_explorer.control.task.TaskTypeHolder
 import com.storyteller_f.giant_explorer.database.RemoteAccessSpec
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentRemoteListBinding
 import com.storyteller_f.giant_explorer.databinding.ViewHolderRemoteAccessSpecBinding
 import com.storyteller_f.ui_list.adapter.ManualAdapter
-import com.storyteller_f.ui_list.core.AdapterViewHolder
+import com.storyteller_f.ui_list.core.BindingViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.ui.ListWithState
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 
@@ -79,7 +76,7 @@ class RemoteAccessSpecHolder(val spec: RemoteAccessSpec) : DataItemHolder {
 }
 
 @BindItemHolder(RemoteAccessSpecHolder::class)
-class RemoteAccessSpecViewHolder(private val binding: ViewHolderRemoteAccessSpecBinding) : AdapterViewHolder<RemoteAccessSpecHolder>(binding) {
+class RemoteAccessSpecViewHolder(private val binding: ViewHolderRemoteAccessSpecBinding) : BindingViewHolder<RemoteAccessSpecHolder>(binding) {
     override fun bindData(itemHolder: RemoteAccessSpecHolder) {
         binding.url.text = itemHolder.spec.toFtpSpec().toUri()
 

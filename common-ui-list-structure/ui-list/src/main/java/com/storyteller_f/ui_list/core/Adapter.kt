@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
@@ -14,10 +15,18 @@ import java.util.*
 typealias BuildViewHolderFunction = (ViewGroup, String) -> AbstractViewHolder<out DataItemHolder>
 
 val list = mutableListOf<BuildViewHolderFunction>()
+val secondList = mutableListOf<Pair<SecondRegisterKey, Int>>()
 
 val registerCenter = mutableMapOf<Class<out DataItemHolder>, Int>()
+val secondRegisterCenter = mutableMapOf<SecondRegisterKey, Int>()
+
+data class SecondRegisterKey(val clazz: Class<out DataItemHolder>, val type: String)
 
 interface DataItemHolder {
+
+    val type: String
+        get() = ""
+
     /**
      * 可以直接进行强制类型转换，无需判断
      */
@@ -28,6 +37,10 @@ interface DataItemHolder {
 abstract class AbstractViewHolder<IH : DataItemHolder>(val view: View) :
     RecyclerView.ViewHolder(view) {
     private var _itemHolder: IH? = null
+
+    /**
+     * 一个View 可能会找到不属于自己的Fragment，需要针对holder 指定key
+     */
     lateinit var keyed: String
     val itemHolder get() = _itemHolder as IH
     fun onBind(itemHolder: IH) {
@@ -40,14 +53,20 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(val view: View) :
     fun getColor(@ColorRes id: Int) = ContextCompat.getColor(view.context, id)
 }
 
-abstract class AdapterViewHolder<IH : DataItemHolder>(binding: ViewBinding) :
+abstract class BindingViewHolder<IH : DataItemHolder>(binding: ViewBinding) :
     AbstractViewHolder<IH>(binding.root)
 
 open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val key: String? = null) : RecyclerView.Adapter<VH>() {
     lateinit var target: RecyclerView.Adapter<VH>
-    var type = ""
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = (list[viewType].invoke(parent, type) as VH).apply {
-        keyed = key ?: "default"
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
+        val size = list.size
+        val viewHolder = if (viewType >= size) {
+            val pair = secondList[viewType - size]
+            list[pair.second](parent, pair.first.type)
+        } else list[viewType](parent, "")
+        return (viewHolder as VH).apply {
+            keyed = key ?: "default"
+        }
     }
 
     override fun onBindViewHolder(holder: VH, position: Int) {
@@ -64,7 +83,44 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val 
 
     override fun getItemViewType(position: Int): Int {
         val item = getItemAbstract(position) ?: return super.getItemViewType(position)
-        return registerCenter[item::class.java] ?: throw Exception("${item::class.java.canonicalName} not found.registerCenter count: ${registerCenter.size}")
+        val ihClass = item::class.java
+        return getType(ihClass, item) ?: throw Exception("${ihClass.canonicalName} not found.registerCenter count: ${registerCenter.size}")
+    }
+
+    private fun getType(ihClass: Class<out IH>, item: IH): Int? {
+        val functionPosition = registerCenter[ihClass] ?: return null
+        if (item.type.isNotEmpty()) {
+            val key1 = SecondRegisterKey(ihClass, item.type)
+            return secondRegisterCenter.getOrPut(key1) {
+                secondList.add(key1 to functionPosition)
+                functionPosition + list.size
+            }
+        }
+        return functionPosition
+    }
+
+    companion object {
+        val common_diff_util = object : DiffUtil.ItemCallback<DataItemHolder>() {
+            override fun areItemsTheSame(
+                oldItem: DataItemHolder,
+                newItem: DataItemHolder
+            ): Boolean {
+                return when {
+                    oldItem === newItem -> true
+                    oldItem.javaClass == newItem.javaClass && oldItem.type == newItem.type -> {
+                        oldItem.areItemsTheSame(newItem)
+                    }
+
+                    else -> false
+                }
+            }
+
+            override fun areContentsTheSame(
+                oldItem: DataItemHolder,
+                newItem: DataItemHolder
+            ): Boolean =
+                oldItem.areContentsTheSame(newItem)
+        }
     }
 
 }

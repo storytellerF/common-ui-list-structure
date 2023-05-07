@@ -6,300 +6,59 @@ import java.io.Serializable
  * @author storyteller_f
  */
 
-open class Dao1<out D1>(val d1: D1) : Serializable {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+data class Dao1<out D1>(val d1: D1) : Serializable
 
-        other as Dao1<*>
-
-        if (d1 != other.d1) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return d1?.hashCode() ?: 0
-    }
-}
-
-open class Dao2<out D1, out D2>(d1: D1, val d2: D2) : Dao1<D1>(d1) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        if (!super.equals(other)) return false
-
-        other as Dao2<*, *>
-
-        if (d2 != other.d2) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + (d2?.hashCode() ?: 0)
-        return result
-    }
-}
+data class Dao2<out D1, out D2>(val d1: D1, val d2: D2)
 
 infix fun <D1, D2> Dao1<D1>.dao(d2: D2) = Dao2(d1, d2)
 
 
-open class Dao3<out D1, out D2, out D3>(d1: D1, d2: D2, val d3: D3) : Dao2<D1, D2>(d1, d2) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        if (!super.equals(other)) return false
-
-        other as Dao3<*, *, *>
-
-        if (d3 != other.d3) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + (d3?.hashCode() ?: 0)
-        return result
-    }
-}
+data class Dao3<out D1, out D2, out D3>(val d1: D1, val d2: D2, val d3: D3)
 
 infix fun <D1, D2, D3> Dao2<D1, D2>.dao(d3: D3) = Dao3(d1, d2, d3)
 
 
-open class Dao4<out D1, out D2, out D3, out D4>(d1: D1, d2: D2, d3: D3, val d4: D4) : Dao3<D1, D2, D3>(d1, d2, d3) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        if (!super.equals(other)) return false
-
-        other as Dao4<*, *, *, *>
-
-        if (d4 != other.d4) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + (d4?.hashCode() ?: 0)
-        return result
-    }
-}
+data class Dao4<out D1, out D2, out D3, out D4>(val d1: D1, val d2: D2, val d3: D3, val d4: D4)
 
 infix fun <D1, D2, D3, D4> Dao3<D1, D2, D3>.dao(d4: D4) = Dao4(d1, d2, d3, d4)
 
 
-open class Dao5<out D1, out D2, out D3, out D4, out D5>(d1: D1, d2: D2, d3: D3, d4: D4, val d5: D5) : Dao4<D1, D2, D3, D4>(d1, d2, d3, d4) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        if (!super.equals(other)) return false
-
-        other as Dao5<*, *, *, *, *>
-
-        if (d5 != other.d5) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + (d5?.hashCode() ?: 0)
-        return result
-    }
-}
+data class Dao5<out D1, out D2, out D3, out D4, out D5>(val d1: D1, val d2: D2, val d3: D3, val d4: D4, val d5: D5)
 
 infix fun <D1, D2, D3, D4, D5> Dao4<D1, D2, D3, D4>.dao(d5: D5) = Dao5(d1, d2, d3, d4, d5)
 
 
-open class Dao6<out D1, out D2, out D3, out D4, out D5, out D6>(d1: D1, d2: D2, d3: D3, d4: D4, d5: D5, val d6: D6) : Dao5<D1, D2, D3, D4, D5>(d1, d2, d3, d4, d5) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        if (!super.equals(other)) return false
-
-        other as Dao6<*, *, *, *, *, *>
-
-        if (d6 != other.d6) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + (d6?.hashCode() ?: 0)
-        return result
-    }
-}
+data class Dao6<out D1, out D2, out D3, out D4, out D5, out D6>(val d1: D1, val d2: D2, val d3: D3, val d4: D4, val d5: D5, val d6: D6)
 
 infix fun <D1, D2, D3, D4, D5, D6> Dao5<D1, D2, D3, D4, D5>.dao(d6: D6) = Dao6(d1, d2, d3, d4, d5, d6)
 
 
-open class Dao7<out D1, out D2, out D3, out D4, out D5, out D6, out D7>(d1: D1, d2: D2, d3: D3, d4: D4, d5: D5, d6: D6, val d7: D7) : Dao6<D1, D2, D3, D4, D5, D6>(d1, d2, d3, d4, d5, d6) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        if (!super.equals(other)) return false
-
-        other as Dao7<*, *, *, *, *, *, *>
-
-        if (d7 != other.d7) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + (d7?.hashCode() ?: 0)
-        return result
-    }
-}
+data class Dao7<out D1, out D2, out D3, out D4, out D5, out D6, out D7>(val d1: D1, val d2: D2, val d3: D3, val d4: D4, val d5: D5, val d6: D6, val d7: D7)
 
 infix fun <D1, D2, D3, D4, D5, D6, D7> Dao6<D1, D2, D3, D4, D5, D6>.dao(d7: D7) = Dao7(d1, d2, d3, d4, d5, d6, d7)
 
 
-open class Dao8<out D1, out D2, out D3, out D4, out D5, out D6, out D7, out D8>(d1: D1, d2: D2, d3: D3, d4: D4, d5: D5, d6: D6, d7: D7, val d8: D8) :
-    Dao7<D1, D2, D3, D4, D5, D6, D7>(d1, d2, d3, d4, d5, d6, d7) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        if (!super.equals(other)) return false
-
-        other as Dao8<*, *, *, *, *, *, *, *>
-
-        if (d8 != other.d8) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + (d8?.hashCode() ?: 0)
-        return result
-    }
-}
+data class Dao8<out D1, out D2, out D3, out D4, out D5, out D6, out D7, out D8>(val d1: D1, val d2: D2, val d3: D3, val d4: D4, val d5: D5, val d6: D6, val d7: D7, val d8: D8)
 
 infix fun <D1, D2, D3, D4, D5, D6, D7, D8> Dao7<D1, D2, D3, D4, D5, D6, D7>.dao(d8: D8) = Dao8(d1, d2, d3, d4, d5, d6, d7, d8)
 
 
-open class Dao9<out D1, out D2, out D3, out D4, out D5, out D6, out D7, out D8, out D9>(d1: D1, d2: D2, d3: D3, d4: D4, d5: D5, d6: D6, d7: D7, d8: D8, val d9: D9) :
-    Dao8<D1, D2, D3, D4, D5, D6, D7, D8>(d1, d2, d3, d4, d5, d6, d7, d8) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        if (!super.equals(other)) return false
-
-        other as Dao9<*, *, *, *, *, *, *, *, *>
-
-        if (d9 != other.d9) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + (d9?.hashCode() ?: 0)
-        return result
-    }
-}
+data class Dao9<out D1, out D2, out D3, out D4, out D5, out D6, out D7, out D8, out D9>(val d1: D1, val d2: D2, val d3: D3, val d4: D4, val d5: D5, val d6: D6, val d7: D7, val d8: D8, val d9: D9)
 
 infix fun <D1, D2, D3, D4, D5, D6, D7, D8, D9> Dao8<D1, D2, D3, D4, D5, D6, D7, D8>.dao(d9: D9) = Dao9(d1, d2, d3, d4, d5, d6, d7, d8, d9)
 
 
-open class Dao10<out D1, out D2, out D3, out D4, out D5, out D6, out D7, out D8, out D9, out D10>(d1: D1, d2: D2, d3: D3, d4: D4, d5: D5, d6: D6, d7: D7, d8: D8, d9: D9, val d10: D10) :
-    Dao9<D1, D2, D3, D4, D5, D6, D7, D8, D9>(d1, d2, d3, d4, d5, d6, d7, d8, d9) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        if (!super.equals(other)) return false
-
-        other as Dao10<*, *, *, *, *, *, *, *, *, *>
-
-        if (d10 != other.d10) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + (d10?.hashCode() ?: 0)
-        return result
-    }
-}
+data class Dao10<out D1, out D2, out D3, out D4, out D5, out D6, out D7, out D8, out D9, out D10>(val d1: D1, val d2: D2, val d3: D3, val d4: D4, val d5: D5, val d6: D6, val d7: D7, val d8: D8, val d9: D9, val d10: D10)
 
 infix fun <D1, D2, D3, D4, D5, D6, D7, D8, D9, D10> Dao9<D1, D2, D3, D4, D5, D6, D7, D8, D9>.dao(d10: D10) = Dao10(d1, d2, d3, d4, d5, d6, d7, d8, d9, d10)
 
 
-open class Dao11<out D1, out D2, out D3, out D4, out D5, out D6, out D7, out D8, out D9, out D10, out D11>(
-    d1: D1,
-    d2: D2,
-    d3: D3,
-    d4: D4,
-    d5: D5,
-    d6: D6,
-    d7: D7,
-    d8: D8,
-    d9: D9,
-    d10: D10,
-    val d11: D11
-) : Dao10<D1, D2, D3, D4, D5, D6, D7, D8, D9, D10>(d1, d2, d3, d4, d5, d6, d7, d8, d9, d10) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        if (!super.equals(other)) return false
-
-        other as Dao11<*, *, *, *, *, *, *, *, *, *, *>
-
-        if (d11 != other.d11) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + (d11?.hashCode() ?: 0)
-        return result
-    }
-}
+data class Dao11<out D1, out D2, out D3, out D4, out D5, out D6, out D7, out D8, out D9, out D10, out D11>(val d1: D1, val d2: D2, val d3: D3, val d4: D4, val d5: D5, val d6: D6, val d7: D7, val d8: D8, val d9: D9, val d10: D10, val d11: D11)
 
 infix fun <D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11> Dao10<D1, D2, D3, D4, D5, D6, D7, D8, D9, D10>.dao(d11: D11) = Dao11(d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11)
 
 
-open class Dao12<out D1, out D2, out D3, out D4, out D5, out D6, out D7, out D8, out D9, out D10, out D11, out D12>(
-    d1: D1,
-    d2: D2,
-    d3: D3,
-    d4: D4,
-    d5: D5,
-    d6: D6,
-    d7: D7,
-    d8: D8,
-    d9: D9,
-    d10: D10,
-    d11: D11,
-    val d12: D12
-) : Dao11<D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11>(d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        if (!super.equals(other)) return false
-
-        other as Dao12<*, *, *, *, *, *, *, *, *, *, *, *>
-
-        if (d12 != other.d12) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + (d12?.hashCode() ?: 0)
-        return result
-    }
-}
+data class Dao12<out D1, out D2, out D3, out D4, out D5, out D6, out D7, out D8, out D9, out D10, out D11, out D12>(val d1: D1, val d2: D2, val d3: D3, val d4: D4, val d5: D5, val d6: D6, val d7: D7, val d8: D8, val d9: D9, val d10: D10, val d11: D11, val d12: D12)
 
 infix fun <D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12> Dao11<D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11>.dao(d12: D12) = Dao12(d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12)
 

@@ -24,6 +24,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ktx.nn
 import com.storyteller_f.common_ui.*
@@ -74,15 +76,15 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     })
 
     private val filters by keyPrefix({ "test" }, asvm({}) { it, _ ->
-        StateValueModel(it, default = mutableListOf<Filter<FileSystemItemModel>>())
+        StateValueModel(it, default = listOf<Filter<FileSystemItemModel>>())
     })
     private val sort by keyPrefix({ "sort" }, asvm({}) { it, _ ->
-        StateValueModel(it, default = mutableListOf<SortChain<FileSystemItemModel>>())
+        StateValueModel(it, default = listOf<SortChain<FileSystemItemModel>>())
     })
 
     private val data by search({ requireDatabase to session.selected }, { (database, selected) ->
-        SearchProducer(fileServiceBuilder(database)) { fileModel, _ ->
-            FileItemHolder(fileModel, selected.value.orEmpty())
+        SearchProducer(fileServiceBuilder(database)) { fileModel, _, sq ->
+            FileItemHolder(fileModel, selected.value.orEmpty(), sq.display)
         }
     })
 
@@ -95,14 +97,25 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     private val session by vm({ args }) {
         FileExplorerSession(requireActivity().application, it.path, it.root)
     }
+    private val displayGrid by keyPrefix("display", avm({}) { _ ->
+        genericValueModel(false)
+    })
+
     private val temp by keyPrefix({ "temp" }, pvm({}) {
         TempVM()
     })
 
     override fun onBindViewEvent(binding: FragmentFileListBinding) {
         val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
-        supportDirectoryContent(
-            binding.content, adapter, data, session, filterHiddenFile.data, filters.data, sort.data
+        displayGrid.data.observe(owner) {
+            binding.content.recyclerView.layoutManager = when {
+                it -> GridLayoutManager(requireContext(), 3)
+                else -> LinearLayoutManager(requireContext())
+            }
+        }
+
+        fileList(
+            binding.content, adapter, data, session, filterHiddenFile.data, filters.data, sort.data, displayGrid.data
         ) {
             (requireContext() as MainActivity).drawPath(it)
         }

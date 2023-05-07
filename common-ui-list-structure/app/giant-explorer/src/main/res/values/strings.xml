@@ -33,4 +33,5 @@
     <string name="background_task_manage">后台任务管理</string>
     <string name="root_intro">了解如何root</string>
     <string name="title_activity_remote_manager">RemoteManagerActivity</string>
+    <string name="duration_ms">duration: %1$s ms</string>
 </resources>

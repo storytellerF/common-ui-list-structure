@@ -33,7 +33,19 @@
         android:layout_height="wrap_content"
         android:text="@string/switch_root"
         app:layout_constraintBottom_toBottomOf="@id/path_man"
+        app:layout_constraintStart_toEndOf="@id/path_man"
+        app:layout_constraintTop_toTopOf="@id/path_man" />
+
+    <ToggleButton
+        android:id="@+id/switchDisplay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textOn="grid"
+        android:textOff="linear"
+        android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toBottomOf="@id/path_man"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/switchRoot"
         app:layout_constraintTop_toTopOf="@id/path_man" />
 
     <androidx.fragment.app.FragmentContainerView

@@ -4,10 +4,11 @@ package com.storyteller_f.common_vm_ktx
 
 import android.util.Log
 import androidx.annotation.MainThread
-import androidx.annotation.Nullable
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
+import com.storyteller_f.ext_func_definition.ExtFuncFlat
+import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.collections.set
@@ -262,6 +263,7 @@ fun <T> LiveData<T>.withState(owner: LifecycleOwner, ob: Observer<in T>) {
     observe(any, ob)
 }
 
+@ExtFuncFlat(ExtFuncFlatType.V6)
 fun<T1, T2> combine(s1: LiveData<T1?>, s2: LiveData<T2?>): MediatorLiveData<Dao2<T1?, T2?>> {
     val mediatorLiveData = MediatorLiveData<Dao2<T1?, T2?>>()
     var v1 = s1.value
@@ -273,52 +275,6 @@ fun<T1, T2> combine(s1: LiveData<T1?>, s2: LiveData<T2?>): MediatorLiveData<Dao2
     mediatorLiveData.addSource(s1) {
         v1 = it
         mediatorLiveData.value = Dao2(it, v2)
-    }
-    return mediatorLiveData
-}
-
-
-fun<T1, T2, T3> combineDao(s1: LiveData<T1>, s2: LiveData<T2>, s3: LiveData<T3>): MediatorLiveData<Dao3<T1?, T2?, T3?>> {
-    val mediatorLiveData = MediatorLiveData<Dao3<T1?, T2?, T3?>>()
-    var d1 = s1.value
-    var d2 = s2.value
-    var d3 = s3.value
-    mediatorLiveData.addSource(s3) {
-        d3 = it
-        mediatorLiveData.value = Dao3(d1, d2, it)
-    }
-    mediatorLiveData.addSource(s2) {
-        d2 = it
-        mediatorLiveData.value = Dao3(d1, it, d3)
-    }
-    mediatorLiveData.addSource(s1) {
-        d1 = it
-        mediatorLiveData.value = Dao3(it, d2, d3)
-    }
-    return mediatorLiveData
-}
-
-fun<T1, T2, T3, T4> combineDao(s1: LiveData<T1>, s2: LiveData<T2>, s3: LiveData<T3>, s4: LiveData<T4>): MediatorLiveData<Dao4<T1?, T2?, T3?, T4?>> {
-    val mediatorLiveData = MediatorLiveData<Dao4<T1?, T2?, T3?, T4?>>()
-    var d1 = s1.value
-    var d2 = s2.value
-    var d3 = s3.value
-    var d4 = s4.value
-    mediatorLiveData.addSource(s4) {
-        d4 = it
-        mediatorLiveData.value = Dao4(d1, d2, d3, it)
-    }
-    mediatorLiveData.addSource(s3) {
-        d3 = it
-        mediatorLiveData.value = Dao4(d1, d2, it, d4)
-    }
-    mediatorLiveData.addSource(s2) {
-        d2 = it
-        mediatorLiveData.value = Dao4(d1, it, d3, d4)
-    }
-    mediatorLiveData.addSource(s1) {
-        d1 = it
-        mediatorLiveData.value = Dao4(it, d2, d3, d4)
     }
     return mediatorLiveData
 }

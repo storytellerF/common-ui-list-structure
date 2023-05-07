@@ -1,6 +1,7 @@
 import com.storyteller_f.version_manager.*
 
 val filterFolder: String by project
+val baoFolder: String by project
 
 class RoomSchemaArgProvider(
     @get:InputDirectory
@@ -141,7 +142,11 @@ dependencies {
     implementation("com.hierynomus:sshj:0.35.0")
     implementation("com.madgag.spongycastle:core:1.58.0.0")
     implementation("com.madgag.spongycastle:prov:1.58.0.0")
-    implementation("com.github.storytellerF.Bao:startup:2.1.2")
+    if (baoFolder == "local")
+        implementation(project(":bao:startup"))
+    else
+        implementation("com.github.storytellerF.Bao:startup:2.1.2")
+    implementation("androidx.window:window:1.1.0-beta02")
 }
 baseApp()
 setupGeneric()

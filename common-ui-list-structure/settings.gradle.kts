@@ -1,4 +1,5 @@
 val filterFolder: String by settings
+val baoFolder: String by settings
 pluginManagement {
     includeBuild("version-manager")
     repositories {
@@ -62,3 +63,16 @@ if (currentFolder?.exists() != true) {
     }
 }
 include(":compat-ktx")
+val debugBaoFolder = when (baoFolder) {
+    "local" -> file("$home/AndroidStudioProjects/Bao/")
+    else -> null
+}
+if (debugBaoFolder != null) {
+    val l = listOf("startup", "bao-library")
+    for (sub in l) {
+        include("bao:$sub")
+        project(":bao:$sub").projectDir = file("${debugBaoFolder.absolutePath}/$sub")
+    }
+
+}
+

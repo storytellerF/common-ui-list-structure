@@ -140,6 +140,10 @@ class GenericValueModel<T> : ViewModel() {
     val data = MutableLiveData<T>()
 }
 
+fun<T> genericValueModel(t: T) = GenericValueModel<T>().apply {
+    data.value = t
+}
+
 class GenericListValueModel<T> : ViewModel() {
     val data = MutableLiveData<List<T>>()
 }

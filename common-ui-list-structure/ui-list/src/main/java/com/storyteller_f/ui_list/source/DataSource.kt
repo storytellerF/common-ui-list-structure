@@ -123,17 +123,17 @@ class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey
 ) : ViewModel() {
     var last: D? = null
 
-    val content: MediatorLiveData<DataHook<D, Holder, RK>> = liveData {
+    val content: MediatorLiveData<FatData<D, Holder, RK>> = liveData {
         val asLiveData = sourceRepository.request().asLiveData(Dispatchers.Main)
         val source = asLiveData.map {
-            DataHook(this@SimpleDataViewModel, it.map { repo ->
+            FatData(this@SimpleDataViewModel, it.map { repo ->
                 val holder = processFactory(repo, last)
                 last = repo
                 holder
             })
         }
         emitSource(source)
-    } as MediatorLiveData<DataHook<D, Holder, RK>>
+    } as MediatorLiveData<FatData<D, Holder, RK>>
 
     val loadState: LiveData<MoreInfoLoadState> = liveData {
         emitSource(sourceRepository.loadState.asLiveData())
@@ -158,10 +158,10 @@ class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey
     }
 
     fun reset(last: MutableList<Holder>) {
-        content.value = DataHook(this, last as List<Holder>)
+        content.value = FatData(this, last as List<Holder>)
     }
 
-    class DataHook<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey>(
+    class FatData<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey>(
         val viewModel: SimpleDataViewModel<D, Holder, RK>,
         val list: List<Holder>
     ) {

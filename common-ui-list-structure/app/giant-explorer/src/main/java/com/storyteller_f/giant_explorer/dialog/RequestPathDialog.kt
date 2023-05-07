@@ -5,6 +5,7 @@ import android.os.Parcelable
 import android.view.View
 import androidx.activity.ComponentDialog
 import androidx.activity.addCallback
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.flowWithLifecycle
 import androidx.paging.PagingData
@@ -51,8 +52,8 @@ class RequestPathDialog : SimpleDialogFragment<DialogRequestPathBinding>(DialogR
     class RequestPathResult(val path: String) : Parcelable
 
     private val data by search({ requireDatabase }, {
-        SearchProducer(fileServiceBuilder(it)) { fileModel, _ ->
-            FileItemHolder(fileModel, mutableListOf())
+        SearchProducer(fileServiceBuilder(it)) { fileModel, _ , sq->
+            FileItemHolder(fileModel, mutableListOf(), sq.display)
         }
     }
 
@@ -111,31 +112,8 @@ class RequestPathDialog : SimpleDialogFragment<DialogRequestPathBinding>(DialogR
         dialogImpl.init(requireContext(), { filters.data.value = it }, { sort.data.value = it })
         filters
         sort
-        context {
-            binding.content.sourceUp(adapter, owner, session.selected, flash = ListWithState.Companion::remote)
-            session.fileInstance.observe(owner) {
-                binding.pathMan.drawPath(it.path)
-            }
-            combineDao(session.fileInstance, filterHiddenFile.data, filters.data, sort.data).observe(owner, Observer {
-                val file = it.d1 ?: return@Observer
-                val filter = it.d2 ?: return@Observer
-                val filters = it.d3 ?: return@Observer
-                val sort = it.d4 ?: return@Observer
-                val path = file.path
-                //检查权限
-                scope.launch {
-                    if (!checkPathPermission(path)) {
-                        requestPermissionForSpecialPath(path)
-                    }
-                }
-
-                data.observerInScope(owner, FileExplorerSearch(file, filter, filters, sort)) { pagingData ->
-                    adapter.submitData(PagingData.empty())
-                    delay(100)
-                    adapter.submitData(pagingData)
-                }
-            })
-
+        fileList(binding.content, adapter, data, session, filterHiddenFile.data, filters.data, sort.data, MutableLiveData(false)) {
+            binding.pathMan.drawPath(it)
         }
         scope.launch {
             callbackFlow {
