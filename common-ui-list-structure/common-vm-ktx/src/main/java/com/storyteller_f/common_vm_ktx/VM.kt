@@ -6,10 +6,12 @@ package com.storyteller_f.common_vm_ktx
  * @author storyteller_f
  */
 
+import androidx.activity.ComponentActivity
 import androidx.annotation.MainThread
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import androidx.lifecycle.viewmodel.CreationExtras
+import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.savedstate.SavedStateRegistryOwner
 import com.storyteller_f.ext_func_definition.ExtFuncFlat
 import com.storyteller_f.ext_func_definition.ExtFuncFlatType
@@ -52,7 +54,7 @@ class KeyedViewModelLazy<VM : ViewModel>(
     private val viewModelClass: KClass<VM>,
     private val storeProducer: () -> ViewModelStore,
     private val factoryProducer: () -> ViewModelProvider.Factory,
-    val extrasProducer: () -> CreationExtras = { CreationExtras.Empty }
+    private val extrasProducer: () -> CreationExtras = { CreationExtras.Empty }
 ) : Lazy<VM> {
     private var cached: VM? = null
 
@@ -140,7 +142,7 @@ class GenericValueModel<T> : ViewModel() {
     val data = MutableLiveData<T>()
 }
 
-fun<T> genericValueModel(t: T) = GenericValueModel<T>().apply {
+fun <T> genericValueModel(t: T) = GenericValueModel<T>().apply {
     data.value = t
 }
 
@@ -150,4 +152,16 @@ class GenericListValueModel<T> : ViewModel() {
 
 class StateValueModel<T>(stateHandle: SavedStateHandle, key: String = "default", default: T) : ViewModel() {
     val data = stateHandle.getLiveData(key, default)
+}
+
+fun Fragment.buildExtras(block: MutableCreationExtras.() -> Unit): CreationExtras {
+    return MutableCreationExtras(defaultViewModelCreationExtras).apply {
+        block()
+    }
+}
+
+fun ComponentActivity.buildExtras(block: MutableCreationExtras.() -> Unit): CreationExtras {
+    return MutableCreationExtras(defaultViewModelCreationExtras).apply {
+        block()
+    }
 }

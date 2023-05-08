@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 class ListWithState @JvmOverloads constructor(
     context: Context,
@@ -67,10 +68,10 @@ class ListWithState @JvmOverloads constructor(
     fun <IH : DataItemHolder, VH : AbstractViewHolder<IH>> sourceUp(
         adapter: SimpleSourceAdapter<IH, VH>,
         lifecycleOwner: LifecycleOwner,
-        selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>? = null,
-        refresh: (() -> Unit) = { },
-        flash: ((CombinedLoadStates, Int) -> UIState) = Companion::simple,
         plugLayoutManager: Boolean = true,
+        refresh: () -> Unit = { },
+        dampingSwipe: ((AbstractViewHolder<out DataItemHolder>, Int) -> Unit)? = null,
+        flash: (CombinedLoadStates, Int) -> UIState = Companion::simple,
     ) {
         setAdapter(
             adapter.withLoadStateHeaderAndFooter(header = SimpleLoadStateAdapter { adapter.retry() },
@@ -106,8 +107,8 @@ class ListWithState @JvmOverloads constructor(
             }
         }
 
-        if (selected != null) {
-            setupSwipeSelectableSupport(selected)
+        if (dampingSwipe != null) {
+            setupDampingSwipeSupport(dampingSwipe)
         }
     }
 
@@ -162,7 +163,7 @@ class ListWithState @JvmOverloads constructor(
         }).attachToRecyclerView(binding.list)
     }
 
-    private fun setupSwipeSelectableSupport(selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>) {
+    private fun setupDampingSwipeSupport(block: (AbstractViewHolder<out DataItemHolder>, Int) -> Unit) {
 
         ItemTouchHelper(object :
             ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.START or ItemTouchHelper.END) {
@@ -186,34 +187,30 @@ class ListWithState @JvmOverloads constructor(
                 binding.refreshLayout.isEnabled = viewHolder == null
             }
 
-            private fun swipeViewHolder(viewHolder: RecyclerView.ViewHolder) {
-                val adapterViewHolder = viewHolder as AbstractViewHolder<out DataItemHolder>
-                val (currentSelectedHolders, currentHolderSelected) =
-                    selected.value.toggle(adapterViewHolder.itemHolder to viewHolder.absoluteAdapterPosition)
-                viewHolder.view.isSelected = currentHolderSelected
-                selected.value = currentSelectedHolders
-            }
 
             override fun onChildDraw(c: Canvas, recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean) {
                 if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
                     val firstLine = 200
                     val secondLine = firstLine + 100
+                    val isRight = dX > 0
+                    val dx = abs(dX)
                     when {
-                        dX < firstLine -> {
+                        dx < firstLine -> {
                             if (swipeEvent) {
                                 swipeEvent = false
                             }
                             super.onChildDraw(c, recyclerView, viewHolder, dX / 2, dY, actionState, isCurrentlyActive)
                         }
 
-                        dX < secondLine -> {
+                        dx < secondLine -> {
                             val firstMax = firstLine / 2
-                            super.onChildDraw(c, recyclerView, viewHolder, firstMax + (dX - firstLine) / 4, dY, actionState, isCurrentlyActive)
+                            val x = firstMax + (dx - firstLine) / 4
+                            super.onChildDraw(c, recyclerView, viewHolder, if (isRight) x else -x, dY, actionState, isCurrentlyActive)
                         }
 
-                        dX >= secondLine -> {
+                        dx >= secondLine -> {
                             if (!swipeEvent) {
-                                swipeViewHolder(viewHolder)
+                                block(viewHolder as AbstractViewHolder<out DataItemHolder>, if (isRight) ItemTouchHelper.RIGHT else ItemTouchHelper.LEFT)
                                 swipeEvent = true
                             }
                         }
@@ -289,10 +286,10 @@ class ListWithState @JvmOverloads constructor(
         setupSwapSupport(adapter)
     }
 
-    fun manualUp(adapter: ManualAdapter<*, *>, selected: MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>? = null, refresh: (() -> Unit)? = null) {
+    fun manualUp(adapter: ManualAdapter<*, *>, dampingSwipe: ((RecyclerView.ViewHolder, Int) -> Unit)? = null, refresh: (() -> Unit)? = null) {
         recyclerView.adapter = adapter
         setupLinearLayoutManager()
-        if (selected != null) setupSwipeSelectableSupport(selected)
+        if (dampingSwipe != null) setupDampingSwipeSupport(dampingSwipe)
         binding.refreshLayout.isEnabled = refresh != null
         binding.refreshLayout.setOnRefreshListener {
             refresh?.invoke()
@@ -401,7 +398,7 @@ class ListWithState @JvmOverloads constructor(
 /**
  * 反选
  */
-fun MutableList<Pair<DataItemHolder, Int>>?.toggle(pair: Pair<DataItemHolder, Int>): Pair<MutableList<Pair<DataItemHolder, Int>>, Boolean> {
+fun List<Pair<DataItemHolder, Int>>?.toggle(pair: Pair<DataItemHolder, Int>): Pair<MutableList<Pair<DataItemHolder, Int>>, Boolean> {
     val oldSelectedHolders = this ?: mutableListOf()
     val otherHolders = oldSelectedHolders.filter {
         !it.first.areItemsTheSame(pair.first)
@@ -416,4 +413,12 @@ fun List<Pair<DataItemHolder, Int>>.valueContains(pair: Pair<DataItemHolder, Int
         it.first.areItemsTheSame(pair.first)
     }
     return firstOrNull != null
+}
+
+fun MutableLiveData<List<Pair<DataItemHolder, Int>>>.toggle(viewHolder: RecyclerView.ViewHolder) {
+    val adapterViewHolder = viewHolder as AbstractViewHolder<out DataItemHolder>
+    val (currentSelectedHolders, currentHolderSelected) =
+        value.toggle(adapterViewHolder.itemHolder to viewHolder.absoluteAdapterPosition)
+    viewHolder.view.isSelected = currentHolderSelected
+    value = currentSelectedHolders
 }

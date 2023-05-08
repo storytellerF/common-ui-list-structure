@@ -8,18 +8,21 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import com.hierynomus.smbj.SMBClient
 import com.storyteller_f.common_ui.owner
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui.setOnClick
 import com.storyteller_f.common_ui.waitingDialog
 import com.storyteller_f.common_vm_ktx.GenericValueModel
+import com.storyteller_f.common_vm_ktx.buildExtras
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.giant_explorer.database.RemoteAccessSpec
 import com.storyteller_f.giant_explorer.database.RemoteSpec
 import com.storyteller_f.giant_explorer.database.ShareSpec
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentRemoteDetailBinding
+import com.storyteller_f.giant_explorer.defaultFactory
 import com.storyteller_f.giant_explorer.service.FtpInstance
 import com.storyteller_f.giant_explorer.service.FtpsInstance
 import com.storyteller_f.giant_explorer.service.WebDavInstance
@@ -49,9 +52,10 @@ class RemoteDetailFragment : Fragment() {
     private var _binding: FragmentRemoteDetailBinding? = null
 
     private val binding get() = _binding!!
-    private val model by vm({}) {
-        GenericValueModel<RemoteAccessSpec>()
-    }
+    private val model by viewModels<GenericValueModel<RemoteAccessSpec>>(factoryProducer = { defaultFactory }, extrasProducer = {
+        buildExtras {
+        }
+    })
 
     //is smb
     private val mode by vm({}) {
@@ -107,12 +111,15 @@ class RemoteDetailFragment : Fragment() {
                         RemoteAccessType.ftp -> withContext(Dispatchers.IO) {
                             FtpInstance(spec()).open()
                         }
+
                         RemoteAccessType.ftpes -> withContext(Dispatchers.IO) {
                             FtpsInstance(spec()).open()
                         }
+
                         RemoteAccessType.ftps -> withContext(Dispatchers.IO) {
                             FtpsInstance(spec()).open()
                         }
+
                         RemoteAccessType.webDav -> withContext(Dispatchers.IO) {
                             WebDavInstance(shareSpec()).instance
                         }

@@ -28,12 +28,9 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.control.plugin.PluginManageActivity
-import com.storyteller_f.giant_explorer.control.plugin.stoppable
 import com.storyteller_f.giant_explorer.control.remote.RemoteAccessType
 import com.storyteller_f.giant_explorer.control.remote.RemoteManagerActivity
 import com.storyteller_f.giant_explorer.control.root.RootAccessActivity
-import com.storyteller_f.giant_explorer.database.RemoteSpec
-import com.storyteller_f.giant_explorer.database.ShareSpec
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.ActivityMainBinding
 import com.storyteller_f.giant_explorer.dialog.FileOperationDialog
@@ -41,13 +38,7 @@ import com.storyteller_f.giant_explorer.filter.*
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
 import com.storyteller_f.giant_explorer.service.FileOperateService
 import com.storyteller_f.giant_explorer.service.FileService
-import com.storyteller_f.giant_explorer.service.FtpFileInstance
-import com.storyteller_f.giant_explorer.service.FtpsFileInstance
-import com.storyteller_f.giant_explorer.service.SFtpFileInstance
-import com.storyteller_f.giant_explorer.service.SmbFileInstance
-import com.storyteller_f.giant_explorer.service.WebDavFileInstance
 import com.storyteller_f.giant_explorer.view.PathMan
-import com.storyteller_f.multi_core.StoppableTask
 import com.storyteller_f.ui_list.core.*
 import com.storyteller_f.ui_list.event.viewBinding
 import com.topjohnwu.superuser.Shell
@@ -57,13 +48,11 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import java.lang.ref.WeakReference
 import java.util.*
-import kotlin.concurrent.thread
 
 class FileExplorerSession(application: Application, path: String, root: String) : AndroidViewModel(application) {
-    val selected = MutableLiveData<MutableList<Pair<DataItemHolder, Int>>>()
+    val selected = MutableLiveData<List<Pair<DataItemHolder, Int>>>()
     val fileInstance = MutableLiveData<FileInstance>()
 
     init {
@@ -73,32 +62,6 @@ class FileExplorerSession(application: Application, path: String, root: String) 
             }
         }
     }
-}
-
-suspend fun getFileInstanceAsync(path: String, context: Context, root: String = FileInstanceFactory.publicFileSystemRoot) = suspendCancellableCoroutine {
-    thread {
-        val result = Result.success(getFileInstance(path, context, root, it.stoppable()))
-        it.resumeWith(result)
-    }
-}
-
-fun getFileInstance(path: String, context: Context, root: String = FileInstanceFactory.publicFileSystemRoot, stoppableTask: StoppableTask = StoppableTask.Blocking): FileInstance {
-    if (root.startsWith("ftp://")) {
-        return FtpFileInstance(path, root, RemoteSpec.parse(root))
-    }
-    if (root.startsWith("smb://")) {
-        return SmbFileInstance(path, root, ShareSpec.parse(root))
-    }
-    if (root.startsWith("sftp://")) {
-        return SFtpFileInstance(path, root, RemoteSpec.parse(root))
-    }
-    if (root.startsWith("ftpes://") || root.startsWith("ftps://")) {
-        return FtpsFileInstance(path, root, RemoteSpec.parse(root))
-    }
-    if (root.startsWith("webdav://")) {
-        return WebDavFileInstance(path, root, ShareSpec.parse(root))
-    }
-    return FileInstanceFactory.getFileInstance(path, context, root, stoppableTask)
 }
 
 class MainActivity : CommonActivity(), FileOperateService.FileOperateResultContainer {
@@ -197,7 +160,8 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
                 navController.navigate(R.id.fileListFragment, FileListFragmentArgs(it, FileInstanceFactory.publicFileSystemRoot).toBundle())
             }
         }
-        navController.setGraph(R.navigation.nav_main, FileListFragmentArgs(FileInstanceFactory.rootUserEmulatedPath, FileInstanceFactory.publicFileSystemRoot).toBundle())
+        val startDestinationArgs = intent.getBundleExtra("start") ?: FileListFragmentArgs(FileInstanceFactory.rootUserEmulatedPath, FileInstanceFactory.publicFileSystemRoot).toBundle()
+        navController.setGraph(R.navigation.nav_main, startDestinationArgs)
     }
 
     companion object {

@@ -3,6 +3,9 @@ package com.storyteller_f.giant_explorer
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
@@ -35,6 +38,12 @@ import java.security.Security
 
 
 val pluginManagerRegister = PluginManager()
+
+val defaultFactory = object : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
+        return super.create(modelClass, extras)
+    }
+}
 
 class App : Application() {
     override fun onCreate() {
@@ -72,6 +81,7 @@ class App : Application() {
 
 
 }
+
 fun refreshPlugin(context: Context) {
     File(context.filesDir, "plugins").listFiles { it ->
         it.extension == "apk" || it.extension == "zip"
@@ -79,6 +89,7 @@ fun refreshPlugin(context: Context) {
         pluginManagerRegister.foundPlugin(it)
     }
 }
+
 abstract class BigTimeWorker(
     private val context: Context,
     private val workerParams: WorkerParameters

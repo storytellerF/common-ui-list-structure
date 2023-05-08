@@ -1,6 +1,6 @@
 package com.storyteller_f.giant_explorer.view;
 
-import static com.storyteller_f.giant_explorer.control.MainActivityKt.getFileInstance;
+import static com.storyteller_f.giant_explorer.control.FileListKt.getFileInstance;
 
 import android.content.Context;
 import android.util.AttributeSet;

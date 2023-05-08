@@ -14,6 +14,7 @@
         android:layout_marginStart="8dp"
         android:ellipsize="middle"
         android:singleLine="true"
+        android:textColor="?android:textColorPrimary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/fileIcon"

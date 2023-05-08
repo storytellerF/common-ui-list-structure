@@ -20,10 +20,12 @@ import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
+import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.paging.PagingData
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.storyteller_f.annotation_defination.BindClickEvent
@@ -108,6 +110,8 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     override fun onBindViewEvent(binding: FragmentFileListBinding) {
         val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
         displayGrid.data.observe(owner) {
+            binding.content.recyclerView.isVisible = false
+            adapter.submitData(cycle, PagingData.empty())
             binding.content.recyclerView.layoutManager = when {
                 it -> GridLayoutManager(requireContext(), 3)
                 else -> LinearLayoutManager(requireContext())
@@ -115,7 +119,12 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         }
 
         fileList(
-            binding.content, adapter, data, session, filterHiddenFile.data, filters.data, sort.data, displayGrid.data
+            binding.content, adapter, data, session, filterHiddenFile.data, filters.data, sort.data, displayGrid.data, { h ->
+                startActivity(Intent(requireContext(), MainActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+                    putExtra("start", FileListFragmentArgs(h.file.fullPath, args.root).toBundle())
+                })
+            }
         ) {
             (requireContext() as MainActivity).drawPath(it)
         }
@@ -293,35 +302,22 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
             setOnMenuItemClickListener { item ->
                 when (item.itemId) {
-                    R.id.delete -> {
-                        fileOperateBinder?.delete(itemHolder.file.item, detectSelected(itemHolder), key)
-                    }
-
-                    R.id.move_to -> {
-                        moveOrCopy(true, itemHolder)
-                    }
-
-                    R.id.copy_to -> {
-                        moveOrCopy(false, itemHolder)
-                    }
-
-                    R.id.copy_file -> {
-                        ContextCompat.getSystemService(requireContext(), ClipboardManager::class.java)?.let { manager ->
-                            val map = detectSelected(itemHolder).map {
-                                Uri.fromFile(File(it.fullPath))
-                            }
-                            val apply = ClipData.newPlainText(clipDataKey, map.first().toString()).apply {
-                                if (map.size > 1) map.subList(1, map.size).forEach {
-                                    addItem(ClipData.Item(it))
-                                }
-                            }
-                            manager.setPrimaryClip(apply)
+                    R.id.delete -> fileOperateBinder?.delete(itemHolder.file.item, detectSelected(itemHolder), key)
+                    R.id.move_to -> moveOrCopy(true, itemHolder)
+                    R.id.copy_to -> moveOrCopy(false, itemHolder)
+                    R.id.copy_file -> ContextCompat.getSystemService(requireContext(), ClipboardManager::class.java)?.let { manager ->
+                        val map = detectSelected(itemHolder).map {
+                            Uri.fromFile(File(it.fullPath))
                         }
+                        val apply = ClipData.newPlainText(clipDataKey, map.first().toString()).apply {
+                            if (map.size > 1) map.subList(1, map.size).forEach {
+                                addItem(ClipData.Item(it))
+                            }
+                        }
+                        manager.setPrimaryClip(apply)
                     }
 
-                    R.id.properties -> {
-                        findNavController().navigate(R.id.action_fileListFragment_to_propertiesDialog, PropertiesDialogArgs(fullPath).toBundle())
-                    }
+                    R.id.properties -> findNavController().navigate(R.id.action_fileListFragment_to_propertiesDialog, PropertiesDialogArgs(fullPath).toBundle())
 
                 }
                 true

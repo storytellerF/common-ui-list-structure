@@ -10,12 +10,10 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?actionBarSize"
-        android:background="@color/purple_500"
+        android:background="?attr/colorPrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-        app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         app:titleTextColor="@android:color/white" />
 
     <com.storyteller_f.giant_explorer.view.EditablePathMan
@@ -40,9 +38,9 @@
         android:id="@+id/switchDisplay"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textOn="grid"
-        android:textOff="linear"
         android:layout_marginStart="8dp"
+        android:textOff="linear"
+        android:textOn="grid"
         app:layout_constraintBottom_toBottomOf="@id/path_man"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/switchRoot"

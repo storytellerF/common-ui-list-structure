@@ -70,7 +70,7 @@
             android:configChanges="keyboard|keyboardHidden"
             android:exported="false"
             android:label="@string/title_activity_root_access"
-            android:theme="@style/Theme.MyApplication" />
+            android:theme="@style/Theme.Common_ui_list_structure" />
         <activity
             android:name=".control.SettingsActivity"
             android:configChanges="keyboard|keyboardHidden"
@@ -80,8 +80,7 @@
             android:name=".control.task.BackgroundTaskConfigActivity"
             android:configChanges="keyboard|keyboardHidden"
             android:exported="false"
-            android:label="@string/title_activity_background_task_config"
-            android:theme="@style/Theme.Common_ui_list_structure.NoActionBar" />
+            android:label="@string/title_activity_background_task_config" />
         <activity
             android:name=".control.MainActivity"
             android:configChanges="keyboard|keyboardHidden"

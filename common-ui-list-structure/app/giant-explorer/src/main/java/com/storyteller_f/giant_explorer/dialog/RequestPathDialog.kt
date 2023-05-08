@@ -6,16 +6,11 @@ import android.view.View
 import androidx.activity.ComponentDialog
 import androidx.activity.addCallback
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
 import androidx.lifecycle.flowWithLifecycle
-import androidx.paging.PagingData
 import com.storyteller_f.annotation_defination.BindClickEvent
-import com.storyteller_f.common_ktx.context
 import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
-import com.storyteller_f.file_system.checkPathPermission
-import com.storyteller_f.file_system.requestPermissionForSpecialPath
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.control.*
 import com.storyteller_f.giant_explorer.database.requireDatabase
@@ -27,11 +22,8 @@ import com.storyteller_f.giant_explorer.view.PathMan
 import com.storyteller_f.multi_core.StoppableTask
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import com.storyteller_f.ui_list.source.SearchProducer
-import com.storyteller_f.ui_list.source.observerInScope
 import com.storyteller_f.ui_list.source.search
-import com.storyteller_f.ui_list.ui.ListWithState
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -52,7 +44,7 @@ class RequestPathDialog : SimpleDialogFragment<DialogRequestPathBinding>(DialogR
     class RequestPathResult(val path: String) : Parcelable
 
     private val data by search({ requireDatabase }, {
-        SearchProducer(fileServiceBuilder(it)) { fileModel, _ , sq->
+        SearchProducer(fileServiceBuilder(it)) { fileModel, _, sq ->
             FileItemHolder(fileModel, mutableListOf(), sq.display)
         }
     }
@@ -112,7 +104,9 @@ class RequestPathDialog : SimpleDialogFragment<DialogRequestPathBinding>(DialogR
         dialogImpl.init(requireContext(), { filters.data.value = it }, { sort.data.value = it })
         filters
         sort
-        fileList(binding.content, adapter, data, session, filterHiddenFile.data, filters.data, sort.data, MutableLiveData(false)) {
+        fileList(binding.content, adapter, data, session, filterHiddenFile.data, filters.data, sort.data, MutableLiveData(false), {
+
+        }) {
             binding.pathMan.drawPath(it)
         }
         scope.launch {

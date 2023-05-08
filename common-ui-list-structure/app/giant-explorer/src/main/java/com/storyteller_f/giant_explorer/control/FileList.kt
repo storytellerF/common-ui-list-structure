@@ -2,6 +2,7 @@ package com.storyteller_f.giant_explorer.control
 
 import android.content.ClipData
 import android.content.ClipDescription
+import android.content.Context
 import android.os.Build
 import android.view.DragEvent
 import android.view.View
@@ -13,12 +14,14 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.ItemTouchHelper
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ktx.context
 import com.storyteller_f.common_ktx.same
 import com.storyteller_f.common_ui.setVisible
 import com.storyteller_f.common_vm_ktx.combineDao
 import com.storyteller_f.common_vm_ktx.distinctUntilChangedBy
+import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
@@ -29,11 +32,20 @@ import com.storyteller_f.file_system_ktx.fileIcon
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.filter_core.Filter
 import com.storyteller_f.giant_explorer.R
+import com.storyteller_f.giant_explorer.control.plugin.stoppable
 import com.storyteller_f.giant_explorer.database.LocalDatabase
+import com.storyteller_f.giant_explorer.database.RemoteSpec
+import com.storyteller_f.giant_explorer.database.ShareSpec
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileBinding
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileGridBinding
 import com.storyteller_f.giant_explorer.model.FileModel
 import com.storyteller_f.giant_explorer.pc_end_on
+import com.storyteller_f.giant_explorer.service.FtpFileInstance
+import com.storyteller_f.giant_explorer.service.FtpsFileInstance
+import com.storyteller_f.giant_explorer.service.SFtpFileInstance
+import com.storyteller_f.giant_explorer.service.SmbFileInstance
+import com.storyteller_f.giant_explorer.service.WebDavFileInstance
+import com.storyteller_f.multi_core.StoppableTask
 import com.storyteller_f.sort_ui.SortChain
 import com.storyteller_f.sort_ui.SortDialog
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
@@ -44,12 +56,31 @@ import com.storyteller_f.ui_list.event.findActionReceiverOrNull
 import com.storyteller_f.ui_list.source.SimpleSearchViewModel
 import com.storyteller_f.ui_list.source.observerInScope
 import com.storyteller_f.ui_list.ui.ListWithState
+import com.storyteller_f.ui_list.ui.toggle
 import com.storyteller_f.ui_list.ui.valueContains
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.Locale
 import kotlin.concurrent.thread
 import kotlin.coroutines.resumeWithException
+
+suspend fun getFileInstanceAsync(path: String, context: Context, root: String = FileInstanceFactory.publicFileSystemRoot) = suspendCancellableCoroutine {
+    thread {
+        val result = Result.success(getFileInstance(path, context, root, it.stoppable()))
+        it.resumeWith(result)
+    }
+}
+
+fun getFileInstance(path: String, context: Context, root: String = FileInstanceFactory.publicFileSystemRoot, stoppableTask: StoppableTask = StoppableTask.Blocking): FileInstance {
+    return when {
+        root.startsWith("ftp://") -> FtpFileInstance(path, root, RemoteSpec.parse(root))
+        root.startsWith("smb://") -> SmbFileInstance(path, root, ShareSpec.parse(root))
+        root.startsWith("sftp://") -> SFtpFileInstance(path, root, RemoteSpec.parse(root))
+        root.startsWith("ftpes://") || root.startsWith("ftps://") -> FtpsFileInstance(path, root, RemoteSpec.parse(root))
+        root.startsWith("webdav://") -> WebDavFileInstance(path, root, ShareSpec.parse(root))
+        else -> FileInstanceFactory.getFileInstance(path, context, root, stoppableTask)
+    }
+}
 
 fun LifecycleOwner.fileList(
     listWithState: ListWithState,
@@ -60,11 +91,16 @@ fun LifecycleOwner.fileList(
     filtersLiveData: LiveData<List<Filter<FileSystemItemModel>>>,
     sortLivedata: LiveData<List<SortChain<FileSystemItemModel>>>,
     display: LiveData<Boolean>,
+    rightSwipe: (FileItemHolder) -> Unit,
     updatePath: (String) -> Unit
 ) {
     val owner = if (this is Fragment) viewLifecycleOwner else this
     context {
-        listWithState.sourceUp(adapter, owner, session.selected, flash = ListWithState.Companion::remote, plugLayoutManager = false)
+        listWithState.sourceUp(adapter, owner, plugLayoutManager = false, dampingSwipe = { viewHolder, direction ->
+            if (direction == ItemTouchHelper.LEFT)
+                session.selected.toggle(viewHolder)
+            else rightSwipe(viewHolder.itemHolder as FileItemHolder)
+        }, flash = ListWithState.Companion::remote)
         session.fileInstance.observe(owner) {
             updatePath(it.path)
         }
