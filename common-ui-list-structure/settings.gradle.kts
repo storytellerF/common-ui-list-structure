@@ -55,7 +55,7 @@ val currentFolder = when (filterFolder) {
     "submodule" -> subModuleFilterFolder
     else -> null
 }
-if (currentFolder?.exists() != true) {
+if (currentFolder?.exists() == true) {
     val l = listOf("config-core", "filter-core", "sort-core", "config_edit", "filter-ui", "sort-ui", "recycleview_ui_extra")
     l.forEach {
         include("filter:$it")
@@ -67,11 +67,11 @@ val debugBaoFolder = when (baoFolder) {
     "local" -> file("$home/AndroidStudioProjects/Bao/")
     else -> null
 }
-if (debugBaoFolder != null) {
+if (debugBaoFolder?.exists() == true) {
     val l = listOf("startup", "bao-library")
     for (sub in l) {
         include("bao:$sub")
-        project(":bao:$sub").projectDir = file("${debugBaoFolder.absolutePath}/$sub")
+        project(":bao:$sub").projectDir = File(debugBaoFolder, sub)
     }
 
 }
