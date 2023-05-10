@@ -7,9 +7,9 @@
 
     <fragment
         android:id="@+id/navigation_home"
-        android:name="com.storyteller_f.common_ui_list_structure.ui.home.HomeFragment"
+        android:name="com.storyteller_f.common_ui_list_structure.ui.home.TestDataViewModelFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_test_data" />
 
     <fragment
         android:id="@+id/navigation_dashboard"
@@ -19,7 +19,7 @@
 
     <fragment
         android:id="@+id/navigation_notifications"
-        android:name="com.storyteller_f.common_ui_list_structure.ui.notifications.NotificationsFragment"
+        android:name="com.storyteller_f.common_ui_list_structure.ui.notifications.TestDetailViewModelFragment"
         android:label="@string/title_notifications"
-        tools:layout="@layout/fragment_notifications" />
+        tools:layout="@layout/fragment_test_detail" />
 </navigation>

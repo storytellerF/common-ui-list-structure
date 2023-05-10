@@ -5,12 +5,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.storyteller_f.common_ui_list_structure.databinding.ActivityMain2Binding
+import com.storyteller_f.common_ui_list_structure.databinding.ActivityTestViewModelBinding
 import com.storyteller_f.ui_list.event.viewBinding
 
-class MainActivity2 : AppCompatActivity() {
+class TestViewModelActivity : AppCompatActivity() {
 
-    private val binding: ActivityMain2Binding by viewBinding(ActivityMain2Binding::inflate)
+    private val binding by viewBinding(ActivityTestViewModelBinding::inflate)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

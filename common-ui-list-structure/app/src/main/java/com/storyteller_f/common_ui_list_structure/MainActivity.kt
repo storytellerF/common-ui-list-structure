@@ -160,7 +160,7 @@ class MainActivity : AppCompatActivity() {
 
     @BindClickEvent(SeparatorItemHolder::class, "card")
     fun clickLine() {
-        startActivity(Intent(this, MainActivity2::class.java))
+        startActivity(Intent(this, TestViewModelActivity::class.java))
     }
 
     private fun printInsets(insets: WindowInsetsCompat) {

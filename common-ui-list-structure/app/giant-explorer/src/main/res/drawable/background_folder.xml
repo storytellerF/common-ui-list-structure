@@ -2,14 +2,18 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_drag_hovered="true">
         <shape android:shape="rectangle">
-            <solid android:color="#3333B5E5" />
+            <solid android:color="?attr/colorTertiaryContainer" />
         </shape>
     </item>
     <item android:state_drag_can_accept="true">
         <shape android:shape="rectangle">
-            <solid android:color="#3399CC00" />
+            <solid android:color="?attr/colorSecondaryContainer" />
         </shape>
     </item>
     <item android:drawable="@drawable/folder_background" android:state_selected="false" />
-    <item android:drawable="@color/greyAlpha" android:state_selected="true" />
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorPrimary"/>
+        </shape>
+    </item>
 </selector>

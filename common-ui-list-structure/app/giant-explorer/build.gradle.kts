@@ -91,7 +91,7 @@ dependencies {
     fileSystemDependency()
     networkDependency()
     workerDependency()
-    implementation("androidx.preference:preference:1.2.0")
+    implementation("androidx.preference:preference-ktx:1.2.0")
     implementation("com.j256.simplemagic:simplemagic:1.17")
     implementation("androidx.browser:browser:1.5.0")
 
@@ -142,10 +142,11 @@ dependencies {
     implementation("com.hierynomus:sshj:0.35.0")
     implementation("com.madgag.spongycastle:core:1.58.0.0")
     implementation("com.madgag.spongycastle:prov:1.58.0.0")
-    if (baoFolder == "local")
+    val baoModule = findProject(":bao:startup")
+    if (baoFolder == "local" && baoModule != null)
         implementation(project(":bao:startup"))
     else
-        implementation("com.github.storytellerF.Bao:startup:2.1.2")
+        implementation("com.github.storytellerF.Bao:startup:2.2.0")
     implementation("androidx.window:window:1.1.0-beta02")
 }
 baseApp()

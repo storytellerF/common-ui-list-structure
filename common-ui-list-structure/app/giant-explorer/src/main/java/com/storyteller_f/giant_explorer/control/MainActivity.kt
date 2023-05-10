@@ -31,6 +31,7 @@ import com.storyteller_f.giant_explorer.control.plugin.PluginManageActivity
 import com.storyteller_f.giant_explorer.control.remote.RemoteAccessType
 import com.storyteller_f.giant_explorer.control.remote.RemoteManagerActivity
 import com.storyteller_f.giant_explorer.control.root.RootAccessActivity
+import com.storyteller_f.giant_explorer.control.task.BackgroundTaskConfigActivity
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.ActivityMainBinding
 import com.storyteller_f.giant_explorer.dialog.FileOperationDialog
@@ -200,6 +201,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             R.id.about -> startActivity(Intent(this, AboutActivity::class.java))
             R.id.plugin_manager -> startActivity(Intent(this, PluginManageActivity::class.java))
             R.id.remote_manager -> startActivity(Intent(this, RemoteManagerActivity::class.java))
+            R.id.background_task -> startActivity(Intent(this, BackgroundTaskConfigActivity::class.java))
         }
         return super.onOptionsItemSelected(item)
     }

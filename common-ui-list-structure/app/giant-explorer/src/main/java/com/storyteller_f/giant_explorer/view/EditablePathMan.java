@@ -32,13 +32,12 @@ public class EditablePathMan extends PathMan {
     @Override
     public void drawPath(String path) {
         super.drawPath(path);
-        addInput();
+        addInput(path);
     }
 
-    public void addInput() {
+    public void addInput(String path) {
         final EditText editText = new EditText(getContext());
         editText.setSingleLine();
-        editText.setHint("input path");
         editText.setTextSize(20);
         editText.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) {

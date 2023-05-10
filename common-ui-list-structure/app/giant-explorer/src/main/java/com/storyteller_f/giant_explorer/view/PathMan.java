@@ -1,7 +1,7 @@
 package com.storyteller_f.giant_explorer.view;
 
 import android.content.Context;
-import android.graphics.Color;
+import android.content.res.TypedArray;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.view.View;
@@ -20,10 +20,13 @@ public class PathMan extends HorizontalScrollView {
     PathChangeListener pathChangeListener;
     private LinearLayout linearLayout;
     private boolean scrollToEnd = false;
+
     public PathMan(Context context) {
         super(context);
         init(context);
-    }    /**
+    }
+
+    /**
      * 通过点击PathMan来进行跳转时，只能跳转到上级目录
      */
     OnClickListener clickListener = new OnClickListener() {
@@ -131,7 +134,15 @@ public class PathMan extends HorizontalScrollView {
             textView.setText(s);
         textView.setTextSize(20);
         textView.setPadding(20, 10, 20, 10);
-        textView.setBackgroundColor(Color.LTGRAY);
+        TypedArray typedArray = getContext().getTheme().obtainStyledAttributes(new int[]{
+                com.google.android.material.R.attr.colorSecondary,
+                com.google.android.material.R.attr.colorOnSecondary
+        });
+        int color = typedArray.getColor(0, 0);
+        int textColor = typedArray.getColor(1, 0);
+        textView.setBackgroundColor(color);
+        textView.setTextColor(textColor);
+        typedArray.recycle();
         textView.setOnClickListener(clickListener);
         return textView;
     }

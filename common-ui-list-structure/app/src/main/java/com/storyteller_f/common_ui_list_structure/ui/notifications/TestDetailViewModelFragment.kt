@@ -3,12 +3,12 @@ package com.storyteller_f.common_ui_list_structure.ui.notifications
 import android.widget.TextView
 import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.common_ui_list_structure.api.requireReposService
-import com.storyteller_f.common_ui_list_structure.databinding.FragmentNotificationsBinding
+import com.storyteller_f.common_ui_list_structure.databinding.FragmentTestDetailBinding
 import com.storyteller_f.common_ui_list_structure.db.requireRepoDatabase
 import com.storyteller_f.ui_list.source.DetailProducer
 import com.storyteller_f.ui_list.source.detail
 
-class NotificationsFragment : SimpleFragment<FragmentNotificationsBinding>(FragmentNotificationsBinding::inflate) {
+class TestDetailViewModelFragment : SimpleFragment<FragmentTestDetailBinding>(FragmentTestDetailBinding::inflate) {
 
     private val detail by detail(DetailProducer(
         {
@@ -18,7 +18,7 @@ class NotificationsFragment : SimpleFragment<FragmentNotificationsBinding>(Fragm
         }
     ))
 
-    override fun onBindViewEvent(binding: FragmentNotificationsBinding) {
+    override fun onBindViewEvent(binding: FragmentTestDetailBinding) {
         val textView: TextView = binding.textNotifications
         detail.content.observe(viewLifecycleOwner) {
             textView.text = it.fullName

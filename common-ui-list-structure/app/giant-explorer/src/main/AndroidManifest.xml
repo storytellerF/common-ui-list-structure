@@ -32,7 +32,7 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Common_ui_list_structure">
+        android:theme="@style/Theme.Giant_Explorer">
         <property
             android:name="android.window.PROPERTY_ACTIVITY_EMBEDDING_SPLITS_ENABLED"
             android:value="true" />
@@ -40,13 +40,11 @@
         <activity
             android:name=".control.remote.RemoteManagerActivity"
             android:exported="false"
-            android:label="@string/title_activity_remote_manager"
-            android:theme="@style/Theme.Common_ui_list_structure" />
+            android:label="@string/title_activity_remote_manager" />
         <activity
             android:name=".control.plugin.PluginManageActivity"
             android:exported="false"
-            android:label="@string/title_activity_plugin_manage"
-            android:theme="@style/Theme.Common_ui_list_structure">
+            android:label="@string/title_activity_plugin_manage">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
@@ -69,8 +67,7 @@
             android:name=".control.root.RootAccessActivity"
             android:configChanges="keyboard|keyboardHidden"
             android:exported="false"
-            android:label="@string/title_activity_root_access"
-            android:theme="@style/Theme.Common_ui_list_structure" />
+            android:label="@string/title_activity_root_access" />
         <activity
             android:name=".control.SettingsActivity"
             android:configChanges="keyboard|keyboardHidden"

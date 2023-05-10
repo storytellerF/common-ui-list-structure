@@ -8,13 +8,13 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import com.google.android.material.snackbar.Snackbar
 import com.storyteller_f.common_ui.CommonActivity
 import com.storyteller_f.common_ui.dialog
-import com.storyteller_f.common_ui_list_structure.databinding.ActivityMain3Binding
+import com.storyteller_f.common_ui_list_structure.databinding.ActivityTestNavigationResultBinding
 import com.storyteller_f.ui_list.event.viewBinding
 
-class MainActivity3 : CommonActivity() {
+class TestNavigationResultActivity : CommonActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
-    private val binding by viewBinding(ActivityMain3Binding::inflate)
+    private val binding by viewBinding(ActivityTestNavigationResultBinding::inflate)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

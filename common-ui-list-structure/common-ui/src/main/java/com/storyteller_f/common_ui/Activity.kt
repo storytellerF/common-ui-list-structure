@@ -1,5 +1,7 @@
 package com.storyteller_f.common_ui
 
+import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
@@ -95,7 +97,8 @@ abstract class SimpleActivity<T : ViewBinding>(
 fun ComponentActivity.supportNavigatorBarImmersive(view: View) {
     WindowCompat.setDecorFitsSystemWindows(window, false)
     window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-    WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = true
+    WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = !isNightMode
+    WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = !isNightMode
     window.navigationBarColor = Color.parseColor("#01000000")
     view.setOnApplyWindowInsetsListener { v, insets ->
         val top = WindowInsetsCompat.toWindowInsetsCompat(insets, v).getInsets(WindowInsetsCompat.Type.statusBars())
@@ -103,3 +106,6 @@ fun ComponentActivity.supportNavigatorBarImmersive(view: View) {
         insets
     }
 }
+
+val Context.isNightMode
+    get() = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES

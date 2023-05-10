@@ -32,6 +32,7 @@
     <string name="paste">粘贴</string>
     <string name="background_task_manage">后台任务管理</string>
     <string name="root_intro">了解如何root</string>
-    <string name="title_activity_remote_manager">RemoteManagerActivity</string>
-    <string name="duration_ms">duration: %1$s ms</string>
+    <string name="title_activity_remote_manager" translatable="false">RemoteManagerActivity</string>
+    <string name="duration_ms" translatable="false">duration: %1$s ms</string>
+    <string name="remote_access" translatable="false">远程访问</string>
 </resources>

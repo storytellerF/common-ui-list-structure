@@ -31,4 +31,5 @@
     <string name="switch_root">switch</string>
     <string name="paste">Paste</string>
     <string name="background_task_manage">background task</string>
+    <string name="root_intro">Learn how to root device</string>
 </resources>

@@ -13,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Common_ui_list_structure">
         <activity
-            android:name=".MainActivity3"
+            android:name=".TestNavigationResultActivity"
             android:configChanges="keyboard|keyboardHidden"
             android:exported="true"
             android:label="@string/title_activity_main3"
@@ -22,7 +22,7 @@
         </activity>
 
         <activity
-            android:name=".MainActivity2"
+            android:name=".TestViewModelActivity"
             android:configChanges="keyboard|keyboardHidden"
             android:exported="false"
             android:label="@string/title_activity_main2" />

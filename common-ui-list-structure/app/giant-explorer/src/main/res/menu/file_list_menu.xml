@@ -8,6 +8,7 @@
                 android:title="@string/string_add_file" />
             <item
                 android:id="@+id/add_directory"
+                android:icon="@drawable/baseline_create_new_folder_24"
                 android:title="@string/string_add_directory" />
         </menu>
     </item>
@@ -16,9 +17,5 @@
         android:icon="@drawable/ic_baseline_content_paste_24"
         android:title="@string/paste"
         app:showAsAction="ifRoom" />
-
-    <item
-        android:id="@+id/background_task"
-        android:title="@string/background_task_manage" />
 
 </menu>

@@ -156,11 +156,6 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
                 }
 
-                R.id.background_task -> {
-                    startActivity(Intent(requireContext(), BackgroundTaskConfigActivity::class.java))
-                    true
-                }
-
                 else -> false
             }
         }, owner)

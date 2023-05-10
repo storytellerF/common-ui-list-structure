@@ -7,16 +7,16 @@ import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.common_ui.dialog
 import com.storyteller_f.common_ui.fragment
 import com.storyteller_f.common_ui.setOnClick
-import com.storyteller_f.common_ui_list_structure.databinding.FragmentFirstBinding
+import com.storyteller_f.common_ui_list_structure.databinding.FragmentNavigationInvokeBinding
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.
  */
-class FirstFragment : SimpleFragment<FragmentFirstBinding>(FragmentFirstBinding::inflate) {
-    override fun onBindViewEvent(binding: FragmentFirstBinding) {
+class NavigationInvokeFragment : SimpleFragment<FragmentNavigationInvokeBinding>(FragmentNavigationInvokeBinding::inflate) {
+    override fun onBindViewEvent(binding: FragmentNavigationInvokeBinding) {
         binding.buttonFirst.setOnClickListener {
             findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
-            fragment(SecondFragment::class.java.toString(), SecondFragment.Result::class.java) { r ->
+            fragment(NavigationResultFragment::class.java.toString(), NavigationResultFragment.Result::class.java) { r ->
                 Toast.makeText(requireContext(), "fragment ${r.hh}", Toast.LENGTH_SHORT).show()
             }
         }
