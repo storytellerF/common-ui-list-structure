@@ -112,20 +112,15 @@ dependencies {
     implementation("androidx.webkit:webkit:1.6.1")
 
     //filter & sort
-    val home: String = System.getProperty("user.home")
-    val debugFilterFolder = file("$home/AndroidStudioProjects/FilterUIProject/")
-    val subModuleFilterFolder = file("./FilterUIProject")
-    val currentFolder = when (filterFolder) {
-        "local" -> debugFilterFolder
-        "submodule" -> subModuleFilterFolder
-        else -> null
+    val filterModuleNames = listOf(":filter:config-core", ":filter:sort-core", ":filter:filter-core", ":filter:filter-u", ":filter:sort-ui")
+       
+    val filterModules = filterModuleNames.mapNotNull {
+        findProject(it)
     }
-    if (currentFolder?.exists() == true) {
-        implementation(project(":filter:config-core"))
-        implementation(project(":filter:sort-core"))
-        implementation(project(":filter:filter-core"))
-        implementation(project(":filter:filter-ui"))
-        implementation(project(":filter:sort-ui"))
+    if (filterModules.size == filterModuleNames.size) {
+        filterModules.forEach {
+            implementation(it)
+        }
     } else {
         implementation("com.github.storytellerF:FilterUIProject:1.0")
     }
