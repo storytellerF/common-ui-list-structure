@@ -4,8 +4,6 @@ import android.app.Application
 import android.content.*
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
-import android.content.res.ColorStateList
-import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -175,10 +173,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     }
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        menu.findItem(R.id.filterHiddenFile)?.updateIcon(filterHiddenFile.data.value == true)
-        menu.findItem(R.id.paste_file)?.let {
-            it.isEnabled = ContextCompat.getSystemService(this, ClipboardManager::class.java)?.hasPrimaryClip() == true
-        }
+        menu.findItem(R.id.filterHiddenFile)?.updateEye(filterHiddenFile.data.value == true)
         return super.onPrepareOptionsMenu(menu)
     }
 
@@ -186,7 +181,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         when (item.itemId) {
             R.id.filterHiddenFile -> {
                 val newState = filterHiddenFile.data.value?.not() ?: true
-                item.updateIcon(newState)
+                item.updateEye(newState)
                 filterHiddenFile.data.value = newState
             }
 
@@ -290,11 +285,9 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         return navHostFragment.navController
     }
 
-    private fun MenuItem.updateIcon(newState: Boolean) {
+    private fun MenuItem.updateEye(newState: Boolean) {
         isChecked = newState
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            iconTintList = if (newState) ColorStateList.valueOf(Color.GRAY) else ColorStateList.valueOf(Color.BLACK)
-        }
+        icon = ContextCompat. getDrawable(this@MainActivity, if (newState) R.drawable.ic_eye_blind else R.drawable.ic_eye_vision)
     }
 
     var fileOperateBinder: FileOperateBinder? = null

@@ -43,7 +43,6 @@ import com.storyteller_f.giant_explorer.control.plugin.DefaultPluginManager
 import com.storyteller_f.giant_explorer.control.plugin.FragmentPluginActivity
 import com.storyteller_f.giant_explorer.control.plugin.WebViewPluginActivity
 import com.storyteller_f.giant_explorer.control.plugin.stoppable
-import com.storyteller_f.giant_explorer.control.task.BackgroundTaskConfigActivity
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentFileListBinding
 import com.storyteller_f.giant_explorer.dialog.*
@@ -135,6 +134,13 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         (requireActivity() as? MenuHost)?.addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
                 menuInflater.inflate(R.menu.file_list_menu, menu)
+            }
+
+            override fun onPrepareMenu(menu: Menu) {
+                super.onPrepareMenu(menu)
+                menu.findItem(R.id.paste_file)?.let {
+                    it.isEnabled = ContextCompat.getSystemService(requireContext(), ClipboardManager::class.java)?.hasPrimaryClip() == true
+                }
             }
 
             override fun onMenuItemSelected(menuItem: MenuItem) = when (menuItem.itemId) {
