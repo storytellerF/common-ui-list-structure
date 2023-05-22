@@ -15,7 +15,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="8dp"
-            android:src="@drawable/icon_filter_hidden_file" />
+            android:src="@drawable/ic_eye_blind" />
 
         <Button
             android:id="@+id/new_file"

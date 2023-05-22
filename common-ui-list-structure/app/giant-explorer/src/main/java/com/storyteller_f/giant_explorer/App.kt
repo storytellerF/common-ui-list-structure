@@ -13,6 +13,7 @@ import androidx.work.ListenableWorker
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.google.android.material.color.DynamicColors
 import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
@@ -48,6 +49,7 @@ val defaultFactory = object : ViewModelProvider.Factory {
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
+        DynamicColors.applyToActivitiesIfAvailable(this)
         setupBouncyCastle()
         listOf(HolderBuilder::add).fold(0) { acc, kFunction1 ->
             kFunction1(acc)
