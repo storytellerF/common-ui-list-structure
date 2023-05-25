@@ -2,7 +2,7 @@ package com.storyteller_f.annotation_compiler
 
 import com.example.ui_list_annotation_common.*
 import com.storyteller_f.annotation_defination.*
-import com.storyteller_f.slim_ktx.indent1
+import com.storyteller_f.slim_ktx.yes
 import com.storyteller_f.slim_ktx.insertCode
 import com.storyteller_f.slim_ktx.no
 import com.storyteller_f.slim_ktx.trimInsertCode
@@ -103,14 +103,14 @@ class AdapterProcessor : AbstractProcessor() {
                 if (type.equals("${it.key}")) {
                     $1
                 }//type if end
-            """.trimIndent().insertCode(viewHolderContent.indent1())
+            """.trimIndent().insertCode(viewHolderContent.yes())
         }.joinToString("\n")
         return """
             public static AbstractViewHolder<?> buildFor${entry.itemHolderName}(ViewGroup view, String type) {
                 $1
                 return null;
             }
-            """.trimIndent().insertCode(viewHolderBuilderContent.indent1())
+            """.trimIndent().insertCode(viewHolderBuilderContent.yes())
     }
 
     private fun createClassFileContent(
@@ -157,7 +157,12 @@ class AdapterProcessor : AbstractProcessor() {
                 $5
                 $6
             }
-            """.trimInsertCode(importComposeLibrary.no(), importHolders.no(), importReceiverClass.no(), importComposeRelatedLibrary.no(), buildViewHolder.indent1(), buildAddFunction.indent1())
+            """.trimInsertCode(importComposeLibrary.no(),
+            importHolders.no(),
+            importReceiverClass.no(),
+            importComposeRelatedLibrary.no(),
+            buildViewHolder.yes(),
+            buildAddFunction.yes())
     }
 
     private fun getEvent(
@@ -262,7 +267,8 @@ class AdapterProcessor : AbstractProcessor() {
                 }
             });
             return viewHolder;
-            """.trimInsertCode(buildComposeClickListener(eventList).indent1(2), buildComposeClickListener(eventList2).indent1(2))
+            """.trimInsertCode(buildComposeClickListener(eventList).yes(2),
+            buildComposeClickListener(eventList2).yes(2))
     }
 
     override fun getSupportedAnnotationTypes(): MutableSet<String> {
@@ -309,7 +315,7 @@ class AdapterProcessor : AbstractProcessor() {
             if (s == "${it.key}") {
                 $1                
             }//if end
-        """.trimInsertCode(clickBlock.indent1())
+        """.trimInsertCode(clickBlock.yes())
     }.joinToString("\n")
 
     private fun buildClickListener(event: Map<String, List<Event<Element>>>, event2: Map<String, List<Event<Element>>>): String {
@@ -318,7 +324,7 @@ class AdapterProcessor : AbstractProcessor() {
                 inflate.${it.key}.setOnClickListener((v) -> {
                     $1
                 });
-            """.trimInsertCode(buildClickListener(it.value).indent1())
+            """.trimInsertCode(buildClickListener(it.value).yes())
         }.joinToString("\n")
         val longClickListener = event2.map {
             """
@@ -326,7 +332,7 @@ class AdapterProcessor : AbstractProcessor() {
                     $1
                     return true;
                 });
-            """.trimInsertCode(buildClickListener(it.value).indent1())
+            """.trimInsertCode(buildClickListener(it.value).yes())
         }.joinToString("\n")
         return singleClickListener + longClickListener
     }
@@ -365,6 +371,6 @@ class AdapterProcessor : AbstractProcessor() {
                 $1
                 return $index;
             }
-            """.trimInsertCode(addFunctions.indent1())
+            """.trimInsertCode(addFunctions.yes())
     }
 }

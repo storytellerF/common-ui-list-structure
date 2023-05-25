@@ -262,22 +262,6 @@ fun <T> LiveData<T>.state(owner: LifecycleOwner, ob: Observer<in T>) {
     observe(any, ob)
 }
 
-@ExtFuncFlat(ExtFuncFlatType.V6)
-fun <T1, T2> combine(s1: LiveData<T1?>, s2: LiveData<T2?>): MediatorLiveData<Dao2<T1?, T2?>> {
-    val mediatorLiveData = MediatorLiveData<Dao2<T1?, T2?>>()
-    var v1 = s1.value
-    var v2 = s2.value
-    mediatorLiveData.addSource(s2) {
-        v2 = it
-        mediatorLiveData.value = Dao2(v1, it)
-    }
-    mediatorLiveData.addSource(s1) {
-        v1 = it
-        mediatorLiveData.value = Dao2(it, v2)
-    }
-    return mediatorLiveData
-}
-
 /**
  * @param f 返回是否相等
  */

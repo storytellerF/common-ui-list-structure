@@ -32,7 +32,7 @@ class UIListHolderZoom<T> {
     /**
      * 合并相同itemHolder的entry
      */
-    fun getGroupedHolders(mutableList: List<Entry<T>>): List<Entry<T>> {
+    private fun getGroupedHolders(mutableList: List<Entry<T>>): List<Entry<T>> {
         return mutableList.groupBy {
             it.itemHolderFullName
         }.map { entry ->

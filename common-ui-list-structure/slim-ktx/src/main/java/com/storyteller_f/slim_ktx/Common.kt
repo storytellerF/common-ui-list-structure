@@ -1,20 +1,21 @@
 package com.storyteller_f.slim_ktx
 
 
+/**
+ * 添加intent，除了第一行
+ */
 fun String.prependRest(indent: String = "    "): String = lineSequence().mapIndexed { index, it ->
-    if (index == 0) it
-    else when {
-        it.isBlank() -> {
-            when {
-                it.length < indent.length -> indent
-                else -> it
-            }
-        }
-
-        else -> indent + it
+    when {
+        index == 0 -> it
+        it.isNotBlank() -> indent + it
+        it.length < indent.length -> indent
+        else -> it
     }
 }.joinToString("\n")
 
+/**
+ * 将指定位置的内容替换成code block。
+ */
 fun String.insertCode(vararg codeBlock: CodeBlock): String {
     return codeBlock.foldIndexed(this) { i, acc, block ->
         acc.replace("$${i + 1}", block.prependRest())
@@ -23,7 +24,10 @@ fun String.insertCode(vararg codeBlock: CodeBlock): String {
 
 fun String.trimInsertCode(vararg codeBlock: CodeBlock) = trimIndent().insertCode(*codeBlock)
 
-class CodeBlock(private val content: String, val indent: Int) {
+class CodeBlock(private val content: String, private val indent: Int) {
+    /**
+     * 根据指定intent 添加intent
+     */
     fun prependRest(): String {
         var result = content
         repeat(indent) {
@@ -33,6 +37,12 @@ class CodeBlock(private val content: String, val indent: Int) {
     }
 }
 
+/**
+ * 不需要添加intent
+ */
 fun String.no() = CodeBlock(this, 0)
 
-fun String.indent1(i: Int = 1) = CodeBlock(this, i)
+/**
+ * 添加指定的intent
+ */
+fun String.yes(i: Int = 1) = CodeBlock(this, i)

@@ -8,223 +8,85 @@ import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 import java.io.BufferedWriter
 import java.io.OutputStreamWriter
 
-class ExtFuncProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
-
-    private fun generatePropertyV2(name: String) = """
-val Fragment.$name get() = requireContext().$name
-val View.$name get() = context.$name"""
-
-    private fun generatePropertyV3(name: String) = """
-val Fragment.$name get() = requireContext().$name
-val View.$name get() = context.$name
-val ViewBinding.$name get() = binding.root.context.$name"""
+class ExtFuncProcessor(private val codeGenerator: CodeGenerator, private val logger: KSPLogger) : SymbolProcessor {
 
     class Task(val name: String, val annotation: ExtFuncFlat, val ksAnnotated: KSAnnotated)
 
+    private var round = 0
 
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        logger.warn("$round")
+        round++
         val symbols = resolver.getSymbolsWithAnnotation(ExtFuncFlat::class.java.canonicalName)
-//        val ret = symbols.filter { !it.validate() }.toList()
+        val notValidates = symbols.filter { !it.validate() }.toList()
+        logger.warn("round $round not validates ${notValidates.joinToString { 
+            it.toString()
+        }}")
         val filter = symbols
             .filter {
-                (it is KSPropertyDeclaration || it is KSFunctionDeclaration) && it.validate()
+                (it is KSPropertyDeclaration || it is KSFunctionDeclaration || it is KSClassDeclaration) && it.validate()
             }
-        val groupBy = filter.mapNotNull { ksAnnotated ->
-            val first = ksAnnotated.getAnnotationsByType(ExtFuncFlat::class).first()
+        val groupByPackageName = filter.mapNotNull { ksAnnotated ->
+            val extFuncFlat = ksAnnotated.getAnnotationsByType(ExtFuncFlat::class).first()
             when (ksAnnotated) {
                 is KSPropertyDeclaration -> {
-                    ksAnnotated.packageName.asString() to Task(ksAnnotated.simpleName.getShortName(), first, ksAnnotated)
+                    ksAnnotated.packageName.asString() to Task(ksAnnotated.simpleName.getShortName(), extFuncFlat, ksAnnotated)
                 }
 
                 is KSFunctionDeclaration -> {
-                    ksAnnotated.packageName.asString() to Task(ksAnnotated.simpleName.getShortName(), first, ksAnnotated)
+                    ksAnnotated.packageName.asString() to Task(ksAnnotated.simpleName.getShortName(), extFuncFlat, ksAnnotated)
+                }
+
+                is KSClassDeclaration -> {
+                    ksAnnotated.packageName.asString() to Task(ksAnnotated.simpleName.getShortName(), extFuncFlat, ksAnnotated)
                 }
 
                 else -> null
             }
         }.groupBy { it.first }
-        groupBy.forEach {
-            generateForOnePackage(it.key, it.value.map { it.second })
+        groupByPackageName.forEach { (packageName, list) ->
+            generateForOnePackage(packageName, list.map { it.second }, symbols)
         }
         return emptyList()
     }
 
-    private fun generatePropertyV5(task: Task): Pair<Set<String>, String> {
-        val extra = if (task.ksAnnotated is KSFunctionDeclaration) {
-            task.ksAnnotated.parameters.map {
-//                (it.type.element as KSCallableReference).typeArguments.map {
-//                    it.type
-//                }
-                it.type.element
-            }.joinToString(",")
-        } else null
-        val imports = getImports(task.ksAnnotated) + listOf("androidx.fragment.app.Fragment")
-        val parameterListExcludeDefault = getParameterListExcludeDefault(task.ksAnnotated as KSFunctionDeclaration)
-        return imports to """
-//$extra
-@MainThread
-inline fun <reified VM : ViewModel, ARG> Fragment.a${task.name}(
-${parameterListExcludeDefault.prependIndent()}
-) = ${task.name}(arg, { requireActivity().viewModelStore }, { requireActivity() }, vmProducer)
-@MainThread
-inline fun <reified VM : ViewModel, ARG> Fragment.p${task.name}(
-${parameterListExcludeDefault.prependIndent()}
-) = ${task.name}(arg, { requireParentFragment().viewModelStore }, { requireParentFragment() }, vmProducer)
-"""
-//        if (task.ksAnnotated is KSFunctionDeclaration) {
-//            return "//${task.ksAnnotated.parameters.map { it.type }}"
-//        }
-//        return ""
-    }
+    private fun generateForOnePackage(packageName: String, taskList: List<Task>, symbols: Sequence<KSAnnotated>) {
 
-    private fun getParameterListExcludeDefault(ksAnnotated: KSFunctionDeclaration): String {
-        return ksAnnotated.parameters.mapNotNull {
-            if (it.hasDefault) null
-            else ("${if (it.isCrossInline) "crossinline" else ""} ${it.name?.getShortName()} : ${it.type}")
-        }.joinToString(",\n")
-    }
-
-    private fun generatePropertyV4(name: String, annotation: ExtFuncFlat): String {
-        return """
-${if (annotation.isContextReceiver) "context(Context)" else ""}
-val Int.$name
-get() = toFloat().dipToInt"""
-    }
-
-    private fun generateForOnePackage(packageName: String, value: List<Task>) {
-
-        val file = codeGenerator.createNewFile(Dependencies(true, *value.mapNotNull { it.ksAnnotated.containingFile }.toSet().toTypedArray()), packageName, "ExtBuilder")
+        val file = codeGenerator.createNewFile(Dependencies(true, *taskList.mapNotNull { it.ksAnnotated.containingFile }.toSet().toTypedArray()), packageName, "ExtBuilder")
         val libraryForContext = setOf("androidx.fragment.app.Fragment", "android.view.View")
         BufferedWriter(OutputStreamWriter(file)).use { writer ->
             writer.write("package $packageName\n")
 
-            writer.write("//${value.count()}\n")
-            writer.write("//${value.joinToString("##") { "${it.ksAnnotated}" }}\n")
-
-            val imports = value.map { "$packageName.${it.name}" }
-            val contents = value.map {
+            writer.write("//${taskList.count()}\n")
+            writer.write("//${taskList.joinToString("##") { "${it.ksAnnotated}" }}\n")
+            writer.write("//${symbols.joinToString("@@") {it.javaClass.canonicalName}}")
+            val beAnnotated = taskList.map { "$packageName.${it.name}" }
+            val contents = taskList.map {
                 val name = it.name
-                val type = it.annotation
-                when (type.type) {
-                    ExtFuncFlatType.V2 -> {
-                        libraryForContext to generatePropertyV2(name)
-                    }
+                val extFuncFlat = it.annotation
+                logger.warn("$name ${extFuncFlat.type}")
+                when (extFuncFlat.type) {
+                    ExtFuncFlatType.V2 -> libraryForContext to generatePropertyV2(name)
 
-                    ExtFuncFlatType.V3 -> {
-                        libraryForContext + "androidx.viewbinding.ViewBinding" to generatePropertyV3(name)
-                    }
+                    ExtFuncFlatType.V3 -> libraryForContext + "androidx.viewbinding.ViewBinding" to generatePropertyV3(name)
 
-                    ExtFuncFlatType.V4 -> {
-                        setOf("android.content.Context") to generatePropertyV4(name, type)
-                    }
+                    ExtFuncFlatType.V4 -> setOf("android.content.Context") to generatePropertyV4(name, extFuncFlat)
 
-                    ExtFuncFlatType.V5 -> {
-                        generatePropertyV5(it)
-                    }
+                    ExtFuncFlatType.V5 -> generatePropertyV5(it)
 
-                    ExtFuncFlatType.V6 -> {
-                        setOf("androidx.lifecycle.LiveData", "androidx.lifecycle.MediatorLiveData") to generateForV6()
-                    }
+                    ExtFuncFlatType.V6 -> setOf("androidx.lifecycle.LiveData", "androidx.lifecycle.MediatorLiveData") to generateForV6()
+                    ExtFuncFlatType.V7 -> setOf<String>() to generateForV7()
 
                     else -> setOf<String>() to ""
                 }
             }
-            val list = imports + contents.map { it.first }.fold<Set<String>, Set<String>>(setOf()) { t, t1 ->
+            val imports = beAnnotated.toSet() + contents.map { it.first }.fold(setOf()) { t, t1 ->
                 t.plus(t1)
-            }.toList()
-            writer.write(list.toSet().joinToString("\n") { "import $it" })
+            }
+            writer.write(imports.joinToString("\n") { "import $it" })
             writer.write("\n\n")
             writer.write(contents.joinToString("\n") { it.second })
-        }
-    }
-
-    private fun generateForV6(): String {
-        return MutableList(4) {
-            val count = 3 + it
-            val genericList = repeat("T1?", count)
-            val type = """MediatorLiveData<Dao$count<$genericList>>"""
-
-            val s = MutableList(count) {
-                val current = it + 1
-                """
-                 mediatorLiveData.addSource(s${current}) {
-                     d${current} = it
-                     mediatorLiveData.value = Dao$count(${repeat("d1", current - 1, end = ", ")}it, ${repeat("d1", count - current, current + 1)})
-                 }
-             """.trimIndent()
-            }.joinToString("\n")
-            """
-            fun<${repeat("T1", count)}> combineDao(${repeat("s1: LiveData<T1>", count)}): $type {
-                val mediatorLiveData = $type()
-                ${repeat("var d1 = s1.value\n", count, sp = "\n")}
-                $s
-                return mediatorLiveData
-            }
-            """.trimIndent()
-        }.joinToString("\n")
-    }
-
-    private fun repeat(template: String, count: Int, start: Int = 1, sp: String = ", ", end: String = ""): String {
-        val s = MutableList(count) {
-            template.replace("1", (it + start).toString())
-        }.joinToString(sp)
-        return s + if (s.isNotEmpty()) end else ""
-    }
-
-    private val setFold: (acc: Set<String>, Set<String>) -> Set<String> = { i, n ->
-        i + n
-    }
-
-    private fun getImports(node: KSNode?): Set<String> {
-        if (node == null) return emptySet<String>()
-        return when (node) {
-            is KSCallableReference -> {
-                getImports(node.returnType) + node.typeArguments.map {
-                    getImports(it)
-                }.fold(setOf(), setFold)
-            }
-
-            else -> {
-                emptySet()
-            }
-        }
-    }
-
-    private fun getImports(annotated: KSAnnotated?): Set<String> {
-        if (annotated == null) {
-            return emptySet()
-        }
-
-        return when (annotated) {
-            is KSFunctionDeclaration -> (annotated.extensionReceiver?.let { getImports(it) }?.toSet() ?: setOf()) +
-                    annotated.typeParameters.map {
-                        getImports(it)
-                    }.fold(setOf(), setFold) +
-                    annotated.annotations.map {
-                        getImports(it.annotationType)
-                    }.fold(setOf(), setFold) +
-                    annotated.parameters.map {
-                        getImports(it)
-                    }.fold(setOf(), setFold)
-
-            is KSTypeParameter -> annotated.bounds.map { reference ->
-                getImports(reference)
-            }.fold(setOf(), setFold)
-
-            is KSTypeReference -> {
-                (annotated.resolve().takeIf { it.declaration.closestClassDeclaration() != null }?.declaration?.qualifiedName?.asString()?.let { setOf(it) } ?: setOf()) + getImports(annotated.element)
-            }
-
-            is KSValueParameter -> {
-                getImports(annotated.type)
-            }
-
-            is KSTypeArgument -> {
-                annotated.type?.let { getImports(it) } ?: setOf()
-            }
-
-            else -> setOf()
         }
     }
 }
