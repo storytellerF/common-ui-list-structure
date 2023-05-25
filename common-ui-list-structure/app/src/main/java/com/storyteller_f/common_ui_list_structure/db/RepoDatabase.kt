@@ -12,7 +12,7 @@ import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 @Dao
 interface RepoDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(all: List<Repo>)
+    suspend fun insertAll(all: MutableList<out Repo>)
 
     @Query("SELECT * FROM repos ORDER BY stars DESC, name ASC")
     fun selectAll(): PagingSource<Int, Repo>
@@ -34,7 +34,7 @@ interface RepoDao {
 interface RemoteKeysDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(remoteKey: List<RepoRemoteKey>)
+    suspend fun insertAll(remoteKey: MutableList<out RepoRemoteKey>)
 
     @Query("SELECT * FROM repo_remote_keys WHERE itemId = :repoId")
     suspend fun remoteKeysRepoId(repoId: String): RepoRemoteKey?

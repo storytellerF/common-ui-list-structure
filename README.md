@@ -5,6 +5,17 @@
 
 整合了Jetpack Paging，View Model，Navigation，Compose
 
+## Build
+
+```shell
+# 编译全部
+bash build_all.sh
+# 仅编译app
+bash build_app.sh
+# 仅编译插件
+bash build_plugins.sh
+```
+
 ## 特殊模块
 
 1. **file-system**：封装android 文件系统。
@@ -13,7 +24,7 @@
 
 3. **ext-func**：对自动为Context 的扩展函数扩充为View，Fragment 的同名扩展函数。
 
-4. **Sml**：[自动生成color、drawable的xml 文件](sml)
+4. **Sml**：[自动生成color，drawable的xml 文件](sml)
 
 ## 示例模块
 
@@ -23,7 +34,7 @@
 
 ## 代码规范
 
-1. 禁止使用DataBinding 进行数据绑定和逻辑代码。xml 本身就有很高的冗余，在xml 中写“代码”只会增加维护成本。
+1. 禁止使用DataBinding 进行数据绑定和逻辑代码，特别是bindingAdapter。xml 本身就有很高的冗余，在xml 中写“代码”只会增加维护成本。
 2. DataItemHolder 应该继承自添加了`ItemHolder` 注解的接口。未来会通过ksp 严格限制。
 3. 基于状态,而不是事件
 4. 唯一数据源
@@ -114,10 +125,4 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
         binding.fileName.text = itemHolder.file.name
     }
 }
-```
-
-## Build
-
-```shell
-bash build_all.sh
 ```

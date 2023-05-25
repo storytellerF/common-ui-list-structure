@@ -6,14 +6,14 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
+import com.storyteller_f.common_vm_ktx.state
 import com.storyteller_f.ext_func_definition.ExtFuncFlat
 import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 
 context(LifecycleOwner)
-fun <T> LiveData<T>.withState(ob: Observer<in T>) {
+fun <T> LiveData<T>.state(ob: Observer<in T>) {
     val owner: LifecycleOwner = this@LifecycleOwner
-    val any = if (owner is Fragment) owner.viewLifecycleOwner else owner
-    observe(any, ob)
+    state(owner, ob)
 }
 
 context(Context)

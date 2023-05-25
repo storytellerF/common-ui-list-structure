@@ -7,13 +7,13 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.repeatOnLifecycle
+import com.storyteller_f.common_pr.state
 import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.operate.DefaultForemanProgressListener
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.databinding.DialogFileOperationBinding
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
-import com.storyteller_f.giant_explorer.service.LocalFileOperationForeman
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
@@ -128,16 +128,16 @@ class FileOperationDialog : SimpleDialogFragment<DialogFileOperationBinding>(Dia
                 else -> list.onVisible(binding.stateProgress)
             }
         }
-        progressVM.data.withState(this) {
+        progressVM.data.state {
             binding.progressBar.progress = it
         }
-        stateVM.data.withState(this) {
+        stateVM.data.state {
             binding.textViewState.text = it
         }
-        tipVM.data.withState(this) {
+        tipVM.data.state {
             binding.textViewDetail.text = it
         }
-        leftVM.data.withState(this) {
+        leftVM.data.state {
             Log.i(TAG, "onBindViewEvent: leftVM: $it")
             binding.textViewLeft.text = presentTaskSnapshot(it)
         }

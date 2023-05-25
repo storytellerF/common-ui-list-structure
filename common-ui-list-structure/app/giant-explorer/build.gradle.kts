@@ -142,8 +142,9 @@ dependencies {
         implementation(project(":bao:startup"))
     else
         implementation("com.github.storytellerF.Bao:startup:2.2.0")
-    implementation("androidx.window:window:1.1.0-beta02")
+    implementation("androidx.window:window:1.1.0-rc01")
 }
 baseApp()
 setupGeneric()
 setupDataBinding()
+setupDipToPx()

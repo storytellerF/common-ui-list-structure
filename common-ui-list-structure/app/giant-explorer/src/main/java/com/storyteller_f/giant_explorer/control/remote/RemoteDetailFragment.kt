@@ -10,7 +10,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.hierynomus.smbj.SMBClient
-import com.storyteller_f.common_ui.owner
+import com.storyteller_f.common_pr.state
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui.setOnClick
 import com.storyteller_f.common_ui.waitingDialog
@@ -76,8 +76,8 @@ class RemoteDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        mode.data.observe(owner) {
+        model
+        mode.data.state {
             Log.i(TAG, "onViewCreated: mode $it")
             binding.shareInput.isVisible = it == RemoteAccessType.smb || it == RemoteAccessType.webDav
             val i = RemoteAccessType.list.indexOf(it)

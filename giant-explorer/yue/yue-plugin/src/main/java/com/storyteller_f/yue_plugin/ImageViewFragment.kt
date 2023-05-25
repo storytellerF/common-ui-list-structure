@@ -3,17 +3,26 @@ package com.storyteller_f.yue_plugin
 import android.content.ContentResolver
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import java.io.File
+import androidx.fragment.app.Fragment
 
 private const val arg_uri = "param1"
 private const val arg_position = "param2"
+
+fun <T> Bundle.getParcelableCompat(key: String, clazz: Class<T>): T? {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        getParcelable(key, clazz)
+    } else {
+        @Suppress("DEPRECATION")
+        getParcelable(key)
+    }
+}
 
 class ImageViewFragment : Fragment() {
     private var uri: Uri? = null
@@ -22,7 +31,7 @@ class ImageViewFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            uri = it.getParcelable(arg_uri)
+            uri = it.getParcelableCompat(arg_uri, Uri::class.java)
             position = it.getInt(arg_position)
         }
     }
@@ -47,7 +56,8 @@ class ImageViewFragment : Fragment() {
                     findViewById.setImageBitmap(decodeStream)
                 }
             } else if (u.scheme == ContentResolver.SCHEME_CONTENT) {
-                val parcelFileDescriptor = requireContext().contentResolver.openFileDescriptor(u, "r")
+                val parcelFileDescriptor =
+                    requireContext().contentResolver.openFileDescriptor(u, "r")
                 parcelFileDescriptor.use {
                     val fileDescriptor = parcelFileDescriptor?.fileDescriptor ?: return
                     val decodeStream = BitmapFactory.decodeFileDescriptor(fileDescriptor)
@@ -56,8 +66,9 @@ class ImageViewFragment : Fragment() {
             }
 
         } catch (e: Exception) {
-            view.findViewById<TextView>(R.id.status).text = """$u
+            val trimMargin = """$u
                 |${e.localizedMessage}""".trimMargin()
+            view.findViewById<TextView>(R.id.status).text = trimMargin
         }
 
     }

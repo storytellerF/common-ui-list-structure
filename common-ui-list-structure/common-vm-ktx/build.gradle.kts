@@ -21,6 +21,6 @@ dependencies {
     unitTestDependency()
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib:${Versions.kotlinVersion}")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
 
 }

@@ -1,14 +1,14 @@
 package com.storyteller_f.version_manager
 
 object Versions {
-    const val kotlinVersion = "1.7.21"
+    const val kotlinVersion = "1.8.21"
     const val compileSdkVersion = 33
     const val targetSdkVersion = 33
     const val appcompatVersion = "1.6.1"
-    const val coreVersion = "1.9.0"
+    const val coreVersion = "1.10.1"
     const val recyclerViewVersion = "1.2.1"
     const val constraintLayoutVersion = "2.1.4"
-    const val materialVersion = "1.8.0"
+    const val materialVersion = "1.9.0"
     const val ktxVersion = "1.6.1"
     const val fragmentKtxVersion = "1.5.2"
     const val lifecycleVersion = "2.5.1"

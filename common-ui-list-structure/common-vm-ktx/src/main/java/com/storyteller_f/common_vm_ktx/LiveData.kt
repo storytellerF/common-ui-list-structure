@@ -78,11 +78,10 @@ fun combine(vararg arrayOfPairs: Pair<String, LiveData<out Any?>>): LiveData<Map
             }
         }
     }
-    return mediatorLiveData.combine()
+    return mediatorLiveData.map {
+        it as Map<String, Any?>
+    }
 }
-
-fun <X> LiveData<X>.combine(): LiveData<Map<String, Any?>> =
-    Transformations.map(this) { it as Map<String, Any?> }
 
 private fun <E> MutableList<E?>.addOrSet(e: Int, it: E) {
     synchronized(this) {
@@ -258,13 +257,13 @@ fun <T> LiveData<T>.debounce(ms: Long): MediatorLiveData<T> {
     return mediatorLiveData
 }
 
-fun <T> LiveData<T>.withState(owner: LifecycleOwner, ob: Observer<in T>) {
+fun <T> LiveData<T>.state(owner: LifecycleOwner, ob: Observer<in T>) {
     val any = if (owner is Fragment) owner.viewLifecycleOwner else owner
     observe(any, ob)
 }
 
 @ExtFuncFlat(ExtFuncFlatType.V6)
-fun<T1, T2> combine(s1: LiveData<T1?>, s2: LiveData<T2?>): MediatorLiveData<Dao2<T1?, T2?>> {
+fun <T1, T2> combine(s1: LiveData<T1?>, s2: LiveData<T2?>): MediatorLiveData<Dao2<T1?, T2?>> {
     val mediatorLiveData = MediatorLiveData<Dao2<T1?, T2?>>()
     var v1 = s1.value
     var v2 = s2.value
