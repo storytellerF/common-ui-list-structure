@@ -19,4 +19,4 @@ exit $?
 fi
 
 echo
-echo -e "\033[1;102m build all done \033[0m"
+echo -e "\033[30;102m build all done \033[0m"

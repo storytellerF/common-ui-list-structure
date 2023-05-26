@@ -2,10 +2,10 @@ package com.storyteller_f.annotation_compiler
 
 import com.example.ui_list_annotation_common.*
 import com.storyteller_f.annotation_defination.*
-import com.storyteller_f.slim_ktx.yes
 import com.storyteller_f.slim_ktx.insertCode
 import com.storyteller_f.slim_ktx.no
 import com.storyteller_f.slim_ktx.trimInsertCode
+import com.storyteller_f.slim_ktx.yes
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
@@ -41,7 +41,7 @@ class AdapterProcessor : AbstractProcessor() {
         roundEnvironment?.let { environment ->
             if (environment.processingOver()) {
                 println("binding event map process: ${zoom.debugState()}")
-                zoom.setTemp.forEach { (_, packageElement) ->
+                zoom.packagesTemp.forEach { (_, packageElement) ->
                     val content = createClassFileContent(
                         packageElement, zoom.holderEntryTemp, zoom
                     )
@@ -69,11 +69,13 @@ class AdapterProcessor : AbstractProcessor() {
                     }
                     processPackageInfo(roundEnvironment, typeElement)
                 }
+
                 "BindClickEvent" -> {
                     getEvent(
                         roundEnvironment, BindClickEvent::class.java
                     )?.let { map -> zoom.addClickEvent(map) }
                 }
+
                 "BindLongClickEvent" -> {
                     getEvent(
                         roundEnvironment, BindLongClickEvent::class.java
@@ -157,12 +159,14 @@ class AdapterProcessor : AbstractProcessor() {
                 $5
                 $6
             }
-            """.trimInsertCode(importComposeLibrary.no(),
+            """.trimInsertCode(
+            importComposeLibrary.no(),
             importHolders.no(),
             importReceiverClass.no(),
             importComposeRelatedLibrary.no(),
             buildViewHolder.yes(),
-            buildAddFunction.yes())
+            buildAddFunction.yes()
+        )
     }
 
     private fun getEvent(
@@ -197,12 +201,15 @@ class AdapterProcessor : AbstractProcessor() {
                 it.contains("android.view.View") -> {
                     "v"
                 }
+
                 it.contains("Holder") && !it.contains("Binding") -> {
                     "viewHolder.getItemHolder()"
                 }
+
                 it.contains("Binding") -> {
                     "inflate"
                 }
+
                 else -> {
                     throw UnknownError(it)
                 }
@@ -267,8 +274,10 @@ class AdapterProcessor : AbstractProcessor() {
                 }
             });
             return viewHolder;
-            """.trimInsertCode(buildComposeClickListener(eventList).yes(2),
-            buildComposeClickListener(eventList2).yes(2))
+            """.trimInsertCode(
+            buildComposeClickListener(eventList).yes(2),
+            buildComposeClickListener(eventList2).yes(2)
+        )
     }
 
     override fun getSupportedAnnotationTypes(): MutableSet<String> {
@@ -284,7 +293,7 @@ class AdapterProcessor : AbstractProcessor() {
     private fun buildViewHolder(
         entry: Holder, eventMapClick: Map<String, List<Event<Element>>>, eventMapLongClick: Map<String, List<Event<Element>>>
     ): String {
-        val buildClickListener = buildClickListener(eventMapClick, eventMapLongClick)
+        val buildClickListener = buildInvokeClickEvent(eventMapClick, eventMapLongClick)
         return """
             Context context = view.getContext();
             ${entry.bindingName} inflate = ${entry.bindingName}.inflate(LayoutInflater.from(context), view, false);
@@ -298,18 +307,7 @@ class AdapterProcessor : AbstractProcessor() {
     private fun buildComposeClickListener(event: Map<String, List<Event<Element>>>) = event.map {
         val clickBlock = it.value.joinToString("\n") { e ->
             val parameterList = e.parameterList
-            if (e.receiver.contains("Activity")) """
-                if("${e.key}".equals(viewHolder.keyed)) ViewJava.doWhenIs(context, ${e.receiver}.class, (activity) -> {
-                    activity.${e.functionName}($parameterList);
-                    return null;//activity return
-                });//activity end
-                """.trimIndent()
-            else """
-                if("${e.key}".equals(viewHolder.keyed)) ViewJava.findActionReceiverOrNull(composeView.getComposeView(), ${e.receiver}.class, (fragment) -> {
-                    fragment.${e.functionName}($parameterList);
-                    return null;//fragment return
-                });//fragment end
-                """.trimIndent()
+            produceClickBlockForCompose(e, parameterList)
         }
         """
             if (s == "${it.key}") {
@@ -318,26 +316,42 @@ class AdapterProcessor : AbstractProcessor() {
         """.trimInsertCode(clickBlock.yes())
     }.joinToString("\n")
 
-    private fun buildClickListener(event: Map<String, List<Event<Element>>>, event2: Map<String, List<Event<Element>>>): String {
-        val singleClickListener = event.map {
+    private fun produceClickBlockForCompose(e: Event<Element>, parameterList: String): String {
+        return if (e.receiver.contains("Activity"))
             """
-                inflate.${it.key}.setOnClickListener((v) -> {
-                    $1
-                });
-            """.trimInsertCode(buildClickListener(it.value).yes())
-        }.joinToString("\n")
-        val longClickListener = event2.map {
-            """
-                inflate.${it.key}.setOnLongClickListener((v) -> {
-                    $1
-                    return true;
-                });
-            """.trimInsertCode(buildClickListener(it.value).yes())
-        }.joinToString("\n")
+            if("${e.key}".equals(viewHolder.keyed)) ViewJava.doWhenIs(context, ${e.receiver}.class, (activity) -> {
+                activity.${e.functionName}($parameterList);
+                return null;//activity return
+            });//activity end
+            """.trimIndent()
+        else """
+            if("${e.key}".equals(viewHolder.keyed)) ViewJava.findActionReceiverOrNull(composeView.getComposeView(), ${e.receiver}.class, (fragment) -> {
+                fragment.${e.functionName}($parameterList);
+                return null;//fragment return
+            });//fragment end
+            """.trimIndent()
+    }
+
+    private fun buildInvokeClickEvent(event: Map<String, List<Event<Element>>>, event2: Map<String, List<Event<Element>>>): String {
+        val singleClickListener = event.map(::produceClickListener).joinToString("\n")
+        val longClickListener = event2.map(::produceLongClickListener).joinToString("\n")
         return singleClickListener + longClickListener
     }
 
-    private fun buildClickListener(events: List<Event<Element>>): String {
+    private fun produceClickListener(it: Map.Entry<String, List<Event<Element>>>) = """
+            inflate.${it.key}.setOnClickListener((v) -> {
+                $1
+            });
+        """.trimInsertCode(buildInvokeClickEvent(it.value).yes())
+
+    private fun produceLongClickListener(it: Map.Entry<String, List<Event<Element>>>) = """
+            inflate.${it.key}.setOnLongClickListener((v) -> {
+                $1
+                return true;
+            });
+        """.trimInsertCode(buildInvokeClickEvent(it.value).yes())
+
+    private fun buildInvokeClickEvent(events: List<Event<Element>>): String {
         return events.joinToString("\n") { event ->
             val parameterList = event.parameterList
             if (event.receiver.contains("Activity")) {
@@ -361,10 +375,8 @@ class AdapterProcessor : AbstractProcessor() {
     private fun buildAddFunction(entry: List<Entry<Element>>): String {
         var index = 0
         val addFunctions = entry.joinToString("\n") {
-            """
-                getRegisterCenter().put(${it.itemHolderName}.class, ${index++} + offset);
-                getList().add($className::buildFor${it.itemHolderName});
-            """.trimIndent()
+            index++
+            buildRegisterBlock(it, index)
         }
         return """
             public static int add(int offset) {
@@ -373,4 +385,9 @@ class AdapterProcessor : AbstractProcessor() {
             }
             """.trimInsertCode(addFunctions.yes())
     }
+
+    private fun buildRegisterBlock(it: Entry<Element>, index: Int) = """
+                getRegisterCenter().put(${it.itemHolderName}.class, $index + offset);
+                getList().add($className::buildFor${it.itemHolderName});
+            """.trimIndent()
 }

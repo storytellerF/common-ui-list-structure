@@ -4,13 +4,13 @@ import javax.lang.model.element.PackageElement
 import javax.lang.model.element.TypeElement
 
 class UIListHolderZoom<T> {
-    val setTemp = mutableMapOf<TypeElement, PackageElement>()
+    val packagesTemp = mutableMapOf<TypeElement, PackageElement>()
     val holderEntryTemp = mutableListOf<Entry<T>>()
     val clickEventMapTemp = mutableMapOf<String?, Map<String, List<Event<T>>>>()
     val longClickEventMapTemp = mutableMapOf<String?, Map<String, List<Event<T>>>>()
 
     fun debugState(): String {
-        return "click: ${clickEventMapTemp.size} long:${longClickEventMapTemp.size}  holder:${holderEntryTemp.size} set:${setTemp.size}"
+        return "click: ${clickEventMapTemp.size} long:${longClickEventMapTemp.size}  holder:${holderEntryTemp.size} package set:${packagesTemp.size}"
     }
 
     fun addHolderEntry(list: List<Entry<T>>) {
@@ -18,7 +18,7 @@ class UIListHolderZoom<T> {
     }
 
     fun logPackageInfo(first: TypeElement, second: PackageElement) {
-        setTemp[first] = second
+        packagesTemp[first] = second
     }
 
     fun addClickEvent(map: Map<String, Map<String, List<Event<T>>>>) {
