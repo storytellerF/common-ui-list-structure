@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.Rect
 import android.text.SpannableString
 import android.util.AttributeSet
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
@@ -13,12 +14,12 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.map
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
+import androidx.paging.LoadStates
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -99,6 +100,7 @@ class ListWithState @JvmOverloads constructor(
 //                }
                 launch {
                     callbackFlow.map {
+                        Log.d(TAG, "sourceUp: ${it.debugEmoji()}")
                         flash(it, adapter.itemCount)
                     }.stateIn(lifecycleOwner.lifecycleScope, SharingStarted.WhileSubscribed(), UIState.empty).collectLatest {
                         flash(it)
@@ -222,10 +224,10 @@ class ListWithState @JvmOverloads constructor(
     }
 
     fun setupClickSelectableSupport(editing: MutableLiveData<Boolean>, lifecycleOwner: LifecycleOwner, selectableDrawer: SelectableDrawer) {
-        editing.observe(lifecycleOwner, Observer {
+        editing.observe(lifecycleOwner) {
             val adapter = binding.list.adapter
             binding.list.adapter = adapter
-        })
+        }
         val value = object : RecyclerView.ItemDecoration() {
             override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
                 super.getItemOffsets(outRect, view, parent, state)
@@ -280,9 +282,9 @@ class ListWithState @JvmOverloads constructor(
         binding.retryButton.setOnClickListener {
             vm.retry()
         }
-        vm.loadState.map { simple(it.loadState, it.itemCount) }.observe(lifecycleOwner, Observer {
+        vm.loadState.map { simple(it.loadState, it.itemCount) }.observe(lifecycleOwner) {
             flash(it)
-        })
+        }
         setupSwapSupport(adapter)
     }
 
@@ -387,6 +389,8 @@ class ListWithState @JvmOverloads constructor(
             )
         }
 
+        private const val TAG = "ListWithState"
+
     }
 
     interface SelectableDrawer {
@@ -394,6 +398,17 @@ class ListWithState @JvmOverloads constructor(
         fun draw(c: Canvas, top: Int, bottom: Int, childWidth: Int, childHeight: Int, parentWidth: Int, parentHeight: Int, child: View, parent: RecyclerView, state: RecyclerView.State)
     }
 }
+
+fun LoadState.debugEmoji() = when (this) {
+    is LoadState.NotLoading -> if (endOfPaginationReached) "\uD83D\uDD1A" else "⏸️"
+    is LoadState.Loading -> "⏳"
+    is LoadState.Error -> "❌"
+}
+
+fun LoadStates?.debugEmoji() = if (this == null) "\uD83D\uDD72" else "${prepend.debugEmoji()} ${refresh.debugEmoji()} ${append.debugEmoji()}"
+
+fun CombinedLoadStates.debugEmoji() =
+    "source: ${source.debugEmoji()}  mediator: ${mediator.debugEmoji()} prepend: ${prepend.debugEmoji()} refresh: ${refresh.debugEmoji()} append: ${append.debugEmoji()}"
 
 /**
  * 反选
