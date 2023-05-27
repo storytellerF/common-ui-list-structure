@@ -1,16 +1,17 @@
 plugins {
-    id("java-library")
+//    id("java-library")
     id("java-gradle-plugin")
     `kotlin-dsl`
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
-}
+//val javaVersion = JavaVersion.VERSION_17
+//java {
+//    sourceCompatibility = javaVersion
+//    targetCompatibility = javaVersion
+//}
+//tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+//    kotlinOptions.jvmTarget = javaVersion.toString()
+//}
 
 gradlePlugin {
     plugins {

@@ -8,13 +8,13 @@ buildscript {
 }
 plugins {
     val androidVersion = "8.0.1"
-    val kotlinVersion = "1.8.0"
-    id("com.android.application") version "8.0.1" apply false
+    val kotlinVersion = "1.8.10"
+    id("com.android.application") version androidVersion apply false
     id("com.android.library") version androidVersion apply false
     id("org.jetbrains.kotlin.android") version kotlinVersion apply false
     id("org.jetbrains.kotlin.jvm") version kotlinVersion apply false
-    id("com.google.devtools.ksp") version ("1.8.10-1.0.9") apply false
-    id("com.storyteller_f.sml") version ("0.0.1") apply false
+    id("com.google.devtools.ksp") version "1.8.10-1.0.9" apply false
+    id("com.storyteller_f.sml") version ("0.0.2") apply false
     id("io.gitlab.arturbosch.detekt") version ("1.21.0")
 }
 dependencies {

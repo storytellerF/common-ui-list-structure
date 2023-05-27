@@ -24,8 +24,8 @@ class Sml : Plugin<Project> {
     override fun apply(project: Project) {
         val extension = project.extensions.create("sml", SmlExtension::class.java)
         val rootPath = "${project.buildDir}/generated"
-        project.androidComponents { componentsExtension ->
-            componentsExtension.onVariants { variant ->
+        project.androidComponents {
+            onVariants { variant ->
                 setup(variant, project, rootPath, extension)
             }
         }
@@ -43,23 +43,28 @@ class Sml : Plugin<Project> {
         project.tasks.register(taskName("Colors", variantName), ColorTask::class.java) {
             val colorsOutputDirectory =
                 File(File(rootPath, "sml_res_colors"), subPath).apply { mkdirs() }
-            it.config(colorsOutputDirectory, extension, project, buildType)
+            config(colorsOutputDirectory, extension, project, buildType)
         }
 
         project.tasks.register(taskName("Dimens", variantName), DimensionTask::class.java) {
             val dimensOutputDirectory =
                 File(File(rootPath, "sml_res_dimens"), subPath).apply { mkdirs() }
-            it.config(dimensOutputDirectory, extension, project, buildType)
+            config(dimensOutputDirectory, extension, project, buildType)
         }
 
         project.tasks.register(taskName("Shapes", variantName), ShapeTask::class.java) {
             val drawablesOutputDirectory =
                 File(File(rootPath, "sml_res_drawables"), subPath).apply { mkdirs() }
-            it.config(drawablesOutputDirectory, extension, project, buildType)
+            config(drawablesOutputDirectory, extension, project, buildType)
         }
     }
 
-    private fun ShapeTask.config(drawablesOutputDirectory: File, extension: SmlExtension, project: Project, buildType: String) {
+    private fun ShapeTask.config(
+        drawablesOutputDirectory: File,
+        extension: SmlExtension,
+        project: Project,
+        buildType: String
+    ) {
         group = "sml"
         val path = File(drawablesOutputDirectory, "drawable")
         outputDirectory = path
@@ -70,14 +75,24 @@ class Sml : Plugin<Project> {
         bindOutputPath(project, drawablesOutputDirectory, buildType)
     }
 
-    private fun DimensionTask.config(dimensOutputDirectory: File, extension: SmlExtension, project: Project, buildType: String) {
+    private fun DimensionTask.config(
+        dimensOutputDirectory: File,
+        extension: SmlExtension,
+        project: Project,
+        buildType: String
+    ) {
         group = "sml"
         outputFile = File(dimensOutputDirectory, "values/generated_dimens.xml")
         dimensMap = extension.dimen.get()
         bindOutputPath(project, dimensOutputDirectory, buildType)
     }
 
-    private fun ColorTask.config(colorsOutputDirectory: File, extension: SmlExtension, project: Project, buildType: String) {
+    private fun ColorTask.config(
+        colorsOutputDirectory: File,
+        extension: SmlExtension,
+        project: Project,
+        buildType: String
+    ) {
         group = "sml"
         outputFile = File(colorsOutputDirectory, "values/generated_colors.xml")
         colorsMap = extension.color.get()
@@ -96,7 +111,8 @@ class Sml : Plugin<Project> {
     }
 
     private fun taskName(type: String, variantName: String): String {
-        val name = variantName.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
+        val name =
+            variantName.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
         return "generate$type$name"
     }
 }

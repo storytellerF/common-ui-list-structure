@@ -7,15 +7,17 @@ mkdir -p build/giant-explorer
 mkdir -p build/ping
 
 bash build_app.sh
-if [ $? -ne 0 ]; then
-echo -e "\033[31m build failed \033[0m"
-exit $?
+lr=$?
+if [ $lr -ne 0 ]; then
+echo -e "\033[101m build app failed \033[0m"
+exit $lr
 fi
 echo
 bash build_plugins.sh
-if [ $? -ne 0 ]; then
-echo -e "\033[31m build failed \033[0m"
-exit $?
+lr=$?
+if [ $lr -ne 0 ]; then
+echo -e "\033[101m build plugins failed \033[0m"
+exit $lr
 fi
 
 echo

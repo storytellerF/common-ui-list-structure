@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("plugin")
     repositories {
         gradlePluginPortal()
         google()
@@ -14,4 +15,3 @@ dependencyResolutionManagement {
 }
 rootProject.name = "sml"
 include ':app'
-//includeBuild("plugin")

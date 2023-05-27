@@ -6,6 +6,9 @@ import org.gradle.api.GradleException
 import org.gradle.api.Project
 import java.io.File
 
+val Project.androidComponents: ApplicationAndroidComponentsExtension get() =
+    (this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("androidComponents") as ApplicationAndroidComponentsExtension
+
 fun Project.androidComponents(configure: Action<ApplicationAndroidComponentsExtension>): Unit =
     (this as org.gradle.api.plugins.ExtensionAware).extensions.configure("androidComponents", configure)
 
