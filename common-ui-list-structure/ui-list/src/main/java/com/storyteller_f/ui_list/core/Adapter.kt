@@ -14,17 +14,31 @@ import java.util.*
 
 typealias BuildViewHolderFunction = (ViewGroup, String) -> AbstractViewHolder<out DataItemHolder>
 
+/**
+ * 不可以手动直接修改
+ */
 val list = mutableListOf<BuildViewHolderFunction>()
-val secondList = mutableListOf<Pair<SecondRegisterKey, Int>>()
 
+/**
+ * 不直接存放BuildViewHolderFunction，使用Int 作为指针指向list，并且没有偏移
+ */
+val secondList = mutableListOf<Pair<String, Int>>()
+
+/**
+ * value 存储指向list 中元素的指针。且作为viewType
+ */
 val registerCenter = mutableMapOf<Class<out DataItemHolder>, Int>()
+
+/**
+ * value 作为viewType，一定是大于list.size的。指向second list 中的元素
+ */
 val secondRegisterCenter = mutableMapOf<SecondRegisterKey, Int>()
 
-data class SecondRegisterKey(val clazz: Class<out DataItemHolder>, val type: String)
+data class SecondRegisterKey(val clazz: Class<out DataItemHolder>, val variant: String)
 
 interface DataItemHolder {
 
-    val type: String
+    val variant: String
         get() = ""
 
     /**
@@ -61,8 +75,8 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val size = list.size
         val viewHolder = if (viewType >= size) {
-            val pair = secondList[viewType - size]
-            list[pair.second](parent, pair.first.type)
+            val (variant, functionPosition) = secondList[viewType - size]
+            list[functionPosition](parent, variant)
         } else list[viewType](parent, "")
         return (viewHolder as VH).apply {
             keyed = key ?: "default"
@@ -89,11 +103,11 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val 
 
     private fun getType(ihClass: Class<out IH>, item: IH): Int? {
         val functionPosition = registerCenter[ihClass] ?: return null
-        if (item.type.isNotEmpty()) {
-            val key1 = SecondRegisterKey(ihClass, item.type)
-            return secondRegisterCenter.getOrPut(key1) {
-                secondList.add(key1 to functionPosition)
-                functionPosition + list.size
+        if (item.variant.isNotEmpty()) {
+            val secondRegisterKey = SecondRegisterKey(ihClass, item.variant)
+            return secondRegisterCenter.getOrPut(secondRegisterKey) {
+                secondList.add(secondRegisterKey.variant to functionPosition)
+                (secondList.size - 1) + list.size
             }
         }
         return functionPosition
@@ -107,7 +121,7 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val 
             ): Boolean {
                 return when {
                     oldItem === newItem -> true
-                    oldItem.javaClass == newItem.javaClass && oldItem.type == newItem.type -> {
+                    oldItem.javaClass == newItem.javaClass && oldItem.variant == newItem.variant -> {
                         oldItem.areItemsTheSame(newItem)
                     }
 

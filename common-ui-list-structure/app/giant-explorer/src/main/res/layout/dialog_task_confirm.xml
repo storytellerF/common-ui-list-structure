@@ -52,9 +52,11 @@
     <include
         android:id="@+id/include"
         layout="@layout/general_dialog_bottom"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_top" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

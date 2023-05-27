@@ -7,6 +7,7 @@ import android.os.Build
 import android.view.DragEvent
 import android.view.View
 import androidx.annotation.RequiresApi
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.DragStartHelper
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -133,7 +134,7 @@ private val <T> LiveData<List<T>>.same
 class FileItemHolder(
     val file: FileModel,
     val selected: List<Pair<DataItemHolder, Int>>,
-    override val type: String
+    override val variant: String
 ) : DataItemHolder {
     override fun areItemsTheSame(other: DataItemHolder) =
         (other as FileItemHolder).file.fullPath == file.fullPath
@@ -184,41 +185,43 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
 
         binding.detail.text = item.permissions
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            dragSupport(itemHolder)
+            itemHolder.file.item.dragSupport(binding.root)
         }
         binding.symLink.isVisible = itemHolder.file.isSymLink
 
     }
 
-    @RequiresApi(Build.VERSION_CODES.N)
-    private fun dragSupport(itemHolder: FileItemHolder) {
-        val listener = { view: View, _: DragStartHelper ->
-            val clipData = ClipData.newPlainText(FileListFragment.clipDataKey, itemHolder.file.fullPath)
-            val flags = View.DRAG_FLAG_GLOBAL or View.DRAG_FLAG_GLOBAL_URI_READ
-            view.startDragAndDrop(clipData, View.DragShadowBuilder(view), null, flags)
-        }
-        DragStartHelper(binding.root, listener).apply {
-            attach()
-        }
-        if (itemHolder.file.item.isDirectory)
-            binding.root.setOnDragListener { v, event ->
-                when (event.action) {
-                    DragEvent.ACTION_DRAG_STARTED -> {
-                        val clipDescription = event.clipDescription
-                        clipDescription.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)
-                                && clipDescription.label == FileListFragment.clipDataKey
-                    }
 
-                    DragEvent.ACTION_DROP -> {
-                        v.findActionReceiverOrNull<FileListFragment>()?.handleClipData(event.clipData, itemHolder.file.fullPath)
-                        true
-                    }
+}
 
-                    else -> true
-                }
-            }
-        else binding.root.setOnDragListener(null)
+@RequiresApi(Build.VERSION_CODES.N)
+private fun FileSystemItemModel.dragSupport(root: ConstraintLayout) {
+    val fullPath = fullPath
+    DragStartHelper(root) { view: View, _: DragStartHelper ->
+        val clipData = ClipData.newPlainText(FileListFragment.clipDataKey, fullPath)
+        val flags = View.DRAG_FLAG_GLOBAL or View.DRAG_FLAG_GLOBAL_URI_READ
+        view.startDragAndDrop(clipData, View.DragShadowBuilder(view), null, flags)
+    }.apply {
+        attach()
     }
+    root.setOnDragListener(if (!isDirectory) null
+    else
+        { v, event ->
+            when (event.action) {
+                DragEvent.ACTION_DRAG_STARTED -> {
+                    val clipDescription = event.clipDescription
+                    clipDescription.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)
+                            && clipDescription.label == FileListFragment.clipDataKey
+                }
+
+                DragEvent.ACTION_DROP -> {
+                    v.findActionReceiverOrNull<FileListFragment>()?.handleClipData(event.clipData, fullPath)
+                    true
+                }
+
+                else -> true
+            }
+        })
 }
 
 fun String?.valid() = this?.trim()?.isNotEmpty() == true

@@ -375,8 +375,7 @@ class AdapterProcessor : AbstractProcessor() {
     private fun buildAddFunction(entry: List<Entry<Element>>): String {
         var index = 0
         val addFunctions = entry.joinToString("\n") {
-            index++
-            buildRegisterBlock(it, index)
+            buildRegisterBlock(it, index++)
         }
         return """
             public static int add(int offset) {

@@ -33,6 +33,7 @@ import com.storyteller_f.common_ktx.nn
 import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
+import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.filter_core.Filter
@@ -46,6 +47,7 @@ import com.storyteller_f.giant_explorer.control.plugin.stoppable
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentFileListBinding
 import com.storyteller_f.giant_explorer.dialog.*
+import com.storyteller_f.giant_explorer.model.FileModel
 import com.storyteller_f.plugin_core.*
 import com.storyteller_f.sort_ui.SortChain
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
@@ -62,9 +64,15 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
-class TempVM : ViewModel() {
+class SharePasteTargetViewModel : ViewModel() {
     var list: MutableList<String> = mutableListOf()
     var dest: String? = null
+
+    fun replace(uriList: List<Uri>, file: FileInstance) {
+        list.clear()
+        list.addAll(uriList.map { it.toString() })
+        dest = file.path
+    }
 }
 
 class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileListBinding::inflate) {
@@ -102,8 +110,8 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         genericValueModel(false)
     })
 
-    private val temp by keyPrefix({ "temp" }, pvm({}) {
-        TempVM()
+    private val shareTarget by keyPrefix({ "temp" }, pvm({}) {
+        SharePasteTargetViewModel()
     })
 
     override fun onBindViewEvent(binding: FragmentFileListBinding) {
@@ -205,20 +213,21 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                 //静默处理
                 return@launch
             }
-            temp.list.clear()
-            temp.list.addAll(uriList.map { it.toString() })
-            temp.dest = dest.path
-            val fileOperateBinderLocal = fileOperateBinder ?: kotlin.run {
-                Toast.makeText(requireContext(), "未连接服务", Toast.LENGTH_LONG).show()
-                return@launch
-            }
-            if (activity?.getSharedPreferences("${requireContext().packageName}_preferences", Activity.MODE_PRIVATE)?.getBoolean("notify_before_paste", true) == true) {
-                dialog(TaskConfirmDialog(), TaskConfirmDialog.Result::class.java) { r ->
-                    if (r.confirm) fileOperateBinderLocal.compoundTask(uriList, dest, key)
+            if (uriList.isNotEmpty()) {
+                shareTarget.replace(uriList, dest)
+                val fileOperateBinderLocal = fileOperateBinder ?: kotlin.run {
+                    Toast.makeText(requireContext(), "未连接服务", Toast.LENGTH_LONG).show()
+                    return@launch
                 }
-            } else {
-                fileOperateBinderLocal.compoundTask(uriList, dest, key)
+                if (activity?.getSharedPreferences("${requireContext().packageName}_preferences", Activity.MODE_PRIVATE)?.getBoolean("notify_before_paste", true) == true) {
+                    dialog(TaskConfirmDialog(), TaskConfirmDialog.Result::class.java) { r ->
+                        if (r.confirm) fileOperateBinderLocal.compoundTask(uriList, dest, key)
+                    }
+                } else {
+                    fileOperateBinderLocal.compoundTask(uriList, dest, key)
+                }
             }
+
         }
 
     }
