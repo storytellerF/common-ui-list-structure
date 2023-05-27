@@ -11,7 +11,6 @@ plugins {
 android {
     namespace = "com.storyteller_f.sml"
     compileSdk = 33
-
     defaultConfig {
         applicationId = "com.storyteller_f.sml"
         minSdk = 21
@@ -28,12 +27,13 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
+    val javaVersion = JavaVersion.VERSION_11
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = javaVersion.toString()
     }
     buildFeatures {
         viewBinding = true
@@ -42,9 +42,9 @@ android {
 
 dependencies {
 
-    implementation("androidx.core:core-ktx:1.9.0")
-    implementation("androidx.appcompat:appcompat:1.6.0")
-    implementation("com.google.android.material:material:1.8.0-rc01")
+    implementation("androidx.core:core-ktx:1.10.1")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.android.material:material:1.9.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.navigation:navigation-fragment-ktx:2.5.3")
     implementation("androidx.navigation:navigation-ui-ktx:2.5.3")
@@ -90,14 +90,22 @@ sml {
         }
     }
 }
-val smls = listOf("sml_res_colors", "sml_res_dimens", "sml_res_drawables")
-val p = smls.map {
-    "build/generated/$it/debug"
+val smlTargetPath = listOf("sml_res_colors", "sml_res_dimens", "sml_res_drawables")
+val debugPath = smlTargetPath.map {
+    "build/generated/$it/"
 }
+val type = listOf("debug", "release")
 kotlin {
     sourceSets {
-        getByName("main") {
-            kotlin.srcDirs(p.toTypedArray())
+        sourceSets.forEach {
+            println(it.name)
+        }
+        type.forEach {
+            getByName(it) {
+                kotlin.srcDirs(debugPath.map { p ->
+                    "$p$it"
+                }.toTypedArray())
+            }
         }
     }
 }

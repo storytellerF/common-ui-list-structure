@@ -14,14 +14,14 @@ internal open class ShapeTask : DefaultTask() {
     lateinit var outputDirectory: File
 
     @get:OutputFiles
-    lateinit var outputFile: Array<File>
+    lateinit var outputFileList: Array<File>
 
     @get:Input
-    lateinit var drawableDomain: Array<DrawableDomain>
+    lateinit var drawableDomains: Array<DrawableDomain>
 
     @TaskAction
     fun makeResources() {
-        drawableDomain.forEach {
+        drawableDomains.forEach {
             val content = it
             val file = File(outputDirectory, "${it.name}.xml")
             Files.writeString(file.toPath(), content.drawable.get())

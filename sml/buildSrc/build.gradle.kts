@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.7.21"
+    kotlin("jvm") version "1.8.21"
     id("java-gradle-plugin")
     id("maven-publish")
 }
@@ -33,11 +33,11 @@ publishing {
 
 dependencies {
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.7.21")
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.21")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.21")
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.21")
 
     // Android gradle plugin will allow us to access Android specific features
-    implementation("com.android.tools.build:gradle:8.0.1")
+    implementation("com.android.tools.build:gradle:8.1.0-beta03")
 }

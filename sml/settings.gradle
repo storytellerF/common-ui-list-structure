@@ -3,7 +3,6 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
-//        maven { url '../repo-snapshot'}
     }
 }
 dependencyResolutionManagement {
@@ -14,4 +13,5 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "sml"
-include ':app',":plugin"
+include ':app'
+//includeBuild("plugin")

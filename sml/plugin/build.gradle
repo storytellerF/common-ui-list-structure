@@ -1,5 +1,5 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm'
+//    id 'org.jetbrains.kotlin.jvm'
     id 'java-gradle-plugin'
     id 'maven-publish'
 }
@@ -17,6 +17,12 @@ gradlePlugin {
     }
 }
 
+repositories {
+    gradlePluginPortal()
+    google()
+    mavenCentral()
+}
+
 publishing {
     repositories {
         maven {
@@ -28,9 +34,9 @@ publishing {
 
 dependencies {
     testImplementation 'junit:junit:4.13.2'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.7.21"
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.21")
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.21"
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.21")
 
     // Android gradle plugin will allow us to access Android specific features
-    implementation 'com.android.tools.build:gradle:7.4.0'
+    implementation 'com.android.tools.build:gradle:8.0.1'
 }

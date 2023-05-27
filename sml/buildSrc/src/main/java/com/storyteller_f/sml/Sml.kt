@@ -63,10 +63,10 @@ class Sml : Plugin<Project> {
         group = "sml"
         val path = File(drawablesOutputDirectory, "drawable")
         outputDirectory = path
-        outputFile = extension.drawables.map { shapeDomain ->
+        outputFileList = extension.drawables.map { shapeDomain ->
             File(path, "${shapeDomain.name}.xml")
         }.toTypedArray()
-        drawableDomain = extension.drawables.toTypedArray()
+        drawableDomains = extension.drawables.toTypedArray()
         bindOutputPath(project, drawablesOutputDirectory, buildType)
     }
 
@@ -84,6 +84,7 @@ class Sml : Plugin<Project> {
         bindOutputPath(project, colorsOutputDirectory, buildType)
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun bindOutputPath(project: Project, outputDirectory: File, buildType: String) {
 //        val substring = outputDirectory.absolutePath.substring(project.projectDir.absolutePath.length + 1)
 //        project.kotlin {
