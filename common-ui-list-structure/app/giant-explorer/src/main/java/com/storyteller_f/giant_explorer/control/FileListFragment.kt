@@ -21,6 +21,7 @@ import androidx.core.net.toUri
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
+import androidx.core.view.iterator
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -47,7 +48,6 @@ import com.storyteller_f.giant_explorer.control.plugin.stoppable
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentFileListBinding
 import com.storyteller_f.giant_explorer.dialog.*
-import com.storyteller_f.giant_explorer.model.FileModel
 import com.storyteller_f.plugin_core.*
 import com.storyteller_f.sort_ui.SortChain
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
@@ -265,21 +265,8 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             inflate(R.menu.item_context_menu)
             val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(File(fullPath).extension)
 
-            resolvePlugins(itemHolder, mimeTypeFromExtension)
-            pluginManagerRegister.pluginsName().forEach {
-                val plugin = File(it)
-                menu.add(plugin.name).setOnMenuItemClickListener {
-                    if (plugin.name.endsWith("apk")) startActivity(Intent(requireContext(), FragmentPluginActivity::class.java).apply {
-                        putExtra("plugin-name", plugin.name)
-                        plugUri(mimeTypeFromExtension, fullPath)
-                    })
-                    else startActivity(Intent(requireContext(), WebViewPluginActivity::class.java).apply {
-                        putExtra("plugin-name", plugin.name)
-                        plugUri(mimeTypeFromExtension, fullPath)
-                    })
-                    true
-                }
-            }
+            resolveInstalledPlugins(itemHolder, mimeTypeFromExtension)
+            resolveNoInstalledPlugins(mimeTypeFromExtension, fullPath)
 
             val liPlugin = LiPlugin()
             val pluginManager = object : DefaultPluginManager(requireContext()) {
@@ -335,7 +322,25 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         }.show()
     }
 
-    private fun PopupMenu.resolvePlugins(itemHolder: FileItemHolder, mimeTypeFromExtension: String?) {
+    private fun PopupMenu.resolveNoInstalledPlugins(mimeTypeFromExtension: String?, fullPath: String) {
+        pluginManagerRegister.pluginsName().forEach { pluginName: String ->
+            val pluginFile = File(pluginName)
+            val subMenu = pluginManagerRegister.resolvePluginName(pluginName, requireContext()).meta.subMenu
+            menu.loopAdd(listOf(subMenu)).add(pluginName).setOnMenuItemClickListener {
+                if (pluginFile.name.endsWith("apk")) startActivity(Intent(requireContext(), FragmentPluginActivity::class.java).apply {
+                    putExtra("plugin-name", pluginFile.name)
+                    plugUri(mimeTypeFromExtension, fullPath)
+                })
+                else startActivity(Intent(requireContext(), WebViewPluginActivity::class.java).apply {
+                    putExtra("plugin-name", pluginFile.name)
+                    plugUri(mimeTypeFromExtension, fullPath)
+                })
+                true
+            }
+        }
+    }
+
+    private fun PopupMenu.resolveInstalledPlugins(itemHolder: FileItemHolder, mimeTypeFromExtension: String?) {
         val intent = Intent("com.storyteller_f.action.giant_explorer.PLUGIN")
         intent.addCategory("android.intent.category.DEFAULT")
         intent.plugUri(mimeTypeFromExtension, itemHolder.file.fullPath)
@@ -383,7 +388,14 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
 private fun Menu.loopAdd(strings: List<String>): Menu {
     return strings.fold(this) { t, e ->
-        t.addSubMenu(e)
+        val item = t.iterator().asSequence().firstOrNull {
+            it.title == e
+        }
+        val subMenu = item?.subMenu
+        if (item != null && subMenu != null) {
+            subMenu
+        } else
+            t.addSubMenu(e)
     }
 }
 

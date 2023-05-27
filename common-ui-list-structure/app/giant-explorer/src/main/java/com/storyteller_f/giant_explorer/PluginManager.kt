@@ -22,7 +22,7 @@ abstract class PluginConfiguration(val meta: PluginMeta): Model {
     }
 }
 
-data class PluginMeta(val version: String, val path: String, val name: String)
+data class PluginMeta(val version: String, val path: String, val name: String, val subMenu: String)
 
 class FragmentPluginConfiguration(meta: PluginMeta, val classLoader: ClassLoader, val startFragment: String, val pluginFragments: List<String>): PluginConfiguration(meta) {
 
@@ -46,20 +46,25 @@ class HtmlPluginConfiguration(meta: PluginMeta, val extractedPath: String) : Plu
             val pluginFile = File(meta.path)
             val extractedPath = File(context.filesDir, "plugins/${pluginFile.nameWithoutExtension}").absolutePath
             File(meta.path).ensureExtract(extractedPath)
-            val version = File(extractedPath, "config").readText()
-            return HtmlPluginConfiguration(meta.copy(version = version), extractedPath)
+            val readText = File(extractedPath, "config").readText().split("\n")
+            val version = readText.first()
+            val subMenu = readText.lastOrNull() ?: "other"
+            return HtmlPluginConfiguration(meta.copy(version = version, subMenu = subMenu), extractedPath)
         }
     }
 }
 
 class PluginManager {
     /**
-     * key name
+     * key 插件名称
      * value configuration
      */
     private val map = mutableMapOf<String, PluginConfiguration>()
     private val raw = mutableMapOf<String, String>()
 
+    /**
+     * 记录一个插件
+     */
     @Synchronized
     fun foundPlugin(file: File) {
         val name = file.name
@@ -67,6 +72,7 @@ class PluginManager {
     }
 
     /**
+     * 根据路径解析插件
      * 涉及io 读写应该在线程中执行
      */
     @WorkerThread
@@ -80,7 +86,7 @@ class PluginManager {
         }
         val pluginType = if (extension == "apk") PluginType.fragment else PluginType.html
         if (raw.contains(name)) raw.remove(name)
-        val pluginMeta = PluginMeta("1.0", path, name)
+        val pluginMeta = PluginMeta("1.0", path, name, "other")
         val configuration = if (pluginType == PluginType.fragment) FragmentPluginConfiguration.resolve(pluginMeta)
         else runBlocking {
             HtmlPluginConfiguration.resolve(pluginMeta, context)
@@ -89,16 +95,23 @@ class PluginManager {
         return configuration
     }
 
+    /**
+     * 根据名称解析插件
+     */
     @WorkerThread
     @Synchronized
-    fun resolvePluginName(name: String, context: Context): PluginConfiguration {
-        return resolvePlugin(pluginPath(name), context)
-    }
+    fun resolvePluginName(name: String, context: Context) = resolvePlugin(pluginPath(name), context)
 
+    /**
+     * 所有查找到插件名称
+     */
     fun pluginsName(): Set<String> {
         return map.keys + raw.keys
     }
 
+    /**
+     * 通过插件名称获取路径
+     */
     private fun pluginPath(name: String): String {
         if (raw.contains(name)) {
             return raw[name]!!
