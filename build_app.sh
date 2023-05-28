@@ -6,7 +6,7 @@ mkdir -p build/ping
 #compile sml
 echo -e "\033[35;106m compile sml \033[0m"
 cd sml
-bash gradlew plugin:publish
+bash gradlew :plugin:publish
 lr=$?
 if [ $lr -ne 0 ]; then
 echo -e "\033[101m build failed \033[0m"

@@ -25,7 +25,7 @@ fun DependencyHandlerScope.baseDependency() {
     "kapt"("androidx.room:room-compiler:${Versions.roomVersion}")
 
     "implementation"("androidx.fragment:fragment-ktx:${Versions.fragmentKtxVersion}")
-    "implementation"("androidx.activity:activity-ktx:${Versions.ktxVersion}")
+    "implementation"("androidx.activity:activity-ktx:${Versions.activityKtxVersion}")
 
     "implementation"("org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.coroutinesVersion}")
     "implementation"("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutinesVersion}")

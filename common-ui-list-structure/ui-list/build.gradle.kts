@@ -63,6 +63,6 @@ dependencies {
 
     //ktx
     implementation("androidx.fragment:fragment-ktx:${Versions.fragmentKtxVersion}")
-    implementation("androidx.activity:activity-ktx:${Versions.ktxVersion}")
+    implementation("androidx.activity:activity-ktx:${Versions.activityKtxVersion}")
     api(project(":common-vm-ktx"))
 }
