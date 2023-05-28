@@ -1,7 +1,11 @@
 val filterFolder: String by settings
 val baoFolder: String by settings
 pluginManagement {
+    val smlFolder: String by settings
     includeBuild("version-manager")
+    if (smlFolder == "submodule" || smlFolder == "local") {
+        includeBuild("../SML/plugin")
+    }
     repositories {
         gradlePluginPortal()
         google()
@@ -9,8 +13,10 @@ pluginManagement {
         maven {
             setUrl("https://jitpack.io")
         }
-        maven {
-            setUrl("../repo")
+        if (smlFolder == "repository") {
+            maven {
+                setUrl("../repo")
+            }
         }
     }
 }

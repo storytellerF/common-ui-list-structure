@@ -27,7 +27,7 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
-    val javaVersion = JavaVersion.VERSION_11
+    val javaVersion = JavaVersion.VERSION_17
     compileOptions {
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion

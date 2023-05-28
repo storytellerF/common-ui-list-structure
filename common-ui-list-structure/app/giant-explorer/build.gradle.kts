@@ -122,7 +122,7 @@ dependencies {
             implementation(it)
         }
     } else {
-        implementation("com.github.storytellerF:FilterUIProject:1.0")
+        implementation("com.github.storytellerF:FilterUIProject:1.1")
     }
     // https://mvnrepository.com/artifact/commons-net/commons-net
     implementation("commons-net:commons-net:3.9.0")
