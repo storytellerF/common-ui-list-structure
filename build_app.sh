@@ -6,7 +6,7 @@ mkdir -p build/ping
 #compile sml
 echo -e "\033[35;106m compile sml \033[0m"
 cd sml
-bash gradlew :plugin:publish
+bash gradlew clean :plugin:publish
 lr=$?
 if [ $lr -ne 0 ]; then
 echo -e "\033[101m build failed \033[0m"
@@ -18,7 +18,7 @@ fi
 echo
 echo -e "\033[35;106m build common-ui-list \033[0m"
 cd ../common-ui-list-structure
-bash gradlew build
+bash gradlew clean build
 lr=$?
 if [ $lr -ne 0 ]; then
 echo -e "\033[101m build failed \033[0m"

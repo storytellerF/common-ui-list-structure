@@ -1,5 +1,5 @@
 mkdir -p build
-zip build/yue-html.zip index.html imgTouchCanvas.js config
+zip build/yue-html.zip src/index.html src/imgTouchCanvas.js config
 cd dispatcher
-./gradlew installDist
+./gradlew clean installDist
 build/install/dispatcher/bin/dispatcher
