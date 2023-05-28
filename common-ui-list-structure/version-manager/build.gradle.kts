@@ -1,5 +1,4 @@
 plugins {
-//    id("java-library")
     id("java-gradle-plugin")
     `kotlin-dsl`
 }
@@ -15,7 +14,7 @@ plugins {
 
 gradlePlugin {
     plugins {
-        register("song") {
+        register("version-manager") {
             // 插件ID
             id = "com.storyteller_f.version_manager"
             // 插件的实现类

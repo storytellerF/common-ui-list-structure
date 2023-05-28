@@ -1,3 +1,4 @@
+import com.storyteller_f.song.dispatch
 import java.io.File
 
 fun main(args: Array<String>) {
@@ -9,7 +10,7 @@ fun main(args: Array<String>) {
     println("Program arguments: ${args.joinToString()}")
     val path = args.firstOrNull() ?: "../"
     println(File(path).absolutePath)
-    extracted(
+    dispatch(
         listOf(File(path, "build/yue-html.zip")),
         listOf("com.storyteller_f.giant_explorer" to "files/plugins"),
         listOf(),

@@ -7,11 +7,14 @@ group = "org.storyteller_f"
 version = "1.0-SNAPSHOT"
 
 repositories {
+    google()
     mavenCentral()
+    maven { setUrl("https://jitpack.io") }
 }
 
 dependencies {
     testImplementation(kotlin("test"))
+    implementation("com.github.storytellerF.song:plugin:1.2")
 }
 
 tasks.test {
@@ -19,7 +22,7 @@ tasks.test {
 }
 
 kotlin {
-    jvmToolchain(8)
+    jvmToolchain(11)
 }
 
 application {
