@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.konan.properties.loadProperties
-
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     dependencies {
@@ -15,9 +13,9 @@ buildscript {
     }
 }
 plugins {
-    val androidVersion = "8.0.1"
-    val kotlinVersion = "1.8.10"
-    val kspVersion = "1.8.10-1.0.9"
+    val androidVersion = "8.0.2"
+    val kotlinVersion = "1.8.21"
+    val kspVersion = "1.8.21-1.0.11"
     id("com.android.application") version androidVersion apply false
     id("com.android.library") version androidVersion apply false
     id("org.jetbrains.kotlin.android") version kotlinVersion apply false

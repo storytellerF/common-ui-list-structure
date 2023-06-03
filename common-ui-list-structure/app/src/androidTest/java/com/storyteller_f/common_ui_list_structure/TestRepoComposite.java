@@ -13,6 +13,7 @@ import java.util.List;
 import kotlin.Unit;
 import kotlin.coroutines.Continuation;
 
+/** @noinspection ALL*/
 public class TestRepoComposite extends CommonRoomDatabase<Repo, RepoRemoteKey, RepoDatabase> {
     public TestRepoComposite(@NonNull RepoDatabase database) {
         super(database);
