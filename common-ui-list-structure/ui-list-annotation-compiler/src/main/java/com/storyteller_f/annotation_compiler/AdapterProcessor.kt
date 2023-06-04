@@ -113,7 +113,8 @@ class AdapterProcessor : AbstractProcessor() {
     ): String {
         val importHolders = zoom.importHolders()
         val importReceiverClass = zoom.importReceiverClass()
-        val buildAddFunction = buildAddFunction(holderEntry)
+        val javaGenerator = JavaGenerator()
+        val buildAddFunction = javaGenerator.buildAddFunction(holderEntry)
         val hasComposeView = zoom.hasComposeView
         val buildViewHolder = holderEntry.joinToString("\n") {
             val eventMapClick = zoom.clickEventMapTemp[it.itemHolderFullName] ?: mapOf()
@@ -185,9 +186,7 @@ class AdapterProcessor : AbstractProcessor() {
 
     private fun parameterList(element: Element): String {
         val parameterList = element.asType().toString().let { s ->
-            val start = s.indexOf("(") + 1
-            val end = s.lastIndexOf(")")
-            s.substring(start, end).split(",").filter { it.isNotBlank() && it.isNotEmpty() }
+            s.subInBrackets().split(",").filter { it.isNotBlank() && it.isNotEmpty() }
         }.joinToString(", ") {
             when {
                 it.isEmpty() -> ""
@@ -236,7 +235,7 @@ class AdapterProcessor : AbstractProcessor() {
 
             val (itemHolderNameFullName, itemHolder) = getAnnotationFirstClassArgument(element, BindItemHolder::class.java) ?: return@mapNotNull null
             element.enclosedElements?.map { it.asType().toString() }?.firstOrNull { it.contains("(") }?.let {
-                val bindingFullName = it.substring(it.indexOf("(") + 1, it.lastIndexOf(")"))
+                val bindingFullName = it.subInBrackets()
                 val bindingName = getSimpleName(bindingFullName)
                 val viewHolderName = element.simpleName.toString()
                 val viewHolderFullName = element.asType().toString()
@@ -250,6 +249,8 @@ class AdapterProcessor : AbstractProcessor() {
         }
         return holderEntry
     }
+
+    private fun String.subInBrackets() = substring(indexOf("(") + 1, lastIndexOf(")"))
 
     private fun getSimpleName(bindingFullName: String) = bindingFullName.substring(bindingFullName.lastIndexOf(".") + 1)
 
@@ -373,22 +374,4 @@ class AdapterProcessor : AbstractProcessor() {
             }
         }
     }
-
-    private fun buildAddFunction(entry: List<Entry<Element>>): String {
-        var index = 0
-        val addFunctions = entry.joinToString("\n") {
-            buildRegisterBlock(it, index++)
-        }
-        return """
-            public static int add(int offset) {
-                $1
-                return $index;
-            }
-            """.trimInsertCode(addFunctions.yes())
-    }
-
-    private fun buildRegisterBlock(it: Entry<Element>, index: Int) = """
-                getRegisterCenter().put(${it.itemHolderName}.class, $index + offset);
-                getList().add($className::buildFor${it.itemHolderName});
-            """.trimIndent()
 }
