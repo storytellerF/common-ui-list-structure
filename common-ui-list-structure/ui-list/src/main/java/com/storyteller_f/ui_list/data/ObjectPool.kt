@@ -1,15 +1,17 @@
 package com.storyteller_f.ui_list.data
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.map
 import com.storyteller_f.ui_list.core.Model
 
 object ObjectPool {
-    private val map = mutableMapOf<Class<*>, Map<String, Record<*>>>()
+    val map = mutableMapOf<Class<*>, Map<String, Record>>()
 
     /**
      * 更新对象，然后返回一个统一的数据
      */
-    fun <T : Model> get(model: T, isFullVersion: Boolean = true): MutableLiveData<out Model> {
+    inline fun <reified T : Model> get(model: T, isFullVersion: Boolean = true): LiveData<out Model?> {
         val key = model.javaClass
         if (!map.containsKey(key)) {
             map[key] = mutableMapOf()
@@ -17,7 +19,7 @@ object ObjectPool {
         val objMap = map[key]?.toMutableMap()
         if (!objMap!!.containsKey(produceKey(model))) {
             objMap[produceKey(model)] =
-                Record<T>(isFullVersion, MutableLiveData(model), System.currentTimeMillis())
+                Record(isFullVersion, MutableLiveData(model), System.currentTimeMillis())
         } else {
             objMap[produceKey(model)]?.let {
                 it.isFullVersion = isFullVersion
@@ -25,10 +27,12 @@ object ObjectPool {
                 it.updatedTime = System.currentTimeMillis()
             }
         }
-        return objMap[produceKey(model)]!!.obj
+        return objMap[produceKey(model)]!!.obj.map {
+            it as? T
+        }
     }
 
-    private fun <T : Model> produceKey(model: T) = model.uniqueIdInOP()
+    fun <T : Model> produceKey(model: T) = model.uniqueIdInOP()
 
     /**
      * 更新对象，然后返回一个统一的数据
@@ -41,7 +45,7 @@ object ObjectPool {
         val objMap = map[key]?.toMutableMap()
         if (!objMap!!.containsKey(model.commonId())) {
             objMap[model.commonId()] =
-                Record<T>(isFullVersion, MutableLiveData(model), System.currentTimeMillis())
+                Record(isFullVersion, MutableLiveData(model), System.currentTimeMillis())
         } else {
             objMap[model.commonId()]?.let {
 
@@ -52,7 +56,7 @@ object ObjectPool {
     /**
      * 更新对象，然后返回一个统一的数据
      */
-    fun <T : Model> get(model: String, isFullVersion: Boolean = true): MutableLiveData<out Model> {
+    inline fun <reified T : Model> get(model: String, isFullVersion: Boolean = true): LiveData<out Model?> {
         val key = model.javaClass
         if (!map.containsKey(key)) {
             map[key] = mutableMapOf()
@@ -62,16 +66,18 @@ object ObjectPool {
             objMap[model] =
                 Record(isFullVersion, MutableLiveData(), System.currentTimeMillis())
         }
-        return objMap[model]?.obj!!
+        return objMap[model]?.obj!!.map {
+            it as? T
+        }
     }
 
     /**
      * 更新对象，然后返回一个统一的数据
      */
-    fun <T : Model> getExisted(
+    inline fun <reified T : Model> getExisted(
         model: String,
         isFullVersion: Boolean = true
-    ): MutableLiveData<out Model>? {
+    ): LiveData<out Model?>? {
         val key = model.javaClass
         if (!map.containsKey(key)) {
             map[key] = mutableMapOf()
@@ -82,13 +88,15 @@ object ObjectPool {
         }
         return objMap[model]?.let {
             if (isFullVersion && !it.isFullVersion) null
-            else it.obj
+            else it.obj.map { any ->
+                any as? T
+            }
         }
     }
 
-    class Record<T : Model>(
+    class Record(
         var isFullVersion: Boolean,
-        val obj: MutableLiveData<T>,
+        val obj: MutableLiveData<Any>,
         var updatedTime: Long
     )
 }

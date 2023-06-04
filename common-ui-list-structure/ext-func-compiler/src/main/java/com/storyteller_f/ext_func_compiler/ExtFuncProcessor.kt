@@ -20,7 +20,7 @@ class ExtFuncProcessor(private val codeGenerator: CodeGenerator, private val log
         round++
         val symbols = resolver.getSymbolsWithAnnotation(ExtFuncFlat::class.java.canonicalName)
         val notValidates = symbols.filter { !it.validate() }.toList()
-        logger.warn("round $round not validates ${notValidates.joinToString { 
+        logger.warn("round $round not validates ${notValidates.size} ${notValidates.joinToString { 
             it.toString()
         }}")
         val filter = symbols

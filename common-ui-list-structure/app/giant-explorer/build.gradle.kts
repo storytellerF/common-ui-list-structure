@@ -109,10 +109,10 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.15.1")
 
     implementation(project(":app:giant-explorer-plugin-core"))
-    implementation("androidx.webkit:webkit:1.6.1")
+    implementation("androidx.webkit:webkit:1.7.0")
 
     //filter & sort
-    val filterModuleNames = listOf(":filter:config-core", ":filter:sort-core", ":filter:filter-core", ":filter:filter-u", ":filter:sort-ui")
+    val filterModuleNames = listOf(":filter:config-core", ":filter:sort-core", ":filter:filter-core", ":filter:filter-ui", ":filter:sort-ui")
        
     val filterModules = filterModuleNames.mapNotNull {
         findProject(it)
@@ -142,7 +142,7 @@ dependencies {
         implementation(project(":bao:startup"))
     else
         implementation("com.github.storytellerF.Bao:startup:2.2.0")
-    implementation("androidx.window:window:1.1.0-rc01")
+    implementation("androidx.window:window:1.2.0-alpha01")
 }
 baseApp()
 setupGeneric()

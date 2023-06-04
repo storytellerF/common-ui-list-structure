@@ -129,13 +129,6 @@ public class ${name}Composite extends CommonRoomDatabase<$name, $remoteKeyType, 
         return null;
     }
 
-    @Nullable
-    @Override
-    public Object deleteItemById(@NonNull String commonDatumId, @NonNull Continuation<? super Unit> ${"$"}completion) {
-        getDatabase().$dataDao().delete(Long.parseLong(commonDatumId), ${"$"}completion);
-        getDatabase().remoteKeyDao().delete(commonDatumId, ${"$"}completion);
-        return null;
-    }
 }"""
     }
 
