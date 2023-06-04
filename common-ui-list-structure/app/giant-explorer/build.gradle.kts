@@ -1,8 +1,5 @@
 import com.storyteller_f.version_manager.*
 
-val filterFolder: String by project
-val baoFolder: String by project
-
 class RoomSchemaArgProvider(
     @get:InputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -112,17 +109,19 @@ dependencies {
     implementation("androidx.webkit:webkit:1.7.0")
 
     //filter & sort
-    val filterModuleNames = listOf(":filter:config-core", ":filter:sort-core", ":filter:filter-core", ":filter:filter-ui", ":filter:sort-ui")
+    val filterArtifact = listOf("config-core", "sort-core", "filter-core", "filter-ui", "sort-ui")
        
-    val filterModules = filterModuleNames.mapNotNull {
-        findProject(it)
+    val filterModules = filterArtifact.mapNotNull {
+        findProject(":filter:$it")
     }
-    if (filterModules.size == filterModuleNames.size) {
+    if (filterModules.size == filterArtifact.size) {
         filterModules.forEach {
             implementation(it)
         }
     } else {
-        implementation("com.github.storytellerF:FilterUIProject:1.1")
+        filterArtifact.forEach {
+            implementation("com.github.storytellerF.FilterUIProject:$it:1.1")
+        }
     }
     // https://mvnrepository.com/artifact/commons-net/commons-net
     implementation("commons-net:commons-net:3.9.0")
@@ -138,8 +137,8 @@ dependencies {
     implementation("com.madgag.spongycastle:core:1.58.0.0")
     implementation("com.madgag.spongycastle:prov:1.58.0.0")
     val baoModule = findProject(":bao:startup")
-    if (baoFolder == "local" && baoModule != null)
-        implementation(project(":bao:startup"))
+    if (baoModule != null)
+        implementation(baoModule)
     else
         implementation("com.github.storytellerF.Bao:startup:2.2.0")
     implementation("androidx.window:window:1.2.0-alpha01")

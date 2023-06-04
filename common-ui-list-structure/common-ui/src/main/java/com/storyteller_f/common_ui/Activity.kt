@@ -3,7 +3,6 @@ package com.storyteller_f.common_ui
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
 import android.view.LayoutInflater
@@ -17,27 +16,19 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updatePadding
 import androidx.databinding.ViewDataBinding
 import androidx.viewbinding.ViewBinding
+import com.storyteller_f.compat_ktx.getParcelableCompat
 
 abstract class CommonActivity : AppCompatActivity(), RegistryFragment {
     override fun onStart() {
         super.onStart()
         //主要用于旋转屏幕
         waitingInActivity.forEach { t ->
-            @Suppress("UNCHECKED_CAST") val action = t.value.action
+            val action = t.value.action
             if (t.value.registerKey == registryKey()) {
-                val callback = { s: String, r: Bundle ->
-                    if (waitingInFragment.containsKey(s)) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            r.getParcelable("result", Parcelable::class.java)?.let {
-                                action(this, it)
-                            }
-                        } else {
-                            @Suppress("DEPRECATION")
-                            r.getParcelable<Parcelable>("result")?.let {
-                                action(this, it)
-                            }
-                        }
-                        waitingInFragment.remove(s)
+                val callback = { requestKey: String, result: Bundle ->
+                    if (waitingInFragment.containsKey(requestKey)) {
+                        result.getParcelableCompat("result", Parcelable::class.java)?.let { action(this, it) }
+                        waitingInFragment.remove(requestKey)
                     }
                 }
                 supportFragmentManager.clearFragmentResultListener(t.key)
@@ -55,15 +46,8 @@ fun <T : Parcelable, A> A.dialog(dialog: Class<out CommonDialogFragment>, result
     val requestKey = apply.requestKey()
     val callback = { s: String, r: Bundle ->
         if (waitingInActivity.containsKey(s)) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                r.getParcelable("result", result)?.let {
-                    action(it)
-                }
-            } else {
-                @Suppress("DEPRECATION")
-                r.getParcelable<T>("result")?.let {
-                    action(it)
-                }
+            r.getParcelableCompat("result", result)?.let {
+                action(it)
             }
             waitingInActivity.remove(s)
         }
@@ -99,6 +83,9 @@ fun ComponentActivity.supportNavigatorBarImmersive(view: View) {
     window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
     WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = !isNightMode
     WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = !isNightMode
+    /**
+     * 如果提供一个透明色，在低版本中会自动添加一个颜色
+     */
     window.navigationBarColor = Color.parseColor("#01000000")
     view.setOnApplyWindowInsetsListener { v, insets ->
         val top = WindowInsetsCompat.toWindowInsetsCompat(insets, v).getInsets(WindowInsetsCompat.Type.statusBars())

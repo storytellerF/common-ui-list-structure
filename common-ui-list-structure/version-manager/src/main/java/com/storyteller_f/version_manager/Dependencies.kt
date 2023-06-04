@@ -26,7 +26,7 @@ object Versions {
     const val navVersion = "2.5.1"
     const val workVersion = "2.7.1"
     const val leakCanary = "2.9.1"
-    const val dataBindingCompilerVersion = "8.0.1"
+    const val dataBindingCompilerVersion = "8.0.2"
 
 }
 

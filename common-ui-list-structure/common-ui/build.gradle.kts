@@ -30,6 +30,7 @@ setupExtFuncSupport()
 dependencies {
     api(project(":ext-func-definition"))
     implementation(project(":common-ktx"))
+    implementation(project(":compat-ktx"))
     api("androidx.core:core-ktx:${Versions.coreVersion}")
     api("androidx.appcompat:appcompat:${Versions.appcompatVersion}")
     api("com.google.android.material:material:${Versions.materialVersion}")
