@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <compositeConfiguration>
+          <compositeBuild compositeDefinitionSource="SCRIPT">
+            <builds>
+              <build path="$PROJECT_DIR$/../../common-ui-list-structure/version-manager" name="version-manager">
+                <projects>
+                  <project path="$PROJECT_DIR$/../../common-ui-list-structure/version-manager" />
+                  <project path="$PROJECT_DIR$/../../common-ui-list-structure/version-manager/version-manager" />
+                </projects>
+              </build>
+            </builds>
+          </compositeBuild>
+        </compositeConfiguration>
+        <option name="testRunner" value="GRADLE" />
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="gradleJvm" value="jbr-17" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/common-ktx" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/common-pr" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/common-ui" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/common-vm-ktx" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/compat-ktx" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/composite-compiler" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/composite-definition" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/config" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/ext-func-compiler" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/ext-func-definition" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/file-system" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/file-system-ktx" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/multi-core" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/slim-ktx" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/ui-list" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/ui-list-annotation-common" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/ui-list-annotation-compiler" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/ui-list-annotation-compiler-ksp" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/ui-list-annotation-definition" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/version-manager" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/version-manager/version-manager" />
+            <option value="$PROJECT_DIR$/../../common-ui-list-structure/view-holder-compose" />
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/giant-explorer" />
+            <option value="$PROJECT_DIR$/giant-explorer-plugin-core" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>

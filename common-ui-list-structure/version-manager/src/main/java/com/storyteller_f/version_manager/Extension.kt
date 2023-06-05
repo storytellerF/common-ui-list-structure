@@ -2,11 +2,14 @@
 
 package com.storyteller_f.version_manager
 
+import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import org.gradle.api.Action
 import org.gradle.api.JavaVersion
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
+import org.gradle.api.plugins.ExtensionAware
 import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptions
@@ -239,33 +242,33 @@ fun Project.baseLibrary() {
     }
 }
 
-fun Project.androidLibrary(configure: Action<com.android.build.gradle.LibraryExtension>): Unit =
-    (this as org.gradle.api.plugins.ExtensionAware).extensions.configure("android", configure)
+fun Project.androidLibrary(configure: Action<LibraryExtension>): Unit =
+    (this as ExtensionAware).extensions.configure("android", configure)
 
 fun Project.androidApp(configure: Action<BaseAppModuleExtension>): Unit =
-    (this as org.gradle.api.plugins.ExtensionAware).extensions.configure("android", configure)
+    (this as ExtensionAware).extensions.configure("android", configure)
 
 fun Project.kotlin(configure: Action<KotlinAndroidProjectExtension>): Unit =
-    (this as org.gradle.api.plugins.ExtensionAware).extensions.configure("kotlin", configure)
+    (this as ExtensionAware).extensions.configure("kotlin", configure)
 
-val org.gradle.api.NamedDomainObjectContainer<KotlinSourceSet>.main: NamedDomainObjectProvider<KotlinSourceSet>
+val NamedDomainObjectContainer<KotlinSourceSet>.main: NamedDomainObjectProvider<KotlinSourceSet>
     get() = named<KotlinSourceSet>("main")
 
-val org.gradle.api.NamedDomainObjectContainer<KotlinSourceSet>.test: NamedDomainObjectProvider<KotlinSourceSet>
+val NamedDomainObjectContainer<KotlinSourceSet>.test: NamedDomainObjectProvider<KotlinSourceSet>
     get() = named<KotlinSourceSet>("test")
 
 fun BaseAppModuleExtension.kotlinOptions(configure: Action<KotlinJvmOptions>): Unit =
-    (this as org.gradle.api.plugins.ExtensionAware).extensions.configure("kotlinOptions", configure)
+    (this as ExtensionAware).extensions.configure("kotlinOptions", configure)
 
 fun KotlinJvmOptions.addArgs(arg: String) {
     freeCompilerArgs = freeCompilerArgs.plusWhenNoExists(arg)
 }
 
-fun com.android.build.gradle.LibraryExtension.kotlinOptionsLibrary(configure: Action<KotlinJvmOptions>): Unit =
-    (this as org.gradle.api.plugins.ExtensionAware).extensions.configure("kotlinOptions", configure)
+fun LibraryExtension.kotlinOptionsLibrary(configure: Action<KotlinJvmOptions>): Unit =
+    (this as ExtensionAware).extensions.configure("kotlinOptions", configure)
 
 fun Project.java(configure: Action<org.gradle.api.plugins.JavaPluginExtension>): Unit =
-    (this as org.gradle.api.plugins.ExtensionAware).extensions.configure("java", configure)
+    (this as ExtensionAware).extensions.configure("java", configure)
 
 fun <T> List<T>.plusWhenNoExists(element: T): List<T> {
     if (this.contains(element)) {
