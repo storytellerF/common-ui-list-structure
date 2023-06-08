@@ -46,7 +46,7 @@ jobs:
       # ID used to access action output
       id: sign_app
       with:
-        releaseDirectory: build/app
+        releaseDirectory: build/common-ui-list
         signingKeyBase64: ${{ secrets.SIGNING_KEY }}
         alias: ${{ secrets.ALIAS }}
         keyStorePassword: ${{ secrets.STORE_PASSWORD }}

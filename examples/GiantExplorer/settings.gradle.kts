@@ -1,5 +1,5 @@
 pluginManagement {
-    includeBuild("../../common-ui-list-structure/version-manager")
+    includeBuild("../../common-ui-list/version-manager")
     repositories {
         google()
         mavenCentral()
@@ -41,7 +41,7 @@ val commonUiListModules = listOf(
     "ui-list-annotation-definition",
     "view-holder-compose"
 )
-val commonUiPath = File(rootDir, "../../common-ui-list-structure")
+val commonUiPath = File(rootDir, "../../common-ui-list")
 commonUiListModules.forEach {
     val modulePath = File(commonUiPath, it)
     include(it)

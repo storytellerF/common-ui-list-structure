@@ -1,6 +1,6 @@
-[submodule "common-ui-list-structure/FilterUIProject"]
-	path = common-ui-list-structure/FilterUIProject
-	url = git@github.com:storytellerF/FilterUIProject
+[submodule "FilterUIProject"]
+	path = FilterUIProject
+	url = git@github.com:storytellerF/FilterUIProject.git
 [submodule "SML"]
 	path = SML
 	url = git@github.com:storytellerF/SML.git
