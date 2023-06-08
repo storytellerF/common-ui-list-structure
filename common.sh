@@ -3,7 +3,7 @@
 # 第一个是tag，第二个参数是上一个命令的结果
 checkLastResult() {
     if [ $2 -ne 0 ]; then
-        echo "\033[101m build $1 failed \033[0m"
+        printf "\033[101m build $1 failed \033[0m\n"
         exit $2
     fi
 }
@@ -11,18 +11,18 @@ checkLastResult() {
 #第一个参数是tag
 printStartLabel() {
     echo
-    echo "\033[35;106m build $1 \033[0m"
+    printf "\033[35;106m build $1 \033[0m\n"
 }
 
 #第一个是tag
 printEndLabel() {
     echo
-    echo "\033[30;102m build $1 done \033[0m"
+    printf "\033[30;102m build $1 done \033[0m\n"
 }
 
 printWarningLabel() {
     echo
-    echo "\033[30;103m $1 \033[0m"
+    printf "\033[30;103m $1 \033[0m\n"
 }
 
 # 第一个参数是project name，同时也作为tag 使用，第二个是module name，第三个是目标子目录，默认是第一个参数，第四个参数是是否开启clean，默认开启
