@@ -3,9 +3,10 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
-        if (songFolder == "local") {
+        if (songFolder == "custom") {
+            def home = System.getProperty("user.home")
             maven {
-                url "../../../../IdeaProjects/song/repo"
+                url "$home/IdeaProjects/song/repo"
             }
         }
         maven {
