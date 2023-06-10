@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.ApplicationDefaultConfig
 import com.storyteller_f.version_manager.*
 
 class RoomSchemaArgProvider(
@@ -33,37 +34,9 @@ android {
     }
 
     defaultConfig {
-        val fileProviderAuthority = "$applicationId.file-provider"
-
-        // Now we can use ${documentsAuthority} in our Manifest
-        manifestPlaceholders["providerAuthority"] = fileProviderAuthority
-        // Now we can use BuildConfig.DOCUMENTS_AUTHORITY in our code
-        buildConfigField(
-            "String",
-            "FILE_PROVIDER_AUTHORITY",
-            "\"${fileProviderAuthority}\""
-        )
-        val fileSystemProviderAuthority = "$applicationId.file-system-provider"
-
-        // Now we can use ${documentsAuthority} in our Manifest
-        manifestPlaceholders["fileSystemProviderAuthority"] = fileSystemProviderAuthority
-        // Now we can use BuildConfig.DOCUMENTS_AUTHORITY in our code
-        buildConfigField(
-            "String",
-            "FILE_SYSTEM_PROVIDER_AUTHORITY",
-            "\"${fileSystemProviderAuthority}\""
-        )
-
-        val fileSystemProviderEncryptedAuthority = "$applicationId.file-system-encrypted-provider"
-
-        // Now we can use ${documentsAuthority} in our Manifest
-        manifestPlaceholders["fileSystemProviderEncryptedAuthority"] = fileSystemProviderEncryptedAuthority
-        // Now we can use BuildConfig.DOCUMENTS_AUTHORITY in our code
-        buildConfigField(
-            "String",
-            "FILE_SYSTEM_ENCRYPTED_PROVIDER_AUTHORITY",
-            "\"${fileSystemProviderEncryptedAuthority}\""
-        )
+        extracted("file-provider")
+        extracted("file-system-provider")
+        extracted("file-system-encrypted-provider")
         javaCompileOptions {
             annotationProcessorOptions {
                 compilerArgumentProviders(
@@ -147,3 +120,46 @@ baseApp()
 setupGeneric()
 setupDataBinding()
 setupDipToPx()
+
+fun ApplicationDefaultConfig.extracted(
+    identification: String,
+) {
+    val placeholderKey = s(identification)
+    val fileSystemProviderEncryptedAuthority = "$applicationId.$identification"
+    val configKey = configKey(placeholderKey)
+
+    // Now we can use ${documentsAuthority} in our Manifest
+    manifestPlaceholders[placeholderKey] = fileSystemProviderEncryptedAuthority
+    // Now we can use BuildConfig.DOCUMENTS_AUTHORITY in our code
+    buildConfigField(
+        "String",
+        configKey.toString(),
+        "\"${fileSystemProviderEncryptedAuthority}\""
+    )
+}
+
+fun configKey(placeholderKey: String): StringBuilder {
+    val configKey = StringBuilder()
+    placeholderKey.forEachIndexed { index, c ->
+        configKey.append(
+            when {
+                index == 0 -> c.uppercase()
+                c.isUpperCase() && placeholderKey[index - 1].isLowerCase() -> "_$c"
+                else -> c.uppercase()
+            }
+        )
+    }
+    return configKey
+}
+
+fun s(identification: String): String {
+    val identifyString = StringBuilder()
+    var i = 0
+    while (i < identification.length) {
+        val c = identification[i++]
+        if (c == '-') {
+            identifyString.append(identification[i++].uppercase())
+        } else identifyString.append(c)
+    }
+    return identifyString.append("Authority").toString()
+}

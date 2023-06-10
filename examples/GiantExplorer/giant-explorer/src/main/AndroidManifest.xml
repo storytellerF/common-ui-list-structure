@@ -101,7 +101,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="${providerAuthority}"
+            android:authorities="${fileProviderAuthority}"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -114,7 +114,7 @@
             android:exported="true" />
         <provider
             android:name=".service.FileSystemProvider"
-            android:authorities="${fileSystemProviderEncryptedAuthority}"
+            android:authorities="${fileSystemEncryptedProviderAuthority}"
             android:exported="true" />
     </application>
 
