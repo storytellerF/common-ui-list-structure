@@ -22,6 +22,7 @@ import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
 import androidx.core.view.iterator
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -51,8 +52,10 @@ import com.storyteller_f.giant_explorer.dialog.*
 import com.storyteller_f.plugin_core.*
 import com.storyteller_f.sort_ui.SortChain
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
+import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.source.SearchProducer
 import com.storyteller_f.ui_list.source.search
+import com.storyteller_f.ui_list.ui.ListWithState
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import java.io.File
@@ -75,6 +78,62 @@ class SharePasteTargetViewModel : ViewModel() {
     }
 }
 
+class  FileListObserver<T : Fragment>(private val fragment: T, val args: () -> FileListFragmentArgs) {
+    val fileInstance: FileInstance?
+        get() = session.fileInstance.value
+    val selected: List<Pair<DataItemHolder, Int>>?
+        get() = session.selected.value
+    private val filters by keyPrefix({ "test" }, fragment.asvm({}) { it, _ ->
+        StateValueModel(it, default = listOf<Filter<FileSystemItemModel>>())
+    })
+    private val sort by keyPrefix({ "sort" }, fragment.asvm({}) { it, _ ->
+        StateValueModel(it, default = listOf<SortChain<FileSystemItemModel>>())
+    })
+
+    private val session by fragment.vm(args) {
+        FileExplorerSession(fragment.requireActivity().application, it.path, it.root)
+    }
+
+    private val data by fragment.search({ fragment.requireDatabase to session.selected }, { (database, selected) ->
+        SearchProducer(fileServiceBuilder(database)) { fileModel, _, sq ->
+            FileItemHolder(fileModel, selected.value.orEmpty(), sq.display)
+        }
+    })
+
+
+    private val filterHiddenFile by fragment.asvm({}) { it, _ ->
+        StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
+    }
+    private val displayGrid by keyPrefix("display", fragment.avm({}) { _ ->
+        genericValueModel(false)
+    })
+    fun setup(listWithState: ListWithState,
+                     adapter: SimpleSourceAdapter<FileItemHolder, FileViewHolder>,) {
+        with(fragment) {
+            displayGrid.data.observe(owner) {
+                listWithState.recyclerView.isVisible = false
+                adapter.submitData(cycle, PagingData.empty())
+                listWithState.recyclerView.layoutManager = when {
+                    it -> GridLayoutManager(requireContext(), 3)
+                    else -> LinearLayoutManager(requireContext())
+                }
+            }
+            fileList(
+                listWithState, adapter, data, session, filterHiddenFile.data, filters.data, sort.data, displayGrid.data, { h ->
+                    startActivity(Intent(requireContext(), MainActivity::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+                        putExtra("start", FileListFragmentArgs(h.file.fullPath, args().root).toBundle())
+                    })
+                }
+            ) {
+                (requireContext() as MainActivity).drawPath(it)
+            }
+
+        }
+
+    }
+}
+
 class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileListBinding::inflate) {
     private val fileOperateBinder
         get() = (requireContext() as MainActivity).fileOperateBinder
@@ -84,57 +143,19 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         }
     })
 
-    private val filters by keyPrefix({ "test" }, asvm({}) { it, _ ->
-        StateValueModel(it, default = listOf<Filter<FileSystemItemModel>>())
-    })
-    private val sort by keyPrefix({ "sort" }, asvm({}) { it, _ ->
-        StateValueModel(it, default = listOf<SortChain<FileSystemItemModel>>())
-    })
-
-    private val data by search({ requireDatabase to session.selected }, { (database, selected) ->
-        SearchProducer(fileServiceBuilder(database)) { fileModel, _, sq ->
-            FileItemHolder(fileModel, selected.value.orEmpty(), sq.display)
-        }
-    })
-
-    private val filterHiddenFile by asvm({}) { it, _ ->
-        StateValueModel(it, filterHiddenFileKey, false)
-    }
-
     private val args by navArgs<FileListFragmentArgs>()
 
-    private val session by vm({ args }) {
-        FileExplorerSession(requireActivity().application, it.path, it.root)
-    }
-    private val displayGrid by keyPrefix("display", avm({}) { _ ->
-        genericValueModel(false)
-    })
+    private val observer = FileListObserver(this, {args})
 
-    private val shareTarget by keyPrefix({ "temp" }, pvm({}) {
+    private val shareTarget by keyPrefix({ "shareTarget" }, pvm({}) {
         SharePasteTargetViewModel()
     })
 
     override fun onBindViewEvent(binding: FragmentFileListBinding) {
         val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
-        displayGrid.data.observe(owner) {
-            binding.content.recyclerView.isVisible = false
-            adapter.submitData(cycle, PagingData.empty())
-            binding.content.recyclerView.layoutManager = when {
-                it -> GridLayoutManager(requireContext(), 3)
-                else -> LinearLayoutManager(requireContext())
-            }
-        }
 
-        fileList(
-            binding.content, adapter, data, session, filterHiddenFile.data, filters.data, sort.data, displayGrid.data, { h ->
-                startActivity(Intent(requireContext(), MainActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
-                    putExtra("start", FileListFragmentArgs(h.file.fullPath, args.root).toBundle())
-                })
-            }
-        ) {
-            (requireContext() as MainActivity).drawPath(it)
-        }
+        observer.setup(binding.content, adapter)
+
         setupMenu()
     }
 
@@ -155,7 +176,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                 R.id.add_file -> {
                     findNavController().navigate(R.id.action_fileListFragment_to_newNameDialog)
                     fragment(NewNameDialog.requestKey, NewNameDialog.NewNameResult::class.java) { nameResult ->
-                        session.fileInstance.value?.toChild(nameResult.name, true, true)
+                        observer.fileInstance?.toChild(nameResult.name, true, true)
                     }
                     true
                 }
@@ -181,7 +202,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         viewLifecycleOwner.lifecycleScope.launch {
             val dest = destDirectory?.let {
                 getFileInstance(it, requireContext(), stoppableTask = stoppable())
-            } ?: session.fileInstance.value ?: kotlin.run {
+            } ?: observer.fileInstance ?: kotlin.run {
                 Toast.makeText(requireContext(), "无法确定目的地", Toast.LENGTH_LONG).show()
                 return@launch
             }
@@ -235,7 +256,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
     @BindClickEvent(FileItemHolder::class)
     fun toChild(itemHolder: FileItemHolder) {
-        val old = session.fileInstance.value ?: return
+        val old = observer.fileInstance ?: return
         if (itemHolder.file.item.isDirectory) {
             findNavController().navigate(R.id.action_fileListFragment_self, FileListFragmentArgs(File(old.path, itemHolder.file.name).absolutePath, old.fileSystemRoot).toBundle())
         } else {
@@ -380,7 +401,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         private const val TAG = "FileListFragment"
     }
 
-    private fun detectSelected(itemHolder: FileItemHolder) = session.selected.value?.map { pair -> (pair.first as FileItemHolder).file.item } ?: listOf(itemHolder.file.item)
+    private fun detectSelected(itemHolder: FileItemHolder) = observer.selected?.map { pair -> (pair.first as FileItemHolder).file.item } ?: listOf(itemHolder.file.item)
 
     override fun requestKey() = "file-list"
 
