@@ -1,6 +1,6 @@
 [submodule "FilterUIProject"]
 	path = FilterUIProject
-	url = git@github.com:storytellerF/FilterUIProject.git
+	url = https://github.com/storytellerF/FilterUIProject.git
 [submodule "SML"]
 	path = SML
-	url = git@github.com:storytellerF/SML.git
+	url = https://github.com/storytellerF/SML.git

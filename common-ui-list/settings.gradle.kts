@@ -1,5 +1,4 @@
-val filterFolder: String by settings
-val baoFolder: String by settings
+
 pluginManagement {
     val smlFolder: String by settings
     includeBuild("version-manager")
@@ -52,33 +51,4 @@ include(":ui-list-annotation-compiler-ksp")
 include(":ui-list-annotation-common")
 include(":app:giant-explorer-plugin-core")
 include(":slim-ktx")
-
-val home: String = System.getProperty("user.home")
-val debugFilterFolder = file("$home/AndroidStudioProjects/FilterUIProject/")
-val subModuleFilterFolder = file("./FilterUIProject")
-val currentFolder = when (filterFolder) {
-    "local" -> debugFilterFolder
-    "submodule" -> subModuleFilterFolder
-    else -> null
-}
-if (currentFolder?.exists() == true) {
-    val l = listOf("config-core", "filter-core", "sort-core", "config_edit", "filter-ui", "sort-ui", "recycleview_ui_extra")
-    l.forEach {
-        include("filter:$it")
-        project(":filter:$it").projectDir = File(currentFolder, it)
-    }
-}
 include(":compat-ktx")
-val debugBaoFolder = when (baoFolder) {
-    "local" -> file("$home/AndroidStudioProjects/Bao/")
-    else -> null
-}
-if (debugBaoFolder?.exists() == true) {
-    val l = listOf("startup", "bao-library")
-    for (sub in l) {
-        include("bao:$sub")
-        project(":bao:$sub").projectDir = File(debugBaoFolder, sub)
-    }
-
-}
-
