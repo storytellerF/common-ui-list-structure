@@ -4,7 +4,7 @@ package com.storyteller_f.slim_ktx
 /**
  * 添加intent，除了第一行
  */
-fun String.prependRest(indent: String = "    "): String = lineSequence().mapIndexed { index, it ->
+fun String.indentRest(indent: String = "    "): String = lineSequence().mapIndexed { index, it ->
     when {
         index == 0 -> it
         it.isNotBlank() -> indent + it
@@ -18,7 +18,7 @@ fun String.prependRest(indent: String = "    "): String = lineSequence().mapInde
  */
 fun String.insertCode(vararg codeBlock: CodeBlock): String {
     return codeBlock.foldIndexed(this) { i, acc, block ->
-        acc.replace("$${i + 1}", block.prependRest())
+        acc.replace("$${i + 1}", block.indentRest())
     }
 }
 
@@ -28,10 +28,10 @@ class CodeBlock(private val content: String, private val indent: Int) {
     /**
      * 根据指定intent 添加intent
      */
-    fun prependRest(): String {
+    fun indentRest(): String {
         var result = content
         repeat(indent) {
-            result = result.prependRest()
+            result = result.indentRest()
         }
         return result
     }

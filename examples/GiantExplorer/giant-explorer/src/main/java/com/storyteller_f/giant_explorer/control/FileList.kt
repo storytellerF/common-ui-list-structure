@@ -266,19 +266,23 @@ fun fileServiceBuilder(
             }
         }
 
-        val predicate: (FileSystemItemModel) -> Boolean = {
-            (!it.isHidden || !searchQuery.filterHiddenFile) && (searchQuery.filters.isEmpty() || searchQuery.filters.any { f ->
+        val filterList = searchQuery.filters
+        val sortChains = searchQuery.sort
+
+        val filterPredicate: (FileSystemItemModel) -> Boolean = {
+            (!searchQuery.filterHiddenFile || !it.isHidden) && (filterList.isEmpty() || filterList.any { f ->
                 f.filter(it)
             })
         }
         val directories = listSafe.directories.toList()
         val files = listSafe.files.toList()
-        if (searchQuery.sort.isNotEmpty()) {
-            SortDialog.sortInternal(directories, searchQuery.sort)
-            SortDialog.sortInternal(files, searchQuery.sort)
+
+        if (sortChains.isNotEmpty()) {
+            SortDialog.sortInternal(directories, sortChains)
+            SortDialog.sortInternal(files, sortChains)
         }
-        val listFiles = if (searchQuery.filterHiddenFile || searchQuery.filters.isNotEmpty()) {
-            directories.filter(predicate).plus(files.filter(predicate))
+        val listFiles = if (searchQuery.filterHiddenFile || filterList.isNotEmpty()) {
+            directories.filter(filterPredicate).plus(files.filter(filterPredicate))
         } else directories.plus(files)
         val total = listFiles.size
         val index = start - 1
@@ -286,7 +290,7 @@ fun fileServiceBuilder(
         if (startPosition > total) SimpleResponse(0)
         else {
             val items = listFiles
-                .subList(startPosition, (count + startPosition).coerceAtMost(total))
+                .subList(startPosition, (startPosition + count).coerceAtMost(total))
                 .map { model ->
                     fileModelBuilder(model, database)
                 }

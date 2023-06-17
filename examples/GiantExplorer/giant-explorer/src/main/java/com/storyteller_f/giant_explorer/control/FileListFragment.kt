@@ -78,59 +78,81 @@ class SharePasteTargetViewModel : ViewModel() {
     }
 }
 
-class  FileListObserver<T : Fragment>(private val fragment: T, val args: () -> FileListFragmentArgs) {
+class FileListObserver<T : Fragment>(
+    private val fragment: T,
+    args: () -> FileListFragmentArgs,
+    val scope: VMScope = fragment.parentScope
+) {
     val fileInstance: FileInstance?
         get() = session.fileInstance.value
     val selected: List<Pair<DataItemHolder, Int>>?
         get() = session.selected.value
-    private val filters by keyPrefix({ "test" }, fragment.asvm({}) { it, _ ->
+    val filters by keyPrefix({ "test" }, fragment.svm({}, scope) { it, _ ->
         StateValueModel(it, default = listOf<Filter<FileSystemItemModel>>())
     })
-    private val sort by keyPrefix({ "sort" }, fragment.asvm({}) { it, _ ->
+    val sort by keyPrefix({ "sort" }, fragment.svm({}, scope) { it, _ ->
         StateValueModel(it, default = listOf<SortChain<FileSystemItemModel>>())
+    })
+    val filterHiddenFile by fragment.svm({}, scope) { it, _ ->
+        StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
+    }
+    private val displayGrid by keyPrefix("display", fragment.vm({}, scope) { _ ->
+        genericValueModel(false)
     })
 
     private val session by fragment.vm(args) {
         FileExplorerSession(fragment.requireActivity().application, it.path, it.root)
     }
 
-    private val data by fragment.search({ fragment.requireDatabase to session.selected }, { (database, selected) ->
-        SearchProducer(fileServiceBuilder(database)) { fileModel, _, sq ->
-            FileItemHolder(fileModel, selected.value.orEmpty(), sq.display)
-        }
-    })
+    private val data by fragment.search(
+        { fragment.requireDatabase to session.selected },
+        { (database, selected) ->
+            SearchProducer(fileServiceBuilder(database)) { fileModel, _, sq ->
+                FileItemHolder(fileModel, selected.value.orEmpty(), sq.display)
+            }
+        })
 
-
-    private val filterHiddenFile by fragment.asvm({}) { it, _ ->
-        StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
-    }
-    private val displayGrid by keyPrefix("display", fragment.avm({}) { _ ->
-        genericValueModel(false)
-    })
-    fun setup(listWithState: ListWithState,
-                     adapter: SimpleSourceAdapter<FileItemHolder, FileViewHolder>,) {
+    fun setup(
+        listWithState: ListWithState,
+        adapter: SimpleSourceAdapter<FileItemHolder, FileViewHolder>,
+        rightSwipe: (FileItemHolder) -> Unit,
+        updatePath: (String) -> Unit
+    ) {
         with(fragment) {
-            displayGrid.data.observe(owner) {
-                listWithState.recyclerView.isVisible = false
-                adapter.submitData(cycle, PagingData.empty())
-                listWithState.recyclerView.layoutManager = when {
-                    it -> GridLayoutManager(requireContext(), 3)
-                    else -> LinearLayoutManager(requireContext())
-                }
-            }
-            fileList(
-                listWithState, adapter, data, session, filterHiddenFile.data, filters.data, sort.data, displayGrid.data, { h ->
-                    startActivity(Intent(requireContext(), MainActivity::class.java).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
-                        putExtra("start", FileListFragmentArgs(h.file.fullPath, args().root).toBundle())
-                    })
-                }
-            ) {
-                (requireContext() as MainActivity).drawPath(it)
-            }
-
+            setup(listWithState, adapter, rightSwipe, updatePath)
         }
 
+    }
+
+    private fun T.setup(
+        listWithState: ListWithState,
+        adapter: SimpleSourceAdapter<FileItemHolder, FileViewHolder>,
+        rightSwipe: (FileItemHolder) -> Unit,
+        updatePath: (String) -> Unit
+    ) {
+        displayGrid.data.observe(owner) {
+            listWithState.recyclerView.isVisible = false
+            adapter.submitData(cycle, PagingData.empty())
+            listWithState.recyclerView.layoutManager = when {
+                it -> GridLayoutManager(requireContext(), 3)
+                else -> LinearLayoutManager(requireContext())
+            }
+        }
+        fileList(
+            listWithState,
+            adapter,
+            data,
+            session,
+            filterHiddenFile.data,
+            filters.data,
+            sort.data,
+            displayGrid.data,
+            rightSwipe, updatePath
+        )
+    }
+
+    fun update(toParent: FileInstance) {
+        session.fileInstance.value = toParent
     }
 }
 
@@ -145,7 +167,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
     private val args by navArgs<FileListFragmentArgs>()
 
-    private val observer = FileListObserver(this, {args})
+    private val observer = FileListObserver(this, { args })
 
     private val shareTarget by keyPrefix({ "shareTarget" }, pvm({}) {
         SharePasteTargetViewModel()
@@ -154,7 +176,17 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     override fun onBindViewEvent(binding: FragmentFileListBinding) {
         val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
 
-        observer.setup(binding.content, adapter)
+        observer.setup(binding.content, adapter, { h ->
+            startActivity(Intent(requireContext(), MainActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+                putExtra(
+                    "start",
+                    FileListFragmentArgs(h.file.fullPath, args.root).toBundle()
+                )
+            })
+        }) {
+            (requireContext() as MainActivity).drawPath(it)
+        }
 
         setupMenu()
     }
@@ -168,25 +200,32 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             override fun onPrepareMenu(menu: Menu) {
                 super.onPrepareMenu(menu)
                 menu.findItem(R.id.paste_file)?.let {
-                    it.isEnabled = ContextCompat.getSystemService(requireContext(), ClipboardManager::class.java)?.hasPrimaryClip() == true
+                    it.isEnabled = ContextCompat.getSystemService(
+                        requireContext(),
+                        ClipboardManager::class.java
+                    )?.hasPrimaryClip() == true
                 }
             }
 
             override fun onMenuItemSelected(menuItem: MenuItem) = when (menuItem.itemId) {
                 R.id.add_file -> {
                     findNavController().navigate(R.id.action_fileListFragment_to_newNameDialog)
-                    fragment(NewNameDialog.requestKey, NewNameDialog.NewNameResult::class.java) { nameResult ->
+                    fragment(
+                        NewNameDialog.requestKey,
+                        NewNameDialog.NewNameResult::class.java
+                    ) { nameResult ->
                         observer.fileInstance?.toChild(nameResult.name, true, true)
                     }
                     true
                 }
 
                 R.id.paste_file -> {
-                    ContextCompat.getSystemService(requireContext(), ClipboardManager::class.java)?.let { manager ->
-                        manager.primaryClip?.let { data ->
-                            handleClipData(data)
+                    ContextCompat.getSystemService(requireContext(), ClipboardManager::class.java)
+                        ?.let { manager ->
+                            manager.primaryClip?.let { data ->
+                                handleClipData(data)
+                            }
                         }
-                    }
                     true
 
                 }
@@ -240,7 +279,11 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                     Toast.makeText(requireContext(), "未连接服务", Toast.LENGTH_LONG).show()
                     return@launch
                 }
-                if (activity?.getSharedPreferences("${requireContext().packageName}_preferences", Activity.MODE_PRIVATE)?.getBoolean("notify_before_paste", true) == true) {
+                if (activity?.getSharedPreferences(
+                        "${requireContext().packageName}_preferences",
+                        Activity.MODE_PRIVATE
+                    )?.getBoolean("notify_before_paste", true) == true
+                ) {
                     dialog(TaskConfirmDialog(), TaskConfirmDialog.Result::class.java) { r ->
                         if (r.confirm) fileOperateBinderLocal.compoundTask(uriList, dest, key)
                     }
@@ -258,19 +301,37 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     fun toChild(itemHolder: FileItemHolder) {
         val old = observer.fileInstance ?: return
         if (itemHolder.file.item.isDirectory) {
-            findNavController().navigate(R.id.action_fileListFragment_self, FileListFragmentArgs(File(old.path, itemHolder.file.name).absolutePath, old.fileSystemRoot).toBundle())
+            findNavController().navigate(
+                R.id.action_fileListFragment_self,
+                FileListFragmentArgs(
+                    File(old.path, itemHolder.file.name).absolutePath,
+                    old.fileSystemRoot
+                ).toBundle()
+            )
         } else {
-            findNavController().navigate(R.id.action_fileListFragment_to_openFileDialog, OpenFileDialogArgs(itemHolder.file.fullPath, old.fileSystemRoot).toBundle())
+            findNavController().navigate(
+                R.id.action_fileListFragment_to_openFileDialog,
+                OpenFileDialogArgs(itemHolder.file.fullPath, old.fileSystemRoot).toBundle()
+            )
             fragment(OpenFileDialog.key, OpenFileDialog.OpenFileResult::class.java) { r ->
                 if (old.fileSystemRoot != FileInstanceFactory.publicFileSystemRoot) return@fragment
                 val file = File(itemHolder.file.fullPath)
-                val uriForFile = FileProvider.getUriForFile(requireContext(), BuildConfig.FILE_PROVIDER_AUTHORITY, file)
+                val uriForFile = FileProvider.getUriForFile(
+                    requireContext(),
+                    BuildConfig.FILE_PROVIDER_AUTHORITY,
+                    file
+                )
                 Intent("android.intent.action.VIEW").apply {
                     addCategory("android.intent.category.DEFAULT")
                     setDataAndType(uriForFile, r.mimeType)
                     flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 }.let {
-                    val ellipsizedText = TextUtils.ellipsize(itemHolder.file.name, TextPaint(), 100f, TextUtils.TruncateAt.MIDDLE)
+                    val ellipsizedText = TextUtils.ellipsize(
+                        itemHolder.file.name,
+                        TextPaint(),
+                        100f,
+                        TextUtils.TruncateAt.MIDDLE
+                    )
                     startActivity(Intent.createChooser(it, "open $ellipsizedText by"))
                 }
             }
@@ -284,7 +345,8 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
         PopupMenu(requireContext(), view).apply {
             inflate(R.menu.item_context_menu)
-            val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(File(fullPath).extension)
+            val mimeTypeFromExtension =
+                MimeTypeMap.getSingleton().getMimeTypeFromExtension(File(fullPath).extension)
 
             resolveInstalledPlugins(itemHolder, mimeTypeFromExtension)
             resolveNoInstalledPlugins(mimeTypeFromExtension, fullPath)
@@ -293,7 +355,10 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             val pluginManager = object : DefaultPluginManager(requireContext()) {
                 override suspend fun requestPath(initPath: String?): String {
                     val completableDeferred = CompletableDeferred<String>()
-                    dialog(RequestPathDialog(), RequestPathDialog.RequestPathResult::class.java) { result ->
+                    dialog(
+                        RequestPathDialog(),
+                        RequestPathDialog.RequestPathResult::class.java
+                    ) { result ->
                         completableDeferred.complete(result.path)
                     }
                     return completableDeferred.await()
@@ -320,22 +385,34 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
             setOnMenuItemClickListener { item ->
                 when (item.itemId) {
-                    R.id.delete -> fileOperateBinder?.delete(itemHolder.file.item, detectSelected(itemHolder), key)
+                    R.id.delete -> fileOperateBinder?.delete(
+                        itemHolder.file.item,
+                        detectSelected(itemHolder),
+                        key
+                    )
+
                     R.id.move_to -> moveOrCopy(true, itemHolder)
                     R.id.copy_to -> moveOrCopy(false, itemHolder)
-                    R.id.copy_file -> ContextCompat.getSystemService(requireContext(), ClipboardManager::class.java)?.let { manager ->
+                    R.id.copy_file -> ContextCompat.getSystemService(
+                        requireContext(),
+                        ClipboardManager::class.java
+                    )?.let { manager ->
                         val map = detectSelected(itemHolder).map {
                             Uri.fromFile(File(it.fullPath))
                         }
-                        val apply = ClipData.newPlainText(clipDataKey, map.first().toString()).apply {
-                            if (map.size > 1) map.subList(1, map.size).forEach {
-                                addItem(ClipData.Item(it))
+                        val apply =
+                            ClipData.newPlainText(clipDataKey, map.first().toString()).apply {
+                                if (map.size > 1) map.subList(1, map.size).forEach {
+                                    addItem(ClipData.Item(it))
+                                }
                             }
-                        }
                         manager.setPrimaryClip(apply)
                     }
 
-                    R.id.properties -> findNavController().navigate(R.id.action_fileListFragment_to_propertiesDialog, PropertiesDialogArgs(fullPath).toBundle())
+                    R.id.properties -> findNavController().navigate(
+                        R.id.action_fileListFragment_to_propertiesDialog,
+                        PropertiesDialogArgs(fullPath).toBundle()
+                    )
 
                 }
                 true
@@ -343,36 +420,55 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         }.show()
     }
 
-    private fun PopupMenu.resolveNoInstalledPlugins(mimeTypeFromExtension: String?, fullPath: String) {
+    private fun PopupMenu.resolveNoInstalledPlugins(
+        mimeTypeFromExtension: String?,
+        fullPath: String
+    ) {
         pluginManagerRegister.pluginsName().forEach { pluginName: String ->
             val pluginFile = File(pluginName)
-            val subMenu = pluginManagerRegister.resolvePluginName(pluginName, requireContext()).meta.subMenu
+            val subMenu =
+                pluginManagerRegister.resolvePluginName(pluginName, requireContext()).meta.subMenu
             menu.loopAdd(listOf(subMenu)).add(pluginName).setOnMenuItemClickListener {
-                if (pluginFile.name.endsWith("apk")) startActivity(Intent(requireContext(), FragmentPluginActivity::class.java).apply {
-                    putExtra("plugin-name", pluginFile.name)
-                    plugUri(mimeTypeFromExtension, fullPath)
-                })
-                else startActivity(Intent(requireContext(), WebViewPluginActivity::class.java).apply {
-                    putExtra("plugin-name", pluginFile.name)
-                    plugUri(mimeTypeFromExtension, fullPath)
-                })
+                if (pluginFile.name.endsWith("apk")) startActivity(
+                    Intent(
+                        requireContext(),
+                        FragmentPluginActivity::class.java
+                    ).apply {
+                        putExtra("plugin-name", pluginFile.name)
+                        plugUri(mimeTypeFromExtension, fullPath)
+                    })
+                else startActivity(
+                    Intent(
+                        requireContext(),
+                        WebViewPluginActivity::class.java
+                    ).apply {
+                        putExtra("plugin-name", pluginFile.name)
+                        plugUri(mimeTypeFromExtension, fullPath)
+                    })
                 true
             }
         }
     }
 
-    private fun PopupMenu.resolveInstalledPlugins(itemHolder: FileItemHolder, mimeTypeFromExtension: String?) {
+    private fun PopupMenu.resolveInstalledPlugins(
+        itemHolder: FileItemHolder,
+        mimeTypeFromExtension: String?
+    ) {
         val intent = Intent("com.storyteller_f.action.giant_explorer.PLUGIN")
         intent.addCategory("android.intent.category.DEFAULT")
         intent.plugUri(mimeTypeFromExtension, itemHolder.file.fullPath)
 
-        val activities = requireContext().packageManager.queryIntentActivitiesCompat(intent, (PackageManager.MATCH_DEFAULT_ONLY or PackageManager.GET_META_DATA).toLong())
+        val activities = requireContext().packageManager.queryIntentActivitiesCompat(
+            intent,
+            (PackageManager.MATCH_DEFAULT_ONLY or PackageManager.GET_META_DATA).toLong()
+        )
         activities.forEach {
             val activityInfo = it.activityInfo ?: return@forEach
             val groups = activityInfo.metaData?.getString("group")?.split("/") ?: return@forEach
             val title = activityInfo.metaData?.getString("title") ?: return@forEach
             menu.loopAdd(groups).add(title).setOnMenuItemClickListener {
-                intent.setPackage(requireContext().packageName).component = ComponentName(activityInfo.packageName, activityInfo.name)
+                intent.setPackage(requireContext().packageName).component =
+                    ComponentName(activityInfo.packageName, activityInfo.name)
                 startActivity(intent)
                 return@setOnMenuItemClickListener true
             }
@@ -389,7 +485,13 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                     val key = uuid.data.value ?: return@nn
                     val detectSelected = detectSelected(itemHolder)
                     Log.i(TAG, "moveOrCopy: uuid: $key")
-                    fileOperateBinder?.moveOrCopy(dest, detectSelected, itemHolder.file.item, move, key)
+                    fileOperateBinder?.moveOrCopy(
+                        dest,
+                        detectSelected,
+                        itemHolder.file.item,
+                        move,
+                        key
+                    )
                 }
             }
         }
@@ -401,7 +503,10 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         private const val TAG = "FileListFragment"
     }
 
-    private fun detectSelected(itemHolder: FileItemHolder) = observer.selected?.map { pair -> (pair.first as FileItemHolder).file.item } ?: listOf(itemHolder.file.item)
+    private fun detectSelected(itemHolder: FileItemHolder) =
+        observer.selected?.map { pair -> (pair.first as FileItemHolder).file.item } ?: listOf(
+            itemHolder.file.item
+        )
 
     override fun requestKey() = "file-list"
 

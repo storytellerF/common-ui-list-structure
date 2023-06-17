@@ -119,6 +119,20 @@ inline fun <reified VM : ViewModel, T, ARG> T.stateDefaultFactory(
     }
 }
 
+class VMScope(val storeProducer: () -> ViewModelStore, val ownerProducer: () -> SavedStateRegistryOwner)
+
+inline val Fragment.parentScope get() = VMScope({
+    requireParentFragment(). viewModelStore
+}, {
+    requireParentFragment()
+})
+
+inline val Fragment.activityScope get() = VMScope({
+    requireActivity().viewModelStore
+}, {
+    requireActivity()
+})
+
 @ExtFuncFlat(type = ExtFuncFlatType.V5)
 @MainThread
 inline fun <reified VM : ViewModel, T, ARG> T.vm(

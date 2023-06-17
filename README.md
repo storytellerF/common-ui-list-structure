@@ -24,13 +24,15 @@ bash build_plugins.sh
 
 3. **ext-func**：对自动为Context 的扩展函数扩充为View，Fragment 的同名扩展函数。
 
-4. **Sml**：[自动生成color，drawable的xml 文件](sml)
+4. **Sml**：[自动生成color，drawable的xml 文件](SML)
+
+5. version-manager： 使用includeBuild 导入，暴露一个gradle plugin，用于依赖管理和配置管理
 
 ## 示例模块
 
-[giant-explorer](common-ui-list-structure/app/giant-explorer) 文件管理器
+[giant-explorer](examples/GiantExplorer) 文件管理器
 
-[ping](common-ui-list-structure/app/ping) 动态壁纸
+[ping](examples/Ping) 动态壁纸
 
 ## 代码规范
 

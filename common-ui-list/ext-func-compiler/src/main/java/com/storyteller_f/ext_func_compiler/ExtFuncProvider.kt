@@ -49,8 +49,8 @@ private fun combineDao(count: Int, type: String): String {
     return """
         fun<${repeat("T1", count)}> combineDao(${repeat("s1: LiveData<T1>", count)}): $type {
             val mediatorLiveData = $type()
-            ${repeat("var d1 = s1.value\n", count, sp = "\n").yes(3).prependRest()}
-            ${liveDataAddSource(count).yes(3).prependRest()}
+            ${repeat("var d1 = s1.value\n", count, sp = "\n").yes(3).indentRest()}
+            ${liveDataAddSource(count).yes(3).indentRest()}
             return mediatorLiveData
         }
         """.trimIndent()
@@ -88,43 +88,43 @@ private fun repeat(template: String, count: Int, start: Int = 1, sp: String = ",
 }
 
 internal fun generatePropertyV5(task: ExtFuncProcessor.Task): Pair<Set<String>, String> {
-    val extra = if (task.ksAnnotated is KSFunctionDeclaration) {
+    val arguments = if (task.ksAnnotated is KSFunctionDeclaration) {
         task.ksAnnotated.parameters.map {
-//                (it.type.element as KSCallableReference).typeArguments.map {
-//                    it.type
-//                }
             it.type.element
         }.joinToString(",")
     } else null
     val imports = getImports(task.ksAnnotated) + listOf("androidx.fragment.app.Fragment")
-    val parameterListExcludeDefault = getParameterListExcludeDefault(task.ksAnnotated as KSFunctionDeclaration)
-    return imports to extendVm(extra, task, parameterListExcludeDefault)
-//        if (task.ksAnnotated is KSFunctionDeclaration) {
-//            return "//${task.ksAnnotated.parameters.map { it.type }}"
-//        }
-//        return ""
+    return imports to extendVm(arguments, task)
 }
 
-private fun extendVm(extra: String?, task: ExtFuncProcessor.Task, parameterListExcludeDefault: String): String {
+private fun extendVm(extra: String?, task: ExtFuncProcessor.Task): String {
+    val parameterList = getParameterListExcludeDefaultList(task.ksAnnotated as KSFunctionDeclaration)
+    val parameterString = parameterList.joinToString(",\n").yes(3).indentRest()
+    val second = parameterList.toMutableList().apply {
+        add(1, "vmScope: VMScope")
+    }.joinToString(",\n").yes(3).indentRest()
     return """
         //$extra
         @MainThread
         inline fun <reified VM : ViewModel, ARG> Fragment.a${task.name}(
-            ${parameterListExcludeDefault.yes(3).prependRest()}
+            $parameterString
         ) = ${task.name}(arg, { requireActivity().viewModelStore }, { requireActivity() }, vmProducer)
         @MainThread
         inline fun <reified VM : ViewModel, ARG> Fragment.p${task.name}(
-            ${parameterListExcludeDefault.yes(3).prependRest()}
+            $parameterString
         ) = ${task.name}(arg, { requireParentFragment().viewModelStore }, { requireParentFragment() }, vmProducer)
+        @MainThread
+        inline fun <reified VM : ViewModel, ARG> Fragment.${task.name}(
+            $second
+        ) = ${task.name}(arg, vmScope.storeProducer, vmScope.ownerProducer, vmProducer)
         """.trimIndent()
 }
 
-private fun getParameterListExcludeDefault(ksAnnotated: KSFunctionDeclaration): String {
-    return ksAnnotated.parameters.mapNotNull {
+private fun getParameterListExcludeDefaultList(ksAnnotated: KSFunctionDeclaration) =
+    ksAnnotated.parameters.mapNotNull {
         if (it.hasDefault) null
         else ("${if (it.isCrossInline) "crossinline" else ""} ${it.name?.getShortName()} : ${it.type}")
-    }.joinToString(",\n")
-}
+    }
 
 internal fun generatePropertyV4(name: String, annotation: ExtFuncFlat): String {
     return """
