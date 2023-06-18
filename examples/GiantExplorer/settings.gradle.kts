@@ -1,5 +1,6 @@
 val filterFolder: String? by settings
 val baoFolder: String? by settings
+val liFolder: String? by settings
 pluginManagement {
     includeBuild("../../common-ui-list/version-manager")
     repositories {
@@ -80,3 +81,12 @@ if (debugBaoFolder?.exists() == true) {
 
 }
 
+val debugLiFolder = when (liFolder) {
+    "local" -> file("../../giant-explorer/li/plugin")
+    else -> null
+}
+
+if (debugLiFolder?.exists() == true) {
+    include("li-plugin")
+    project(":li-plugin").projectDir = debugLiFolder
+}

@@ -115,6 +115,10 @@ dependencies {
     else
         implementation("com.github.storytellerF.Bao:startup:2.2.0")
     implementation("androidx.window:window:1.2.0-alpha02")
+    val liPluginModule = findProject(":li-plugin")
+    if (liPluginModule != null) {
+        implementation(liPluginModule)
+    }
 }
 baseApp()
 setupGeneric()

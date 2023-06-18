@@ -47,6 +47,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/giant-explorer" />
             <option value="$PROJECT_DIR$/giant-explorer-plugin-core" />
+            <option value="$PROJECT_DIR$/../../giant-explorer/li/plugin" />
           </set>
         </option>
       </GradleProjectSettings>

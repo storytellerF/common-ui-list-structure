@@ -29,12 +29,17 @@ dependencies {
 val target = listOf("yue", "li")
 val dispatchTasks = target.map { targetName ->
     tasks.register("dispatchPluginCoreLibTo${targetName.toUpperCaseAsciiOnly()}", Copy::class) {
-        from(File(buildDir, "/outputs/aar/plugin-core-debug.aar")) {
+        val aarFileName = "giant-explorer-plugin-core-debug.aar"
+        val aarFile = File(buildDir, "/outputs/aar/$aarFileName")
+        val dest = File(rootDir, "../../giant-explorer/$targetName/giant-explorer-plugin-core")
+
+        from(aarFile) {
             rename {
-                it.replace("plugin-core-debug.aar", "core.aar")
+                it.replace(aarFileName, "core.aar")
             }
         }
-        into(File(rootDir, "../../giant-explorer/$targetName/giant-explorer-plugin-core"))
+        into(dest)
+        println("dest : ${dest.absolutePath} aar: $aarFile")
     }
 }
 
