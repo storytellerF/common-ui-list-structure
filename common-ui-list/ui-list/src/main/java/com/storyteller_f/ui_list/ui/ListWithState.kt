@@ -34,11 +34,15 @@ import com.storyteller_f.ui_list.source.SimpleDataViewModel
 import com.storyteller_f.ui_list.source.isError
 import com.storyteller_f.ui_list.source.isLoading
 import com.storyteller_f.ui_list.source.isNotLoading
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -48,6 +52,15 @@ class ListWithState @JvmOverloads constructor(
     attributeSet: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attributeSet, defStyleAttr) {
+
+    val recyclerView get() = binding.list
+
+    private val binding = ListWithStateBinding.inflate(LayoutInflater.from(context), this)
+
+    init {
+        binding.list.setHasFixedSize(true)
+    }
+
     fun flash(uiState: UIState) {
         // Only show the list if refresh succeeds.
         binding.list.isVisible = uiState.data
@@ -87,17 +100,7 @@ class ListWithState @JvmOverloads constructor(
         }
         lifecycleOwner.lifecycleScope.launch {
             lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-//                launch {
-//                    callbackFlow.distinctUntilChanged { old, new ->
-//                        old.mediator?.refresh.isLoading == new.mediator?.refresh.isLoading
-//                    }.shareIn(lifecycleOwner.lifecycleScope, SharingStarted.WhileSubscribed()).collectLatest {
-//                        val notLoading = it.mediator?.refresh.isNotLoading
-//                        Log.d(TAG, "sourceUp: scroll to position if $notLoading")
-//                        if (notLoading) {
-//                            binding.list.smoothScrollToPosition(0)
-//                        }
-//                    }
-//                }
+//                autoScrollToTop(callbackFlow, lifecycleOwner)
                 launch {
                     callbackFlow.map {
                         Log.d(TAG, "sourceUp: ${it.debugEmoji()}")
@@ -111,6 +114,68 @@ class ListWithState @JvmOverloads constructor(
 
         if (dampingSwipe != null) {
             setupDampingSwipeSupport(dampingSwipe)
+        }
+    }
+
+    fun dataUp(
+        adapter: SimpleDataAdapter<*, *>,
+        lifecycleOwner: LifecycleOwner,
+        vm: SimpleDataViewModel<*, *, *>,
+    ) {
+        setupLinearLayoutManager()
+        val layoutManager = binding.list.layoutManager as LinearLayoutManager
+        binding.list.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                val totalItemCount = layoutManager.itemCount
+                val visibleItemCount = layoutManager.childCount
+                val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
+                if (visibleItemCount + lastVisibleItem + visibleItemCount >= totalItemCount) {
+                    vm.requestMore()
+                }
+            }
+        })
+        binding.list.adapter = adapter
+        binding.refreshLayout.setOnRefreshListener {
+            vm.refresh()
+        }
+        binding.retryButton.setOnClickListener {
+            vm.retry()
+        }
+        vm.loadState.map { simple(it.loadState, it.itemCount) }.observe(lifecycleOwner) {
+            flash(it)
+        }
+        setupSwapSupport(adapter)
+    }
+
+    fun manualUp(adapter: ManualAdapter<*, *>, dampingSwipe: ((RecyclerView.ViewHolder, Int) -> Unit)? = null, refresh: (() -> Unit)? = null) {
+        recyclerView.adapter = adapter
+        setupLinearLayoutManager()
+        if (dampingSwipe != null) setupDampingSwipeSupport(dampingSwipe)
+        binding.refreshLayout.isEnabled = refresh != null
+        binding.refreshLayout.setOnRefreshListener {
+            refresh?.invoke()
+        }
+        binding.retryButton.setOnClickListener {
+            refresh?.invoke()
+        }
+    }
+
+    private fun CoroutineScope.autoScrollToTop(
+        callbackFlow: Flow<CombinedLoadStates>,
+        lifecycleOwner: LifecycleOwner
+    ) {
+        launch {
+            callbackFlow.distinctUntilChanged { old, new ->
+                old.mediator?.refresh.isLoading == new.mediator?.refresh.isLoading
+            }.shareIn(lifecycleOwner.lifecycleScope, SharingStarted.WhileSubscribed())
+                .collectLatest {
+                    val notLoading = it.mediator?.refresh.isNotLoading
+                    Log.d(TAG, "sourceUp: scroll to position if $notLoading")
+                    if (notLoading) {
+                        binding.list.smoothScrollToPosition(0)
+                    }
+                }
         }
     }
 
@@ -255,58 +320,6 @@ class ListWithState @JvmOverloads constructor(
     private fun setupLinearLayoutManager() {
         binding.list.layoutManager =
             LinearLayoutManager(binding.list.context, LinearLayoutManager.VERTICAL, false)
-    }
-
-    fun dataUp(
-        adapter: SimpleDataAdapter<*, *>,
-        lifecycleOwner: LifecycleOwner,
-        vm: SimpleDataViewModel<*, *, *>,
-    ) {
-        setupLinearLayoutManager()
-        val layoutManager = binding.list.layoutManager as LinearLayoutManager
-        binding.list.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                val totalItemCount = layoutManager.itemCount
-                val visibleItemCount = layoutManager.childCount
-                val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
-                if (visibleItemCount + lastVisibleItem + visibleItemCount >= totalItemCount) {
-                    vm.requestMore()
-                }
-            }
-        })
-        binding.list.adapter = adapter
-        binding.refreshLayout.setOnRefreshListener {
-            vm.refresh()
-        }
-        binding.retryButton.setOnClickListener {
-            vm.retry()
-        }
-        vm.loadState.map { simple(it.loadState, it.itemCount) }.observe(lifecycleOwner) {
-            flash(it)
-        }
-        setupSwapSupport(adapter)
-    }
-
-    fun manualUp(adapter: ManualAdapter<*, *>, dampingSwipe: ((RecyclerView.ViewHolder, Int) -> Unit)? = null, refresh: (() -> Unit)? = null) {
-        recyclerView.adapter = adapter
-        setupLinearLayoutManager()
-        if (dampingSwipe != null) setupDampingSwipeSupport(dampingSwipe)
-        binding.refreshLayout.isEnabled = refresh != null
-        binding.refreshLayout.setOnRefreshListener {
-            refresh?.invoke()
-        }
-        binding.retryButton.setOnClickListener {
-            refresh?.invoke()
-        }
-    }
-
-    val recyclerView get() = binding.list
-
-    private val binding = ListWithStateBinding.inflate(LayoutInflater.from(context), this)
-
-    init {
-        binding.list.setHasFixedSize(true)
     }
 
     class UIState(
