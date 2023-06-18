@@ -7,6 +7,8 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.storyteller_f.ext_func_definition.ExtFuncFlat
 import com.storyteller_f.ext_func_definition.ExtFuncFlatType
+import com.storyteller_f.file_system_remote.RemoteAccessDao
+import com.storyteller_f.file_system_remote.RemoteAccessSpec
 
 
 @Database(

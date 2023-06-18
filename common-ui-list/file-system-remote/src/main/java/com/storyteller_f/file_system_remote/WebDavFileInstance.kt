@@ -1,9 +1,8 @@
-package com.storyteller_f.giant_explorer.service
+package com.storyteller_f.file_system_remote
 
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.giant_explorer.database.ShareSpec
 import kotlinx.coroutines.runBlocking
 import java.io.BufferedReader
 import java.io.BufferedWriter

@@ -39,6 +39,7 @@
             <option value="$PROJECT_DIR$/ext-func-definition" />
             <option value="$PROJECT_DIR$/file-system" />
             <option value="$PROJECT_DIR$/file-system-ktx" />
+            <option value="$PROJECT_DIR$/file-system-remote" />
             <option value="$PROJECT_DIR$/multi-core" />
             <option value="$PROJECT_DIR$/slim-ktx" />
             <option value="$PROJECT_DIR$/ui-list" />

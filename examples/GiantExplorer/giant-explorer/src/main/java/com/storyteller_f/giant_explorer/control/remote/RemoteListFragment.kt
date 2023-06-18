@@ -9,7 +9,7 @@ import androidx.lifecycle.flowWithLifecycle
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.annotation_defination.ItemHolder
 import com.storyteller_f.common_ui.scope
-import com.storyteller_f.giant_explorer.database.RemoteAccessSpec
+import com.storyteller_f.file_system_remote.RemoteAccessSpec
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentRemoteListBinding
 import com.storyteller_f.giant_explorer.databinding.ViewHolderRemoteAccessSpecBinding

@@ -1,4 +1,4 @@
-package com.storyteller_f.giant_explorer.service
+package com.storyteller_f.file_system_remote
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

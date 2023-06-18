@@ -35,6 +35,7 @@ val commonUiListModules = listOf(
     "ext-func-definition",
     "file-system",
     "file-system-ktx",
+    "file-system-remote",
     "multi-core",
     "slim-ktx",
     "ui-list",

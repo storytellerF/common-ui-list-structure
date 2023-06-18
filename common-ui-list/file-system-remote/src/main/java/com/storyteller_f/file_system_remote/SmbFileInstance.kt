@@ -1,4 +1,4 @@
-package com.storyteller_f.giant_explorer.service
+package com.storyteller_f.file_system_remote
 
 import com.hierynomus.msfscc.fileinformation.FileAllInformation
 import com.hierynomus.smbj.SMBClient
@@ -7,7 +7,6 @@ import com.hierynomus.smbj.share.DiskShare
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.giant_explorer.database.ShareSpec
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.File
@@ -23,6 +22,10 @@ fun ShareSpec.requireDiskShare(): DiskShare {
     val authenticationContext = AuthenticationContext(user, password.toCharArray(), "")
     val session = connect.authenticate(authenticationContext)
     return session.connectShare(share) as DiskShare
+}
+
+fun ShareSpec.checkSmb() {
+    requireDiskShare().close()
 }
 
 val smbSessions = mutableMapOf<ShareSpec, DiskShare>()

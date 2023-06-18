@@ -9,7 +9,6 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import com.hierynomus.smbj.SMBClient
 import com.storyteller_f.common_pr.state
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui.setOnClick
@@ -17,32 +16,21 @@ import com.storyteller_f.common_ui.waitingDialog
 import com.storyteller_f.common_vm_ktx.GenericValueModel
 import com.storyteller_f.common_vm_ktx.buildExtras
 import com.storyteller_f.common_vm_ktx.vm
-import com.storyteller_f.giant_explorer.database.RemoteAccessSpec
-import com.storyteller_f.giant_explorer.database.RemoteSpec
-import com.storyteller_f.giant_explorer.database.ShareSpec
+import com.storyteller_f.file_system_remote.FtpInstance
+import com.storyteller_f.file_system_remote.FtpsInstance
+import com.storyteller_f.file_system_remote.RemoteAccessSpec
+import com.storyteller_f.file_system_remote.RemoteAccessType
+import com.storyteller_f.file_system_remote.RemoteSpec
+import com.storyteller_f.file_system_remote.ShareSpec
+import com.storyteller_f.file_system_remote.WebDavInstance
+import com.storyteller_f.file_system_remote.checkSftp
+import com.storyteller_f.file_system_remote.checkSmb
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.FragmentRemoteDetailBinding
 import com.storyteller_f.giant_explorer.defaultFactory
-import com.storyteller_f.giant_explorer.service.FtpInstance
-import com.storyteller_f.giant_explorer.service.FtpsInstance
-import com.storyteller_f.giant_explorer.service.WebDavInstance
-import com.storyteller_f.giant_explorer.service.requireDiskShare
-import com.storyteller_f.giant_explorer.service.sftpClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
-object RemoteAccessType {
-    const val ftp = "ftp"
-    const val sftp = "sftp"
-    const val smb = "smb"
-    const val ftpes = "ftpes"
-    const val ftps = "ftps"
-    const val webDav = "webdav"
-
-    val list = listOf("", smb, sftp, ftp, ftpes, ftps, webDav)
-}
-
 
 class RemoteDetailFragment : Fragment() {
     companion object {
@@ -52,10 +40,12 @@ class RemoteDetailFragment : Fragment() {
     private var _binding: FragmentRemoteDetailBinding? = null
 
     private val binding get() = _binding!!
-    private val model by viewModels<GenericValueModel<RemoteAccessSpec>>(factoryProducer = { defaultFactory }, extrasProducer = {
-        buildExtras {
-        }
-    })
+    private val model by viewModels<GenericValueModel<RemoteAccessSpec>>(
+        factoryProducer = { defaultFactory },
+        extrasProducer = {
+            buildExtras {
+            }
+        })
 
     //is smb
     private val mode by vm({}) {
@@ -79,7 +69,8 @@ class RemoteDetailFragment : Fragment() {
         model
         mode.data.state {
             Log.i(TAG, "onViewCreated: mode $it")
-            binding.shareInput.isVisible = it == RemoteAccessType.smb || it == RemoteAccessType.webDav
+            binding.shareInput.isVisible =
+                it == RemoteAccessType.smb || it == RemoteAccessType.webDav
             val i = RemoteAccessType.list.indexOf(it)
             if (binding.typeGroup.checkedRadioButtonId != i) {
                 binding.typeGroup.check(i)
@@ -91,7 +82,7 @@ class RemoteDetailFragment : Fragment() {
             if (binding.portInput.text.isEmpty()) {
                 binding.portInput.setText(
                     when (checkedId - 1) {
-                        2 -> SMBClient.DEFAULT_PORT.toString()
+                        2 -> "22"
                         0 -> "22"
                         1 -> "22"
                         else -> null
@@ -102,32 +93,17 @@ class RemoteDetailFragment : Fragment() {
         binding.testConnection.setOnClick {
             scope.launch {
                 waitingDialog {
-                    when (mode.data.value) {
-                        RemoteAccessType.smb -> withContext(Dispatchers.IO) {
-                            val requireDiskShare = shareSpec().requireDiskShare()
-                            requireDiskShare.close()
-                        }
-
-                        RemoteAccessType.ftp -> withContext(Dispatchers.IO) {
-                            FtpInstance(spec()).open()
-                        }
-
-                        RemoteAccessType.ftpes -> withContext(Dispatchers.IO) {
-                            FtpsInstance(spec()).open()
-                        }
-
-                        RemoteAccessType.ftps -> withContext(Dispatchers.IO) {
-                            FtpsInstance(spec()).open()
-                        }
-
-                        RemoteAccessType.webDav -> withContext(Dispatchers.IO) {
-                            WebDavInstance(shareSpec()).instance
-                        }
-
-                        else -> withContext(Dispatchers.IO) {
-                            spec().sftpClient()
+                    withContext(Dispatchers.IO) {
+                        when (mode.data.value) {
+                            RemoteAccessType.smb -> shareSpec().checkSmb()
+                            RemoteAccessType.ftp -> FtpInstance(spec()).open()
+                            RemoteAccessType.ftpes -> FtpsInstance(spec()).open()
+                            RemoteAccessType.ftps -> FtpsInstance(spec()).open()
+                            RemoteAccessType.webDav -> WebDavInstance(shareSpec()).instance
+                            else -> spec().checkSftp()
                         }
                     }
+
                     Toast.makeText(requireContext(), "success", Toast.LENGTH_SHORT).show()
                 }
 

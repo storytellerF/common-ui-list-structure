@@ -90,14 +90,8 @@ class YueFragment : Fragment(), GiantExplorerPlugin {
         private const val TAG = "YueFragment"
     }
 
-    override fun accept(file: List<File>): Boolean {
-        return file.all {
-            it.extension == "jpg"
-        }
-    }
-
-    override fun group(): List<String> {
-        return listOf("view", "yue")
+    override fun group(file: List<File>): List<Pair<List<String>, Int>> {
+        return listOf(listOf("view", "yue") to 109)
     }
 
     override fun plugPluginManager(pluginManager: GiantExplorerPluginManager) {

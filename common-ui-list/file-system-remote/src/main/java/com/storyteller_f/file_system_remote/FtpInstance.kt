@@ -1,11 +1,10 @@
-package com.storyteller_f.giant_explorer.service
+package com.storyteller_f.file_system_remote
 
 import android.util.Log
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.permissions
-import com.storyteller_f.giant_explorer.database.RemoteSpec
 import org.apache.commons.net.PrintCommandListener
 import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPFile

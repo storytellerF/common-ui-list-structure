@@ -1,12 +1,12 @@
-package com.storyteller_f.giant_explorer
+package com.storyteller_f.file_system_remote
 
-import com.storyteller_f.giant_explorer.database.RemoteSpec
-import com.storyteller_f.giant_explorer.service.FtpInstance
 import org.junit.After
+import org.junit.Test
+
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.FixMethodOrder
 import org.junit.Ignore
-import org.junit.Test
 import org.junit.runners.MethodSorters
 import org.mockftpserver.fake.FakeFtpServer
 import org.mockftpserver.fake.UserAccount

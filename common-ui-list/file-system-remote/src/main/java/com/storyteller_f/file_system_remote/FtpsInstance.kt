@@ -1,19 +1,15 @@
-package com.storyteller_f.giant_explorer.service
+package com.storyteller_f.file_system_remote
 
 import android.util.Log
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.permissions
-import com.storyteller_f.giant_explorer.control.remote.RemoteAccessType
-import com.storyteller_f.giant_explorer.database.RemoteSpec
 import org.apache.commons.net.PrintCommandListener
-import org.apache.commons.net.ftp.FTP
 import org.apache.commons.net.ftp.FTPClientConfig
 import org.apache.commons.net.ftp.FTPFile
 import org.apache.commons.net.ftp.FTPReply
 import org.apache.commons.net.ftp.FTPSClient
-import org.apache.commons.net.util.TrustManagerUtils
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.File

@@ -1,9 +1,8 @@
-package com.storyteller_f.giant_explorer.service
+package com.storyteller_f.file_system_remote
 
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.giant_explorer.database.RemoteSpec
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.sftp.FileAttributes
 import net.schmizz.sshj.sftp.FileMode
@@ -155,4 +154,8 @@ fun RemoteSpec.sftpClient(): SFTPClient {
     sshClient.connect(server, port)
     sshClient.authPassword(user, password)
     return sshClient.newSFTPClient()
+}
+
+fun RemoteSpec.checkSftp() {
+    sftpClient()
 }

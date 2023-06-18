@@ -1,3 +1,4 @@
+include(":file-system-remote")
 
 pluginManagement {
     val smlFolder: String by settings

@@ -80,7 +80,8 @@ dependencies {
 
     implementation(project(":giant-explorer-plugin-core"))
     implementation("androidx.webkit:webkit:1.7.0")
-
+    implementation(project(":compat-ktx"))
+    androidTestImplementation("androidx.room:room-testing:2.5.1")
     //filter & sort
     val filterArtifact = listOf("config-core", "sort-core", "filter-core", "filter-ui", "sort-ui")
        
@@ -96,17 +97,7 @@ dependencies {
             implementation("com.github.storytellerF.FilterUIProject:$it:1.1")
         }
     }
-    // https://mvnrepository.com/artifact/commons-net/commons-net
-    implementation("commons-net:commons-net:3.9.0")
-    // https://mvnrepository.com/artifact/org.mockftpserver/MockFtpServer
-    testImplementation("org.mockftpserver:MockFtpServer:3.1.0")
-    implementation(project(":compat-ktx"))
-    androidTestImplementation("androidx.room:room-testing:2.5.1")
-
-    // https://mvnrepository.com/artifact/com.hierynomus/smbj
-    implementation("com.hierynomus:smbj:0.11.5")
-    // https://mvnrepository.com/artifact/com.hierynomus/sshj
-    implementation("com.hierynomus:sshj:0.35.0")
+    implementation(project(":file-system-remote"))
     implementation("com.madgag.spongycastle:core:1.58.0.0")
     implementation("com.madgag.spongycastle:prov:1.58.0.0")
     val baoModule = findProject(":bao:startup")
