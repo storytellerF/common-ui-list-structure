@@ -7,7 +7,7 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-import com.storyteller_f.common_ktx.nn
+import com.storyteller_f.common_ktx.safeLet
 import com.storyteller_f.common_ui.CommonActivity
 import com.storyteller_f.common_ui.dialog
 import com.storyteller_f.file_system.instance.FileInstance
@@ -48,9 +48,9 @@ class PluginManageActivity : CommonActivity() {
         binding.fab.setOnClickListener {
             dialog(RequestPathDialog::class.java, RequestPathDialog.RequestPathResult::class.java, null) { result ->
                 lifecycleScope.launch {
-                    result.path.nn {
+                    result.path.safeLet {
                         getFileInstance(it, this@PluginManageActivity, stoppableTask = stoppable())
-                    }.nn { pluginFile ->
+                    }.safeLet { pluginFile ->
                         lifecycleScope.launch {
                             addPlugin(pluginFile, pluginRoot)
                         }

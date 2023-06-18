@@ -15,13 +15,25 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import androidx.paging.PagingData
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ktx.context
 import com.storyteller_f.common_ktx.same
+import com.storyteller_f.common_ui.cycle
+import com.storyteller_f.common_ui.owner
 import com.storyteller_f.common_ui.setVisible
+import com.storyteller_f.common_vm_ktx.StateValueModel
+import com.storyteller_f.common_vm_ktx.VMScope
 import com.storyteller_f.common_vm_ktx.combineDao
 import com.storyteller_f.common_vm_ktx.distinctUntilChangedBy
+import com.storyteller_f.common_vm_ktx.genericValueModel
+import com.storyteller_f.common_vm_ktx.keyPrefix
+import com.storyteller_f.common_vm_ktx.parentScope
+import com.storyteller_f.common_vm_ktx.svm
+import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
@@ -37,6 +49,7 @@ import com.storyteller_f.giant_explorer.control.plugin.stoppable
 import com.storyteller_f.giant_explorer.database.LocalDatabase
 import com.storyteller_f.giant_explorer.database.RemoteSpec
 import com.storyteller_f.giant_explorer.database.ShareSpec
+import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileBinding
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileGridBinding
 import com.storyteller_f.giant_explorer.model.FileModel
@@ -54,8 +67,10 @@ import com.storyteller_f.ui_list.core.BindingViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.data.SimpleResponse
 import com.storyteller_f.ui_list.event.findActionReceiverOrNull
+import com.storyteller_f.ui_list.source.SearchProducer
 import com.storyteller_f.ui_list.source.SimpleSearchViewModel
 import com.storyteller_f.ui_list.source.observerInScope
+import com.storyteller_f.ui_list.source.search
 import com.storyteller_f.ui_list.ui.ListWithState
 import com.storyteller_f.ui_list.ui.toggle
 import com.storyteller_f.ui_list.ui.valueContains
@@ -80,6 +95,84 @@ fun getFileInstance(path: String, context: Context, root: String = FileInstanceF
         root.startsWith("ftpes://") || root.startsWith("ftps://") -> FtpsFileInstance(path, root, RemoteSpec.parse(root))
         root.startsWith("webdav://") -> WebDavFileInstance(path, root, ShareSpec.parse(root))
         else -> FileInstanceFactory.getFileInstance(path, context, root, stoppableTask)
+    }
+}
+
+class FileListObserver<T : Fragment>(
+    private val fragment: T,
+    args: () -> FileListFragmentArgs,
+    val scope: VMScope = fragment.parentScope
+) {
+    val fileInstance: FileInstance?
+        get() = session.fileInstance.value
+    val selected: List<Pair<DataItemHolder, Int>>?
+        get() = session.selected.value
+    val filters by keyPrefix({ "test" }, fragment.svm({}, scope) { it, _ ->
+        StateValueModel(it, default = listOf<Filter<FileSystemItemModel>>())
+    })
+    val sort by keyPrefix({ "sort" }, fragment.svm({}, scope) { it, _ ->
+        StateValueModel(it, default = listOf<SortChain<FileSystemItemModel>>())
+    })
+    val filterHiddenFile by fragment.svm({}, scope) { it, _ ->
+        StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
+    }
+    private val displayGrid by keyPrefix("display", fragment.vm({}, scope) { _ ->
+        genericValueModel(false)
+    })
+
+    private val session by fragment.vm(args) {
+        FileExplorerSession(fragment.requireActivity().application, it.path, it.root)
+    }
+
+    private val data by fragment.search(
+        { fragment.requireDatabase to session.selected },
+        { (database, selected) ->
+            SearchProducer(fileServiceBuilder(database)) { fileModel, _, sq ->
+                FileItemHolder(fileModel, selected.value.orEmpty(), sq.display)
+            }
+        })
+
+    fun setup(
+        listWithState: ListWithState,
+        adapter: SimpleSourceAdapter<FileItemHolder, FileViewHolder>,
+        rightSwipe: (FileItemHolder) -> Unit,
+        updatePath: (String) -> Unit
+    ) {
+        with(fragment) {
+            setup(listWithState, adapter, rightSwipe, updatePath)
+        }
+
+    }
+
+    private fun T.setup(
+        listWithState: ListWithState,
+        adapter: SimpleSourceAdapter<FileItemHolder, FileViewHolder>,
+        rightSwipe: (FileItemHolder) -> Unit,
+        updatePath: (String) -> Unit
+    ) {
+        displayGrid.data.observe(owner) {
+            listWithState.recyclerView.isVisible = false
+            adapter.submitData(cycle, PagingData.empty())
+            listWithState.recyclerView.layoutManager = when {
+                it -> GridLayoutManager(requireContext(), 3)
+                else -> LinearLayoutManager(requireContext())
+            }
+        }
+        fileList(
+            listWithState,
+            adapter,
+            data,
+            session,
+            filterHiddenFile.data,
+            filters.data,
+            sort.data,
+            displayGrid.data,
+            rightSwipe, updatePath
+        )
+    }
+
+    fun update(toParent: FileInstance) {
+        session.fileInstance.value = toParent
     }
 }
 

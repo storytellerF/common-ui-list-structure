@@ -411,16 +411,16 @@ fun CombinedLoadStates.debugEmoji() =
     "source: ${source.debugEmoji()}  mediator: ${mediator.debugEmoji()} prepend: ${prepend.debugEmoji()} refresh: ${refresh.debugEmoji()} append: ${append.debugEmoji()}"
 
 /**
- * 反选
+ * 反选。pair 的first 作为key。
  */
-fun List<Pair<DataItemHolder, Int>>?.toggle(pair: Pair<DataItemHolder, Int>): Pair<MutableList<Pair<DataItemHolder, Int>>, Boolean> {
+fun List<Pair<DataItemHolder, Int>>?.toggle(pair: Pair<DataItemHolder, Int>): Pair<List<Pair<DataItemHolder, Int>>, Boolean> {
     val oldSelectedHolders = this ?: mutableListOf()
     val otherHolders = oldSelectedHolders.filter {
         !it.first.areItemsTheSame(pair.first)
-    }.toMutableList()
+    }
     val stateSelected = otherHolders.size == oldSelectedHolders.size
-    if (stateSelected) otherHolders.add(pair)
-    return otherHolders to stateSelected
+    val selected = if (stateSelected) otherHolders + pair else otherHolders
+    return selected to stateSelected
 }
 
 fun List<Pair<DataItemHolder, Int>>.valueContains(pair: Pair<DataItemHolder, Int>): Boolean {
@@ -432,8 +432,8 @@ fun List<Pair<DataItemHolder, Int>>.valueContains(pair: Pair<DataItemHolder, Int
 
 fun MutableLiveData<List<Pair<DataItemHolder, Int>>>.toggle(viewHolder: RecyclerView.ViewHolder) {
     val adapterViewHolder = viewHolder as AbstractViewHolder<out DataItemHolder>
-    val (currentSelectedHolders, currentHolderSelected) =
+    val (selectedHolders, currentSelected) =
         value.toggle(adapterViewHolder.itemHolder to viewHolder.absoluteAdapterPosition)
-    viewHolder.view.isSelected = currentHolderSelected
-    value = currentSelectedHolders
+    viewHolder.view.isSelected = currentSelected
+    value = selectedHolders
 }

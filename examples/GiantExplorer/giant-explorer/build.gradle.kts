@@ -34,9 +34,9 @@ android {
     }
 
     defaultConfig {
-        extracted("file-provider")
-        extracted("file-system-provider")
-        extracted("file-system-encrypted-provider")
+        registerConfigKey("file-provider")
+        registerConfigKey("file-system-provider")
+        registerConfigKey("file-system-encrypted-provider")
         javaCompileOptions {
             annotationProcessorOptions {
                 compilerArgumentProviders(
@@ -56,8 +56,8 @@ dependencies {
     implementation("androidx.appcompat:appcompat:${Versions.appcompatVersion}")
     implementation("com.google.android.material:material:${Versions.materialVersion}")
     implementation("androidx.constraintlayout:constraintlayout:${Versions.constraintLayoutVersion}")
-    implementation("androidx.navigation:navigation-fragment-ktx:2.5.3")
-    implementation("androidx.navigation:navigation-ui-ktx:2.5.3")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.6.0")
+    implementation("androidx.navigation:navigation-ui-ktx:2.6.0")
     fileSystemDependency()
     networkDependency()
     workerDependency()
@@ -114,31 +114,31 @@ dependencies {
         implementation(baoModule)
     else
         implementation("com.github.storytellerF.Bao:startup:2.2.0")
-    implementation("androidx.window:window:1.2.0-alpha01")
+    implementation("androidx.window:window:1.2.0-alpha02")
 }
 baseApp()
 setupGeneric()
 setupDataBinding()
 setupDipToPx()
 
-fun ApplicationDefaultConfig.extracted(
+fun ApplicationDefaultConfig.registerConfigKey(
     identification: String,
 ) {
-    val placeholderKey = s(identification)
+    val placeholderKey = placeholderKey(identification)
+    val buildConfigKey = buildConfigKey(placeholderKey)
     val fileSystemProviderEncryptedAuthority = "$applicationId.$identification"
-    val configKey = configKey(placeholderKey)
 
     // Now we can use ${documentsAuthority} in our Manifest
     manifestPlaceholders[placeholderKey] = fileSystemProviderEncryptedAuthority
     // Now we can use BuildConfig.DOCUMENTS_AUTHORITY in our code
     buildConfigField(
         "String",
-        configKey.toString(),
+        buildConfigKey.toString(),
         "\"${fileSystemProviderEncryptedAuthority}\""
     )
 }
 
-fun configKey(placeholderKey: String): StringBuilder {
+fun buildConfigKey(placeholderKey: String): StringBuilder {
     val configKey = StringBuilder()
     placeholderKey.forEachIndexed { index, c ->
         configKey.append(
@@ -152,7 +152,7 @@ fun configKey(placeholderKey: String): StringBuilder {
     return configKey
 }
 
-fun s(identification: String): String {
+fun placeholderKey(identification: String): String {
     val identifyString = StringBuilder()
     var i = 0
     while (i < identification.length) {
