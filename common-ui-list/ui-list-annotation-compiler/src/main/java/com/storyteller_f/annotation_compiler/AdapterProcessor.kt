@@ -131,7 +131,7 @@ class AdapterProcessor : AbstractProcessor() {
             """.trimIndent()
         else ""
         return """
-            package $packageOf.adapter_produce;
+            package $packageOf.ui_list;
 
             import static com.storyteller_f.ui_list.core.AdapterKt.getList;
             import static com.storyteller_f.ui_list.core.AdapterKt.getRegisterCenter;

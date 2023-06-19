@@ -5,15 +5,14 @@ import android.content.Context
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.android.material.color.DynamicColors
-import com.storyteller_f.ping.adapter_produce.HolderBuilder
+import com.storyteller_f.ping.ui_list.HolderBuilder
+import com.storyteller_f.ui_list.core.holders
 
 class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         DynamicColors.applyToActivitiesIfAvailable(this)
-        listOf(HolderBuilder::add).fold(0) { acc, kFunction1 ->
-            kFunction1(acc)
-        }
+        holders(HolderBuilder::add)
     }
 }
 

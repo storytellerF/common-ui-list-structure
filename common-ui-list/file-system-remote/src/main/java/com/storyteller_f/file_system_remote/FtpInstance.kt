@@ -9,8 +9,6 @@ import org.apache.commons.net.PrintCommandListener
 import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPFile
 import org.apache.commons.net.ftp.FTPReply
-import java.io.BufferedReader
-import java.io.BufferedWriter
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -57,14 +55,6 @@ class FtpFileInstance(path: String, fileSystemRoot: String, private val spec: Re
     }
 
     override fun getDirectory(): DirectoryItemModel {
-        TODO("Not yet implemented")
-    }
-
-    override fun getBufferedReader(): BufferedReader {
-        TODO("Not yet implemented")
-    }
-
-    override fun getBufferedWriter(): BufferedWriter {
         TODO("Not yet implemented")
     }
 

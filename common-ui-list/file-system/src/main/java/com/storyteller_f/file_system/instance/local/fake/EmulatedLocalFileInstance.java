@@ -9,10 +9,6 @@ import com.storyteller_f.file_system.instance.local.LocalFileInstance;
 import com.storyteller_f.file_system.model.DirectoryItemModel;
 import com.storyteller_f.file_system.model.FileItemModel;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -41,16 +37,6 @@ public class EmulatedLocalFileInstance extends LocalFileInstance {
     @Override
     public long getFileLength() {
         return 0;
-    }
-
-    @Override
-    public BufferedReader getBufferedReader() {
-        return null;
-    }
-
-    @Override
-    public BufferedWriter getBufferedWriter() {
-        return null;
     }
 
     @Override

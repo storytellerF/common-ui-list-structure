@@ -7,8 +7,6 @@ import com.hierynomus.smbj.share.DiskShare
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import java.io.BufferedReader
-import java.io.BufferedWriter
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -65,14 +63,6 @@ class SmbFileInstance(path: String, fileSystemRoot: String, val shareSpec: Share
     }
 
     override fun getDirectory(): DirectoryItemModel {
-        TODO("Not yet implemented")
-    }
-
-    override fun getBufferedReader(): BufferedReader {
-        TODO("Not yet implemented")
-    }
-
-    override fun getBufferedWriter(): BufferedWriter {
         TODO("Not yet implemented")
     }
 

@@ -19,7 +19,7 @@ import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.TorrentFileItemModel
-import com.storyteller_f.giant_explorer.control.adapter_produce.HolderBuilder
+import com.storyteller_f.giant_explorer.control.ui_list.HolderBuilder
 import com.storyteller_f.giant_explorer.control.getFileInstanceAsync
 import com.storyteller_f.giant_explorer.database.FileMDRecord
 import com.storyteller_f.giant_explorer.database.FileSizeRecord
@@ -27,6 +27,7 @@ import com.storyteller_f.giant_explorer.database.FileTorrentRecord
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.utils.TorrentFile
 import com.storyteller_f.multi_core.StoppableTask
+import com.storyteller_f.ui_list.core.holders
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -51,9 +52,7 @@ class App : Application() {
         super.onCreate()
         DynamicColors.applyToActivitiesIfAvailable(this)
         setupBouncyCastle()
-        listOf(HolderBuilder::add).fold(0) { acc, kFunction1 ->
-            kFunction1(acc)
-        }
+        holders(HolderBuilder::add)
         MainScope().launch {
             requireDatabase.bigTimeDao().fetchSuspend().groupBy {
                 it.workerName
@@ -297,7 +296,7 @@ fun getFileMD5(fileInstance: FileInstance, mdWorker: StoppableTask): String? {
     return try {
         var len: Int
         val digest = MessageDigest.getInstance("MD5")
-        fileInstance.bufferedInputSteam.use { stream ->
+        fileInstance.fileInputStream.buffered().use { stream ->
             while (stream.read(buffer).also { len = it } != -1) {
                 if (mdWorker.needStop()) return null
                 digest.update(buffer, 0, len)

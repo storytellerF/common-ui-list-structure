@@ -17,18 +17,10 @@ import com.storyteller_f.file_system.util.FileInstanceUtility;
 import com.storyteller_f.file_system.util.FileUtility;
 import com.storyteller_f.file_system.util.UtilityKt;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.util.Arrays;
 import java.util.List;
 
@@ -56,13 +48,10 @@ public class DocumentLocalFileInstance extends BaseContextFileInstance {
 
     /**
      * 初始化DocumentFile，初始化失败一般不影响获取目录,但是不可以对当前对象进行操作
-     *
-     * @return true 代表初始化成功
      */
-    public boolean initDocumentFile() {
+    public void initDocumentFile() {
         current = getSpecialDocumentFile(getPath(), false, file.isFile());
         if (current == null) Log.e(TAG, "initDocumentFile: 初始化失败（未授权）" + getPath());
-        return current != null;
     }
 
     /**
@@ -265,14 +254,6 @@ public class DocumentLocalFileInstance extends BaseContextFileInstance {
         }
     }
 
-    InputStream getInputStream() throws FileNotFoundException {
-        return context.getContentResolver().openInputStream(current.getUri());
-    }
-
-    OutputStream getOutputStream() throws FileNotFoundException {
-        return context.getContentResolver().openOutputStream(current.getUri());
-    }
-
     @Override
     public boolean deleteFileOrEmptyDirectory() {
         return current.delete();
@@ -361,29 +342,8 @@ public class DocumentLocalFileInstance extends BaseContextFileInstance {
     }
 
     @Override
-    public BufferedOutputStream getBufferedOutputStream() throws FileNotFoundException {
-        OutputStream outputStream = getOutputStream();
-        return new BufferedOutputStream(outputStream);
-    }
-
-    @Override
-    public BufferedInputStream getBufferedInputSteam() throws FileNotFoundException {
-        return new BufferedInputStream(getInputStream());
-    }
-
-    @Override
     public boolean isHidden() {
         return false;
-    }
-
-    @Override
-    public BufferedReader getBufferedReader() throws FileNotFoundException {
-        return new BufferedReader(new InputStreamReader(getInputStream()));
-    }
-
-    @Override
-    public BufferedWriter getBufferedWriter() throws FileNotFoundException {
-        return new BufferedWriter(new OutputStreamWriter(getOutputStream()));
     }
 
     @Override

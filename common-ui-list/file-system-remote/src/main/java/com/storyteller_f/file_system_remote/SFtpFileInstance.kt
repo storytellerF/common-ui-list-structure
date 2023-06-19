@@ -9,8 +9,6 @@ import net.schmizz.sshj.sftp.FileMode
 import net.schmizz.sshj.sftp.RemoteFile
 import net.schmizz.sshj.sftp.SFTPClient
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier
-import java.io.BufferedReader
-import java.io.BufferedWriter
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -53,14 +51,6 @@ class SFtpFileInstance(path: String, fileSystemRoot: String, val spec: RemoteSpe
     }
 
     override fun getDirectory(): DirectoryItemModel {
-        TODO("Not yet implemented")
-    }
-
-    override fun getBufferedReader(): BufferedReader {
-        TODO("Not yet implemented")
-    }
-
-    override fun getBufferedWriter(): BufferedWriter {
         TODO("Not yet implemented")
     }
 

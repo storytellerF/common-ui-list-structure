@@ -9,10 +9,6 @@ import com.storyteller_f.file_system.instance.FileInstance
 abstract class DirectoryLocalFileInstance(path: String) : FileInstance(path, FileInstanceFactory.publicFileSystemRoot) {
     override fun getFileLength(): Long = -1L
 
-    override fun getBufferedReader() = null
-
-    override fun getBufferedWriter() = null
-
     override fun getFile() = null
 
     override fun isFile() = false

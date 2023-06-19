@@ -36,6 +36,12 @@ val secondRegisterCenter = mutableMapOf<SecondRegisterKey, Int>()
 
 data class SecondRegisterKey(val clazz: Class<out DataItemHolder>, val variant: String)
 
+fun holders(vararg blocks: (Int) -> Int) {
+    blocks.fold(0) { acc, block ->
+        block(acc)
+    }
+}
+
 interface DataItemHolder {
 
     val variant: String

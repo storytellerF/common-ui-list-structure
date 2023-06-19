@@ -13,14 +13,10 @@ import com.storyteller_f.file_system.model.FileSystemItemModel;
 import com.storyteller_f.file_system.util.FileInstanceUtility;
 import com.storyteller_f.file_system.util.FileUtility;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
@@ -85,16 +81,6 @@ public class RegularLocalFileInstance extends LocalFileInstance {
             return;
         }
         this.file = new File(path);
-    }
-
-    @Override
-    public BufferedReader getBufferedReader() throws FileNotFoundException {
-        return new BufferedReader(new FileReader(getPath()));
-    }
-
-    @Override
-    public BufferedWriter getBufferedWriter() throws IOException {
-        return new BufferedWriter(new FileWriter(getPath()));
     }
 
     @Override

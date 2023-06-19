@@ -11,18 +11,11 @@ import com.storyteller_f.file_system.model.FileSystemItemModel;
 import com.storyteller_f.file_system.model.FilesAndDirectories;
 import com.storyteller_f.multi_core.StoppableTask;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -84,41 +77,10 @@ public abstract class FileInstance {
         return file.length();
     }
 
-    /**
-     * 应该仅用于文件，可以使用readLine 方法
-     */
-    @WorkerThread
-    public abstract BufferedReader getBufferedReader() throws Exception;
-    @WorkerThread
-    public abstract BufferedWriter getBufferedWriter() throws Exception;
     @WorkerThread
     public abstract FileInputStream getFileInputStream() throws FileNotFoundException;
     @WorkerThread
     public abstract FileOutputStream getFileOutputStream() throws FileNotFoundException;
-    @WorkerThread
-    public InputStreamReader getInputStreamReader(String charset) throws Exception {
-        return new InputStreamReader(getBufferedInputSteam(), charset);
-    }
-    @WorkerThread
-    public OutputStreamWriter getOutputStreamWriter(String charset) throws Exception {
-        return new OutputStreamWriter(getBufferedOutputStream(), charset);
-    }
-
-    public InputStreamReader getInputStreamReader(Charset charset) throws Exception {
-        return new InputStreamReader(getBufferedInputSteam(), charset);
-    }
-    @WorkerThread
-    public OutputStreamWriter getOutputStreamWriter(Charset charset) throws Exception {
-        return new OutputStreamWriter(getBufferedOutputStream(), charset);
-    }
-    @WorkerThread
-    public BufferedOutputStream getBufferedOutputStream() throws Exception {
-        return new BufferedOutputStream(getFileOutputStream());
-    }
-    @WorkerThread
-    public BufferedInputStream getBufferedInputSteam() throws Exception {
-        return new BufferedInputStream(new FileInputStream(file.getAbsolutePath()));
-    }
 
     //todo getChannel
     //todo file descriptor

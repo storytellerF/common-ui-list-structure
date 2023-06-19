@@ -11,8 +11,6 @@ import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui.setFragmentResult
 import com.storyteller_f.common_vm_ktx.GenericValueModel
 import com.storyteller_f.common_vm_ktx.vm
-import com.storyteller_f.file_system.FileInstanceFactory
-import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.util.FileUtility
 import com.storyteller_f.giant_explorer.control.getFileInstance
 import com.storyteller_f.giant_explorer.databinding.DialogOpenFileBinding
@@ -58,7 +56,7 @@ class OpenFileDialog : SimpleDialogFragment<DialogOpenFileBinding>(DialogOpenFil
             dataType.data.value = suspendCancellableCoroutine {
                 thread {
                     try {
-                        val value = ContentInfoUtil().findMatch(fileInstance.bufferedInputSteam)
+                        val value = ContentInfoUtil().findMatch(fileInstance.fileInputStream.buffered())
                         it.resumeWith(Result.success(value))
                     } catch (e: Exception) {
                         it.resumeWithException(e)

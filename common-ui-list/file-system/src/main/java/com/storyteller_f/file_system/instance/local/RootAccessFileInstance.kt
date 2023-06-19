@@ -20,10 +20,6 @@ class RootAccessFileInstance(path: String, private val remote: FileSystemManager
         return DirectoryItemModel(extendedFile.name, extendedFile.absolutePath, extendedFile.isHidden, extendedFile.lastModified(), extendedFile.isSymlink)
     }
 
-    override fun getBufferedReader(): BufferedReader = extendedFile.bufferedReader()
-
-    override fun getBufferedWriter(): BufferedWriter = extendedFile.bufferedWriter()
-
     override fun getFileInputStream(): FileInputStream = extendedFile.inputStream()
 
     override fun getFileOutputStream(): FileOutputStream = extendedFile.outputStream()

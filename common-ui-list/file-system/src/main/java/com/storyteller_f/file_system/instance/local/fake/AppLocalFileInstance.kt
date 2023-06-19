@@ -26,10 +26,6 @@ class AppLocalFileInstance(context: Context, path: String) : BaseContextFileInst
 
     override fun getFileLength() = File(publicSourceDir).length()
 
-    override fun getBufferedReader() = BufferedReader(FileReader(publicSourceDir))
-
-    override fun getBufferedWriter() = BufferedWriter(FileWriter(publicSourceDir))
-
     override fun getFileInputStream() = FileInputStream(publicSourceDir)
 
     override fun getFileOutputStream() = FileOutputStream(publicSourceDir)
