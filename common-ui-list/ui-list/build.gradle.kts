@@ -26,7 +26,7 @@ android {
 baseLibrary()
 
 dependencies {
-    implementation(project(":ui-list-annotation-compiler"))
+    implementation(project(":ui-list-annotation-definition"))
     implementation(fileTree("libs"))
 
     //test
@@ -39,7 +39,7 @@ dependencies {
     api("com.google.android.material:material:${Versions.materialVersion}")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 
-    //kotlin
+    //coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutinesVersion}")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.coroutinesVersion}")
 

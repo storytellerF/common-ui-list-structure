@@ -14,17 +14,13 @@ import java.io.OutputStreamWriter
 
 class Identity(val fullName: String, val name: String)
 
-private const val className = "Temp"
-
-class Processing(val environment: SymbolProcessorEnvironment) : SymbolProcessor {
-    var count = 0
+class Processing(private val environment: SymbolProcessorEnvironment) : SymbolProcessor {
+    private var count = 0
     private val zoom = UIListHolderZoom<KSAnnotated>()
 
-    @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val logger = environment.logger
         count++
-        if (count > 5) return emptyList()
         val viewHolders = resolver.getSymbolsWithAnnotation(BindItemHolder::class.java.canonicalName)
         val clickEvents = resolver.getSymbolsWithAnnotation(BindClickEvent::class.java.canonicalName)
         val longClickEvents = resolver.getSymbolsWithAnnotation(BindLongClickEvent::class.java.canonicalName)
@@ -41,11 +37,14 @@ class Processing(val environment: SymbolProcessorEnvironment) : SymbolProcessor 
         val clickEventCount = clickEvents.count()
         val longClickEventCount = longClickEvents.count()
 
-        logger.warn("count $count $viewHolderCount $clickEventCount $longClickEventCount")
-        logger.warn("count $count ${viewHolderMap[true]?.count()} ${viewHolderMap[false]?.size}")
-        logger.warn("count $count ${clickEventMap[true]?.count()} ${clickEventMap[false]?.size}")
-        logger.warn("count $count ${longClickEventMap[true]?.count()} ${longClickEventMap[false]?.size}")
+        logger.warn("round $count $viewHolderCount $clickEventCount $longClickEventCount")
+        logger.warn("round $count holder ${viewHolderMap[true]?.count()} ${viewHolderMap[false]?.size}")
+        logger.warn("round $count click: ${clickEventMap[true]?.count()} ${clickEventMap[false]?.size}")
+        logger.warn("round $count long ${longClickEventMap[true]?.count()} ${longClickEventMap[false]?.size}")
         val invalidate = viewHolderMap[false].orEmpty() + clickEventMap[false].orEmpty() + longClickEventMap[false].orEmpty()
+        invalidate.forEach {
+            logger.warn("invalidate $it")
+        }
         if (viewHolderCount == 0 && clickEventCount == 0 && longClickEventCount == 0) {
             return emptyList()
         }
@@ -55,7 +54,7 @@ class Processing(val environment: SymbolProcessorEnvironment) : SymbolProcessor 
         zoom.addHolderEntry(processEntry(viewHolders).toList())
         zoom.addClickEvent(processEvent(clickEvents, isLong = false))
         zoom.addLongClick(processEvent(longClickEvents, isLong = true))
-        val real = "$packageName.adapter_produce"
+        val real = "$packageName.ui_list"
         logger.warn("package $real")
         val dependencies = Dependencies(aggregating = false, *resolver.getAllFiles().toList().toTypedArray())
         val createNewFile = environment.codeGenerator.createNewFile(dependencies, real, className)
@@ -146,6 +145,10 @@ class Processing(val environment: SymbolProcessorEnvironment) : SymbolProcessor 
             val bindingFullName = asString?.asString() ?: ""
             Pair(bindingName, bindingFullName)
         }
+    }
+
+    companion object {
+        private const val className = "Temp"
     }
 
 }

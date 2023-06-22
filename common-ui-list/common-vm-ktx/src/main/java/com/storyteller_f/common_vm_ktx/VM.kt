@@ -180,13 +180,7 @@ class StateValueModel<T>(stateHandle: SavedStateHandle, key: String = "default",
     val data = stateHandle.getLiveData(key, default)
 }
 
-fun Fragment.buildExtras(block: MutableCreationExtras.() -> Unit): CreationExtras {
-    return MutableCreationExtras(defaultViewModelCreationExtras).apply {
-        block()
-    }
-}
-
-fun ComponentActivity.buildExtras(block: MutableCreationExtras.() -> Unit): CreationExtras {
+fun HasDefaultViewModelProviderFactory.buildExtras(block: MutableCreationExtras.() -> Unit): CreationExtras {
     return MutableCreationExtras(defaultViewModelCreationExtras).apply {
         block()
     }

@@ -10,7 +10,7 @@ class UIListHolderZoom<T> {
     val longClickEventMapTemp = mutableMapOf<String?, Map<String, List<Event<T>>>>()
 
     fun debugState(): String {
-        return "click: ${clickEventMapTemp.size} long:${longClickEventMapTemp.size}  holder:${holderEntryTemp.size} package set:${packagesTemp.size}"
+        return "click:${clickEventMapTemp.size} long:${longClickEventMapTemp.size} holder:${holderEntryTemp.size} package-set:${packagesTemp.size}"
     }
 
     fun addHolderEntry(list: List<Entry<T>>) {

@@ -27,11 +27,12 @@ class AdapterProcessor : AbstractProcessor() {
         set: MutableSet<out TypeElement>?, roundEnvironment: RoundEnvironment?
     ): Boolean {
         count++
-        println(
-            "binding event map ${zoom.debugState()} error:${roundEnvironment?.errorRaised()} over: ${roundEnvironment?.processingOver()} count $count"
-        )
 
         processAnnotation(set, roundEnvironment)
+
+        println(
+            "binding event map ${zoom.debugState()} error:${roundEnvironment?.errorRaised()} over:${roundEnvironment?.processingOver()} count:$count"
+        )
 
         writeFile(roundEnvironment)
         return true
@@ -59,9 +60,7 @@ class AdapterProcessor : AbstractProcessor() {
 
     private fun processAnnotation(set: MutableSet<out TypeElement>?, roundEnvironment: RoundEnvironment?) {
         set?.forEach { typeElement ->
-            val name = typeElement.simpleName.toString()
-            println(name)
-            when (name) {
+            when (typeElement.simpleName.toString()) {
                 "BindItemHolder" -> {
                     zoom.addHolderEntry(getHolder(roundEnvironment, typeElement))
                     processPackageInfo(roundEnvironment, typeElement)
