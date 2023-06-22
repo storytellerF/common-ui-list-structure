@@ -1,5 +1,6 @@
 package com.storyteller_f.li.plugin
 
+import androidx.core.net.toUri
 import com.storyteller_f.plugin_core.GiantExplorerPluginManager
 import com.storyteller_f.plugin_core.GiantExplorerShellPlugin
 import java.io.File
@@ -23,16 +24,16 @@ class LiPlugin : GiantExplorerShellPlugin {
         else listOf(listOf("archive", "compress") to 109)
     }
 
-    override suspend fun start(fullPath: String, id: Int) {
+    override suspend fun start(uriString: String, id: Int) {
         val requestPath = pluginManager.requestPath()
         println("request path $requestPath")
         if (id == 108) {
-            extract(pluginManager.fileInputStream(fullPath), File(requestPath))
+            extract(pluginManager.fileInputStream(uriString), File(requestPath))
         } else {
             val dest = pluginManager.fileOutputStream(requestPath)
             val zipOutputStream = ZipOutputStream(dest)
             zipOutputStream.use {
-                compress(it, File(fullPath), "")
+                compress(it, File(uriString), "")
             }
         }
     }
@@ -91,7 +92,7 @@ class LiPlugin : GiantExplorerShellPlugin {
         val child = File(dest, nextEntry.name)
         println(nextEntry.name)
         if (nextEntry.isDirectory) {
-            pluginManager.ensureDir(child)
+            pluginManager.ensureDir(child.toUri().toString())
         } else {
             write(pluginManager.fileOutputStream(child.absolutePath), stream)
         }

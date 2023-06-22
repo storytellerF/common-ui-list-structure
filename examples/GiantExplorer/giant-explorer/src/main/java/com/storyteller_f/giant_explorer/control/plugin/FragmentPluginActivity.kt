@@ -5,6 +5,7 @@ import android.content.res.Resources
 import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.storyteller_f.compat_ktx.packageInfoCompat
@@ -25,20 +26,20 @@ import java.io.FileOutputStream
 const val giantExplorerPluginIni = "META-INF/giant-explorer-plugin.ini"
 
 abstract class DefaultPluginManager(val context: Context) : GiantExplorerPluginManager {
-    override fun fileInputStream(path: String): FileInputStream {
-        return getFileInstance(path, context, stoppableTask = StoppableTask.Blocking).apply {
+    override fun fileInputStream(uriString: String): FileInputStream {
+        return getFileInstance(context, uriString.toUri(), stoppableTask = StoppableTask.Blocking).apply {
             createFile()
         }.fileInputStream
     }
 
-    override fun fileOutputStream(path: String): FileOutputStream {
-        return getFileInstance(path, context, stoppableTask = StoppableTask.Blocking).apply {
+    override fun fileOutputStream(uriString: String): FileOutputStream {
+        return getFileInstance(context, uriString.toUri(), stoppableTask = StoppableTask.Blocking).apply {
             createFile()
         }.fileOutputStream
     }
 
-    override fun listFiles(path: String): List<String> {
-        return getFileInstance(path, context, stoppableTask = StoppableTask.Blocking).list().let { filesAndDirectories ->
+    override fun listFiles(uriString: String): List<String> {
+        return getFileInstance(context, uriString.toUri(), stoppableTask = StoppableTask.Blocking).list().let { filesAndDirectories ->
             filesAndDirectories.files.map {
                 it.fullPath
             } + filesAndDirectories.directories.map {
@@ -48,35 +49,32 @@ abstract class DefaultPluginManager(val context: Context) : GiantExplorerPluginM
     }
 
     override fun resolveParentUri(uriString: String): String? {
-        val parse = Uri.parse(uriString)
-        val resolvePath = FileSystemProviderResolver.resolvePath(parse) ?: return null
+        val resolvePath = FileSystemProviderResolver.resolvePath(uriString.toUri()) ?: return null
         val parent = File(resolvePath).parent ?: return null
         return FileSystemProviderResolver.build(false, parent).toString()
     }
 
     override fun resolveParentPath(uriString: String): String? {
-        val parse = Uri.parse(uriString)
-        val resolvePath = FileSystemProviderResolver.resolvePath(parse) ?: return null
+        val resolvePath = FileSystemProviderResolver.resolvePath(uriString.toUri()) ?: return null
         return File(resolvePath).parent
     }
 
     override fun resolvePath(uriString: String): String? {
-        val parse = Uri.parse(uriString)
-        return FileSystemProviderResolver.resolvePath(parse)
+        return FileSystemProviderResolver.resolvePath(uriString.toUri())
     }
 
-    override fun ensureDir(child: File) {
-        getFileInstance(child.absolutePath, context, stoppableTask = StoppableTask.Blocking).createDirectory()
+    override fun ensureDir(uriString: String) {
+        getFileInstance(context, uriString.toUri(), stoppableTask = StoppableTask.Blocking).createDirectory()
     }
 
-    override fun isFile(path: String): Boolean {
-        return getFileInstance(path, context, stoppableTask = StoppableTask.Blocking).isFile
+    override fun isFile(uriString: String): Boolean {
+        return getFileInstance(context, uriString.toUri(), stoppableTask = StoppableTask.Blocking).isFile
     }
 }
 
 class FragmentPluginActivity : AppCompatActivity() {
-    lateinit var pluginName: String
-    lateinit var pluginFragments: List<String>
+    private lateinit var pluginName: String
+    private lateinit var pluginFragments: List<String>
     private val pluginFile by lazy { File(filesDir, "plugins/$pluginName") }
 
     private val pluginResources by lazy {
@@ -96,7 +94,7 @@ class FragmentPluginActivity : AppCompatActivity() {
         val uri = intent.data
         pluginName = intent.getStringExtra("plugin-name")!!
         val pluginManager = object : DefaultPluginManager(this) {
-            override suspend fun requestPath(initPath: String?): String {
+            override suspend fun requestPath(initUri: String?): String {
                 return ""
             }
 
@@ -119,8 +117,11 @@ class FragmentPluginActivity : AppCompatActivity() {
                 newInstance.arguments = Bundle().apply {
                     putParcelable("uri", uri)
                 }
-                if (savedInstanceState == null)
-                    supportFragmentManager.beginTransaction().replace(R.id.content, newInstance).commit()
+                if (savedInstanceState == null) {
+                    val beginTransaction = supportFragmentManager.beginTransaction()
+                    beginTransaction.replace(R.id.content, newInstance)
+                    beginTransaction.commit()
+                }
             }
         }
     }

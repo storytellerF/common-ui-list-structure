@@ -3,7 +3,9 @@ package com.storyteller_f.file_system.operate
 import android.content.Context
 import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.file_system.FileInstanceFactory
+import com.storyteller_f.file_system.instance.Create
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.NotCreate
 import com.storyteller_f.file_system.message.Message
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
@@ -60,7 +62,13 @@ class FileCopyOp(
             //新建一个文件
             copyFileFaster(fileInstance, target)
         } else {
-            copyDirectoryFaster(fileInstance, FileInstanceFactory.toChild(target, fileInstance.name, false, context, true, task))
+            copyDirectoryFaster(fileInstance, FileInstanceFactory.toChild(
+                context,
+                target,
+                fileInstance.name,
+                Create(false),
+                task
+            ))
         }
     }
 
@@ -68,12 +76,18 @@ class FileCopyOp(
         val listSafe = f.list()
         listSafe.files.forEach {
             if (needStop()) return false
-            copyFileFaster(FileInstanceFactory.toChild(f, it.name, true, context, true, task), t)
+            copyFileFaster(FileInstanceFactory.toChild(context, f, it.name, Create(true), task), t)
         }
         listSafe.directories.forEach {
             if (needStop()) return false
             copyDirectoryFaster(
-                FileInstanceFactory.toChild(f, it.name, false, context, true, task), FileInstanceFactory.toChild(t, it.name, false, context, true, task)
+                FileInstanceFactory.toChild(context, f, it.name, Create(false), task), FileInstanceFactory.toChild(
+                    context,
+                    t,
+                    it.name,
+                    Create(false),
+                    task
+                )
             )
         }
         onDirectoryDone(fileInstance, Message("${f.name} success"), 0)
@@ -82,7 +96,7 @@ class FileCopyOp(
 
     private fun copyFileFaster(f: FileInstance, t: FileInstance): Boolean {
         try {
-            val toChild = FileInstanceFactory.toChild(t, f.name, true, context, true, task)
+            val toChild = FileInstanceFactory.toChild(context, t, f.name, Create(true), task)
             f.fileInputStream.channel.use { int ->
                 (toChild).fileOutputStream.channel.use { out ->
                     val byteBuffer = ByteBuffer.allocateDirect(1024)
@@ -199,7 +213,7 @@ class FileDeleteOp(
 
     private fun deleteChildDirectory(fileInstance: FileInstance, it: DirectoryItemModel): Boolean {
         val childDirectory = FileInstanceFactory.toChild(
-            fileInstance, it.name, false, context, false, task
+            context, fileInstance, it.name, NotCreate, task
         )
         val deleteDirectory = deleteDirectory(childDirectory)
         if (deleteDirectory)
@@ -211,7 +225,7 @@ class FileDeleteOp(
     }
 
     private fun deleteChildFile(fileInstance: FileInstance, it: FileItemModel): Boolean {
-        val childFile = FileInstanceFactory.toChild(fileInstance, it.name, true, context, false, task)
+        val childFile = FileInstanceFactory.toChild(context, fileInstance, it.name, NotCreate, task)
         val deleteFileOrEmptyDirectory = childFile.deleteFileOrEmptyDirectory()
         if (deleteFileOrEmptyDirectory)
             onFileDone(

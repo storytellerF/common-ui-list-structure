@@ -14,8 +14,8 @@ import androidx.core.content.ContextCompat
 import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.giant_explorer.databinding.FragmentRootIntroBinding
 
-val MagiskUrl = "https://github.com/topjohnwu/Magisk"
-val kernelSuUrl = "https://github.com/tiann/KernelSU"
+const val MagiskUrl = "https://github.com/topjohnwu/Magisk"
+const val kernelSuUrl = "https://github.com/tiann/KernelSU"
 
 class RootIntroFragment : SimpleFragment<FragmentRootIntroBinding>(FragmentRootIntroBinding::inflate) {
 

@@ -1,5 +1,7 @@
 package com.storyteller_f.file_system_remote
 
+import android.net.Uri
+import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
@@ -15,9 +17,9 @@ import java.io.FileOutputStream
 
 val sftpChannels = mutableMapOf<RemoteSpec, SFTPClient>()
 
-class SFtpFileInstance(path: String, fileSystemRoot: String, val spec: RemoteSpec) : FileInstance(path, fileSystemRoot) {
-    var remoteFile: RemoteFile? = null
-    var attribute: FileAttributes? = null
+class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri) {
+    private var remoteFile: RemoteFile? = null
+    private var attribute: FileAttributes? = null
 
     private fun initCurrent(): Pair<RemoteFile, FileAttributes> {
         val orPut = getInstance()
@@ -54,6 +56,10 @@ class SFtpFileInstance(path: String, fileSystemRoot: String, val spec: RemoteSpe
         TODO("Not yet implemented")
     }
 
+    override fun getFileLength(): Long {
+        TODO("Not yet implemented")
+    }
+
     override fun getFileInputStream(): FileInputStream {
         TODO("Not yet implemented")
     }
@@ -65,11 +71,12 @@ class SFtpFileInstance(path: String, fileSystemRoot: String, val spec: RemoteSpe
     override fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
         getInstance().ls(path).forEach {
             val attributes = it.attributes
+            val (file, child) = child(it.name)
             val isSymLink = attributes.mode.type == FileMode.Type.SYMLINK
             if (it.isDirectory) {
-                directoryItems.add(DirectoryItemModel(it.name, it.path, false, attributes.mtime, isSymLink))
+                directoryItems.add(DirectoryItemModel(it.name, child, false, attributes.mtime, isSymLink))
             } else {
-                fileItems.add(FileItemModel(it.name, it.path, false, attributes.mtime, isSymLink, File(it.path).extension))
+                fileItems.add(FileItemModel(it.name, child, false, attributes.mtime, isSymLink, file.extension))
             }
         }
     }
@@ -120,11 +127,11 @@ class SFtpFileInstance(path: String, fileSystemRoot: String, val spec: RemoteSpe
         TODO("Not yet implemented")
     }
 
-    override fun toChild(name: String, isFile: Boolean, createWhenNotExists: Boolean): FileInstance {
+    override fun toChild(name: String, policy: FileCreatePolicy?): FileInstance {
         TODO("Not yet implemented")
     }
 
-    override fun changeToChild(name: String, isFile: Boolean, createWhenNotExists: Boolean) {
+    override fun changeToChild(name: String, policy: FileCreatePolicy?) {
         TODO("Not yet implemented")
     }
 

@@ -98,6 +98,7 @@ dependencies {
         }
     }
     implementation(project(":file-system-remote"))
+    implementation(project(":file-system-root"))
     implementation("com.madgag.spongycastle:core:1.58.0.0")
     implementation("com.madgag.spongycastle:prov:1.58.0.0")
     val baoModule = findProject(":bao:startup")

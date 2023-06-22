@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.navArgs
 import com.storyteller_f.common_ui.SimpleDialogFragment
@@ -35,7 +34,7 @@ class PropertiesDialog : SimpleDialogFragment<DialogFilePropertiesBinding>(Dialo
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.lifecycleOwner = viewLifecycleOwner
-        val fileInstance = getFileInstance(args.path, requireContext())
+        val fileInstance = getFileInstance(requireContext(), args.uri)
         scope.launch {
             val length = if (fileInstance.isFile) fileInstance.fileLength
             else 0

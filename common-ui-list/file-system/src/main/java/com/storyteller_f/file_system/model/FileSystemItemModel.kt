@@ -1,5 +1,6 @@
 package com.storyteller_f.file_system.model
 
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import java.io.File
@@ -9,13 +10,17 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.text.SimpleDateFormat
 import java.util.*
 
+class FormattedData<T>(val t: T, val formatted: String? = null) {
+
+}
+
 open class FileSystemItemModel(
     name: String,
-    absolutePath: String,
+    uri: Uri,
     val isHidden: Boolean,
     val lastModifiedTime: Long,
     val isSymLink: Boolean,
-) : FileSystemItemModelLite(name, absolutePath) {
+) : FileSystemItemModelLite(name, uri) {
     private val simpleDateFormat = SimpleDateFormat("yyyy:MM:dd hh:mm:ss sss", Locale.CHINA)
     val formattedLastModifiedTime: String
     var formattedLastAccessTime: String? = null

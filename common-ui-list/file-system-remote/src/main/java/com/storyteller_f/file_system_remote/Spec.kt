@@ -3,8 +3,8 @@ package com.storyteller_f.file_system_remote
 import android.net.Uri
 
 data class ShareSpec(val server: String, val port: Int, val user: String, val password: String, val type: String, val share: String) {
-    fun toUri(): String {
-        return "$type://$user:$password@$server:$port:$share"
+    fun toUri(): Uri {
+        return Uri.parse("$type://$user:$password@$server:$port:$share")!!
     }
 
     fun toRemote(): RemoteAccessSpec {
@@ -12,8 +12,7 @@ data class ShareSpec(val server: String, val port: Int, val user: String, val pa
     }
 
     companion object {
-        fun parse(url: String): ShareSpec {
-            val parse = Uri.parse(url)
+        fun parse(parse: Uri): ShareSpec {
             val authority = parse.authority!!
             val split = authority.split("@")
             val (user, pass) = split.first().split(":")
@@ -25,9 +24,9 @@ data class ShareSpec(val server: String, val port: Int, val user: String, val pa
 }
 
 data class RemoteSpec(val server: String, val port: Int, val user: String, val password: String, val type: String) {
-    fun toUri(): String {
+    fun toUri(): Uri {
         val scheme = type
-        return "$scheme://$user:$password@$server:$port/"
+        return Uri.parse("$scheme://$user:$password@$server:$port/")!!
     }
 
     fun toRemote(): RemoteAccessSpec {
@@ -35,8 +34,7 @@ data class RemoteSpec(val server: String, val port: Int, val user: String, val p
     }
 
     companion object {
-        fun parse(url: String): RemoteSpec {
-            val parse = Uri.parse(url)
+        fun parse(parse: Uri): RemoteSpec {
             val scheme = parse.scheme!!
             val authority = parse.authority!!
             val split = authority.split("@")

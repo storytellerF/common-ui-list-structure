@@ -1,16 +1,10 @@
 package com.storyteller_f.giant_explorer.view;
 
-import static com.storyteller_f.giant_explorer.control.FileListKt.getFileInstance;
-
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.Toast;
-
-import com.storyteller_f.file_system.instance.FileInstance;
-import com.storyteller_f.multi_core.StoppableTask;
 
 public class EditablePathMan extends PathMan {
     public EditablePathMan(Context context) {
@@ -67,13 +61,8 @@ public class EditablePathMan extends PathMan {
         int length = path.length();
         if (path.endsWith("/") && length != 1) path = path.substring(0, length - 1);
         if (pathChangeListener != null) {
-            FileInstance fileInstance = getFileInstance(path, v.getContext(), pathChangeListener.root(), StoppableTask.Blocking.INSTANCE);
-            if (fileInstance.exists()) {
-                if (pathChangeListener != null) pathChangeListener.onSkipOnPathMan(path);
-                drawPath(path);
-            }
-        } else {
-            Toast.makeText(getContext(), "输入的路径不存在", Toast.LENGTH_SHORT).show();
+            pathChangeListener.onSkipOnPathMan(path);
+            drawPath(path);
         }
     }
 }

@@ -3,6 +3,7 @@ package com.storyteller_f.giant_explorer.service
 import android.app.Service
 import android.content.Intent
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.IBinder
 import android.util.Log
 
@@ -43,11 +44,11 @@ class FileOperateService : Service() {
 
     interface FileOperateResultContainer {
         /**
-         * @param dest 去路径
-         * @param origin 来路径
+         * @param uri 去路径
+         * @param originUri 来路径
          */
-        fun onSuccess(dest: String?, origin: String?)
-        fun onError(string: String?)
+        fun onSuccess(uri: Uri?, originUri: Uri?)
+        fun onError(errorMessage: String?)
         fun onCancel()
     }
 

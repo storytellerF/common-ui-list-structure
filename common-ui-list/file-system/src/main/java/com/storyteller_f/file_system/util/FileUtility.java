@@ -9,28 +9,42 @@ import android.os.storage.StorageVolume;
 import android.provider.DocumentsContract;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.documentfile.provider.DocumentFile;
+
+import com.storyteller_f.file_system.FileInstanceFactory;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public class FileUtility {
     private static final String TAG = "FileUtility";
 
     public static String getPermissionStringByFile(File file) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return getPermissions(file.isFile(), file);
+        }
         boolean w = file.canWrite();
         boolean e = file.canExecute();
         boolean r = file.canRead();
         return UtilityKt.permissions(r, w, e, file.isFile());
     }
 
+    public static String getPermissions(DocumentFile file) {
+        var w = file.canWrite();
+        var r = file.canRead();
+        return UtilityKt.permissions(r, w, false, file.isFile());
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public static String getPermissionString(boolean b, String fullPath) {
-        Path path = new File(fullPath).toPath();
+    public static String getPermissions(boolean b, File file) {
+        Path path = file.toPath();
         boolean w = Files.isWritable(path);
         boolean e = Files.isExecutable(path);
         boolean r = Files.isReadable(path);
@@ -72,64 +86,34 @@ public class FileUtility {
         return getStorageVolume(context, storageManager);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    public static String[] getStorageFileStrings(Context context) {
-        File[] sdCard = getStorageFile(context);
-        String[] strings = new String[sdCard.length];
-        for (int i = 0; i < sdCard.length; i++) {
-            strings[i] = sdCard[i].getAbsolutePath();
-        }
-        return strings;
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    public static File[] getStorageFile(Context context) {
-        File[] externalFilesDirs = context.getExternalCacheDirs();
-        File[] files = new File[externalFilesDirs.length];
-        for (int i = 0; i < externalFilesDirs.length; i++) {
-            String absolutePath = externalFilesDirs[i].getAbsolutePath();
-            String android = absolutePath.substring(0, absolutePath.indexOf("Android"));
-            files[i] = new File(android);
-        }
-        return files;
-    }
-
-    public static String[] getStorageFileStringsSafe(Context context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            return getStorageFileStrings(context);
+    @NonNull
+    public static File[] getStorageCompat(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            return getStorageVolume(context).stream().map(storageVolume -> {
+                String uuid = storageVolume.getUuid();
+                return new File(FileInstanceFactory.storagePath, Objects.requireNonNullElse(uuid, "emulated"));
+            }).toArray(File[]::new);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            File[] externalFilesDirs = context.getExternalCacheDirs();
+            File[] files = new File[externalFilesDirs.length];
+            for (int i = 0; i < externalFilesDirs.length; i++) {
+                String absolutePath = externalFilesDirs[i].getAbsolutePath();
+                String android = absolutePath.substring(0, absolutePath.indexOf("Android"));
+                files[i] = new File(android);
+            }
+            return files;
         } else {
             File file = new File("/storage/");
-            File[] files = file.listFiles((dir, name) -> {
-                if (name.equals("emulated")) {
-                    return false;
-                } else return !name.equals("self");
-            });
+            File[] files = file.listFiles();
             if (files == null) {
-                return null;
+                return new File[]{};
             }
-            String[] strings = new String[files.length + 1];
-            strings[0] = "/storage/emulated/0";
-            for (int i = 0; i < files.length; i++) {
-                strings[i + 1] = files[i].getAbsolutePath();
-            }
-            return strings;
+            return files;
         }
-    }
-
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    public static String[] getUuid(Context context) {
-        List<StorageVolume> storageVolume = getStorageVolume(context);
-        String[] names = new String[storageVolume.size()];
-        for (int i = 0; i < names.length; i++) {
-            names[i] = storageVolume.get(i).getUuid();
-        }
-        return names;
     }
 
     @Nullable
-    @SuppressWarnings("deprecation")
-    public static Intent produceSafRequestIntent(String prefix, Activity activity) {
+    public static Intent produceSafRequestIntent(Activity activity, String prefix) {
         Intent intent = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             StorageManager sm = activity.getSystemService(StorageManager.class);
@@ -138,15 +122,10 @@ public class FileUtility {
                 intent = volume.createOpenDocumentTreeIntent();
             }
         }
-        if (intent == null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, prefix);
-                }
-            } else {
-                //没有权限问题
-                return null;
+        if (intent == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, prefix);
             }
         }
         return intent;

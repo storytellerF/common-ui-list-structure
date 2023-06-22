@@ -1,23 +1,30 @@
-package com.storyteller_f.file_system.instance.local
+package com.storyteller_f.file_system_root
 
-import com.storyteller_f.file_system.FileInstanceFactory
+import android.net.Uri
+import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.FileInstanceUtility
 import com.topjohnwu.superuser.nio.ExtendedFile
 import com.topjohnwu.superuser.nio.FileSystemManager
-import java.io.*
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 
-class RootAccessFileInstance(path: String, private val remote: FileSystemManager) : FileInstance(path, FileInstanceFactory.rootFileSystemRoot) {
+class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : FileInstance(uri) {
 
     private var extendedFile = remote.getFile(path)
     override fun getFile(): FileItemModel {
-        return FileItemModel(extendedFile.name, extendedFile.absolutePath, extendedFile.isHidden, extendedFile.lastModified(), extendedFile.isSymlink, extendedFile.extension)
+        return FileItemModel(extendedFile.name, uri, extendedFile.isHidden, extendedFile.lastModified(), extendedFile.isSymlink, extendedFile.extension)
     }
 
     override fun getDirectory(): DirectoryItemModel {
-        return DirectoryItemModel(extendedFile.name, extendedFile.absolutePath, extendedFile.isHidden, extendedFile.lastModified(), extendedFile.isSymlink)
+        return DirectoryItemModel(extendedFile.name, uri, extendedFile.isHidden, extendedFile.lastModified(), extendedFile.isSymlink)
+    }
+
+    override fun getFileLength(): Long {
+        return extendedFile.length()
     }
 
     override fun getFileInputStream(): FileInputStream = extendedFile.inputStream()
@@ -30,11 +37,13 @@ class RootAccessFileInstance(path: String, private val remote: FileSystemManager
     ) {
         val listFiles = extendedFile.listFiles()
         listFiles?.forEach {
-            val format = it.permissions()
+            val permissions = it.permissions()
+            val (_, child) = child(it.name)
+            val pair = it to child
             if (it.isFile) {
-                FileInstanceUtility.addFile(fileItems, it, format)
+                FileInstanceUtility.addFile(fileItems, pair, permissions)
             } else if (it.isDirectory) {
-                FileInstanceUtility.addDirectory(directoryItems, it, format)
+                FileInstanceUtility.addDirectory(directoryItems, pair, permissions)
             }
         }
     }
@@ -59,7 +68,8 @@ class RootAccessFileInstance(path: String, private val remote: FileSystemManager
     }
 
     override fun toParent(): FileInstance {
-        return RootAccessFileInstance(File(path).parent!!, remote)
+        val newUri = uri.buildUpon().path(extendedFile.parent!!).build()
+        return RootAccessFileInstance(remote, newUri)
     }
 
     override fun changeToParent() {
@@ -80,21 +90,18 @@ class RootAccessFileInstance(path: String, private val remote: FileSystemManager
         TODO("Not yet implemented")
     }
 
-    override fun toChild(name: String, isFile: Boolean, createWhenNotExists: Boolean): FileInstance {
-        return RootAccessFileInstance(File(file, name).absolutePath, remote)
+    override fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
+        val newUri = uri.buildUpon().path(File(extendedFile, name).absolutePath).build()
+        return RootAccessFileInstance(remote, newUri)
     }
 
-    override fun changeToChild(name: String, isFile: Boolean, createWhenNotExists: Boolean) {
-        val tempFile = File(file, name)
-        val childFile = remote.getFile(file.absolutePath)
-        file = tempFile
+    override fun changeToChild(name: String, policy: FileCreatePolicy) {
+        val childFile = remote.getFile(extendedFile.absolutePath)
         extendedFile = childFile
     }
 
     override fun changeTo(path: String) {
-        val tempFile = File(path)
         val childFile = remote.getFile(path)
-        file = tempFile
         extendedFile = childFile
     }
 
@@ -102,5 +109,10 @@ class RootAccessFileInstance(path: String, private val remote: FileSystemManager
 
     override fun isSymbolicLink(): Boolean {
         return extendedFile.isSymlink
+    }
+
+    companion object {
+        const val rootFileSystemScheme = "root"
+        var remote: FileSystemManager? = null
     }
 }

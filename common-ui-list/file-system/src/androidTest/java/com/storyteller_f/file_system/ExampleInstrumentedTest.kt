@@ -1,30 +1,51 @@
 package com.storyteller_f.file_system
 
+import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.storyteller_f.multi_core.StoppableTask
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
 
-/**
- * Instrumented test, which will execute on an Android device.
- *
- * See [testing documentation](http://d.android.com/tools/testing).
- */
 @RunWith(AndroidJUnit4::class)
 class ExampleInstrumentedTest {
     @Test
-    fun useAppContext() {
-        // Context of the app under test.
+    fun testPrefix() {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        //assertEquals("com.storyteller_f.file_system.test", appContext.packageName)
-        val fileInstance = FileInstanceFactory.getFileInstance("/bin", appContext)
-        val listSafe = fileInstance.list()
-//        val listFiles = File("/data/app").listFiles()
-//        val installedApplications = appContext.packageManager.getInstalledApplications(
-//            0
-//        )
-//        println(fileInstance.javaClass)
-//        assertEquals(listSafe.count, 0)
+        listOf(
+            FileInstanceFactory.currentEmulatedPath to FileInstanceFactory.currentEmulatedPath,
+            "/storage/self/primary" to FileInstanceFactory.currentEmulatedPath,
+            FileInstanceFactory.rootUserEmulatedPath to FileInstanceFactory.rootUserEmulatedPath,
+            "/storage/XX44-XX55/Downloads" to "/storage/XX44-XX55",
+            "/storage/XX44-XX55" to "/storage/XX44-XX55",
+            FileInstanceFactory.storagePath to "fake"
+        ).forEach {
+            val prefix = FileInstanceFactory.getPrefix(appContext, File(it.first).toUri())
+            assertEquals(it.second, prefix)
+        }
     }
+
+    @Test
+    fun testList() {
+        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+        listOf(
+            "/storage/self" to listOf("primary"),
+            "/storage/self/primary" to listOf(),
+        ).forEach { (it, expected) ->
+            val fileInstance = FileInstanceFactory.getFileInstance(
+                appContext,
+                File(it).toUri(),
+                StoppableTask.Blocking
+            )
+            assertEquals(expected.size, fileInstance.list().count)
+        }
+    }
+
+    @Test
+    fun testRequestPermission() {
+        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+    }
+
 }

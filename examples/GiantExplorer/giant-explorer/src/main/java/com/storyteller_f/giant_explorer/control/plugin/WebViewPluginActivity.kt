@@ -116,14 +116,14 @@ class WebViewPluginActivity : AppCompatActivity() {
         val pluginManager = object : DefaultPluginManager(this) {
 
             @JavascriptInterface
-            override fun fileInputStream(path: String) = super.fileInputStream(path)
+            override fun fileInputStream(uriString: String) = super.fileInputStream(uriString)
 
             @JavascriptInterface
-            override fun fileOutputStream(path: String) = super.fileOutputStream(path)
+            override fun fileOutputStream(uriString: String) = super.fileOutputStream(uriString)
 
             @JavascriptInterface
-            override fun listFiles(path: String): List<String> = super.listFiles(path)
-            override suspend fun requestPath(initPath: String?): String {
+            override fun listFiles(uriString: String): List<String> = super.listFiles(uriString)
+            override suspend fun requestPath(initUri: String?): String {
                 return ""
             }
 

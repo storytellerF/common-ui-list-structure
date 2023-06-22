@@ -121,8 +121,20 @@ inline fun <reified VM : ViewModel, T, ARG> T.stateDefaultFactory(
 
 class VMScope(val storeProducer: () -> ViewModelStore, val ownerProducer: () -> SavedStateRegistryOwner)
 
+inline val Fragment.selfScope get() = VMScope({
+    viewModelStore
+}, {
+    this
+})
+
+inline val ComponentActivity.selfScope get() = VMScope({
+    viewModelStore
+}, {
+    this
+})
+
 inline val Fragment.parentScope get() = VMScope({
-    requireParentFragment(). viewModelStore
+    requireParentFragment().viewModelStore
 }, {
     requireParentFragment()
 })

@@ -1,74 +1,63 @@
 package com.storyteller_f.file_system
 
+import android.content.ContentResolver
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
-import com.storyteller_f.file_system.MainActivity.Companion.getBundle
+import com.storyteller_f.file_system.MainActivity.Companion.putBundle
 import kotlinx.coroutines.CompletableDeferred
 
-suspend fun Context.requestPermissionForSpecialPath(path: String) {
+suspend fun Context.requestPermissionForSpecialPath(uri: Uri): Boolean {
+    if (uri.scheme != ContentResolver.SCHEME_FILE) return true
+    val path = uri.path!!
     val task = CompletableDeferred<Boolean>()
     when {
         path.startsWith(FileInstanceFactory.rootUserEmulatedPath) -> {
             when {
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> requestManageExternalPermission(
-                    task
-                )
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> requestSAF(
-                    path,
-                    MainActivity.REQUEST_SAF_EMULATED, task
-                )
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
+                    requestManageExternalPermission(task)
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ->
+                    requestSAF(uri, MainActivity.REQUEST_SAF_EMULATED, task)
                 else -> requestWriteExternalStorage(task)
             }
         }
-        path == FileInstanceFactory.storagePath -> {
-            Log.w(
-                "requestPermission",
-                "checkPermission: 当前还不会的对整体的/storage请求权限"
-            )
-        }
         path.startsWith(FileInstanceFactory.storagePath) -> {
             when {
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> requestManageExternalPermission(
-                    task
-                )
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> requestSAF(
-                    path,
-                    MainActivity.REQUEST_SAF_SDCARD,
-                    task
-                )
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
+                    requestManageExternalPermission(task)
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ->
+                    requestSAF(uri, MainActivity.REQUEST_SAF_SDCARD, task)
                 else -> requestWriteExternalStorage(task)
             }
         }
     }
-    task.await()
+    return task.await()
 }
 
 private suspend fun Context.requestWriteExternalStorage(task: CompletableDeferred<Boolean>) {
     if (yesOrNo("权限不足", "查看文件夹系统必须授予权限", "授予", "取消")) {
         MainActivity.task = task
         startActivity(Intent(this, MainActivity::class.java).apply {
-            getBundle(MainActivity.REQUEST_EMULATED, "")
+            putBundle(MainActivity.REQUEST_EMULATED, Uri.EMPTY)
         })
     } else {
         task.complete(false)
-
     }
 }
 
 private suspend fun Context.requestSAF(
-    path: String,
+    uri: Uri,
     requestCodeSAF: String,
     task: CompletableDeferred<Boolean>
 ) {
     if (yesOrNo("需要授予权限", "在Android 10 或者访问存储卡，需要获取SAF权限", "去授予", "取消")) {
         MainActivity.task = task
         startActivity(Intent(this, MainActivity::class.java).apply {
-            getBundle(requestCodeSAF, path)
+            putBundle(requestCodeSAF, uri)
         })
     } else {
         task.complete(false)
@@ -80,7 +69,7 @@ private suspend fun Context.requestManageExternalPermission(task: CompletableDef
     if (yesOrNo("需要授予权限", "在Android 11上，需要获取Manage External Storage权限", "去授予", "取消")) {
         MainActivity.task = task
         startActivity(Intent(this, MainActivity::class.java).apply {
-            getBundle(MainActivity.REQUEST_MANAGE, "")
+            putBundle(MainActivity.REQUEST_MANAGE, Uri.EMPTY)
         })
     } else {
         task.complete(false)

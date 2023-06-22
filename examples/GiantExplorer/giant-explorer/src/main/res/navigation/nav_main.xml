@@ -22,11 +22,8 @@
             app:popEnterAnim="@anim/pop_in_right"
             app:popExitAnim="@anim/pop_out_left" />
         <argument
-            android:name="path"
-            app:argType="string" />
-        <argument
-            android:name="root"
-            app:argType="string" />
+            android:name="uri"
+            app:argType="android.net.Uri" />
         <action
             android:id="@+id/action_fileListFragment_to_propertiesDialog"
             app:destination="@id/propertiesDialog" />
@@ -40,18 +37,15 @@
         android:name="com.storyteller_f.giant_explorer.dialog.OpenFileDialog"
         android:label="OpenFileDialog">
         <argument
-            android:name="path"
-            app:argType="string" />
-        <argument
-            android:name="root"
-            app:argType="string" />
+            android:name="uri"
+            app:argType="android.net.Uri" />
     </dialog>
     <dialog
         android:id="@+id/propertiesDialog"
         android:name="com.storyteller_f.giant_explorer.dialog.PropertiesDialog"
         android:label="properties">
         <argument
-            android:name="path"
-            app:argType="string" />
+            android:name="uri"
+            app:argType="android.net.Uri" />
     </dialog>
 </navigation>

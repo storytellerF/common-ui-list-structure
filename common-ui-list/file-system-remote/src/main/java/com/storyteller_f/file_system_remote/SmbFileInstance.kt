@@ -1,9 +1,11 @@
 package com.storyteller_f.file_system_remote
 
+import android.net.Uri
 import com.hierynomus.msfscc.fileinformation.FileAllInformation
 import com.hierynomus.smbj.SMBClient
 import com.hierynomus.smbj.auth.AuthenticationContext
 import com.hierynomus.smbj.share.DiskShare
+import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
@@ -28,9 +30,9 @@ fun ShareSpec.checkSmb() {
 
 val smbSessions = mutableMapOf<ShareSpec, DiskShare>()
 
-class SmbFileInstance(path: String, fileSystemRoot: String, val shareSpec: ShareSpec) : FileInstance(path, fileSystemRoot) {
-    var information: FileAllInformation? = null
-    var share: DiskShare? = null
+class SmbFileInstance(private val shareSpec: ShareSpec, uri: Uri) : FileInstance(uri) {
+    private var information: FileAllInformation? = null
+    private var share: DiskShare? = null
 
     private fun initCurrentFile(): Pair<DiskShare, FileAllInformation> {
         val connectShare = getDiskShare()
@@ -66,6 +68,10 @@ class SmbFileInstance(path: String, fileSystemRoot: String, val shareSpec: Share
         TODO("Not yet implemented")
     }
 
+    override fun getFileLength(): Long {
+        TODO("Not yet implemented")
+    }
+
     override fun getFileInputStream(): FileInputStream {
         TODO("Not yet implemented")
     }
@@ -79,13 +85,13 @@ class SmbFileInstance(path: String, fileSystemRoot: String, val shareSpec: Share
         share.list(path).filter {
             it.fileName != "." && it.fileName != ".."
         }.forEach {
-            val child = File(path, it.fileName)
-            val fileInformation = share.getFileInformation(child.absolutePath)
+            val (file, child) = child(it.fileName)
+            val fileInformation = share.getFileInformation(file.absolutePath)
             val lastModifiedTime = fileInformation.basicInformation.changeTime.windowsTimeStamp
             if (fileInformation.standardInformation.isDirectory) {
-                directoryItems.add(DirectoryItemModel(it.fileName, child.absolutePath, false, lastModifiedTime, false))
+                directoryItems.add(DirectoryItemModel(it.fileName, child, false, lastModifiedTime, false))
             } else {
-                fileItems.add(FileItemModel(it.fileName, child.absolutePath, false, lastModifiedTime, false, file.extension))
+                fileItems.add(FileItemModel(it.fileName, child, false, lastModifiedTime, false, file.extension))
             }
         }
     }
@@ -135,11 +141,11 @@ class SmbFileInstance(path: String, fileSystemRoot: String, val shareSpec: Share
         TODO("Not yet implemented")
     }
 
-    override fun toChild(name: String, isFile: Boolean, createWhenNotExists: Boolean): FileInstance {
+    override fun toChild(name: String, policy: FileCreatePolicy?): FileInstance {
         TODO("Not yet implemented")
     }
 
-    override fun changeToChild(name: String, isFile: Boolean, createWhenNotExists: Boolean) {
+    override fun changeToChild(name: String, policy: FileCreatePolicy?) {
         TODO("Not yet implemented")
     }
 

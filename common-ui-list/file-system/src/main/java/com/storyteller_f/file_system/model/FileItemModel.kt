@@ -1,5 +1,6 @@
 package com.storyteller_f.file_system.model
 
+import android.net.Uri
 import java.io.File
 
 open class FileItemModel : FileSystemItemModel {
@@ -12,22 +13,23 @@ open class FileItemModel : FileSystemItemModel {
 
     constructor(
         file: File,
+        uri: Uri,
         isHide: Boolean = file.isHidden,
         extension: String = file.extension,
         isSymLink: Boolean,
-    ) : super(file.name, file.absolutePath, isHide, file.lastModified(), isSymLink) {
+    ) : super(file.name, uri, isHide, file.lastModified(), isSymLink) {
         this.extension = extension
     }
 
     constructor(
         name: String,
-        fullPath: String,
+        uri: Uri,
         isHidden: Boolean,
         lastModifiedTime: Long,
         isSymLink: Boolean,
         extension: String? = null,
     ) : super(
-        name, fullPath, isHidden, lastModifiedTime, isSymLink
+        name, uri, isHidden, lastModifiedTime, isSymLink
     ) {
         this.extension = extension
     }

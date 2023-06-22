@@ -1,6 +1,8 @@
 package com.storyteller_f.file_system_remote
 
+import android.net.Uri
 import android.util.Log
+import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
@@ -18,8 +20,8 @@ import java.io.PrintWriter
 
 val ftpsClients = mutableMapOf<RemoteSpec, FtpsInstance>()
 
-class FtpsFileInstance(path: String, fileSystemRoot: String, private val spec: RemoteSpec) : FileInstance(path, fileSystemRoot) {
-    var ftpFile: FTPFile? = null
+class FtpsFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri) {
+    private var ftpFile: FTPFile? = null
 
     companion object {
         private const val TAG = "FtpInstance"
@@ -59,6 +61,10 @@ class FtpsFileInstance(path: String, fileSystemRoot: String, private val spec: R
         TODO("Not yet implemented")
     }
 
+    override fun getFileLength(): Long {
+        TODO("Not yet implemented")
+    }
+
     override fun getFileInputStream(): FileInputStream {
         TODO("Not yet implemented")
     }
@@ -72,22 +78,26 @@ class FtpsFileInstance(path: String, fileSystemRoot: String, private val spec: R
         val listFiles = getInstance()?.listFiles(path)
         listFiles?.forEach {
             val name = it.name
-            val path = File(path, name).absolutePath
+            val (file, child) = child(name)
             val lastModifiedTime = it.timestamp.timeInMillis
-            val canRead = it.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
-            val canWrite = it.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)
-            val canExecute = it.hasPermission(FTPFile.USER_ACCESS, FTPFile.EXECUTE_PERMISSION)
-            val permission = permissions(canRead, canWrite, canExecute, it.isFile)
+            val permission = it.getPermissions()
             if (it.isFile) {
-                fileItems.add(FileItemModel(name, path, false, lastModifiedTime, it.isSymbolicLink, File(path).extension).apply {
+                fileItems.add(FileItemModel(name, child, false, lastModifiedTime, it.isSymbolicLink, file.extension).apply {
                     permissions = permission
                 })
-            } else {
-                directoryItems.add(DirectoryItemModel(name, path, false, lastModifiedTime, it.isSymbolicLink).apply {
+            } else if (it.isDirectory) {
+                directoryItems.add(DirectoryItemModel(name, child, false, lastModifiedTime, it.isSymbolicLink).apply {
                     permissions = permission
                 })
             }
         }
+    }
+
+    private fun FTPFile.getPermissions(): String {
+        val canRead = hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
+        val canWrite = hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)
+        val canExecute = hasPermission(FTPFile.USER_ACCESS, FTPFile.EXECUTE_PERMISSION)
+        return permissions(canRead, canWrite, canExecute, isFile)
     }
 
     override fun isFile(): Boolean {
@@ -143,11 +153,11 @@ class FtpsFileInstance(path: String, fileSystemRoot: String, private val spec: R
         TODO("Not yet implemented")
     }
 
-    override fun toChild(name: String, isFile: Boolean, createWhenNotExists: Boolean): FileInstance {
+    override fun toChild(name: String, policy: FileCreatePolicy?): FileInstance {
         TODO("Not yet implemented")
     }
 
-    override fun changeToChild(name: String, isFile: Boolean, createWhenNotExists: Boolean) {
+    override fun changeToChild(name: String, policy: FileCreatePolicy?) {
         TODO("Not yet implemented")
     }
 

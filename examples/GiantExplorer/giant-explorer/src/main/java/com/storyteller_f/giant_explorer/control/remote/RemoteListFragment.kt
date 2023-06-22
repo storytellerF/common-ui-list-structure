@@ -78,7 +78,7 @@ class RemoteAccessSpecHolder(val spec: RemoteAccessSpec) : DataItemHolder {
 @BindItemHolder(RemoteAccessSpecHolder::class)
 class RemoteAccessSpecViewHolder(private val binding: ViewHolderRemoteAccessSpecBinding) : BindingViewHolder<RemoteAccessSpecHolder>(binding) {
     override fun bindData(itemHolder: RemoteAccessSpecHolder) {
-        binding.url.text = itemHolder.spec.toFtpSpec().toUri()
+        binding.url.text = itemHolder.spec.toFtpSpec().toUri().toString()
 
     }
 

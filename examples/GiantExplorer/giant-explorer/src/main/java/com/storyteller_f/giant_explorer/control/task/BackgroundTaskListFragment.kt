@@ -13,6 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.lifecycle.flowWithLifecycle
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
@@ -35,6 +36,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 class BackgroundTaskListFragment : SimpleFragment<FragmentTaskListBinding>(FragmentTaskListBinding::inflate) {
     private val adapter = ManualAdapter<DataItemHolder, AbstractViewHolder<DataItemHolder>>()
@@ -43,14 +45,14 @@ class BackgroundTaskListFragment : SimpleFragment<FragmentTaskListBinding>(Fragm
         binding.content.manualUp(adapter)
         binding.content.flash(ListWithState.UIState.loading)
         scope.launch {
-            requireDatabase.bigTimeDao().fetch().map { list -> list.groupBy { it.workerName } }
+            requireDatabase.bigTimeDao().fetch().map { list -> list.groupBy { it.category } }
                 .flowWithLifecycle(viewLifecycleOwner.lifecycle)
                 .shareIn(scope, SharingStarted.WhileSubscribed())
                 .collectLatest {
                     binding.content.flash(ListWithState.UIState(false, it.isNotEmpty(), empty = false, progress = false, null, null))
                     val list = mutableListOf<DataItemHolder>()
-                    it.forEach { (workName, result) ->
-                        list.add(TaskTypeHolder(workName))
+                    it.forEach { (category, result) ->
+                        list.add(TaskTypeHolder(category))
                         list.addAll(result.map { task ->
                             BigTimeTaskItemHolder(task)
                         })
@@ -66,7 +68,7 @@ class BackgroundTaskListFragment : SimpleFragment<FragmentTaskListBinding>(Fragm
             val waitingDialog = waitingDialog()
             try {
                 withContext(Dispatchers.IO) {
-                    requireDatabase.bigTimeDao().update(BigTimeTask(itemHolder.bigTimeWorker.absolutePath, !itemHolder.bigTimeWorker.enable, itemHolder.bigTimeWorker.workerName))
+                    requireDatabase.bigTimeDao().update(BigTimeTask(itemHolder.bigTimeWorker.uri, !itemHolder.bigTimeWorker.enable, itemHolder.bigTimeWorker.category))
                 }
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), e.exceptionMessage, Toast.LENGTH_SHORT).show()
@@ -119,7 +121,7 @@ fun TaskType(@PreviewParameter(TaskTypeProvider::class) itemHolder: TaskTypeHold
 }
 
 class BigTimeTaskItemHolder(val bigTimeWorker: BigTimeTask) : DataItemHolder {
-    val id = "${bigTimeWorker.absolutePath}:${bigTimeWorker.workerName}"
+    val id = "${bigTimeWorker.uri}:${bigTimeWorker.category}"
     override fun areItemsTheSame(other: DataItemHolder) = id == (other as BigTimeTaskItemHolder).id
 }
 
@@ -136,7 +138,7 @@ class BigTimeTaskViewHolder(edComposeView: EDComposeView) : ComposeViewHolder<Bi
 class BigTimeTaskProvider : PreviewParameterProvider<BigTimeTaskItemHolder> {
     override val values: Sequence<BigTimeTaskItemHolder>
         get() = sequence {
-            yield(BigTimeTaskItemHolder(BigTimeTask("/storage/emulated/0/Download", true, "md")))
+            yield(BigTimeTaskItemHolder(BigTimeTask(File("/storage/emulated/0/Download").toUri(), true, "md")))
         }
 
 }
@@ -150,7 +152,7 @@ fun BigTimeTaskView(@PreviewParameter(BigTimeTaskProvider::class) itemHolder: Bi
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = itemHolder.bigTimeWorker.absolutePath, modifier = Modifier.weight(1f))
+        Text(text = itemHolder.bigTimeWorker.uri.toString(), modifier = Modifier.weight(1f))
         Checkbox(checked = itemHolder.bigTimeWorker.enable, onCheckedChange = { edComposeView.notifyClickEvent("check") })
     }
 }

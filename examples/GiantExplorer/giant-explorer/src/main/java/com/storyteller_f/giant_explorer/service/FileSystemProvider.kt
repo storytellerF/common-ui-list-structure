@@ -9,6 +9,7 @@ import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.util.Log
 import android.webkit.MimeTypeMap
+import androidx.core.net.toUri
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.giant_explorer.FileSystemProviderResolver
 import com.storyteller_f.giant_explorer.control.getFileInstance
@@ -31,7 +32,7 @@ class FileSystemProvider : ContentProvider() {
         val c = context ?: return null
         val filePath = FileSystemProviderResolver.resolvePath(uri) ?: return null
         Log.i(TAG, "query: file path:$filePath $uri")
-        val fileInstance = getFileInstance(filePath, c)
+        val fileInstance = getFileInstance(c, File(filePath).toUri())
         return if (fileInstance.isFile) {
             MatrixCursor(fileProjection).apply {
                 val file = fileInstance.file

@@ -1,6 +1,8 @@
 package com.storyteller_f.file_system.model
 
-class TorrentFileItemModel(name: String, fullPath: String, isHide: Boolean, time: Long, isSymLink: Boolean) :
-    FileItemModel(name, fullPath, isHide, time, isSymLink, "torrent") {
+import android.net.Uri
+
+class TorrentFileItemModel(name: String, uri: Uri, isHide: Boolean, time: Long, isSymLink: Boolean) :
+    FileItemModel(name, uri, isHide, time, isSymLink, "torrent") {
     var torrentName: String? = null
 }

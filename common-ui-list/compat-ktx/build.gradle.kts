@@ -11,7 +11,7 @@ plugins {
 android {
     namespace = "com.storyteller_f.compat_ktx"
     defaultConfig {
-        minSdk = 21
+        minSdk = 16
     }
 }
 

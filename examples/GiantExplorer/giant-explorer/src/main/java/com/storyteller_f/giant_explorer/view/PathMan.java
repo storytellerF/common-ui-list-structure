@@ -160,8 +160,6 @@ public class PathMan extends HorizontalScrollView {
 
     public interface PathChangeListener {
         void onSkipOnPathMan(@NonNull String pathString);
-
-        String root();
     }
 
 

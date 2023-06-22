@@ -39,9 +39,9 @@ class OpenFileDialog : SimpleDialogFragment<DialogOpenFileBinding>(DialogOpenFil
     class OpenFileResult(val mimeType: String) : Parcelable
 
     override fun onBindViewEvent(binding: DialogOpenFileBinding) {
-        val path = args.path
-        val fileInstance = getFileInstance(path, requireContext(), args.root)
-        binding.fileName.text = path
+        val uri = args.uri
+        val fileInstance = getFileInstance(requireContext(), uri)
+        binding.fileName.text = uri.toString()
         binding.fileName.copyTextFeature()
         binding.dataType = dataType
         binding.handler = object : StringResult {
@@ -50,7 +50,7 @@ class OpenFileDialog : SimpleDialogFragment<DialogOpenFileBinding>(DialogOpenFil
                 dismiss()
             }
         }
-        val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(FileUtility.getExtension(path))
+        val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(FileUtility.getExtension(uri.path))
         binding.mimeType = mimeTypeFromExtension
         scope.launch {
             dataType.data.value = suspendCancellableCoroutine {

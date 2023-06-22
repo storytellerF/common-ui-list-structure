@@ -2,7 +2,9 @@ package com.storyteller_f.giant_explorer
 
 import android.app.Application
 import android.content.Context
+import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.CreationExtras
@@ -17,10 +19,11 @@ import com.google.android.material.color.DynamicColors
 import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.NotCreate
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.TorrentFileItemModel
-import com.storyteller_f.giant_explorer.control.ui_list.HolderBuilder
 import com.storyteller_f.giant_explorer.control.getFileInstanceAsync
+import com.storyteller_f.giant_explorer.control.ui_list.HolderBuilder
 import com.storyteller_f.giant_explorer.database.FileMDRecord
 import com.storyteller_f.giant_explorer.database.FileSizeRecord
 import com.storyteller_f.giant_explorer.database.FileTorrentRecord
@@ -47,6 +50,12 @@ val defaultFactory = object : ViewModelProvider.Factory {
     }
 }
 
+object WorkCategory {
+    const val messageDigest = "message-digest"
+    const val folderSize = "folder-size"
+    const val torrentName = "torrent-name"
+}
+
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
@@ -55,17 +64,22 @@ class App : Application() {
         holders(HolderBuilder::add)
         MainScope().launch {
             requireDatabase.bigTimeDao().fetchSuspend().groupBy {
-                it.workerName
+                it.category
             }.forEach { entry ->
                 WorkManager.getInstance(this@App).enqueueUniqueWork(
                     entry.key,
                     ExistingWorkPolicy.KEEP,
                     when (entry.key) {
-                        "message digest" -> OneTimeWorkRequestBuilder<MDWorker>()
-                        "folder size" -> OneTimeWorkRequestBuilder<FolderWorker>()
+                        WorkCategory.messageDigest -> OneTimeWorkRequestBuilder<MDWorker>()
+                        WorkCategory.folderSize -> OneTimeWorkRequestBuilder<FolderWorker>()
                         else -> OneTimeWorkRequestBuilder<TorrentWorker>()
                     }.setInputData(
-                        Data.Builder().putStringArray("folders", entry.value.mapNotNull { if (it.enable) it.absolutePath else null }.toTypedArray())
+                        Data.Builder().putStringArray("folders", entry.value.mapNotNull {
+                            when {
+                                !it.enable -> null
+                                else -> it.uri.toString()
+                            }
+                        }.toTypedArray())
                             .build()
                     ).build()
                 )
@@ -79,7 +93,6 @@ class App : Application() {
         Security.removeProvider("BC")
         Security.insertProviderAt(BouncyCastleProvider(), 1)
     }
-
 
 }
 
@@ -100,19 +113,22 @@ abstract class BigTimeWorker(
     override fun needStop() = isStopped
 
     override suspend fun doWork(): Result {
-        val stringArray =
+        val uriStringArray =
             workerParams.inputData.getStringArray("folders") ?: return Result.failure(
                 Data.Builder().putString("error", "input empty").build()
             )
         return withContext(Dispatchers.IO) {
-            val results = stringArray.asList().map {
-                if (!context.checkPathPermission(it)) WorkerResult.Failure(java.lang.Exception("don't have permission")) else if (isStopped) WorkerResult.Stopped
-                else work(context, it)
+            val results = uriStringArray.asList().map { uriString ->
+                when {
+                    !context.checkPathPermission(uriString.toUri()) -> WorkerResult.Failure(java.lang.Exception("don't have permission"))
+                    isStopped -> WorkerResult.Stopped
+                    else -> doWork(context, uriString)
+                }
             }
             if (results.none { it is WorkerResult.Failure || it is WorkerResult.Stopped }) Result.success()
             else Result.failure(
                 Data.Builder().putString(
-                    "data",
+                    "error",
                     results.joinToString(",") {
                         when (it) {
                             is WorkerResult.Stopped -> "stop"
@@ -124,22 +140,23 @@ abstract class BigTimeWorker(
         }
     }
 
-    abstract suspend fun work(context: Context, path: String): WorkerResult
+    abstract suspend fun doWork(context: Context, uriString: String): WorkerResult
 }
 
 class FolderWorker(context: Context, workerParams: WorkerParameters) :
     BigTimeWorker(context, workerParams) {
-    override suspend fun work(context: Context, path: String): WorkerResult {
+    override suspend fun doWork(context: Context, uriString: String): WorkerResult {
         return try {
-            val fileInstance = getFileInstanceAsync(path, context)
-            val record = context.requireDatabase.sizeDao().search(path)
+            val uri = uriString.toUri()
+            val fileInstance = getFileInstanceAsync(context, uri)
+            val record = context.requireDatabase.sizeDao().search(uri)
             if (record != null && record.lastUpdateTime > fileInstance.directory.lastModifiedTime) return WorkerResult.SizeWorker(
                 record.size
             )
             val listSafe = fileInstance.list()
             val mapNullNull = listSafe.directories.map {
                 if (isStopped) return WorkerResult.Stopped
-                work(context, it.fullPath)
+                doWork(context, it.fullPath)
             }
             val filter =
                 mapNullNull.filter { it is WorkerResult.Failure || it is WorkerResult.Stopped }
@@ -162,7 +179,7 @@ class FolderWorker(context: Context, workerParams: WorkerParameters) :
                         acc + s
                     }
             context.requireDatabase.sizeDao()
-                .save(FileSizeRecord(path, size, System.currentTimeMillis()))
+                .save(FileSizeRecord(uri, size, System.currentTimeMillis()))
             WorkerResult.SizeWorker(size)
         } catch (e: Exception) {
             Log.e(TAG, "work: ", e)
@@ -180,19 +197,21 @@ class FolderWorker(context: Context, workerParams: WorkerParameters) :
 class MDWorker(context: Context, workerParams: WorkerParameters) :
     BigTimeWorker(context, workerParams) {
 
-    override suspend fun work(context: Context, path: String): WorkerResult {
+    override suspend fun doWork(context: Context, uriString: String): WorkerResult {
         return try {
-            val fileInstance = getFileInstanceAsync(path, context)
+            val uri = uriString.toUri()
+            val fileInstance = getFileInstanceAsync(context, uri)
             val listSafe = fileInstance.list()
             listSafe.directories.mapNullNull {
                 if (isStopped) return WorkerResult.Stopped
-                work(context, it.fullPath)
+                doWork(context, it.fullPath)
             }
             listSafe.files.forEach {
                 if (isStopped) return WorkerResult.Stopped
-                val search = context.requireDatabase.mdDao().search(it.fullPath)
+                val child = uri.buildUpon().path(it.fullPath).build()
+                val search = context.requireDatabase.mdDao().search(child)
                 if ((search?.lastUpdateTime ?: 0) <= it.lastModifiedTime) {
-                    processAndSave(fileInstance, it, context)
+                    processAndSave(fileInstance, it, context, child)
                 }
             }
             WorkerResult.Success
@@ -202,12 +221,17 @@ class MDWorker(context: Context, workerParams: WorkerParameters) :
 
     }
 
-    private suspend fun processAndSave(fileInstance: FileInstance, it: FileItemModel, context: Context) {
+    private suspend fun processAndSave(
+        fileInstance: FileInstance,
+        it: FileItemModel,
+        context: Context,
+        child: Uri
+    ) {
         getFileMD5(
-            fileInstance.toChild(it.name, true, false), closeable
+            fileInstance.toChild(it.name, NotCreate), closeable
         )?.let { data ->
             context.requireDatabase.mdDao()
-                .save(FileMDRecord(it.fullPath, data, System.currentTimeMillis()))
+                .save(FileMDRecord(child, data, System.currentTimeMillis()))
         }
     }
 
@@ -218,19 +242,21 @@ class MDWorker(context: Context, workerParams: WorkerParameters) :
 class TorrentWorker(context: Context, workerParams: WorkerParameters) :
     BigTimeWorker(context, workerParams) {
 
-    override suspend fun work(context: Context, path: String): WorkerResult {
+    override suspend fun doWork(context: Context, uriString: String): WorkerResult {
         return try {
-            val fileInstance = getFileInstanceAsync(path, context)
+            val uri = uriString.toUri()
+            val fileInstance = getFileInstanceAsync(context, uri)
             val listSafe = fileInstance.list()
             listSafe.directories.mapNullNull {
                 if (isStopped) return WorkerResult.Stopped
-                work(context, it.fullPath)
+                doWork(context, it.fullPath)
             }
             listSafe.files.filterIsInstance<TorrentFileItemModel>().forEach {
                 if (isStopped) return WorkerResult.Stopped
-                val search = context.requireDatabase.torrentDao().search(it.fullPath)
+                val child = uri.buildUpon().path(it.fullPath).build()
+                val search = context.requireDatabase.torrentDao().search(child)
                 if ((search?.lastUpdateTime ?: 0) <= it.lastModifiedTime) {
-                    processAndSave(fileInstance, it, context)
+                    processAndSave(fileInstance, it, context, child)
                 }
             }
             WorkerResult.Success
@@ -241,15 +267,20 @@ class TorrentWorker(context: Context, workerParams: WorkerParameters) :
 
     }
 
-    private suspend fun processAndSave(fileInstance: FileInstance, it: TorrentFileItemModel, context: Context) {
+    private suspend fun processAndSave(
+        fileInstance: FileInstance,
+        it: TorrentFileItemModel,
+        context: Context,
+        child: Uri
+    ) {
         TorrentFile.getTorrentName(
-            fileInstance.toChild(it.name, true, false),
+            fileInstance.toChild(it.name, NotCreate),
             closeable
         ).takeIf { it.isNotEmpty() }?.let { torrentName ->
             context.requireDatabase.torrentDao()
                 .save(
                     FileTorrentRecord(
-                        it.fullPath,
+                        child,
                         torrentName,
                         System.currentTimeMillis()
                     )

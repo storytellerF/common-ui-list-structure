@@ -1,12 +1,25 @@
 package com.storyteller_f.giant_explorer.database
 
+import android.net.Uri
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
+
+class Converters {
+    @TypeConverter
+    fun parseUri(uriString: String?): Uri? {
+        return uriString?.let { Uri.parse(it) }
+    }
+
+    @TypeConverter
+    fun stringifyUri(date: Uri?): String? {
+        return date?.toString()
+    }
+}
 
 @Entity(tableName = "file-size-record")
 class FileSizeRecord(
     @PrimaryKey
-    val absolutePath: String,
+    val uri: Uri,
     val size: Long,
     val lastUpdateTime: Long
 )
@@ -14,7 +27,7 @@ class FileSizeRecord(
 @Entity(tableName = "file-md-record")
 class FileMDRecord(
     @PrimaryKey
-    val absolutePath: String,
+    val uri: Uri,
     val data: String,
     val lastUpdateTime: Long
 )
@@ -22,25 +35,25 @@ class FileMDRecord(
 @Entity(tableName = "file-torrent")
 class FileTorrentRecord(
     @PrimaryKey
-    val absolutePath: String,
+    val uri: Uri,
     val torrent: String,
     val lastUpdateTime: Long
 )
 
-@Entity(tableName = "big-time-task", primaryKeys = ["absolutePath", "workerName"])
+@Entity(tableName = "big-time-task", primaryKeys = ["uri", "category"])
 class BigTimeTask(
-    val absolutePath: String,
+    val uri: Uri,
     val enable: Boolean,
-    val workerName: String
+    val category: String,
 )
 
 @Dao
 interface FileSizeRecordDao {
-    @Query("select * from `file-size-record` where absolutePath = :absolutePath")
-    suspend fun search(absolutePath: String): FileSizeRecord?
+    @Query("select * from `file-size-record` where uri = :uri")
+    suspend fun search(uri: Uri): FileSizeRecord?
 
-    @Query("select * from `file-size-record` where absolutePath = :absolutePath")
-    fun searchInThread(absolutePath: String): FileSizeRecord?
+    @Query("select * from `file-size-record` where uri = :uri")
+    fun searchInThread(uri: Uri): FileSizeRecord?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun save(record: FileSizeRecord)
@@ -48,8 +61,8 @@ interface FileSizeRecordDao {
 
 @Dao
 interface FileMDRecordDao {
-    @Query("select * from `file-md-record` where absolutePath = :absolutePath")
-    suspend fun search(absolutePath: String): FileMDRecord?
+    @Query("select * from `file-md-record` where uri = :uri")
+    suspend fun search(uri: Uri): FileMDRecord?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun save(record: FileMDRecord)
@@ -57,8 +70,8 @@ interface FileMDRecordDao {
 
 @Dao
 interface FileTorrentRecordDao {
-    @Query("select * from `file-torrent` where absolutePath = :absolutePath")
-    suspend fun search(absolutePath: String): FileTorrentRecord?
+    @Query("select * from `file-torrent` where uri = :uri")
+    suspend fun search(uri: Uri): FileTorrentRecord?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun save(record: FileTorrentRecord)

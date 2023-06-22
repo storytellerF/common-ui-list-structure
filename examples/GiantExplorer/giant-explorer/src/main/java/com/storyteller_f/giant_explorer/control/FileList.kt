@@ -3,22 +3,26 @@ package com.storyteller_f.giant_explorer.control
 import android.content.ClipData
 import android.content.ClipDescription
 import android.content.Context
+import android.net.Uri
 import android.os.Build
 import android.view.DragEvent
 import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.app.ComponentActivity
 import androidx.core.view.DragStartHelper
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.PagingData
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.savedstate.SavedStateRegistryOwner
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ktx.context
 import com.storyteller_f.common_ktx.same
@@ -31,7 +35,6 @@ import com.storyteller_f.common_vm_ktx.combineDao
 import com.storyteller_f.common_vm_ktx.distinctUntilChangedBy
 import com.storyteller_f.common_vm_ktx.genericValueModel
 import com.storyteller_f.common_vm_ktx.keyPrefix
-import com.storyteller_f.common_vm_ktx.parentScope
 import com.storyteller_f.common_vm_ktx.svm
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.file_system.FileInstanceFactory
@@ -50,6 +53,7 @@ import com.storyteller_f.file_system_remote.SFtpFileInstance
 import com.storyteller_f.file_system_remote.ShareSpec
 import com.storyteller_f.file_system_remote.SmbFileInstance
 import com.storyteller_f.file_system_remote.WebDavFileInstance
+import com.storyteller_f.file_system_root.RootAccessFileInstance
 import com.storyteller_f.filter_core.Filter
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.control.plugin.stoppable
@@ -80,52 +84,75 @@ import java.util.Locale
 import kotlin.concurrent.thread
 import kotlin.coroutines.resumeWithException
 
-suspend fun getFileInstanceAsync(path: String, context: Context, root: String = FileInstanceFactory.publicFileSystemRoot) = suspendCancellableCoroutine {
+suspend fun getFileInstanceAsync(context: Context, uri: Uri) = suspendCancellableCoroutine {
     thread {
-        val result = Result.success(getFileInstance(path, context, root, it.stoppable()))
+        val result = Result.success(getFileInstance(context, uri, it.stoppable()))
         it.resumeWith(result)
     }
 }
 
-fun getFileInstance(path: String, context: Context, root: String = FileInstanceFactory.publicFileSystemRoot, stoppableTask: StoppableTask = StoppableTask.Blocking): FileInstance {
+fun getFileInstance(
+    context: Context,
+    uri: Uri,
+    stoppableTask: StoppableTask = StoppableTask.Blocking
+): FileInstance {
+    val r = RootAccessFileInstance.remote
+    val scheme = uri.scheme!!
     return when {
-        root.startsWith("ftp://") -> FtpFileInstance(path, root, RemoteSpec.parse(root))
-        root.startsWith("smb://") -> SmbFileInstance(path, root, ShareSpec.parse(root))
-        root.startsWith("sftp://") -> SFtpFileInstance(path, root, RemoteSpec.parse(root))
-        root.startsWith("ftpes://") || root.startsWith("ftps://") -> FtpsFileInstance(path, root, RemoteSpec.parse(root))
-        root.startsWith("webdav://") -> WebDavFileInstance(path, root, ShareSpec.parse(root))
-        else -> FileInstanceFactory.getFileInstance(path, context, root, stoppableTask)
+        scheme == RootAccessFileInstance.rootFileSystemScheme && r != null -> RootAccessFileInstance(
+            r,
+            uri
+        )
+
+        scheme == "ftp" -> FtpFileInstance(RemoteSpec.parse(uri), uri)
+        scheme == "smb" -> SmbFileInstance(ShareSpec.parse(uri), uri)
+        scheme == "sftp" -> SFtpFileInstance(RemoteSpec.parse(uri), uri)
+        scheme == "ftpes" || scheme == "ftps" -> FtpsFileInstance(RemoteSpec.parse(uri), uri)
+        scheme == "webdav" -> WebDavFileInstance(ShareSpec.parse(uri), uri)
+        else -> FileInstanceFactory.getFileInstance(context, uri, stoppableTask)
     }
 }
 
-class FileListObserver<T : Fragment>(
-    private val fragment: T,
+class FileListObserver<T>(
+    private val owner: T,
     args: () -> FileListFragmentArgs,
-    val scope: VMScope = fragment.parentScope
-) {
+    val scope: VMScope
+) where T : ViewModelStoreOwner, T : SavedStateRegistryOwner {
     val fileInstance: FileInstance?
         get() = session.fileInstance.value
     val selected: List<Pair<DataItemHolder, Int>>?
         get() = session.selected.value
-    val filters by keyPrefix({ "test" }, fragment.svm({}, scope) { it, _ ->
+    val filters by keyPrefix({ "test" }, owner.svm({}, scope) { it, _ ->
         StateValueModel(it, default = listOf<Filter<FileSystemItemModel>>())
     })
-    val sort by keyPrefix({ "sort" }, fragment.svm({}, scope) { it, _ ->
+    val sort by keyPrefix({ "sort" }, owner.svm({}, scope) { it, _ ->
         StateValueModel(it, default = listOf<SortChain<FileSystemItemModel>>())
     })
-    val filterHiddenFile by fragment.svm({}, scope) { it, _ ->
+    val filterHiddenFile by owner.svm({}, scope) { it, _ ->
         StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
     }
-    private val displayGrid by keyPrefix("display", fragment.vm({}, scope) { _ ->
+    private val displayGrid by keyPrefix("display", owner.vm({}, scope) { _ ->
         genericValueModel(false)
     })
 
-    private val session by fragment.vm(args) {
-        FileExplorerSession(fragment.requireActivity().application, it.path, it.root)
+    private val session by owner.vm(args) {
+        FileExplorerSession(
+            when (owner) {
+                is Fragment -> owner.requireActivity().application
+                is ComponentActivity -> owner.application
+                else -> throw Exception("unrecognized ${owner.javaClass}")
+            }, it.uri
+        )
     }
 
-    private val data by fragment.search(
-        { fragment.requireDatabase to session.selected },
+    private val data by owner.search(
+        {
+            when (owner) {
+                is Fragment -> owner.requireDatabase
+                is Context -> owner.requireDatabase
+                else -> throw Exception("unrecognized ${owner.javaClass}")
+            } to session.selected
+        },
         { (database, selected) ->
             SearchProducer(fileServiceBuilder(database)) { fileModel, _, sq ->
                 FileItemHolder(fileModel, selected.value.orEmpty(), sq.display)
@@ -138,7 +165,7 @@ class FileListObserver<T : Fragment>(
         rightSwipe: (FileItemHolder) -> Unit,
         updatePath: (String) -> Unit
     ) {
-        with(fragment) {
+        with(owner) {
             setup(listWithState, adapter, rightSwipe, updatePath)
         }
 
@@ -150,12 +177,13 @@ class FileListObserver<T : Fragment>(
         rightSwipe: (FileItemHolder) -> Unit,
         updatePath: (String) -> Unit
     ) {
+
         displayGrid.data.observe(owner) {
             listWithState.recyclerView.isVisible = false
             adapter.submitData(cycle, PagingData.empty())
             listWithState.recyclerView.layoutManager = when {
-                it -> GridLayoutManager(requireContext(), 3)
-                else -> LinearLayoutManager(requireContext())
+                it -> GridLayoutManager(listWithState.context, 3)
+                else -> LinearLayoutManager(listWithState.context)
             }
         }
         fileList(
@@ -190,28 +218,51 @@ fun LifecycleOwner.fileList(
 ) {
     val owner = if (this is Fragment) viewLifecycleOwner else this
     context {
-        listWithState.sourceUp(adapter, owner, plugLayoutManager = false, dampingSwipe = { viewHolder, direction ->
-            if (direction == ItemTouchHelper.LEFT)
-                session.selected.toggle(viewHolder)
-            else rightSwipe(viewHolder.itemHolder as FileItemHolder)
-        }, flash = ListWithState.Companion::remote)
+        listWithState.sourceUp(
+            adapter,
+            owner,
+            plugLayoutManager = false,
+            dampingSwipe = { viewHolder, direction ->
+                if (direction == ItemTouchHelper.LEFT)
+                    session.selected.toggle(viewHolder)
+                else rightSwipe(viewHolder.itemHolder as FileItemHolder)
+            },
+            flash = ListWithState.Companion::remote
+        )
         session.fileInstance.observe(owner) {
             updatePath(it.path)
         }
-        combineDao(session.fileInstance, filterHiddenFileLiveData, filtersLiveData.same, sortLivedata.same, display).observe(owner, Observer {
+        combineDao(
+            session.fileInstance,
+            filterHiddenFileLiveData,
+            filtersLiveData.same,
+            sortLivedata.same,
+            display
+        ).observe(owner, Observer {
             val fileInstance = it.d1 ?: return@Observer
             val filterHiddenFile = it.d2 ?: return@Observer
             val filters = it.d3 ?: return@Observer
             val sortChains = it.d4 ?: return@Observer
-            val path = fileInstance.path
+            val path = fileInstance.uri
             //检查权限
             owner.lifecycleScope.launch {
                 if (!checkPathPermission(path)) {
-                    requestPermissionForSpecialPath(path)
+                    if (requestPermissionForSpecialPath(path)) {
+                        adapter.refresh()
+                    }
                 }
             }
 
-            viewModel.observerInScope(owner, FileExplorerSearch(fileInstance, filterHiddenFile, filters, sortChains, if (it.d5 == true) "grid" else "")) { pagingData ->
+            viewModel.observerInScope(
+                owner,
+                FileExplorerSearch(
+                    fileInstance,
+                    filterHiddenFile,
+                    filters,
+                    sortChains,
+                    if (it.d5 == true) "grid" else ""
+                )
+            ) { pagingData ->
                 adapter.submitData(pagingData)
             }
         })
@@ -239,7 +290,8 @@ class FileItemHolder(
 }
 
 @BindItemHolder(FileItemHolder::class, type = "grid")
-class FileGridViewHolder(private val binding: ViewHolderFileGridBinding) : BindingViewHolder<FileItemHolder>(binding) {
+class FileGridViewHolder(private val binding: ViewHolderFileGridBinding) :
+    BindingViewHolder<FileItemHolder>(binding) {
     override fun bindData(itemHolder: FileItemHolder) {
         binding.fileName.text = itemHolder.file.name
         binding.fileIcon.fileIcon(itemHolder.file.item)
@@ -268,7 +320,9 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
             it.text = i.md
         }
 
-        binding.torrentName.setVisible(item, { it: TorrentFileItemModel -> it.torrentName.valid() }) { it, i ->
+        binding.torrentName.setVisible(
+            item,
+            { it: TorrentFileItemModel -> it.torrentName.valid() }) { it, i ->
             it.text = i.torrentName
         }
 
@@ -289,9 +343,8 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
 
 @RequiresApi(Build.VERSION_CODES.N)
 private fun FileSystemItemModel.dragSupport(root: ConstraintLayout) {
-    val fullPath = fullPath
     DragStartHelper(root) { view: View, _: DragStartHelper ->
-        val clipData = ClipData.newPlainText(FileListFragment.clipDataKey, fullPath)
+        val clipData = ClipData.newPlainText(FileListFragment.clipDataKey, uri.toString())
         val flags = View.DRAG_FLAG_GLOBAL or View.DRAG_FLAG_GLOBAL_URI_READ
         view.startDragAndDrop(clipData, View.DragShadowBuilder(view), null, flags)
     }.apply {
@@ -308,7 +361,8 @@ private fun FileSystemItemModel.dragSupport(root: ConstraintLayout) {
                 }
 
                 DragEvent.ACTION_DROP -> {
-                    v.findActionReceiverOrNull<FileListFragment>()?.handleClipData(event.clipData, fullPath)
+                    v.findActionReceiverOrNull<FileListFragment>()
+                        ?.pasteFiles(event.clipData, uri)
                     true
                 }
 
@@ -340,7 +394,13 @@ fun format1024(args: Long): String {
     return String.format(Locale.CHINA, "%.2f %s", size, flags[flag])
 }
 
-class FileExplorerSearch(val path: FileInstance, val filterHiddenFile: Boolean, val filters: List<Filter<FileSystemItemModel>>, val sort: List<SortChain<FileSystemItemModel>>, val display: String)
+class FileExplorerSearch(
+    val path: FileInstance,
+    val filterHiddenFile: Boolean,
+    val filters: List<Filter<FileSystemItemModel>>,
+    val sort: List<SortChain<FileSystemItemModel>>,
+    val display: String
+)
 
 fun fileServiceBuilder(
     database: LocalDatabase
@@ -403,17 +463,17 @@ private suspend fun fileModelBuilder(
     database: LocalDatabase
 ): FileModel {
     val length = if (model is FileItemModel) {
-        database.mdDao().search(model.fullPath)?.let {
+        database.mdDao().search(model.uri)?.let {
             if (it.lastUpdateTime > model.lastModifiedTime) model.md = it.data
         }
         if (model is TorrentFileItemModel)
-            database.torrentDao().search(model.fullPath)?.let {
+            database.torrentDao().search(model.uri)?.let {
                 if (it.lastUpdateTime > model.lastModifiedTime) model.torrentName = it.torrent
             }
         model.size
     } else {
         //从数据库中查找
-        val directory = database.sizeDao().search(model.fullPath)
+        val directory = database.sizeDao().search(model.uri)
         if (directory != null && directory.lastUpdateTime > model.lastModifiedTime) {
             directory.size
         } else -1

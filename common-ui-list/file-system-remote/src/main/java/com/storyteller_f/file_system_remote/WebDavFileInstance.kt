@@ -1,5 +1,7 @@
 package com.storyteller_f.file_system_remote
 
+import android.net.Uri
+import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
@@ -10,7 +12,7 @@ import java.io.FileOutputStream
 
 val webdavInstances = mutableMapOf<ShareSpec, WebDavInstance>()
 
-class WebDavFileInstance(path: String, fileSystemRoot: String, val spec: ShareSpec) : FileInstance(path, fileSystemRoot) {
+class WebDavFileInstance(private val spec: ShareSpec, uri: Uri) : FileInstance(uri) {
 
     val instance = getWebDavInstance()
 
@@ -28,6 +30,10 @@ class WebDavFileInstance(path: String, fileSystemRoot: String, val spec: ShareSp
         TODO("Not yet implemented")
     }
 
+    override fun getFileLength(): Long {
+        TODO("Not yet implemented")
+    }
+
     override fun getFileInputStream(): FileInputStream {
         TODO("Not yet implemented")
     }
@@ -38,10 +44,11 @@ class WebDavFileInstance(path: String, fileSystemRoot: String, val spec: ShareSp
 
     override fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
         instance.list(path).forEach {
-            if (it.isFile) fileItems.add(FileItemModel(it.name, it.path, false, it.lastModified, false, File(it.path).extension))
-            else {
-                directoryItems.add(DirectoryItemModel(it.name, it.path, false, it.lastModified, false))
-            }
+            val (file, child) = child(it.name)
+            if (it.isFile)
+                fileItems.add(FileItemModel(it.name, child, false, it.lastModified, false, file.extension))
+            else
+                directoryItems.add(DirectoryItemModel(it.name, child, false, it.lastModified, false))
         }
     }
 
@@ -89,11 +96,11 @@ class WebDavFileInstance(path: String, fileSystemRoot: String, val spec: ShareSp
         TODO("Not yet implemented")
     }
 
-    override fun toChild(name: String, isFile: Boolean, createWhenNotExists: Boolean): FileInstance {
+    override fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         TODO("Not yet implemented")
     }
 
-    override fun changeToChild(name: String, isFile: Boolean, createWhenNotExists: Boolean) {
+    override fun changeToChild(name: String, policy: FileCreatePolicy) {
         TODO("Not yet implemented")
     }
 

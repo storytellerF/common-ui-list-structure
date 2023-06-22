@@ -4,9 +4,10 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
-import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.BaseContextFileInstance
+import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
@@ -15,8 +16,8 @@ import java.io.*
 /**
  * 标识一个apk 文件
  */
-class AppLocalFileInstance(context: Context, path: String) : BaseContextFileInstance(context, path, FileInstanceFactory.publicFileSystemRoot) {
-    override fun getFile() = FileItemModel(name, path, false, 0, false, "apk")
+class AppLocalFileInstance(context: Context, uri: Uri?) : BaseContextFileInstance(context, uri,) {
+    override fun getFile() = FileItemModel(name, uri, false, 0, false, "apk")
 
     override fun getDirectory(): DirectoryItemModel {
         TODO("Not yet implemented")
@@ -72,11 +73,11 @@ class AppLocalFileInstance(context: Context, path: String) : BaseContextFileInst
         TODO("Not yet implemented")
     }
 
-    override fun toChild(name: String, isFile: Boolean, createWhenNotExists: Boolean): FileInstance {
+    override fun toChild(name: String, policy: FileCreatePolicy?): FileInstance {
         TODO("Not yet implemented")
     }
 
-    override fun changeToChild(name: String, isFile: Boolean, createWhenNotExists: Boolean) {
+    override fun changeToChild(name: String, policy: FileCreatePolicy?) {
         TODO("Not yet implemented")
     }
 

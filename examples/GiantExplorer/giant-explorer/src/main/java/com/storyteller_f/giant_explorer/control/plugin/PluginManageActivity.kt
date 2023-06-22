@@ -1,6 +1,7 @@
 package com.storyteller_f.giant_explorer.control.plugin
 
 import android.os.Bundle
+import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
@@ -49,7 +50,7 @@ class PluginManageActivity : CommonActivity() {
             dialog(RequestPathDialog::class.java, RequestPathDialog.RequestPathResult::class.java, null) { result ->
                 lifecycleScope.launch {
                     result.path.safeLet {
-                        getFileInstance(it, this@PluginManageActivity, stoppableTask = stoppable())
+                        getFileInstance(this@PluginManageActivity, File(it).toUri(), stoppableTask = stoppable())
                     }.safeLet { pluginFile ->
                         lifecycleScope.launch {
                             addPlugin(pluginFile, pluginRoot)
@@ -68,7 +69,7 @@ class PluginManageActivity : CommonActivity() {
         val name = pluginFile.name
         val destPluginFile = File(pluginRoot, name).ensureFile() ?: return
         withContext(Dispatchers.IO) {
-            FileCopyOp(this.stoppable(), pluginFile, getFileInstanceAsync(destPluginFile.absolutePath, this@PluginManageActivity, "/"), this@PluginManageActivity).call()
+            FileCopyOp(this.stoppable(), pluginFile, getFileInstanceAsync( this@PluginManageActivity, destPluginFile.toUri()),this@PluginManageActivity).call()
         }
     }
 

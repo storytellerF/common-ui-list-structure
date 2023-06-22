@@ -1,8 +1,10 @@
 package com.storyteller_f.giant_explorer.control.task
 
+import android.net.Uri
 import android.os.Parcelable
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.core.net.toUri
 import androidx.navigation.fragment.findNavController
 import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.common_ui.*
@@ -18,11 +20,11 @@ class AddTaskFragment : SimpleFragment<FragmentAddTaskBinding>(FragmentAddTaskBi
 
     override fun onBindViewEvent(binding: FragmentAddTaskBinding) {
         binding.button.setOnClickListener {
-            val result = Result(binding.checkBox2.isChecked, binding.path.text.toString(), binding.selectWorkerName.selectedItem.toString())
+            val result = Result(binding.checkBox2.isChecked, binding.path.text.toString().toUri(), binding.selectWorkerName.selectedItem.toString())
             scope.launch {
                 val waitingDialog = waitingDialog()
                 try {
-                    requireDatabase.bigTimeDao().add(BigTimeTask(result.path, result.enable, result.workerName))
+                    requireDatabase.bigTimeDao().add(BigTimeTask(result.uri, result.enable, result.category))
                     setFragmentResult(result)
                     findNavController().navigateUp()
                 } catch (e: Exception) {
@@ -43,7 +45,7 @@ class AddTaskFragment : SimpleFragment<FragmentAddTaskBinding>(FragmentAddTaskBi
     }
 
     @Parcelize
-    class Result(val enable: Boolean, val path: String, val workerName: String) : Parcelable
+    class Result(val enable: Boolean, val uri: Uri, val category: String) : Parcelable
     companion object {
         const val requestKey = "test"
     }

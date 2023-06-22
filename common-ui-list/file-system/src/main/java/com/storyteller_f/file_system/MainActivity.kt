@@ -1,21 +1,21 @@
 package com.storyteller_f.file_system
 
 import android.Manifest
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.provider.DocumentsContract
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.fragment.app.Fragment
-import com.storyteller_f.common_ktx.context
+import com.storyteller_f.compat_ktx.getParcelableCompat
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.file_system.util.FileUtility
 import com.storyteller_f.multi_core.StoppableTask
@@ -31,17 +31,17 @@ class MainActivity : AppCompatActivity() {
         const val REQUEST_MANAGE = "REQUEST_MANAGE"
         const val REQUEST_CODE_EMULATED = 3
 
-        fun Intent.getBundle(type: String, path: String) {
+        fun Intent.putBundle(type: String, uri: Uri) {
             putExtras(
                 Bundle().apply {
-                    putString("path", path)
+                    putParcelable("path", uri)
                     putString("permission", type)
                 }
             )
         }
 
         fun Intent.fromBundle() = extras!!.let {
-            it.getString("permission") to it.getString("path")
+            it.getString("permission")!! to it.getParcelableCompat("path", Uri::class.java)!!
         }
 
     }
@@ -49,15 +49,15 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val fromBundle = intent.fromBundle()
-        when (fromBundle.first!!) {
+        val (code, uri) = intent.fromBundle()
+        when (code) {
             REQUEST_EMULATED -> ActivityCompat.requestPermissions(
                 this,
                 arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
                 REQUEST_CODE_EMULATED
             )
-            REQUEST_SAF_EMULATED -> requestForEmulatedSAF(fromBundle)
-            REQUEST_SAF_SDCARD -> requestForSdcard(fromBundle)
+            REQUEST_SAF_EMULATED -> requestForEmulatedSAF(uri)
+            REQUEST_SAF_SDCARD -> requestForSdcard(uri)
             REQUEST_MANAGE -> requestForManageFile()
         }
     }
@@ -67,56 +67,51 @@ class MainActivity : AppCompatActivity() {
             registerForActivityResult(
                 ActivityResultContracts.StartActivityForResult()
             ) { result: ActivityResult ->
-                val ok = result.resultCode == RESULT_OK
-                //boolean is=Environment.isExternalStorageManager();
-                if (ok) {
-                    toast()
+                if (result.resultCode == RESULT_OK) {
+                    success()
                 } else failure()
             }.launch(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
         } else throw Exception("错误使用request manage！")
     }
 
-    private fun requestForSdcard(fromBundle: Pair<String?, String?>) {
-
-        val prefix = FileInstanceFactory.getPrefix(fromBundle.second!!, this, stoppableTask =  StoppableTask.Blocking)
+    private fun requestForSdcard(path: Uri) {
+        val prefix = FileInstanceFactory.getPrefix(this, path, stoppableTask =  StoppableTask.Blocking)
         registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) {
-            if (it.resultCode == RESULT_OK) {
-                val uri = it.data?.data
-                if (uri != null) {
-                    FileSystemUriSaver.getInstance().saveUri(DocumentLocalFileInstance.mountedKey, this, uri)
-                    toast()
-                    return@registerForActivityResult
-                }
-            }
+            if (processResult(it, prefix)) return@registerForActivityResult
             failure()
         }.launch(
-            FileUtility.produceSafRequestIntent(
-                prefix,
-                this
-            )
+            FileUtility.produceSafRequestIntent(this, prefix)
         )
     }
 
-    private fun requestForEmulatedSAF(fromBundle: Pair<String?, String?>) {
-        val prefix = FileInstanceFactory.getPrefix(fromBundle.second!!, this, stoppableTask = StoppableTask.Blocking)
+    private fun processResult(it: ActivityResult, prefix: String): Boolean {
+        if (it.resultCode == RESULT_OK) {
+            val uri = it.data?.data
+            if (uri != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                }
+                FileSystemUriSaver.getInstance().saveUri(this, prefix, uri)
+                success()
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun requestForEmulatedSAF(path: Uri) {
+        val prefix = FileInstanceFactory.getPrefix(this, path, stoppableTask = StoppableTask.Blocking)
         registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) {
-            if (it.resultCode == RESULT_OK) {
-                val uri = it.data?.data
-                if (uri != null) {
-                    FileSystemUriSaver.getInstance().saveUri(DocumentLocalFileInstance.emulatedKey, this, uri)
-                    toast()
-                    return@registerForActivityResult
-                }
-            }
+            if (processResult(it, prefix)) return@registerForActivityResult
             failure()
         }.launch(
             FileUtility.produceSafRequestIntent(
-                prefix,
-                this
+                this,
+                prefix
             )
         )
     }
@@ -126,7 +121,7 @@ class MainActivity : AppCompatActivity() {
         finish()
     }
 
-    private fun toast() {
+    private fun success() {
         Toast.makeText(this, "授予权限成功", Toast.LENGTH_SHORT).show()
         task?.complete(true)
         finish()
@@ -140,7 +135,7 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_EMULATED) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                toast()
+                success()
                 return
             }
         }
@@ -148,25 +143,22 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-fun Fragment.checkPathPermission(dest: String) = context {
-    checkPathPermission(dest)
-}
-
 /**
  * @return 返回是否含有权限。对于没有权限的，调用 requestPermissionForSpecialPath
  */
-fun Context.checkPathPermission(dest: String): Boolean {
+fun Context.checkPathPermission(uri: Uri): Boolean {
+    if (uri.scheme != ContentResolver.SCHEME_FILE) return true
+    val prefix = FileInstanceFactory.getPrefix(this, uri, StoppableTask.Blocking)
     return when {
-        dest.startsWith(FileInstanceFactory.rootUserEmulatedPath) -> when {
+        prefix == FileInstanceFactory.rootUserEmulatedPath -> when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> Environment.isExternalStorageManager()
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> DocumentLocalFileInstance.getEmulated(this, dest).exists()
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> DocumentLocalFileInstance.getEmulated(this, uri, prefix).exists()
             else -> ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
         }
-        dest == FileInstanceFactory.emulatedRootPath -> true
-        dest == "/storage" -> true
-        dest.startsWith("/storage") -> when {
+        prefix == "fake" -> true
+        uri.path!!.startsWith("/storage") -> when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> Environment.isExternalStorageManager()
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> DocumentLocalFileInstance.getMounted(this, dest).exists()
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> DocumentLocalFileInstance.getMounted(this, uri, prefix).exists()
             else -> ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
         }
         else -> ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED

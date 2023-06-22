@@ -3,9 +3,6 @@ package com.storyteller_f.file_system;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.Binder;
-
-import com.topjohnwu.superuser.nio.FileSystemManager;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -23,10 +20,7 @@ public class FileSystemUriSaver {
     }
 
     @Nullable
-    public FileSystemManager remote;
-
-    @Nullable
-    public Uri savedUri(String sharedPreferenceKey, Context context) {
+    public Uri savedUri(Context context, String sharedPreferenceKey) {
         if (!documentRootCache.containsKey(sharedPreferenceKey)) {
             var sharedPreferences = getSharedPreferences(context);
             String uriString = sharedPreferences.getString(sharedPreferenceKey, null);
@@ -37,7 +31,7 @@ public class FileSystemUriSaver {
         return documentRootCache.get(sharedPreferenceKey);
     }
 
-    public void saveUri(String key, Context context, Uri uri) {
+    public void saveUri(Context context, String key, Uri uri) {
         var sharedPreferences = getSharedPreferences(context);
         sharedPreferences.edit().putString(key, uri.toString()).apply();
         documentRootCache.put(key, uri);
@@ -47,8 +41,9 @@ public class FileSystemUriSaver {
         if (documentRootCache.isEmpty()) {
             var sharedPreferences = getSharedPreferences(context);
             for (String k : sharedPreferences.getAll().keySet()) {
-                String string = sharedPreferences.getString(k, "");
-                documentRootCache.put(k, Uri.parse(string));
+                String uriString = sharedPreferences.getString(k, null);
+                if (uriString != null)
+                    documentRootCache.put(k, Uri.parse(uriString));
             }
         }
         return new ArrayList<>(documentRootCache.keySet());

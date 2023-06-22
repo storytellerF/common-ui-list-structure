@@ -30,8 +30,10 @@ import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ktx.safeLet
 import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.*
-import com.storyteller_f.file_system.FileInstanceFactory
+import com.storyteller_f.file_system.instance.Create
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.NotCreate
+import com.storyteller_f.file_system.model.FileSystemItemModelLite
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.*
 import com.storyteller_f.giant_explorer.BuildConfig
@@ -64,14 +66,12 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     private val fileOperateBinder
         get() = (requireContext() as MainActivity).fileOperateBinder
     private val uuid by keyPrefix({ "uuid" }, avm({}) {
-        GenericValueModel<String>().apply {
-            data.value = UUID.randomUUID().toString()
-        }
+        genericValueModel(UUID.randomUUID().toString())
     })
 
     private val args by navArgs<FileListFragmentArgs>()
 
-    private val observer = FileListObserver(this, { args })
+    private val observer = FileListObserver(this, { args }, selfScope)
 
     private val shareTarget by keyPrefix({ "shareTarget" }, pvm({}) {
         SharePasteTargetViewModel()
@@ -90,11 +90,12 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     }
 
     private fun openFolderInNewPage(holder: FileItemHolder) {
+        val uri = observer.fileInstance?.toChild(holder.file.name, NotCreate)?.uri ?: return
         startActivity(Intent(requireContext(), MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
             putExtra(
                 "start",
-                FileListFragmentArgs(holder.file.fullPath, args.root).toBundle()
+                FileListFragmentArgs(uri).toBundle()
             )
         })
     }
@@ -112,7 +113,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
             override fun onMenuItemSelected(menuItem: MenuItem) = when (menuItem.itemId) {
                 R.id.add_file -> addFile()
-                R.id.paste_file -> pasteFile()
+                R.id.paste_file -> pasteFiles()
                 else -> false
             }
 
@@ -135,40 +136,40 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             NewNameDialog.requestKey,
             NewNameDialog.NewNameResult::class.java
         ) { nameResult ->
-            observer.fileInstance?.toChild(nameResult.name, true, true)
+            observer.fileInstance?.toChild(nameResult.name, Create(true))
         }
         return true
     }
 
-    private fun pasteFile(): Boolean {
+    private fun pasteFiles(): Boolean {
         ContextCompat.getSystemService(requireContext(), ClipboardManager::class.java)
             ?.let { manager ->
                 manager.primaryClip?.let { data ->
-                    handleClipData(data)
+                    pasteFiles(data)
                 }
             }
         return true
     }
 
-    fun handleClipData(data: ClipData, destDirectory: String? = null) {
+    fun pasteFiles(data: ClipData, destDirectory: Uri? = null) {
         val key = uuid.data.value ?: return
         Log.i(TAG, "handleClipData: key $key")
         viewLifecycleOwner.lifecycleScope.launch {
             val dest = destDirectory.safeLet {
-                getFileInstance(it, requireContext(), stoppableTask = stoppable())
+                getFileInstance(requireContext(), it, stoppableTask = stoppable())
             } ?: observer.fileInstance ?: kotlin.run {
                 Toast.makeText(requireContext(), "无法确定目的地", Toast.LENGTH_LONG).show()
                 return@launch
             }
             val uriList = resolveUri(data)
             if (uriList.any {
-                    it.scheme == ContentResolver.SCHEME_FILE && it.path == destDirectory
+                    it.scheme == ContentResolver.SCHEME_FILE && it == destDirectory
                 }) {
                 //静默处理
                 return@launch
             }
             if (uriList.isNotEmpty()) {
-                startFileOperation(uriList, dest, key)
+                startPasteFiles(uriList, dest, key)
             }
 
         }
@@ -201,11 +202,14 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         return uriList
     }
 
-    private fun startFileOperation(
+    private fun startPasteFiles(
         uriList: List<Uri>,
         dest: FileInstance,
         key: String
     ) {
+        val items = uriList.map {
+            FileSystemItemModelLite(it.path!!, it)
+        }
         shareTarget.replace(uriList, dest)
         val fileOperateBinderLocal = fileOperateBinder ?: kotlin.run {
             Toast.makeText(requireContext(), "未连接服务", Toast.LENGTH_LONG).show()
@@ -217,10 +221,10 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             )?.getBoolean("notify_before_paste", true) == true
         ) {
             dialog(TaskConfirmDialog(), TaskConfirmDialog.Result::class.java) { r ->
-                if (r.confirm) fileOperateBinderLocal.compoundTask(uriList, dest, key)
+                if (r.confirm) fileOperateBinderLocal.moveOrCopy(dest, items,  null, false, key)
             }
         } else {
-            fileOperateBinderLocal.compoundTask(uriList, dest, key)
+            fileOperateBinderLocal.moveOrCopy(dest, items, null, false, key)
         }
     }
 
@@ -232,17 +236,17 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             findNavController().navigate(
                 R.id.action_fileListFragment_self,
                 FileListFragmentArgs(
-                    File(old.path, itemHolder.file.name).absolutePath,
-                    old.fileSystemRoot
+                    old.toChild(itemHolder.file.name, NotCreate).uri,
                 ).toBundle()
             )
         } else {
+            val uri = old.uri
             findNavController().navigate(
                 R.id.action_fileListFragment_to_openFileDialog,
-                OpenFileDialogArgs(itemHolder.file.fullPath, old.fileSystemRoot).toBundle()
+                OpenFileDialogArgs(uri).toBundle()
             )
             fragment(OpenFileDialog.key, OpenFileDialog.OpenFileResult::class.java) { r ->
-                if (old.fileSystemRoot != FileInstanceFactory.publicFileSystemRoot) return@fragment
+                if (uri.scheme != ContentResolver.SCHEME_FILE) return@fragment
                 val file = File(itemHolder.file.fullPath)
                 val uriForFile = FileProvider.getUriForFile(
                     requireContext(),
@@ -269,6 +273,8 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     @BindClickEvent(FileItemHolder::class, "fileIcon")
     fun fileMenu(view: View, itemHolder: FileItemHolder) {
         val fullPath = itemHolder.file.fullPath
+        val name = itemHolder.file.name
+        val uri = observer.fileInstance?.toChild(name, NotCreate)?.uri ?: return
         val key = uuid.data.value ?: return
 
         PopupMenu(requireContext(), view).apply {
@@ -286,7 +292,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                     R.id.move_to -> moveOrCopy(true, itemHolder)
                     R.id.copy_to -> moveOrCopy(false, itemHolder)
                     R.id.copy_file -> copyFilePathToClipboard(itemHolder)
-                    R.id.properties -> showPropertiesDialog(fullPath)
+                    R.id.properties -> showPropertiesDialog(uri)
                 }
                 true
             }
@@ -321,7 +327,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
     private fun defaultPluginManager(key: String) =
         object : DefaultPluginManager(requireContext()) {
-            override suspend fun requestPath(initPath: String?): String {
+            override suspend fun requestPath(initUri: String?): String {
                 val completableDeferred = CompletableDeferred<String>()
                 dialog(
                     RequestPathDialog(),
@@ -338,7 +344,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
         }
 
-    private fun showPropertiesDialog(fullPath: String) {
+    private fun showPropertiesDialog(fullPath: Uri) {
         findNavController().navigate(
             R.id.action_fileListFragment_to_propertiesDialog,
             PropertiesDialogArgs(fullPath).toBundle()
@@ -449,7 +455,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         dialog(RequestPathDialog(), RequestPathDialog.RequestPathResult::class.java) { result ->
             scope.launch {
                 result.path.safeLet {
-                    getFileInstance(it, requireContext(), stoppableTask = stoppable())
+                    getFileInstance(requireContext(), File(it).toUri(), stoppableTask = stoppable())
                 }.safeLet { dest ->
                     moveOrCopy(itemHolder, dest, move)
                 }

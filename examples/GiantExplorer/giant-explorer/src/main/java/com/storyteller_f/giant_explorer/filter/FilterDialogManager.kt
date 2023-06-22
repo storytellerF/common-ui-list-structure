@@ -92,11 +92,13 @@ class FilterViewModel(handle: SavedStateHandle, defaultValue: List<Filter<FileSy
     val data = MutableLiveData<List<Filter<FileSystemItemModel>>>()
 
     init {
-        val bundle = handle.get<Bundle>("filter")
-        val cache = bundle?.getSerializableCompat("data", FilterDataWrapper::class.java)
+        val key = "filter"
+        val dataKey = "data"
+        val bundle = handle.get<Bundle>(key)
+        val cache = bundle?.getSerializableCompat(dataKey, FilterDataWrapper::class.java)
         data.value = cache?.list?.buildFilterActive() ?: defaultValue
-        handle.setSavedStateProvider("filter") {
-            bundleOf("data" to FilterDataWrapper(data.value.saveFilterItem()))
+        handle.setSavedStateProvider(key) {
+            bundleOf(dataKey to FilterDataWrapper(data.value.saveFilterItem()))
         }
     }
 }

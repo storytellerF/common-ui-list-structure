@@ -1,6 +1,8 @@
 package com.storyteller_f.file_system.instance;
 
 
+import android.net.Uri;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 import androidx.core.util.ObjectsCompat;
@@ -17,27 +19,22 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+
+import kotlin.Pair;
 
 /**
  * notice 如果需要给name 设置值，那就需要提供path。或者自行处理
  */
 public abstract class FileInstance {
-    public String fileSystemRoot;
-    /**
-     * 仅用来标识对象，有些情况下是不能够操作的
-     */
-    protected File file;
+    //todo 考虑使用suspend 替代
     protected StoppableTask task;
+    @NonNull
+    public Uri uri;
 
-    /**
-     * @param path 路径
-     */
-    public FileInstance(@NonNull String path, @NonNull String fileSystemRoot) {
-        assert path.trim().length() != 0;
-        file = new File(path);
-        this.fileSystemRoot = fileSystemRoot;
+    public FileInstance(@NonNull Uri uri) {
+        this.uri = uri;
+        assert getPath().trim().length() != 0;
     }
 
     @Override
@@ -45,26 +42,34 @@ public abstract class FileInstance {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         FileInstance that = (FileInstance) o;
-        return ObjectsCompat.equals(file.getAbsolutePath(), that.file.getAbsolutePath()) && ObjectsCompat.equals(fileSystemRoot, that.fileSystemRoot);
+        return ObjectsCompat.equals(uri, that.uri);
     }
 
     @Override
     public int hashCode() {
-        return ObjectsCompat.hash(file.getAbsolutePath());
+        return ObjectsCompat.hash(uri);
     }
 
     @WorkerThread
     public abstract FileItemModel getFile();
+
     @WorkerThread
     public abstract DirectoryItemModel getDirectory();
+
     @WorkerThread
     public FileSystemItemModel getFileSystemItem() throws Exception {
         if (isFile()) return getFile();
         else return getDirectory();
     }
 
+    protected Pair<File, Uri> child(String it) {
+        var file = new File(getPath(), it);
+        var child = uri.buildUpon().path(file.getAbsolutePath()).build();
+        return new Pair<>(file, child);
+    }
+
     public String getName() {
-        return file.getName();
+        return new File(getPath()).getName();
     }
 
     /**
@@ -73,9 +78,7 @@ public abstract class FileInstance {
      * @return 文件字节长度
      */
     @WorkerThread
-    public long getFileLength() {
-        return file.length();
-    }
+    abstract public long getFileLength();
 
     @WorkerThread
     public abstract FileInputStream getFileInputStream() throws FileNotFoundException;
@@ -100,58 +103,13 @@ public abstract class FileInstance {
 
     private List<FileItemModel> buildFilesContainer() {
         return new ArrayList<>() {
-            @Override
-            public boolean add(FileItemModel fileItemModel) {
-                if (checkWhenAdd(file.getAbsolutePath(), fileItemModel.getFullPath(), true)) return super.add(fileItemModel);
-                return false;
-            }
 
-            @Override
-            public void add(int index, FileItemModel element) {
-                if (checkWhenAdd(file.getAbsolutePath(), element.getFullPath(), true)) super.add(index, element);
-            }
-
-            @Override
-            public boolean addAll(@NonNull Collection<? extends FileItemModel> c) {
-                for (FileItemModel fileItemModel : c) {
-                    if (!add(fileItemModel)) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-
-            @Override
-            public boolean addAll(int index, @NonNull Collection<? extends FileItemModel> c) {
-                return false;
-            }
         };
     }
 
     private List<DirectoryItemModel> buildDirectoryContainer() {
         return new ArrayList<>() {
-            @Override
-            public void add(int index, DirectoryItemModel element) {
-                if (checkWhenAdd(file.getAbsolutePath(), element.getFullPath(), false))
-                    super.add(index, element);
-            }
 
-            @Override
-            public boolean add(DirectoryItemModel directoryItemModel) {
-                if (checkWhenAdd(file.getAbsolutePath(), directoryItemModel.getFullPath(), false))
-                    return super.add(directoryItemModel);
-                return false;
-            }
-
-            @Override
-            public boolean addAll(int index, @NonNull Collection<? extends DirectoryItemModel> c) {
-                return false;
-            }
-
-            @Override
-            public boolean addAll(@NonNull Collection<? extends DirectoryItemModel> c) {
-                return false;
-            }
         };
     }
 
@@ -220,7 +178,7 @@ public abstract class FileInstance {
 
     @WorkerThread
     public String getPath() {
-        return file.getAbsolutePath();
+        return uri.getPath();
     }
     @WorkerThread
     public abstract boolean createFile() throws IOException;
@@ -236,17 +194,16 @@ public abstract class FileInstance {
      * 不应该考虑能否转换成功
      *
      * @param name                名称
-     * @param createWhenNotExists 是否创建
      * @return 返回子对象
      */
     @WorkerThread
-    public abstract FileInstance toChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) throws Exception;
+    public abstract FileInstance toChild(@NonNull String name, FileCreatePolicy policy) throws Exception;
 
     /**
      * 不应该考虑能否转换成功
      */
     @WorkerThread
-    public abstract void changeToChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) throws Exception;
+    public abstract void changeToChild(@NonNull String name, FileCreatePolicy policy) throws Exception;
 
     /**
      * 基本上完成的工作是构造函数应该做的
@@ -265,12 +222,9 @@ public abstract class FileInstance {
      */
     @WorkerThread
     public String getParent() {
-        return file.getParent();
+        return new File(getPath()).getParent();
     }
 
-    private boolean checkWhenAdd(String parent, String absolutePath, boolean isFile) {
-        return true;
-    }
 
     @WorkerThread
     public boolean isSymbolicLink() {

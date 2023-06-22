@@ -1,12 +1,15 @@
 package com.storyteller_f.file_system.instance.local;
 
 import android.content.Context;
+import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
+import com.storyteller_f.file_system.instance.Create;
+import com.storyteller_f.file_system.instance.FileCreatePolicy;
 import com.storyteller_f.file_system.model.DirectoryItemModel;
 import com.storyteller_f.file_system.model.FileItemModel;
 import com.storyteller_f.file_system.model.FileSystemItemModel;
@@ -21,12 +24,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
+import kotlin.Pair;
+
 @SuppressWarnings({"unused", "RedundantSuppression"})
 public class RegularLocalFileInstance extends LocalFileInstance {
     private static final String TAG = "ExternalFileInstance";
+    private File file = new File(getPath());
 
-    public RegularLocalFileInstance(Context context, String path, String fileSystemRoot) {
-        super(context, path, fileSystemRoot);
+    public RegularLocalFileInstance(Context context, Uri uri) {
+        super(context, uri);
     }
 
     @Override
@@ -47,31 +53,36 @@ public class RegularLocalFileInstance extends LocalFileInstance {
     }
 
     @Override
-    public LocalFileInstance toChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) throws Exception {
+    public LocalFileInstance toChild(@NonNull String name, FileCreatePolicy policy) throws Exception {
         File subFile = new File(file, name);
-        RegularLocalFileInstance internalFileInstance = new RegularLocalFileInstance(context, subFile.getAbsolutePath(), fileSystemRoot);
+        Uri uri = getUri(subFile);
+        RegularLocalFileInstance internalFileInstance = new RegularLocalFileInstance(context, uri);
         //检查目标文件是否存在
-        checkChildExistsOtherwiseCreate(subFile, isFile, createWhenNotExists);
+        checkChildExistsOtherwiseCreate(subFile, policy);
         return internalFileInstance;
     }
 
-    private void checkChildExistsOtherwiseCreate(File file, boolean isFile, boolean createWhenNotExists) throws Exception {
-        if (exists()) if (isFile()) throw new Exception("当前是一个文件，无法向下操作");
-        else if (file.exists()) {
-            if (file.isFile() != isFile) throw new Exception("当前文件已经存在，并且类型不符合：" + file.isFile() + " " + isFile);
-        } else if (createWhenNotExists) {
-            if (isFile) {
-                if (!file.createNewFile()) throw new Exception("新建文件失败");
-            } else if (!file.mkdirs()) throw new Exception("新建文件失败");
-        } else throw new Exception("不存在，且不能创建");
-        else
+    private static Uri getUri(File subFile) {
+        return new Uri.Builder().scheme("file").path(subFile.getPath()).build();
+    }
+
+    private void checkChildExistsOtherwiseCreate(File file, FileCreatePolicy policy) throws Exception {
+        if (!exists()) {
             throw new Exception("当前文件或者文件夹不存在。path:" + getPath());
+        } else if (isFile()) throw new Exception("当前是一个文件，无法向下操作");
+        else if (!file.exists()) {
+            if (policy instanceof Create) {
+                if (((Create) policy).isFile()) {
+                    if (!file.createNewFile()) throw new Exception("新建文件失败");
+                } else if (!file.mkdirs()) throw new Exception("新建文件失败");
+            } else throw new Exception("不存在，且不能创建");
+        }
     }
 
     @Override
-    public void changeToChild(@NonNull String name, boolean isFile, boolean createWhenNotExists) throws Exception {
-        Log.d(TAG, "changeToChild() called with: name = [" + name + "], isFile = [" + isFile + "]");
-        checkChildExistsOtherwiseCreate(file, isFile, createWhenNotExists);
+    public void changeToChild(@NonNull String name, FileCreatePolicy policy) throws Exception {
+        Log.d(TAG, "changeToChild() called with: name = [" + name + "], policy = [" + policy + "]");
+        checkChildExistsOtherwiseCreate(file, policy);
         file = new File(file, name);
     }
 
@@ -94,15 +105,20 @@ public class RegularLocalFileInstance extends LocalFileInstance {
     }
 
     public FileItemModel getFile() {
-        FileItemModel fileItemModel = new FileItemModel(file.getName(), file.getAbsolutePath(), file.isHidden(), file.lastModified(), false, FileUtility.getExtension(getName()));
+        FileItemModel fileItemModel = new FileItemModel(file.getName(), uri, file.isHidden(), file.lastModified(), false, FileUtility.getExtension(getName()));
         fileItemModel.editAccessTime(file);
         return fileItemModel;
     }
 
     public DirectoryItemModel getDirectory() {
-        DirectoryItemModel directoryItemModel = new DirectoryItemModel(file.getName(), file.getAbsolutePath(), file.isHidden(), file.lastModified(), false);
+        DirectoryItemModel directoryItemModel = new DirectoryItemModel(file.getName(), uri, file.isHidden(), file.lastModified(), false);
         directoryItemModel.editAccessTime(file);
         return directoryItemModel;
+    }
+
+    @Override
+    public long getFileLength() {
+        return file.length();
     }
 
     @Override
@@ -112,13 +128,14 @@ public class RegularLocalFileInstance extends LocalFileInstance {
 
         if (listFiles != null) {
             for (File childFile : listFiles) {
+                Pair<File, Uri> child = child(childFile.getName());
                 String permissions = FileUtility.getPermissionStringByFile(childFile);
                 FileSystemItemModel fileSystemItemModel;
                 // 判断是否为文件夹
                 if (childFile.isDirectory()) {
-                    fileSystemItemModel = FileInstanceUtility.addDirectory(directoryItems, childFile, permissions);
+                    fileSystemItemModel = FileInstanceUtility.addDirectory(directoryItems, child, permissions);
                 } else {
-                    fileSystemItemModel = FileInstanceUtility.addFile(fileItems, childFile, permissions);
+                    fileSystemItemModel = FileInstanceUtility.addFile(fileItems, child, permissions);
                 }
                 fileSystemItemModel.editAccessTime(childFile);
             }
@@ -152,7 +169,7 @@ public class RegularLocalFileInstance extends LocalFileInstance {
 
     @Override
     public LocalFileInstance toParent() {
-        return new RegularLocalFileInstance(context, file.getParent(), fileSystemRoot);
+        return new RegularLocalFileInstance(context, getUri(file.getParentFile()));
     }
 
     @Override

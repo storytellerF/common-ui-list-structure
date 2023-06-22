@@ -5,18 +5,19 @@ import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverter
+import androidx.room.TypeConverters
 import com.storyteller_f.ext_func_definition.ExtFuncFlat
 import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 import com.storyteller_f.file_system_remote.RemoteAccessDao
 import com.storyteller_f.file_system_remote.RemoteAccessSpec
 
-
 @Database(
     entities = [FileSizeRecord::class, FileMDRecord::class, FileTorrentRecord::class, BigTimeTask::class, RemoteAccessSpec::class],
-    version = 5,
+    version = 1,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5)]
 )
+@TypeConverters(Converters::class)
 abstract class LocalDatabase : RoomDatabase() {
 
     abstract fun sizeDao(): FileSizeRecordDao
