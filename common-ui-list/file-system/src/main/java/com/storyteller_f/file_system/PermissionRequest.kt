@@ -11,7 +11,7 @@ import androidx.appcompat.app.AlertDialog
 import com.storyteller_f.file_system.MainActivity.Companion.putBundle
 import kotlinx.coroutines.CompletableDeferred
 
-suspend fun Context.requestPermissionForSpecialPath(uri: Uri): Boolean {
+suspend fun Context.requestPathPermission(uri: Uri): Boolean {
     if (uri.scheme != ContentResolver.SCHEME_FILE) return true
     val path = uri.path!!
     val task = CompletableDeferred<Boolean>()
@@ -21,7 +21,7 @@ suspend fun Context.requestPermissionForSpecialPath(uri: Uri): Boolean {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
                     requestManageExternalPermission(task)
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ->
-                    requestSAF(uri, MainActivity.REQUEST_SAF_EMULATED, task)
+                    requestSAFPermission(uri, MainActivity.REQUEST_SAF_EMULATED, task)
                 else -> requestWriteExternalStorage(task)
             }
         }
@@ -30,7 +30,7 @@ suspend fun Context.requestPermissionForSpecialPath(uri: Uri): Boolean {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
                     requestManageExternalPermission(task)
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ->
-                    requestSAF(uri, MainActivity.REQUEST_SAF_SDCARD, task)
+                    requestSAFPermission(uri, MainActivity.REQUEST_SAF_SDCARD, task)
                 else -> requestWriteExternalStorage(task)
             }
         }
@@ -49,7 +49,7 @@ private suspend fun Context.requestWriteExternalStorage(task: CompletableDeferre
     }
 }
 
-private suspend fun Context.requestSAF(
+private suspend fun Context.requestSAFPermission(
     uri: Uri,
     requestCodeSAF: String,
     task: CompletableDeferred<Boolean>

@@ -43,7 +43,7 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.model.TorrentFileItemModel
-import com.storyteller_f.file_system.requestPermissionForSpecialPath
+import com.storyteller_f.file_system.requestPathPermission
 import com.storyteller_f.file_system_ktx.fileIcon
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.file_system_remote.FtpFileInstance
@@ -247,7 +247,7 @@ fun LifecycleOwner.fileList(
             //检查权限
             owner.lifecycleScope.launch {
                 if (!checkPathPermission(path)) {
-                    if (requestPermissionForSpecialPath(path)) {
+                    if (requestPathPermission(path)) {
                         adapter.refresh()
                     }
                 }

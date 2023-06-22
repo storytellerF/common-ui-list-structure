@@ -43,9 +43,4 @@ class ExampleInstrumentedTest {
         }
     }
 
-    @Test
-    fun testRequestPermission() {
-        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-    }
-
 }
