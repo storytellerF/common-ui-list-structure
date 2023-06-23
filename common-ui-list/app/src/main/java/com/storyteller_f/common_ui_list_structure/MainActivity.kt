@@ -73,21 +73,12 @@ class MainActivity : AppCompatActivity() {
             },
             { repo, _ -> RepoItemHolder(repo) },
             { before, after ->
-                if (after == null) {
-                    // we're at the end of the list
-                    null
-                } else if (before == null) {
-                    // we're at the beginning of the list
-                    SeparatorItemHolder("${after.roundedStarCount}0.000+ stars")
-                } else if (before.roundedStarCount > after.roundedStarCount) {
-                    if (after.roundedStarCount >= 1) {
-                        SeparatorItemHolder("${after.roundedStarCount}0.000+ stars")
-                    } else {
-                        SeparatorItemHolder("< 10.000+ stars")
-                    }
-                } else {
-                    // no separator
-                    null
+                when {
+                    after == null -> null
+                    before == null -> SeparatorItemHolder("${after.roundedStarCount}0.000+ stars")
+                    before.roundedStarCount <= after.roundedStarCount -> null
+                    after.roundedStarCount >= 1 -> SeparatorItemHolder("${after.roundedStarCount}0.000+ stars")
+                    else -> SeparatorItemHolder("< 10.000+ stars")
                 }
             }
         )
@@ -146,7 +137,7 @@ class MainActivity : AppCompatActivity() {
             val lAge = it["age"] as Int
             val lGender = it["gender"]
             val lRepo = it["repo"]
-            println("hello $lAge $lGender $lRepo")
+            Log.i(TAG, "onResume: $lAge $lGender $lRepo")
         }
         age.value = 2
         gender.value = false
@@ -155,7 +146,7 @@ class MainActivity : AppCompatActivity() {
 
     @BindClickEvent(RepoItemHolder::class)
     fun clickRepo(itemHolder: RepoItemHolder) {
-        println("click ${itemHolder.repo.fullName}")
+        Log.i(TAG, "clickRepo: ${itemHolder.repo.fullName}")
     }
 
     @BindClickEvent(SeparatorItemHolder::class, "card")

@@ -35,7 +35,9 @@ suspend fun Context.requestPathPermission(uri: Uri): Boolean {
             }
         }
     }
-    return task.await()
+    val await = task.await()
+    MainActivity.task = null
+    return await
 }
 
 private suspend fun Context.requestWriteExternalStorage(task: CompletableDeferred<Boolean>) {
@@ -73,7 +75,6 @@ private suspend fun Context.requestManageExternalPermission(task: CompletableDef
         })
     } else {
         task.complete(false)
-
     }
 }
 
@@ -83,15 +84,16 @@ private suspend fun Context.yesOrNo(
     yesString: String,
     noString: String
 ): Boolean {
-    val t = CompletableDeferred<Boolean>()
+    val deferred = CompletableDeferred<Boolean>()
     AlertDialog.Builder(this).setTitle(title)
         .setMessage(message)
         .setPositiveButton(yesString) { _: DialogInterface?, _: Int ->
-            t.complete(true)
+            deferred.complete(true)
         }
         .setNegativeButton(noString) { dialog: DialogInterface, _: Int ->
             dialog.dismiss()
-            t.complete(false)
+            deferred.complete(false)
         }.show()
-    return t.await()
+    println("wait dialog")
+    return deferred.await()
 }

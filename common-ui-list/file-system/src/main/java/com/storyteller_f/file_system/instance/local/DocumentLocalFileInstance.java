@@ -50,7 +50,7 @@ public class DocumentLocalFileInstance extends BaseContextFileInstance {
         this.prefix = prefix;
         assertInit();
         this.preferenceKey = preferenceKey;
-        this.current = getDocumentFile();
+        current = getDocumentFile();
     }
 
     private DocumentLocalFileInstance(Context context, Uri uri, String prefix) {
@@ -74,9 +74,7 @@ public class DocumentLocalFileInstance extends BaseContextFileInstance {
      * 初始化DocumentFile，初始化失败一般不影响获取目录,但是不可以对当前对象进行操作
      */
     public DocumentFile getDocumentFile() {
-        var current = getDocumentFile(NotCreate.INSTANCE);
-        if (current == null) Log.e(TAG, "getDocumentFile: 初始化失败（未授权）" + getPath());
-        return current;
+        return getDocumentFile(NotCreate.INSTANCE);
     }
 
     /**
@@ -97,7 +95,7 @@ public class DocumentLocalFileInstance extends BaseContextFileInstance {
             return null;
         }
         if (!rootFile.canRead()) {
-            Log.e(TAG, "getDocumentFile: 初始化失败(权限过期) 不可读写 " + getPath() + " prefix: " + prefix);
+            Log.e(TAG, "getDocumentFile: 权限过期, 不可读写 " + getPath() + " prefix: " + prefix);
             return null;
         }
 
@@ -166,7 +164,6 @@ public class DocumentLocalFileInstance extends BaseContextFileInstance {
     }
 
     public boolean createDirectory() {
-        //todo 检查是不是真的directory
         if (current != null) return true;
         DocumentFile created = getDocumentFile(new Create(false));
         if (created != null) {
@@ -351,7 +348,7 @@ public class DocumentLocalFileInstance extends BaseContextFileInstance {
             return;
         }
         if (path.startsWith(prefix)) {
-            getDocumentFile();
+            current = getDocumentFile();
         }
     }
 
