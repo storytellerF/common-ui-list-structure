@@ -22,36 +22,39 @@ abstract class CommonActivity : AppCompatActivity(), RegistryFragment {
     override fun onStart() {
         super.onStart()
         //主要用于旋转屏幕
-        waitingInActivity.forEach { t ->
-            val action = t.value.action
-            if (t.value.registerKey == registryKey()) {
-                val callback = { requestKey: String, result: Bundle ->
-                    if (waitingInFragment.containsKey(requestKey)) {
-                        result.getParcelableCompat("result", Parcelable::class.java)?.let { action(this, it) }
-                        waitingInFragment.remove(requestKey)
-                    }
-                }
-                supportFragmentManager.clearFragmentResultListener(t.key)
-                supportFragmentManager.setFragmentResultListener(t.key, this, callback)
+        waitingInActivity.forEach { (requestKey, value) ->
+            val action = value.action
+            if (value.registerKey == registryKey()) {
+                val callback = buildCallback(Parcelable::class.java, action)
+                supportFragmentManager.clearFragmentResultListener(requestKey)
+                supportFragmentManager.setFragmentResultListener(requestKey, this, callback)
             }
         }
     }
 }
 
-fun <T : Parcelable, A> A.dialog(dialog: Class<out CommonDialogFragment>, result: Class<T>, parameters: Bundle? = null, action: A.(T) -> Unit) where A : CommonActivity {
-    val apply = dialog.newInstance().apply {
-        arguments = parameters
-        show(supportFragmentManager, this.tag())
-    }
-    val requestKey = apply.requestKey()
-    val callback = { s: String, r: Bundle ->
+fun <T : Parcelable, A> A.buildCallback(
+    result: Class<T>,
+    action: A.(T) -> Unit
+): (String, Bundle) -> Unit where A : CommonActivity {
+    return { s: String, r: Bundle ->
         if (waitingInActivity.containsKey(s)) {
-            r.getParcelableCompat("result", result)?.let {
+            r.getParcelableCompat(fragmentResultKey, result)?.let {
                 action(it)
             }
             waitingInActivity.remove(s)
         }
     }
+}
+
+
+fun <T : Parcelable, A> A.dialog(dialog: Class<out CommonDialogFragment>, result: Class<T>, parameters: Bundle? = null, action: A.(T) -> Unit) where A : CommonActivity {
+    val dialogFragment = dialog.newInstance().apply {
+        arguments = parameters
+        show(supportFragmentManager, this.tag())
+    }
+    val requestKey = dialogFragment.requestKey()
+    val callback = buildCallback(result, action)
     @Suppress("UNCHECKED_CAST")
     waitingInActivity[requestKey] = ActivityAction(action as (CommonActivity, Parcelable) -> Unit, registryKey())
     supportFragmentManager.setFragmentResultListener(requestKey, this, callback)

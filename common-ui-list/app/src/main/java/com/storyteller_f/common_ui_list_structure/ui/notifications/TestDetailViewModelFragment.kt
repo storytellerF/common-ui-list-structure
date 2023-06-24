@@ -25,7 +25,4 @@ class TestDetailViewModelFragment : SimpleFragment<FragmentTestDetailBinding>(Fr
         }
     }
 
-    override fun requestKey(): String {
-        return "notification"
-    }
 }

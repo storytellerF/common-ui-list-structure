@@ -25,7 +25,7 @@ printWarningLabel() {
     printf "\033[30;103m $1 \033[0m\n"
 }
 
-# 第一个参数是project name，同时也作为tag 使用，第二个是module name，第三个是目标子目录，默认是第一个参数，第四个参数是是否开启clean，默认开启
+# 第一个参数是project name，同时也作为tag 使用，第二个是module name，第三个是目标子目录，默认是第一个参数，第四个参数是是否开启clean，默认开启，除非指定一个cache 的值
 # 输出目录是1层目录
 buildApp(){
     buildAppInternal $1 $2 ../build/${3:-$1}/ $4
@@ -37,7 +37,7 @@ buildApp2(){
     buildAppInternal $1 $2 ../../build/${3:-$1}/ $4
 }
 
-# 第一个参数是project name，同时也作为tag 使用，第二个是module name，第三个是目标目录，默认是第一个参数，第四个参数是是否开启clean，默认开启，
+# 第一个参数是project name，同时也作为tag 使用，第二个是module name，第三个是目标目录，第四个参数是是否开启clean，默认开启，
 buildAppInternal() {
     cd $1
 
@@ -58,6 +58,14 @@ customBuildProcess() {
     invokeClean $1 "$2" $4
     sh $3
     checkLastResult $1 $?
+}
+
+# 执行clean 命令
+# 第一个参数是project name，同时也作为tag 使用
+cleanCache() {
+    cd $1
+    invokeClean $1 "gradlew clean"
+    cd ..
 }
 
 #第一个参数是tag，第二个参数是自定义clean命令, 第三个参数是是否开启clean，默认开始，输入cache 会关闭

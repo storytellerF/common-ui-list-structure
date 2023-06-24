@@ -36,8 +36,4 @@ class TestDataViewModelFragment : RegularFragment<FragmentTestDataBinding>(Fragm
         }
     }
 
-    override fun requestKey(): String {
-        return "home"
-    }
-
 }
