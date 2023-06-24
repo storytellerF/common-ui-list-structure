@@ -1,10 +1,10 @@
-package com.storyteller_f.common_ui_list_structure.ui.home
+package com.storyteller_f.common_ui_list_structure.test_model
 
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.storyteller_f.common_ui.RegularFragment
 import com.storyteller_f.common_ui.scope
-import com.storyteller_f.common_ui_list_structure.Repo2ViewHolder
+import com.storyteller_f.common_ui_list_structure.RepoViewHolder
 import com.storyteller_f.common_ui_list_structure.RepoItemHolder
 import com.storyteller_f.common_ui_list_structure.api.requireReposService
 import com.storyteller_f.common_ui_list_structure.databinding.FragmentTestDataBinding
@@ -23,7 +23,7 @@ class TestDataViewModelFragment : RegularFragment<FragmentTestDataBinding>(Fragm
             { it, _ -> RepoItemHolder(it) },
         )
     )
-    private val adapter = SimpleDataAdapter<RepoItemHolder, Repo2ViewHolder>()
+    private val adapter = SimpleDataAdapter<RepoItemHolder, RepoViewHolder>()
 
     override fun onBindViewEvent(binding: FragmentTestDataBinding) {
         binding.listWithState.dataUp(adapter, viewLifecycleOwner, data)

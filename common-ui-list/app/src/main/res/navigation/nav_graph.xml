@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/FirstFragment"
-        android:name="com.storyteller_f.common_ui_list_structure.NavigationInvokeFragment"
+        android:name="com.storyteller_f.common_ui_list_structure.test_navigation.NavigationInvokeFragment"
         android:label="@string/first_fragment_label"
         tools:layout="@layout/fragment_navigation_invoke">
 
@@ -20,11 +20,11 @@
     </fragment>
     <fragment
         android:id="@+id/SecondFragment"
-        android:name="com.storyteller_f.common_ui_list_structure.NavigationResultFragment"
+        android:name="com.storyteller_f.common_ui_list_structure.test_navigation.NavigationResultFragment"
         android:label="@string/second_fragment_label"
         tools:layout="@layout/fragment_navigation_result" />
     <dialog
         android:id="@+id/testDialog"
-        android:name="com.storyteller_f.common_ui_list_structure.TestDialog"
+        android:name="com.storyteller_f.common_ui_list_structure.dialog.NavigationDialog"
         android:label="TestDialog" />
 </navigation>

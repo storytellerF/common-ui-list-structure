@@ -15,8 +15,8 @@ import com.storyteller_f.common_ktx.exceptionMessage
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 
-abstract class CommonDialogFragment : DialogFragment(), RequestFragment {
-    fun tag(): String = requestKey()
+abstract class CommonDialogFragment : DialogFragment(), ResponseFragment {
+    override val vm by responseModel
 }
 
 /**

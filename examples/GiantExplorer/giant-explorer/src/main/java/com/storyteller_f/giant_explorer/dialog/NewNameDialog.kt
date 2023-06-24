@@ -24,8 +24,4 @@ class NewNameDialog : SimpleDialogFragment<DialogNewNameBinding>(DialogNewNameBi
     companion object {
         const val requestKey = "add-file"
     }
-
-    override fun requestKey(): String {
-        return requestKey
-    }
 }

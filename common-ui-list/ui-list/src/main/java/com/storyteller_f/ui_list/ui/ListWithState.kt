@@ -2,7 +2,6 @@ package com.storyteller_f.ui_list.ui
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Rect
 import android.text.SpannableString
 import android.util.AttributeSet
@@ -179,30 +178,6 @@ class ListWithState @JvmOverloads constructor(
         }
     }
 
-
-    private fun setAdapter(
-        concatAdapter: ConcatAdapter,
-        adapter: SimpleSourceAdapter<out DataItemHolder, out AbstractViewHolder<*>>,
-        refresh: () -> Unit,
-        plugLayoutManager: Boolean = true,
-    ) {
-        if (plugLayoutManager)
-            setupLinearLayoutManager()
-        binding.list.adapter = concatAdapter
-        setupRefresh(adapter, refresh)
-    }
-
-    private fun setupRefresh(adapter: SimpleSourceAdapter<*, *>, refresh: () -> Unit) {
-        binding.refreshLayout.setOnRefreshListener {
-            refresh()
-            adapter.refresh()
-        }
-        binding.retryButton.setOnClickListener {
-            refresh()
-            adapter.refresh()
-        }
-    }
-
     /**
      * 仅data adapter 可用
      */
@@ -297,13 +272,15 @@ class ListWithState @JvmOverloads constructor(
             override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
                 super.getItemOffsets(outRect, view, parent, state)
                 if (editing.value == true) {
-                    outRect.right = selectableDrawer.width(view, parent, state, parent.getChildAdapterPosition(view), (parent.getChildViewHolder(view) as AbstractViewHolder<*>).itemHolder)
+                    val childAdapterPosition = parent.getChildAdapterPosition(view)
+                    val childViewHolder = parent.getChildViewHolder(view)
+                    val absoluteAdapterPosition = (childViewHolder as AbstractViewHolder<*>).itemHolder
+                    outRect.right = selectableDrawer.width(view, parent, state, childAdapterPosition, absoluteAdapterPosition)
                 } else outRect.right = 0
             }
 
             override fun onDraw(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
                 super.onDraw(c, parent, state)
-                c.drawColor(Color.LTGRAY)
                 if (editing.value == true)
                     for (i in 0 until parent.childCount) {
                         val child = parent.getChildAt(i)
@@ -320,6 +297,29 @@ class ListWithState @JvmOverloads constructor(
     private fun setupLinearLayoutManager() {
         binding.list.layoutManager =
             LinearLayoutManager(binding.list.context, LinearLayoutManager.VERTICAL, false)
+    }
+
+    private fun setAdapter(
+        concatAdapter: ConcatAdapter,
+        adapter: SimpleSourceAdapter<out DataItemHolder, out AbstractViewHolder<*>>,
+        refresh: () -> Unit,
+        plugLayoutManager: Boolean = true,
+    ) {
+        if (plugLayoutManager)
+            setupLinearLayoutManager()
+        binding.list.adapter = concatAdapter
+        setupRefresh(adapter, refresh)
+    }
+
+    private fun setupRefresh(adapter: SimpleSourceAdapter<*, *>, refresh: () -> Unit) {
+        binding.refreshLayout.setOnRefreshListener {
+            refresh()
+            adapter.refresh()
+        }
+        binding.retryButton.setOnClickListener {
+            refresh()
+            adapter.refresh()
+        }
     }
 
     class UIState(

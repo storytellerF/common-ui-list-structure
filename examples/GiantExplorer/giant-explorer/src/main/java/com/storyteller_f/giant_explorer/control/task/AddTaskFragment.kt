@@ -37,8 +37,8 @@ class AddTaskFragment : SimpleFragment<FragmentAddTaskBinding>(FragmentAddTaskBi
         }
         binding.selectWorkerName.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, arrayOf("message digest", "torrent name", "folder size"))
         binding.selectPath.setOnClick {
-            findNavController().navigate(R.id.action_select_task_path)
-            fragment(RequestPathDialog.requestKey, RequestPathDialog.RequestPathResult::class.java) {r ->
+            val requestKey = findNavController().request(R.id.action_select_task_path)
+            fragment(requestKey, RequestPathDialog.RequestPathResult::class.java) {r ->
                 binding.path.setText(r.path)
             }
         }
@@ -46,9 +46,6 @@ class AddTaskFragment : SimpleFragment<FragmentAddTaskBinding>(FragmentAddTaskBi
 
     @Parcelize
     class Result(val enable: Boolean, val uri: Uri, val category: String) : Parcelable
-    companion object {
-        const val requestKey = "test"
-    }
+    companion object
 
-    override fun requestKey() = requestKey
 }

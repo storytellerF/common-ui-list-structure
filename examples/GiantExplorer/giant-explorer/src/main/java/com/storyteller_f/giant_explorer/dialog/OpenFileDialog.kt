@@ -85,9 +85,5 @@ class OpenFileDialog : SimpleDialogFragment<DialogOpenFileBinding>(DialogOpenFil
             }
         }
     }
-
-    override fun requestKey(): String {
-        return key
-    }
 }
 

@@ -5,21 +5,18 @@ import android.graphics.Canvas
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,7 +34,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
-import com.storyteller_f.common_pr.dip
 import com.storyteller_f.common_pr.dipToInt
 import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_ui_list_structure.api.requireReposService
@@ -46,6 +42,8 @@ import com.storyteller_f.common_ui_list_structure.databinding.RepoViewItemBindin
 import com.storyteller_f.common_ui_list_structure.db.composite.RepoComposite
 import com.storyteller_f.common_ui_list_structure.db.requireRepoDatabase
 import com.storyteller_f.common_ui_list_structure.model.Repo
+import com.storyteller_f.common_ui_list_structure.test_model.TestViewModelActivity
+import com.storyteller_f.common_ui_list_structure.test_navigation.TestNavigationResultActivity
 import com.storyteller_f.common_vm_ktx.combine
 import com.storyteller_f.ui_list.core.*
 import com.storyteller_f.ui_list.event.viewBinding
@@ -90,15 +88,17 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding.content.sourceUp(adapter, this)
+        val dp24 = 24.dipToInt
         binding.content.setupClickSelectableSupport(editing, owner, object : ListWithState.SelectableDrawer {
             override fun width(view: View, parent: RecyclerView, state: RecyclerView.State, childAdapterPosition: Int, absoluteAdapterPosition: DataItemHolder): Int {
-                return 200
+                return dp24 * 3
             }
 
             override fun draw(c: Canvas, top: Int, bottom: Int, childWidth: Int, childHeight: Int, parentWidth: Int, parentHeight: Int, child: View, parent: RecyclerView, state: RecyclerView.State) {
-                val offset = (childHeight - 24.dip) / 2
+                val offset = (childHeight - dp24) / 2
+                val t = top + offset
                 ContextCompat.getDrawable(this@MainActivity, R.drawable.ic_baseline_radio_button_unchecked_24)?.run {
-                    setBounds((parentWidth - 24.dipToInt).toInt(), (top + offset).toInt(), (parentWidth), (top + offset + 24.dipToInt).toInt())
+                    setBounds(parentWidth - dp24 * 2, t, (parentWidth - dp24), t + dp24)
                     draw(c)
                 }
             }
@@ -123,7 +123,11 @@ class MainActivity : AppCompatActivity() {
         binding.buttonGroup.run {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(lifecycle))
             setContent {
-                ButtonGroup()
+                ButtonGroup({
+                    startActivity(Intent(this@MainActivity, TestViewModelActivity::class.java))
+                }) {
+                    startActivity(Intent(this@MainActivity, TestNavigationResultActivity::class.java))
+                }
             }
         }
     }
@@ -146,12 +150,12 @@ class MainActivity : AppCompatActivity() {
 
     @BindClickEvent(RepoItemHolder::class)
     fun clickRepo(itemHolder: RepoItemHolder) {
-        Log.i(TAG, "clickRepo: ${itemHolder.repo.fullName}")
+        Toast.makeText(this, itemHolder.repo.fullName, Toast.LENGTH_SHORT).show()
     }
 
     @BindClickEvent(SeparatorItemHolder::class, "card")
-    fun clickLine() {
-        startActivity(Intent(this, TestViewModelActivity::class.java))
+    fun clickLine(itemHolder: SeparatorItemHolder) {
+        Toast.makeText(this, itemHolder.info, Toast.LENGTH_SHORT).show()
     }
 
     private fun printInsets(insets: WindowInsetsCompat) {
@@ -165,20 +169,15 @@ class MainActivity : AppCompatActivity() {
 
     @Preview
     @Composable
-    fun ButtonGroup() {
+    fun ButtonGroup(next: () -> Unit = {}, response: () -> Unit = {}) {
         Row(
             modifier = Modifier
-                .background(
-                    Brush.linearGradient(listOf(Color.Black, Color.White)),
-                    RoundedCornerShape(3)
-                )
                 .fillMaxWidth()
+                .padding(horizontal = 10.dp)
         ) {
             Button(
                 onClick = {
                     editing.value = true
-//                    adapter.type = "linear"
-//                    adapter.notifyDataSetChanged()
                 },
             ) {
                 Text(text = "edit")
@@ -187,8 +186,25 @@ class MainActivity : AppCompatActivity() {
                 onClick = {
                     editing.value = false
                 },
+                modifier = Modifier.padding(start = 8.dp)
             ) {
                 Text(text = "redo")
+            }
+            Button(
+                onClick = {
+                    next()
+                },
+                modifier = Modifier.padding(start = 8.dp)
+            ) {
+                Text(text = "next")
+            }
+            Button(
+                onClick = {
+                    response()
+                },
+                modifier = Modifier.padding(start = 8.dp)
+            ) {
+                Text(text = "test")
             }
         }
     }
@@ -201,40 +217,8 @@ class RepoItemHolder(val repo: Repo) : DataItemHolder {
     }
 }
 
-@BindItemHolder(RepoItemHolder::class, type = "linear")
-class Repo2ViewHolder(private val binding: RepoViewItemBinding) :
-    BindingViewHolder<RepoItemHolder>(binding) {
-    override fun bindData(itemHolder: RepoItemHolder) {
-        binding.repoName.text = itemHolder.repo.name
-        // if the description is missing, hide the TextView
-        var descriptionVisibility = View.GONE
-        if (itemHolder.repo.description != null) {
-            binding.repoDescription.text = itemHolder.repo.description
-            descriptionVisibility = View.VISIBLE
-        }
-        binding.repoDescription.visibility = descriptionVisibility
-
-        binding.repoStars.text = itemHolder.repo.stars.toString()
-        binding.repoForks.text = itemHolder.repo.forks.toString()
-
-        // if the language is missing, hide the label and the value
-        var languageVisibility = View.GONE
-        if (!itemHolder.repo.language.isNullOrEmpty()) {
-            val resources = this.itemView.context.resources
-            binding.repoLanguage.text =
-                resources.getString(
-                    R.string.language,
-                    itemHolder.repo.language
-                )
-            languageVisibility = View.VISIBLE
-        }
-        binding.repoLanguage.visibility = languageVisibility
-    }
-
-}
-
 @BindItemHolder(RepoItemHolder::class)
-class Repo2ViewHolder2(private val binding: RepoViewItemBinding) :
+class RepoViewHolder(private val binding: RepoViewItemBinding) :
     BindingViewHolder<RepoItemHolder>(binding) {
     override fun bindData(itemHolder: RepoItemHolder) {
         binding.repoName.text = itemHolder.repo.name

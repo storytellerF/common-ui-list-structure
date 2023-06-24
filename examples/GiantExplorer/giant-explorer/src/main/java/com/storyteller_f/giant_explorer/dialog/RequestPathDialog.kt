@@ -28,7 +28,7 @@ import java.io.File
 
 class RequestPathDialog :
     SimpleDialogFragment<DialogRequestPathBinding>(DialogRequestPathBinding::inflate),
-    RegistryFragment {
+    Registry {
     private val dialogImpl = FilterDialogManager()
     private val observer = FileListObserver(this, {
         FileListFragmentArgs(File(FileInstanceFactory.rootUserEmulatedPath).toUri())
@@ -64,7 +64,8 @@ class RequestPathDialog :
             dismiss()
         }
         binding.newFile.setOnClick {
-            dialog(NewNameDialog(), NewNameDialog.NewNameResult::class.java) { nameResult ->
+            val requestDialog = requestDialog(NewNameDialog::class.java)
+            dialog(NewNameDialog.NewNameResult::class.java, requestDialog,) { nameResult ->
                 observer.fileInstance?.toChild(nameResult.name, Create(false))
             }
         }
@@ -143,7 +144,4 @@ class RequestPathDialog :
         }
     }
 
-    override fun requestKey(): String {
-        return requestKey
-    }
 }

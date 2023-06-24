@@ -1,10 +1,11 @@
-package com.storyteller_f.common_ui_list_structure
+package com.storyteller_f.common_ui_list_structure.test_model
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.storyteller_f.common_ui_list_structure.R
 import com.storyteller_f.common_ui_list_structure.databinding.ActivityTestViewModelBinding
 import com.storyteller_f.ui_list.event.viewBinding
 

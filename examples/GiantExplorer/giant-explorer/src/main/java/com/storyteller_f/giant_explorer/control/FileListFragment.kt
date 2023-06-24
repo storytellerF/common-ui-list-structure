@@ -131,9 +131,9 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     }
 
     private fun addFile(): Boolean {
-        findNavController().navigate(R.id.action_fileListFragment_to_newNameDialog)
+        val requestKey = findNavController().request(R.id.action_fileListFragment_to_newNameDialog)
         fragment(
-            NewNameDialog.requestKey,
+            requestKey,
             NewNameDialog.NewNameResult::class.java
         ) { nameResult ->
             observer.fileInstance?.toChild(nameResult.name, Create(true))
@@ -220,8 +220,9 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                 Activity.MODE_PRIVATE
             )?.getBoolean("notify_before_paste", true) == true
         ) {
-            dialog(TaskConfirmDialog(), TaskConfirmDialog.Result::class.java) { r ->
-                if (r.confirm) fileOperateBinderLocal.moveOrCopy(dest, items,  null, false, key)
+            val requestKey = requestDialog(TaskConfirmDialog::class.java)
+            dialog(TaskConfirmDialog.Result::class.java, requestKey) { r ->
+                if (r.confirm) fileOperateBinderLocal.moveOrCopy(dest, items, null, false, key)
             }
         } else {
             fileOperateBinderLocal.moveOrCopy(dest, items, null, false, key)
@@ -241,11 +242,11 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             )
         } else {
             val uri = old.uri
-            findNavController().navigate(
+            val requestKey = findNavController().request(
                 R.id.action_fileListFragment_to_openFileDialog,
                 OpenFileDialogArgs(uri).toBundle()
             )
-            fragment(OpenFileDialog.key, OpenFileDialog.OpenFileResult::class.java) { r ->
+            fragment(requestKey, OpenFileDialog.OpenFileResult::class.java) { r ->
                 if (uri.scheme != ContentResolver.SCHEME_FILE) return@fragment
                 val file = File(itemHolder.file.fullPath)
                 val uriForFile = FileProvider.getUriForFile(
@@ -329,9 +330,9 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         object : DefaultPluginManager(requireContext()) {
             override suspend fun requestPath(initUri: String?): String {
                 val completableDeferred = CompletableDeferred<String>()
+                val requestKey = requestDialog(RequestPathDialog::class.java)
                 dialog(
-                    RequestPathDialog(),
-                    RequestPathDialog.RequestPathResult::class.java
+                    RequestPathDialog.RequestPathResult::class.java, requestKey
                 ) { result ->
                     completableDeferred.complete(result.path)
                 }
@@ -452,7 +453,8 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     }
 
     private fun moveOrCopy(move: Boolean, itemHolder: FileItemHolder) {
-        dialog(RequestPathDialog(), RequestPathDialog.RequestPathResult::class.java) { result ->
+        val requestKey = requestDialog(RequestPathDialog::class.java)
+        dialog(RequestPathDialog.RequestPathResult::class.java, requestKey) { result ->
             scope.launch {
                 result.path.safeLet {
                     getFileInstance(requireContext(), File(it).toUri(), stoppableTask = stoppable())
@@ -490,9 +492,6 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         observer.selected?.map { pair -> (pair.first as FileItemHolder).file.item } ?: listOf(
             itemHolder.file.item
         )
-
-    override fun requestKey() = "file-list"
-
 }
 
 private fun Menu.loopAdd(strings: List<String>): Menu {

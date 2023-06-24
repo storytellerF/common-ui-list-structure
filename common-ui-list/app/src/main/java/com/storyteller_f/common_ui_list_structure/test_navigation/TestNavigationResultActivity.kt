@@ -1,4 +1,4 @@
-package com.storyteller_f.common_ui_list_structure
+package com.storyteller_f.common_ui_list_structure.test_navigation
 
 import android.os.Bundle
 import androidx.navigation.findNavController
@@ -8,6 +8,9 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import com.google.android.material.snackbar.Snackbar
 import com.storyteller_f.common_ui.CommonActivity
 import com.storyteller_f.common_ui.dialog
+import com.storyteller_f.common_ui.requestDialog
+import com.storyteller_f.common_ui_list_structure.R
+import com.storyteller_f.common_ui_list_structure.dialog.TestDialog2
 import com.storyteller_f.common_ui_list_structure.databinding.ActivityTestNavigationResultBinding
 import com.storyteller_f.ui_list.event.viewBinding
 
@@ -25,7 +28,7 @@ class TestNavigationResultActivity : CommonActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
 
         binding.fab.setOnClickListener { view ->
-            dialog(TestDialog2::class.java, TestDialog2.Result::class.java) {
+            dialog(TestDialog2.Result::class.java, requestDialog(TestDialog2::class.java)) {
                 Snackbar.make(view, it.test, Snackbar.LENGTH_LONG)
                     .setAction("activity->dialog", null).show()
             }

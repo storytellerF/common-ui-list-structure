@@ -180,6 +180,10 @@ class StateValueModel<T>(stateHandle: SavedStateHandle, key: String = "default",
     val data = stateHandle.getLiveData(key, default)
 }
 
+fun <T> stateValueModel(t: T, stateHandle: SavedStateHandle): StateValueModel<T> {
+    return StateValueModel(stateHandle, default = t);
+}
+
 fun HasDefaultViewModelProviderFactory.buildExtras(block: MutableCreationExtras.() -> Unit): CreationExtras {
     return MutableCreationExtras(defaultViewModelCreationExtras).apply {
         block()

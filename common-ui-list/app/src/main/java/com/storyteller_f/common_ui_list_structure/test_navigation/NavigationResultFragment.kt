@@ -1,4 +1,4 @@
-package com.storyteller_f.common_ui_list_structure
+package com.storyteller_f.common_ui_list_structure.test_navigation
 
 import android.os.Parcelable
 import androidx.fragment.app.Fragment
@@ -15,7 +15,6 @@ class NavigationResultFragment : SimpleFragment<FragmentNavigationResultBinding>
 
     override fun onBindViewEvent(binding: FragmentNavigationResultBinding) {
         binding.buttonSecond.setOnClickListener {
-//            findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
             setFragmentResult(Result("second fragment"))
             findNavController().navigateUp()
         }

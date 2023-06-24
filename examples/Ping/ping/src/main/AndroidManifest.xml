@@ -19,7 +19,7 @@
         tools:replace="theme">
         <activity
             android:name=".MainActivity"
-            android:configChanges="keyboard|k	eyboardHidden"
+            android:configChanges="keyboard|keyboardHidden"
             android:exported="true"
             android:theme="@style/Theme.Common_ui_list_structure">
             <intent-filter>
