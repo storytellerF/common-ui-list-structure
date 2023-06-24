@@ -3,6 +3,7 @@ package com.storyteller_f.file_system.util;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.storage.StorageManager;
 import android.os.storage.StorageVolume;
@@ -15,6 +16,7 @@ import androidx.annotation.RequiresApi;
 import androidx.documentfile.provider.DocumentFile;
 
 import com.storyteller_f.file_system.FileInstanceFactory;
+import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -114,21 +116,22 @@ public class FileUtility {
 
     @Nullable
     public static Intent produceSafRequestIntent(Activity activity, String prefix) {
-        Intent intent = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             StorageManager sm = activity.getSystemService(StorageManager.class);
             StorageVolume volume = sm.getStorageVolume(new File(prefix));
             if (volume != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                intent = volume.createOpenDocumentTreeIntent();
+                return volume.createOpenDocumentTreeIntent();
             }
         }
-        if (intent == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, prefix);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && prefix.equals(FileInstanceFactory.rootUserEmulatedPath)) {
+                Uri primary = DocumentsContract.buildRootUri(DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS, "primary");
+                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, primary);
             }
+            return intent;
         }
-        return intent;
+        return null;
     }
 
     @Nullable

@@ -30,6 +30,7 @@ import kotlin.Pair;
 
 public class DocumentLocalFileInstance extends BaseContextFileInstance {
     private static final String TAG = "DocumentLocalFileInstan";
+    public static final String EXTERNAL_STORAGE_DOCUMENTS = "com.android.externalstorage.documents";
 
     protected DocumentFile current;
 
@@ -389,17 +390,14 @@ public class DocumentLocalFileInstance extends BaseContextFileInstance {
     }
 
     public static DocumentLocalFileInstance getEmulated(Context context, Uri uri, String prefix) {
-        return new DocumentLocalFileInstance(context, uri, prefix, prefix);
+        return new DocumentLocalFileInstance(context, uri, EXTERNAL_STORAGE_DOCUMENTS, prefix);
     }
 
     /**
-     * sd 卡使用特殊的preferenceKey
-     *
-     * @param context
-     * @param uri
-     * @return
+     * sd 卡使用特殊的preferenceKey，就是路径
      */
     public static DocumentLocalFileInstance getMounted(Context context, Uri uri, String prefix) {
+        //fixme sdCard 与emulated authority 相同，只是rootId 不同
         return new DocumentLocalFileInstance(context, uri, prefix, prefix);
     }
 }

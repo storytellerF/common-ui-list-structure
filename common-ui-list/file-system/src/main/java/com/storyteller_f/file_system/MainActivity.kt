@@ -86,14 +86,14 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    private fun processResult(it: ActivityResult, prefix: String): Boolean {
+    private fun processResult(it: ActivityResult, preferenceKey: String): Boolean {
         if (it.resultCode == RESULT_OK) {
             val uri = it.data?.data
             if (uri != null) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                     contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                 }
-                FileSystemUriSaver.getInstance().saveUri(this, prefix, uri)
+                FileSystemUriSaver.getInstance().saveUri(this, preferenceKey, uri)
                 success()
                 return true
             }
@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity() {
         registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) {
-            if (processResult(it, prefix)) return@registerForActivityResult
+            if (processResult(it, DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS)) return@registerForActivityResult
             failure()
         }.launch(
             FileUtility.produceSafRequestIntent(

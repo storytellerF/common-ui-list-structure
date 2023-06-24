@@ -1,5 +1,6 @@
 package com.storyteller_f.ping
 
+import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.database.Cursor
 import android.database.MatrixCursor
@@ -54,12 +55,16 @@ class StorageProvider : DocumentsProvider() {
 
     override fun queryRoots(projection: Array<out String>?): Cursor {
         Log.d(TAG, "queryRoots() called with: projection = $projection")
-        val flags = DocumentsContract.Root.FLAG_LOCAL_ONLY or DocumentsContract.Root.FLAG_SUPPORTS_IS_CHILD
+        val flags =
+            DocumentsContract.Root.FLAG_LOCAL_ONLY or DocumentsContract.Root.FLAG_SUPPORTS_IS_CHILD
 
         return MatrixCursor(projection ?: DEFAULT_ROOT_PROJECTION).apply {
             newRow().apply {
                 add(DocumentsContract.Root.COLUMN_ROOT_ID, DEFAULT_ROOT_ID)
-                add(DocumentsContract.Root.COLUMN_MIME_TYPES, DocumentsContract.Document.MIME_TYPE_DIR)
+                add(
+                    DocumentsContract.Root.COLUMN_MIME_TYPES,
+                    DocumentsContract.Document.MIME_TYPE_DIR
+                )
                 add(DocumentsContract.Root.COLUMN_FLAGS, flags)
                 add(DocumentsContract.Root.COLUMN_ICON, R.drawable.ic_launcher_foreground)
                 add(DocumentsContract.Root.COLUMN_TITLE, context?.getString(R.string.app_name))
@@ -70,9 +75,12 @@ class StorageProvider : DocumentsProvider() {
     }
 
     override fun queryDocument(documentId: String?, projection: Array<out String>?): Cursor {
-        Log.d(TAG, "queryDocument() called with: documentId = $documentId, projection = ${projection?.joinToString()}")
+        Log.d(
+            TAG,
+            "queryDocument() called with: documentId = $documentId, projection = ${projection?.joinToString()}"
+        )
         return MatrixCursor(projection ?: DEFAULT_DOCUMENT_PROJECTION).apply {
-            val root = context?.filesDir?.parentFile ?: return@apply
+            val root = context.root ?: return@apply
             val document = documentId ?: "/"
             val file = File(root, document)
             newRow().apply {
@@ -83,8 +91,8 @@ class StorageProvider : DocumentsProvider() {
 
     private fun MatrixCursor.handleChild(documentId: String?) {
         if (documentId != null) {
+            val root = context.root ?: return
             context?.let {
-                val root = it.filesDir.parentFile ?: return@let
                 File(root, documentId).listFiles()?.forEach {
                     newRow().apply {
                         fileRow(it, root)
@@ -93,6 +101,11 @@ class StorageProvider : DocumentsProvider() {
             }
         }
     }
+
+    private val Context?.root: File?
+        get() {
+            return this?.filesDir?.parentFile
+        }
 
     private fun MatrixCursor.RowBuilder.fileRow(it: File, root: File) {
         val subDocumentId = it.absolutePath.substring(root.absolutePath.length)
@@ -121,16 +134,30 @@ class StorageProvider : DocumentsProvider() {
         Log.d(TAG, "fileRow: $subDocumentId ${it.name}")
     }
 
-    override fun queryChildDocuments(parentDocumentId: String?, projection: Array<out String>?, sortOrder: String?): Cursor {
-        Log.d(TAG, "queryChildDocuments() called with: parentDocumentId = $parentDocumentId, projection = ${projection?.joinToString()}, sortOrder = $sortOrder")
+    override fun queryChildDocuments(
+        parentDocumentId: String?,
+        projection: Array<out String>?,
+        sortOrder: String?
+    ): Cursor {
+        Log.d(
+            TAG,
+            "queryChildDocuments() called with: parentDocumentId = $parentDocumentId, projection = ${projection?.joinToString()}, sortOrder = $sortOrder"
+        )
 
         return MatrixCursor(projection ?: DEFAULT_DOCUMENT_PROJECTION).apply {
             handleChild(parentDocumentId)
         }
     }
 
-    override fun openDocument(documentId: String?, mode: String?, signal: CancellationSignal?): ParcelFileDescriptor {
-        Log.d(TAG, "openDocument() called with: documentId = $documentId, mode = $mode, signal = $signal")
+    override fun openDocument(
+        documentId: String?,
+        mode: String?,
+        signal: CancellationSignal?
+    ): ParcelFileDescriptor {
+        Log.d(
+            TAG,
+            "openDocument() called with: documentId = $documentId, mode = $mode, signal = $signal"
+        )
         val accessMode: Int = ParcelFileDescriptor.parseMode(mode)
 
         val isWrite: Boolean = mode?.contains("w") ?: false
@@ -143,7 +170,10 @@ class StorageProvider : DocumentsProvider() {
             try {
                 ParcelFileDescriptor.open(file, accessMode, handler) {
                     // Update the file with the cloud server. The client is done writing.
-                    Log.i(TAG, "A file with id $documentId has been closed! Time to update the server.")
+                    Log.i(
+                        TAG,
+                        "A file with id $documentId has been closed! Time to update the server."
+                    )
                 }
             } catch (e: IOException) {
                 throw FileNotFoundException(
@@ -155,12 +185,17 @@ class StorageProvider : DocumentsProvider() {
         }
     }
 
-    override fun openDocumentThumbnail(documentId: String?, sizeHint: Point?, signal: CancellationSignal?): AssetFileDescriptor {
+    override fun openDocumentThumbnail(
+        documentId: String?,
+        sizeHint: Point?,
+        signal: CancellationSignal?
+    ): AssetFileDescriptor {
         val lc = context!!
         sizeHint!!
-        val hash = MessageDigest.getInstance("md5").digest(documentId!!.toByteArray()).joinToString("") {
-            "%02x".format(it)
-        }
+        val hash =
+            MessageDigest.getInstance("md5").digest(documentId!!.toByteArray()).joinToString("") {
+                "%02x".format(it)
+            }
         val root = lc.filesDir?.parentFile!!
         val thumbFile = File(root, "cache/.storage-provider/.thumbnail/$hash.jpg")
         if (!thumbFile.exists()) {
@@ -178,7 +213,12 @@ class StorageProvider : DocumentsProvider() {
             scale.compress(Bitmap.CompressFormat.JPEG, 90, fileOutputStream)
         }
 
-        return AssetFileDescriptor(ParcelFileDescriptor.open(thumbFile, ParcelFileDescriptor.parseMode("r")), 0, AssetFileDescriptor.UNKNOWN_LENGTH)
+        return AssetFileDescriptor(
+            ParcelFileDescriptor.open(
+                thumbFile,
+                ParcelFileDescriptor.parseMode("r")
+            ), 0, AssetFileDescriptor.UNKNOWN_LENGTH
+        )
     }
 
     override fun isChildDocument(parentDocumentId: String?, documentId: String?): Boolean {

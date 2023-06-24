@@ -246,26 +246,14 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         }
         info.forEach {
             val authority = it.providerInfo.authority
-            val root = uriFromAuthority(authority)
             val loadLabel = it.loadLabel(packageManager).toString()
 //            val icon = it.loadIcon(packageManager)
-            val contains = savedUris.contains(authority) && try {
-                DocumentLocalFileInstance(this@MainActivity, root, authority, "").exists()
-            } catch (e: Exception) {
-                Log.e(TAG, "onCreateContextMenu: ", e)
-                false
-            }
             menu.add(loadLabel)
-                .setChecked(contains)
+                .setChecked(hasPermission(savedUris, authority))
                 .setCheckable(true)
 //                .setActionView(ImageView(this).apply {
 //                    setImageDrawable(icon)
 //                })
-                .apply {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        tooltipText = authority
-                    }
-                }
                 .setOnMenuItemClickListener {
                     switchRoot(authority)
                     true
@@ -273,6 +261,24 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
 
         }
 
+    }
+
+    private fun hasPermission(
+        savedUris: MutableList<String>,
+        authority: String
+    ): Boolean {
+        val contains = savedUris.contains(authority) && try {
+            DocumentLocalFileInstance(
+                this@MainActivity,
+                uriFromAuthority(authority),
+                authority,
+                ""
+            ).exists()
+        } catch (e: Exception) {
+            Log.e(TAG, "onCreateContextMenu: ", e)
+            false
+        }
+        return contains
     }
 
     private fun switchRoot(authority: String): Boolean {
