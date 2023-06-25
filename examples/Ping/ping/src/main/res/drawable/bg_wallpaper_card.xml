@@ -3,5 +3,5 @@
     android:color="@color/colorPrimary">
     <item
         android:id="@android:id/mask"
-        android:drawable="@color/white" />
+        android:drawable="@android:color/white" />
 </ripple>

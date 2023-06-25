@@ -4,4 +4,6 @@
     <!-- Strings used for fragments for navigation -->
     <string name="wallpaper_fragment_label">萍</string>
     <string name="wallpaper_info_fragment_label">详情</string>
+    <string name="add_video">添加视频</string>
+    <string name="wallpaper_preview">壁纸预览</string>
 </resources>

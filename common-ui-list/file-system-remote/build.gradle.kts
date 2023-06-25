@@ -1,6 +1,10 @@
+import com.storyteller_f.version_manager.Versions
+
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
+    id("com.storyteller_f.version_manager")
+
 }
 
 android {
@@ -37,7 +41,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    implementation("androidx.room:room-common:2.5.1")
+    implementation("androidx.room:room-common:${Versions.roomVersion}")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
     implementation(project(":file-system"))
 

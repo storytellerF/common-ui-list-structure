@@ -28,7 +28,7 @@
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="@dimen/fab_margin"
         android:layout_marginBottom="16dp"
-        android:contentDescription="add video"
+        android:contentDescription="@string/add_video"
         app:srcCompat="@drawable/ic_baseline_video_library_24" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

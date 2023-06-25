@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -41,7 +42,8 @@ class MainActivity : AppCompatActivity() {
 
         setSupportActionBar(binding.toolbar)
 
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
+        val navController =
+            (supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main) as NavHostFragment).navController
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
 
@@ -52,8 +54,10 @@ class MainActivity : AppCompatActivity() {
                 val file = File(cacheDir, "$dir/video.mp4").ensureFile() ?: return@launch
                 withContext(Dispatchers.IO) {
                     file.outputStream().sink().buffer().use { writer ->
-                        contentResolver.openInputStream(uri)?.source()?.buffer()?.use {
-                            writer.writeAll(it)
+                        contentResolver.openInputStream(uri)?.use { stream ->
+                            stream.source().buffer().use {
+                                writer.writeAll(it)
+                            }
                         }
                     }
                 }
