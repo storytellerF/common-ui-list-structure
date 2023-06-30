@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.os.Parcelable
 import androidx.annotation.IdRes
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
@@ -16,7 +17,7 @@ import com.storyteller_f.compat_ktx.getParcelableCompat
 import com.storyteller_f.compat_ktx.getSerializableCompat
 import java.util.UUID
 
-class ActivityAction(val action: (CommonActivity, Parcelable) -> Unit, val registerKey: String)
+class ActivityAction(val action: (FragmentActivity, Parcelable) -> Unit, val registerKey: String)
 class FragmentAction(val action: (Registry, Parcelable) -> Unit, val registerKey: String)
 
 val waitingInActivity = mutableMapOf<String, ActivityAction>()
@@ -73,7 +74,7 @@ inline fun <T : Parcelable, F> F.buildCallback(result: Class<T>, crossinline act
 fun <T : Parcelable, A> A.buildCallback(
     result: Class<T>,
     action: A.(T) -> Unit
-): (String, Bundle) -> Unit where A : CommonActivity {
+): (String, Bundle) -> Unit where A : FragmentActivity, A: Registry {
     return { s: String, r: Bundle ->
         if (waitingInActivity.containsKey(s)) {
             r.getParcelableCompat(fragmentResultKey, result)?.let {
@@ -94,10 +95,10 @@ fun <T : Parcelable, F> F.waitingResponseInFragment(requestKey: RequestKey, acti
     fm.setFragmentResultListener(key, owner, callback)
 }
 
-private fun <A, T : Parcelable> A.waitingResponseInActivity(requestKey: RequestKey, action: A.(T) -> Unit, callback: (String, Bundle) -> Unit) where A : CommonActivity {
+private fun <A, T : Parcelable> A.waitingResponseInActivity(requestKey: RequestKey, action: A.(T) -> Unit, callback: (String, Bundle) -> Unit) where A : FragmentActivity, A: Registry {
     val key = requestKey.toString()
     @Suppress("UNCHECKED_CAST")
-    waitingInActivity[key] = ActivityAction(action as (CommonActivity, Parcelable) -> Unit, registryKey())
+    waitingInActivity[key] = ActivityAction(action as (FragmentActivity, Parcelable) -> Unit, registryKey())
     fm.setFragmentResultListener(key, this, callback)
 }
 
@@ -144,12 +145,12 @@ fun <T : Parcelable, A> A.observe(
     requestKey: RequestKey,
     result: Class<T>,
     action: A.(T) -> Unit
-) where A : CommonActivity {
+) where A : FragmentActivity, A: Registry {
     val callback = buildCallback(result, action)
     waitingResponseInActivity(requestKey, action, callback)
 }
 
-internal fun CommonActivity.observeResponse() {
+internal fun<A> A.observeResponse() where A: FragmentActivity, A: Registry {
     waitingInActivity.forEach { (requestKey, value) ->
         val action = value.action
         if (value.registerKey == registryKey()) {
