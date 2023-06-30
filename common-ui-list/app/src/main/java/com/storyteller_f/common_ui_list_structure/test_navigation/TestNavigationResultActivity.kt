@@ -7,8 +7,8 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.google.android.material.snackbar.Snackbar
 import com.storyteller_f.common_ui.CommonActivity
-import com.storyteller_f.common_ui.dialog
-import com.storyteller_f.common_ui.requestDialog
+import com.storyteller_f.common_ui.observe
+import com.storyteller_f.common_ui.request
 import com.storyteller_f.common_ui_list_structure.R
 import com.storyteller_f.common_ui_list_structure.dialog.TestDialog2
 import com.storyteller_f.common_ui_list_structure.databinding.ActivityTestNavigationResultBinding
@@ -28,7 +28,7 @@ class TestNavigationResultActivity : CommonActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
 
         binding.fab.setOnClickListener { view ->
-            dialog(TestDialog2.Result::class.java, requestDialog(TestDialog2::class.java)) {
+            observe(request(TestDialog2::class.java), TestDialog2.Result::class.java) {
                 Snackbar.make(view, it.test, Snackbar.LENGTH_LONG)
                     .setAction("activity->dialog", null).show()
             }

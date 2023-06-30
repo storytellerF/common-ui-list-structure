@@ -32,9 +32,7 @@ interface ResponseFragment {
 data class RequestKey(private val uuid: UUID?)
 
 internal val ResponseFragment.requestKey: RequestKey
-    get() {
-        return RequestKey(vm.data.value)
-    }
+    get() = RequestKey(vm.data.value)
 
 /**
  * 可以发起请求，发起的请求通过registryKey 辨别
@@ -46,15 +44,13 @@ interface Registry {
     fun registryKey(): String = "${this.javaClass.simpleName}-registry"
 }
 
-fun <T : Parcelable> Fragment.setFragmentResult(requestKey: RequestKey, result: T) {
+fun <T : Parcelable> Fragment.setFragmentResult(requestKey: RequestKey, result: T) =
     fm.setFragmentResult(requestKey.toString(), Bundle().apply {
         putParcelable(fragmentResultKey, result)
     })
-}
 
-fun <T, F> F.setFragmentResult(result: T) where T : Parcelable, F : Fragment, F : ResponseFragment {
+fun <T, F> F.setFragmentResult(result: T) where T : Parcelable, F : Fragment, F : ResponseFragment =
     setFragmentResult(requestKey, result)
-}
 
 val fragmentResultKey
     get() = "result"
@@ -89,33 +85,13 @@ fun <T : Parcelable, A> A.buildCallback(
 }
 
 /**
- * 如果使用此方法打开dialog，fragmentManager 需要使用parentFragmentManager，否则没有效果。
- * 下面的dialog 同样有此问题
+ * 如果启动是通过navigation 启动dialog，需要使用parentFragmentManager 接受结果
  */
-fun <T : Parcelable, F> F.fragment(requestKey: RequestKey, result: Class<T>, action: F.(T) -> Unit) where F : CommonFragment, F : Registry {
-    val callback = buildCallback(result, action)
-    waitingResponseInFragment(requestKey, action, callback)
-}
-
-fun <T : Parcelable, F> F.dialog(
-    result: Class<T>,
-    requestKey: RequestKey,
-    action: F.(T) -> Unit
-) where F : Fragment, F : Registry {
-    val callback = buildCallback(result, action)
-    waitingResponseInFragment(requestKey, action, callback)
-}
-
-fun <T : Parcelable, A> A.dialog(result: Class<T>, requestDialog: RequestKey, action: A.(T) -> Unit) where A : CommonActivity {
-    val callback = buildCallback(result, action)
-    waitingResponseInActivity(requestDialog, action, callback)
-}
-
 fun <T : Parcelable, F> F.waitingResponseInFragment(requestKey: RequestKey, action: F.(T) -> Unit, callback: (String, Bundle) -> Unit) where F : Registry, F : Fragment {
     val key = requestKey.toString()
     @Suppress("UNCHECKED_CAST")
     waitingInFragment[key] = FragmentAction(action as (Registry, Parcelable) -> Unit, registryKey())
-    childFragmentManager.setFragmentResultListener(key, owner, callback)
+    fm.setFragmentResultListener(key, owner, callback)
 }
 
 private fun <A, T : Parcelable> A.waitingResponseInActivity(requestKey: RequestKey, action: A.(T) -> Unit, callback: (String, Bundle) -> Unit) where A : CommonActivity {
@@ -125,7 +101,7 @@ private fun <A, T : Parcelable> A.waitingResponseInActivity(requestKey: RequestK
     fm.setFragmentResultListener(key, this, callback)
 }
 
-private fun <A> A.showDialog(dialog: Class<out CommonDialogFragment>, parameters: Bundle?): UUID where A : LifecycleOwner {
+private fun <A> A.show(dialog: Class<out CommonDialogFragment>, parameters: Bundle?): UUID where A : LifecycleOwner {
     val randomUUID = UUID.randomUUID()
     parameters?.putSerializable("uuid", randomUUID)
     val dialogFragment = dialog.newInstance().apply {
@@ -136,25 +112,41 @@ private fun <A> A.showDialog(dialog: Class<out CommonDialogFragment>, parameters
 }
 
 //todo 自定义NavController
-fun NavController.request(@IdRes resId: Int,
-                          args: Bundle = Bundle(),
-                          navOptions: NavOptions? = null,
-                          navigatorExtras: Navigator.Extras? = null): RequestKey {
+fun NavController.request(
+    @IdRes resId: Int,
+    args: Bundle = Bundle(),
+    navOptions: NavOptions? = null,
+    navigatorExtras: Navigator.Extras? = null
+): RequestKey {
     val randomUUID = UUID.randomUUID()
     args.putSerializable("uuid", randomUUID)
     navigate(resId, args, navOptions, navigatorExtras)
     return randomUUID.requestKey()
 }
 
-fun <F> F.requestDialog(
+fun <F> F.request(
     dialog: Class<out CommonDialogFragment>,
     parameters: Bundle = Bundle()
-): RequestKey where F: LifecycleOwner {
-    return showDialog(dialog, parameters).requestKey()
+): RequestKey where F : LifecycleOwner = show(dialog, parameters).requestKey()
+
+private fun UUID.requestKey(): RequestKey = RequestKey(this)
+
+fun <T : Parcelable, F> F.observe(
+    requestKey: RequestKey,
+    result: Class<T>,
+    action: F.(T) -> Unit
+) where F : Fragment, F : Registry {
+    val callback = buildCallback(result, action)
+    waitingResponseInFragment(requestKey, action, callback)
 }
 
-private fun UUID.requestKey(): RequestKey {
-    return RequestKey(this)
+fun <T : Parcelable, A> A.observe(
+    requestKey: RequestKey,
+    result: Class<T>,
+    action: A.(T) -> Unit
+) where A : CommonActivity {
+    val callback = buildCallback(result, action)
+    waitingResponseInActivity(requestKey, action, callback)
 }
 
 internal fun CommonActivity.observeResponse() {
@@ -162,6 +154,7 @@ internal fun CommonActivity.observeResponse() {
         val action = value.action
         if (value.registerKey == registryKey()) {
             val callback = buildCallback(Parcelable::class.java, action)
+            val supportFragmentManager = fm
             supportFragmentManager.clearFragmentResultListener(requestKey)
             supportFragmentManager.setFragmentResultListener(requestKey, this, callback)
         }

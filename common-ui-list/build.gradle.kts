@@ -2,7 +2,7 @@
 buildscript {
     dependencies {
         val smlFolder: String by project
-        val navVersion = "2.5.3"
+        val navVersion = "2.6.0"
         val smlVersion = "0.0.2"
         classpath("androidx.navigation:navigation-safe-args-gradle-plugin:$navVersion")
         classpath("app.cash.licensee:licensee-gradle-plugin:1.6.0")
