@@ -10,8 +10,8 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.storyteller_f.common_ktx.safeLet
 import com.storyteller_f.common_ui.CommonActivity
-import com.storyteller_f.common_ui.dialog
-import com.storyteller_f.common_ui.requestDialog
+import com.storyteller_f.common_ui.observe
+import com.storyteller_f.common_ui.request
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.operate.FileCopyOp
 import com.storyteller_f.file_system_ktx.ensureFile
@@ -48,8 +48,8 @@ class PluginManageActivity : CommonActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         val pluginRoot = File(filesDir, "plugins")
         binding.fab.setOnClickListener {
-            val requestKey = requestDialog(RequestPathDialog::class.java)
-            dialog(RequestPathDialog.RequestPathResult::class.java, requestKey) { result ->
+            val requestKey = request(RequestPathDialog::class.java)
+            observe(requestKey, RequestPathDialog.RequestPathResult::class.java) { result ->
                 lifecycleScope.launch {
                     result.path.safeLet {
                         getFileInstance(this@PluginManageActivity, File(it).toUri(), stoppableTask = stoppable())

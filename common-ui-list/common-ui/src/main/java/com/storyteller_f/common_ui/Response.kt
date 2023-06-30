@@ -17,11 +17,11 @@ import com.storyteller_f.compat_ktx.getParcelableCompat
 import com.storyteller_f.compat_ktx.getSerializableCompat
 import java.util.UUID
 
-class ActivityAction(val action: (FragmentActivity, Parcelable) -> Unit, val registerKey: String)
-class FragmentAction(val action: (Registry, Parcelable) -> Unit, val registerKey: String)
+class ActivityAction(val action: (FragmentActivity, Parcelable) -> Unit, val requestKey: String)
+class FragmentAction(val action: (Registry, Parcelable) -> Unit, val requestKey: String)
 
-val waitingInActivity = mutableMapOf<String, ActivityAction>()
-val waitingInFragment = mutableMapOf<String, FragmentAction>()
+val waitingInActivity = mutableMapOf<String, List<ActivityAction>>()
+val waitingInFragment = mutableMapOf<String, List<FragmentAction>>()
 
 /**
  * 可以被请求。返回的结构通过requestKey 辨别
@@ -61,26 +61,36 @@ val <T : Fragment> T.responseModel
         stateValueModel(arg?.getSerializableCompat("uuid", UUID::class.java), handle)
     })
 
-inline fun <T : Parcelable, F> F.buildCallback(result: Class<T>, crossinline action: (F, T) -> Unit): (String, Bundle) -> Unit where F : Fragment, F : Registry {
-    return { responseKey: String, r: Bundle ->
-        if (waitingInFragment.containsKey(responseKey)) {
-            val parcelable = r.getParcelableCompat(fragmentResultKey, result)
-            parcelable?.let { action(this, it) }
-            waitingInFragment.remove(responseKey)
+inline fun <T : Parcelable, F> F.buildCallback(
+    result: Class<T>,
+    crossinline action: (F, T) -> Unit
+): (String, Bundle) -> Unit where F : Fragment, F : Registry {
+    return { requestKey: String, bundle: Bundle ->
+        val registry = registryKey()
+        waitingInFragment[registry]?.let { list ->
+            bundle.getParcelableCompat(fragmentResultKey, result)?.let {
+                action(this, it)
+            }
+            waitingInFragment[registry] = list.filter {
+                it.requestKey != requestKey
+            }
         }
     }
 }
 
-fun <T : Parcelable, A> A.buildCallback(
+inline fun <T : Parcelable, A> A.buildCallback(
     result: Class<T>,
-    action: A.(T) -> Unit
-): (String, Bundle) -> Unit where A : FragmentActivity, A: Registry {
-    return { s: String, r: Bundle ->
-        if (waitingInActivity.containsKey(s)) {
-            r.getParcelableCompat(fragmentResultKey, result)?.let {
-                action(it)
+    crossinline action: A.(T) -> Unit
+): (String, Bundle) -> Unit where A : FragmentActivity, A : Registry {
+    return { requestKey: String, bundle: Bundle ->
+        val registry = registryKey()
+        waitingInActivity[registry]?.let { list ->
+            bundle.getParcelableCompat(fragmentResultKey, result)?.let {
+                action(this, it)
             }
-            waitingInActivity.remove(s)
+            waitingInActivity[registry] = list.filter {
+                it.requestKey != requestKey
+            }
         }
     }
 }
@@ -90,15 +100,21 @@ fun <T : Parcelable, A> A.buildCallback(
  */
 fun <T : Parcelable, F> F.waitingResponseInFragment(requestKey: RequestKey, action: F.(T) -> Unit, callback: (String, Bundle) -> Unit) where F : Registry, F : Fragment {
     val key = requestKey.toString()
-    @Suppress("UNCHECKED_CAST")
-    waitingInFragment[key] = FragmentAction(action as (Registry, Parcelable) -> Unit, registryKey())
+    val registerKey = registryKey()
+    @Suppress("UNCHECKED_CAST") val actions = waitingInFragment.getOrPut(registerKey) {
+        listOf()
+    } + FragmentAction(action as (Registry, Parcelable) -> Unit, key)
+    waitingInFragment[registerKey] = actions
     fm.setFragmentResultListener(key, owner, callback)
 }
 
-private fun <A, T : Parcelable> A.waitingResponseInActivity(requestKey: RequestKey, action: A.(T) -> Unit, callback: (String, Bundle) -> Unit) where A : FragmentActivity, A: Registry {
+private fun <A, T : Parcelable> A.waitingResponseInActivity(requestKey: RequestKey, action: A.(T) -> Unit, callback: (String, Bundle) -> Unit) where A : FragmentActivity, A : Registry {
     val key = requestKey.toString()
-    @Suppress("UNCHECKED_CAST")
-    waitingInActivity[key] = ActivityAction(action as (FragmentActivity, Parcelable) -> Unit, registryKey())
+    val registerKey = registryKey()
+    @Suppress("UNCHECKED_CAST") val actions = waitingInActivity.getOrPut(registerKey) {
+        listOf()
+    } + ActivityAction(action as (FragmentActivity, Parcelable) -> Unit, key)
+    waitingInActivity[registerKey] = actions
     fm.setFragmentResultListener(key, this, callback)
 }
 
@@ -145,30 +161,29 @@ fun <T : Parcelable, A> A.observe(
     requestKey: RequestKey,
     result: Class<T>,
     action: A.(T) -> Unit
-) where A : FragmentActivity, A: Registry {
+) where A : FragmentActivity, A : Registry {
     val callback = buildCallback(result, action)
     waitingResponseInActivity(requestKey, action, callback)
 }
 
-internal fun<A> A.observeResponse() where A: FragmentActivity, A: Registry {
-    waitingInActivity.forEach { (requestKey, value) ->
-        val action = value.action
-        if (value.registerKey == registryKey()) {
-            val callback = buildCallback(Parcelable::class.java, action)
-            val supportFragmentManager = fm
-            supportFragmentManager.clearFragmentResultListener(requestKey)
-            supportFragmentManager.setFragmentResultListener(requestKey, this, callback)
-        }
+internal fun <A> A.observeResponse() where A : FragmentActivity, A : Registry {
+    waitingInActivity[registryKey()]?.forEach {
+        val action = it.action
+        val requestKey = it.requestKey
+        val callback = buildCallback(Parcelable::class.java, action)
+        val supportFragmentManager = fm
+        supportFragmentManager.clearFragmentResultListener(requestKey)
+        supportFragmentManager.setFragmentResultListener(requestKey, this, callback)
     }
 }
 
 internal fun CommonFragment.observeResponse() {
-    waitingInFragment.forEach { (requestKey, value) ->
-        if (value.registerKey == registryKey()) {
-            val callback = buildCallback(Parcelable::class.java, value.action)
-            val fragmentManager = fm
-            fragmentManager.clearFragmentResultListener(requestKey)
-            fragmentManager.setFragmentResultListener(requestKey, owner, callback)
-        }
+    waitingInFragment[registryKey()]?.forEach {
+        val action = it.action
+        val requestKey = it.requestKey
+        val callback = buildCallback(Parcelable::class.java, action)
+        val fragmentManager = fm
+        fragmentManager.clearFragmentResultListener(requestKey)
+        fragmentManager.setFragmentResultListener(requestKey, owner, callback)
     }
 }

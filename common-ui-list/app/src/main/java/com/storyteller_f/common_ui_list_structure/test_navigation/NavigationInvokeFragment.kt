@@ -24,13 +24,13 @@ class NavigationInvokeFragment : SimpleFragment<FragmentNavigationInvokeBinding>
             }
         }
         binding.textviewFirst.setOnClick {
-            val request = findNavController().request(R.id.action_FirstFragment_to_testDialog)
-            observe(request, NavigationDialog.Result::class.java) { r ->
+            val requestKey = findNavController().request(R.id.action_FirstFragment_to_testDialog)
+            observe(requestKey, NavigationDialog.Result::class.java) { r ->
                 Toast.makeText(requireContext(), "fragment-->dialog ${r.test}", Toast.LENGTH_SHORT).show()
             }
         }
         binding.button2.setOnClick {
-            observe(request(TestDialog2::class.java), TestDialog2.Result::class.java,) { r ->
+            observe(request(TestDialog2::class.java), TestDialog2.Result::class.java) { r ->
                 Toast.makeText(requireContext(), "dialog ${r.test}", Toast.LENGTH_SHORT).show()
             }
         }
