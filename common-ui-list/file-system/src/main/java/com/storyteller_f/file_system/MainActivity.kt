@@ -93,7 +93,7 @@ class MainActivity : AppCompatActivity() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                     contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                 }
-                FileSystemUriSaver.getInstance().saveUri(this, preferenceKey, uri)
+                FileSystemUriSaver.instance.saveUri(this, preferenceKey, uri)
                 success()
                 return true
             }

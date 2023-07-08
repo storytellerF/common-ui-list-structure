@@ -3,7 +3,7 @@ package com.storyteller_f.file_system.message
 import java.util.*
 
 class Commission(private val commissionName: String) {
-    val messages: LinkedList<Message>
+    val messages: LinkedList<Message> = LinkedList()
     fun setSuccess(success: Boolean): Boolean {
         isSuccess = success
         return success
@@ -46,7 +46,6 @@ class Commission(private val commissionName: String) {
         get() = messages.last
 
     init {
-        messages = LinkedList()
         isSuccess = true
     }
 }

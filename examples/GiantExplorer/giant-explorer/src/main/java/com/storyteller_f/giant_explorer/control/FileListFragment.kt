@@ -30,9 +30,8 @@ import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ktx.safeLet
 import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.*
-import com.storyteller_f.file_system.instance.Create
+import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
-import com.storyteller_f.file_system.instance.NotCreate
 import com.storyteller_f.file_system.model.FileSystemItemModelLite
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.*
@@ -90,7 +89,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     }
 
     private fun openFolderInNewPage(holder: FileItemHolder) {
-        val uri = observer.fileInstance?.toChild(holder.file.name, NotCreate)?.uri ?: return
+        val uri = observer.fileInstance?.toChild(holder.file.name, FileCreatePolicy.NotCreate)?.uri ?: return
         startActivity(Intent(requireContext(), MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
             putExtra(
@@ -136,7 +135,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             requestKey,
             NewNameDialog.NewNameResult::class.java
         ) { nameResult ->
-            observer.fileInstance?.toChild(nameResult.name, Create(true))
+            observer.fileInstance?.toChild(nameResult.name, FileCreatePolicy.Create(true))
         }
         return true
     }
@@ -234,10 +233,11 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     fun toChild(itemHolder: FileItemHolder) {
         val old = observer.fileInstance ?: return
         if (itemHolder.file.item.isDirectory) {
+            val uri = old.toChild(itemHolder.file.name, FileCreatePolicy.NotCreate)?.uri ?: return
             findNavController().navigate(
                 R.id.action_fileListFragment_self,
                 FileListFragmentArgs(
-                    old.toChild(itemHolder.file.name, NotCreate).uri,
+                    uri,
                 ).toBundle()
             )
         } else {
@@ -275,7 +275,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     fun fileMenu(view: View, itemHolder: FileItemHolder) {
         val fullPath = itemHolder.file.fullPath
         val name = itemHolder.file.name
-        val uri = observer.fileInstance?.toChild(name, NotCreate)?.uri ?: return
+        val uri = observer.fileInstance?.toChild(name, FileCreatePolicy.NotCreate)?.uri ?: return
         val key = uuid.data.value ?: return
 
         PopupMenu(requireContext(), view).apply {

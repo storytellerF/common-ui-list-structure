@@ -41,7 +41,7 @@ object FileInstanceFactory {
         val safeUri = uri.buildUpon().path(path).build()
 
         return when (scheme) {
-            ContentResolver.SCHEME_CONTENT -> DocumentLocalFileInstance(context, safeUri, uri.authority!!, "")
+            ContentResolver.SCHEME_CONTENT -> DocumentLocalFileInstance("", uri.authority!!, context, safeUri)
             else -> getPublicFileSystemInstance(context, safeUri)
         }
     }
@@ -167,7 +167,7 @@ object FileInstanceFactory {
         val currentPrefix = getPrefix(context, fileInstance.uri, stoppableTask = stoppableTask)
         val childPrefix = getPrefix(context, childUri, stoppableTask = stoppableTask)
         return if (currentPrefix == childPrefix) {
-            fileInstance.toChild(name, policy)
+            fileInstance.toChild(name, policy)!!
         } else {
             getFileInstance(context, childUri, stoppableTask = stoppableTask)
         }

@@ -1,6 +1,5 @@
 package com.storyteller_f.file_system_remote
 
-import android.net.Uri
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Delete

@@ -73,9 +73,15 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     }
     private val dialogImpl = FilterDialogManager()
 
-    private val filters by keyPrefix({ "filter" }, svm({ dialogImpl.filterDialog }, vmProducer = buildFilterDialogState))
+    private val filters by keyPrefix(
+        { "filter" },
+        svm({ dialogImpl.filterDialog }, vmProducer = buildFilterDialogState)
+    )
 
-    private val sort by keyPrefix({ "sort" }, svm({ dialogImpl.sortDialog }, vmProducer = buildSortDialogState))
+    private val sort by keyPrefix(
+        { "sort" },
+        svm({ dialogImpl.sortDialog }, vmProducer = buildSortDialogState)
+    )
 
     private val uuid by vm({}) {
         genericValueModel(UUID.randomUUID().toString())
@@ -85,9 +91,10 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     })
 
     private var currentRequestingKey: String? = null
-    private val requestDocumentProvider = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) {
-        processDocumentProvider(it)
-    }
+    private val requestDocumentProvider =
+        registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) {
+            processDocumentProvider(it)
+        }
 
     private fun processDocumentProvider(uri: Uri?) {
         val key = currentRequestingKey
@@ -98,8 +105,11 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
                 Toast.makeText(this, "选择错误", Toast.LENGTH_LONG).show()
                 return
             }
-            contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-            FileSystemUriSaver.getInstance().saveUri(this, key, uri)
+            contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+            FileSystemUriSaver.instance.saveUri(this, key, uri)
             switchRoot(authority)
             currentRequestingKey = null
         }
@@ -135,11 +145,16 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             displayGrid.data.value = it.isChecked
         }
         registerForContextMenu(binding.switchRoot)
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_main) as NavHostFragment
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.nav_host_fragment_main) as NavHostFragment
         val navController = navHostFragment.navController
 
         observePathMan(navController)
-        val startDestinationArgs = intent.getBundleExtra("start") ?: FileListFragmentArgs(File(FileInstanceFactory.rootUserEmulatedPath).toUri()).toBundle()
+        val startDestinationArgs = intent.getBundleExtra("start") ?: FileListFragmentArgs(
+            File(
+                FileInstanceFactory.rootUserEmulatedPath
+            ).toUri()
+        ).toBundle()
         navController.setGraph(R.navigation.nav_main, startDestinationArgs)
     }
 
@@ -198,7 +213,12 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             R.id.about -> startActivity(Intent(this, AboutActivity::class.java))
             R.id.plugin_manager -> startActivity(Intent(this, PluginManageActivity::class.java))
             R.id.remote_manager -> startActivity(Intent(this, RemoteManagerActivity::class.java))
-            R.id.background_task -> startActivity(Intent(this, BackgroundTaskConfigActivity::class.java))
+            R.id.background_task -> startActivity(
+                Intent(
+                    this,
+                    BackgroundTaskConfigActivity::class.java
+                )
+            )
         }
         return super.onOptionsItemSelected(item)
     }
@@ -215,15 +235,22 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         })
     }
 
-    override fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?) {
+    override fun onCreateContextMenu(
+        menu: ContextMenu?,
+        v: View?,
+        menuInfo: ContextMenu.ContextMenuInfo?
+    ) {
         super.onCreateContextMenu(menu, v, menuInfo)
         menu ?: return
         val provider = Intent("android.content.action.DOCUMENTS_PROVIDER")
         val info = packageManager.queryIntentContentProvidersCompat(provider, 0)
-        val savedUris = FileSystemUriSaver.getInstance().savedUris(this)
+        val savedUris = FileSystemUriSaver.instance.savedUris(this)
 
         menu.add("Return").setOnMenuItemClickListener {
-            findNavControl().navigate(R.id.fileListFragment, FileListFragmentArgs(File("/").toUri()).toBundle())
+            findNavControl().navigate(
+                R.id.fileListFragment,
+                FileListFragmentArgs(File("/").toUri()).toBundle()
+            )
             true
         }
         scope.launch {
@@ -232,13 +259,19 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
                 if (it.type == RemoteAccessType.smb || it.type == RemoteAccessType.webDav) {
                     val toUri = it.toShareSpec().toUri()
                     menu.add(toUri.toString()).setOnMenuItemClickListener {
-                        findNavControl().navigate(R.id.fileListFragment, FileListFragmentArgs(toUri).toBundle())
+                        findNavControl().navigate(
+                            R.id.fileListFragment,
+                            FileListFragmentArgs(toUri).toBundle()
+                        )
                         true
                     }
                 } else {
                     val toUri = it.toFtpSpec().toUri()
                     menu.add(toUri.toString()).setOnMenuItemClickListener {
-                        findNavControl().navigate(R.id.fileListFragment, FileListFragmentArgs(toUri).toBundle())
+                        findNavControl().navigate(
+                            R.id.fileListFragment,
+                            FileListFragmentArgs(toUri).toBundle()
+                        )
                         true
                     }
                 }
@@ -264,16 +297,16 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     }
 
     private fun hasPermission(
-        savedUris: MutableList<String>,
+        savedUris: List<String>,
         authority: String
     ): Boolean {
         val contains = savedUris.contains(authority) && try {
             DocumentLocalFileInstance(
+                "", authority,
                 this@MainActivity,
                 uriFromAuthority(authority),
-                authority,
-                ""
-            ).exists()
+
+                ).exists()
         } catch (e: Exception) {
             Log.e(TAG, "onCreateContextMenu: ", e)
             false
@@ -282,13 +315,16 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     }
 
     private fun switchRoot(authority: String): Boolean {
-        val savedUri = FileSystemUriSaver.getInstance().savedUri(this, authority)
+        val savedUri = FileSystemUriSaver.instance.savedUri(this, authority)
         if (savedUri != null) {
             try {
                 val root = uriFromAuthority(authority)
-                val instance = DocumentLocalFileInstance(this, root, authority, "")
+                val instance = DocumentLocalFileInstance("", authority, this, root)
                 if (instance.exists()) {
-                    findNavControl().navigate(R.id.fileListFragment, FileListFragmentArgs(root).toBundle())
+                    findNavControl().navigate(
+                        R.id.fileListFragment,
+                        FileListFragmentArgs(root).toBundle()
+                    )
                     return true
                 }
             } catch (e: Exception) {
@@ -307,13 +343,17 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     }
 
     private fun findNavControl(): NavController {
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_main) as NavHostFragment
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.nav_host_fragment_main) as NavHostFragment
         return navHostFragment.navController
     }
 
     private fun MenuItem.updateEye(newState: Boolean) {
         isChecked = newState
-        icon = ContextCompat. getDrawable(this@MainActivity, if (newState) R.drawable.ic_eye_blind else R.drawable.ic_eye_vision)
+        icon = ContextCompat.getDrawable(
+            this@MainActivity,
+            if (newState) R.drawable.ic_eye_blind else R.drawable.ic_eye_vision
+        )
     }
 
     var fileOperateBinder: FileOperateBinder? = null
@@ -328,7 +368,11 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
                 binder.state.toDiffNoNull { i, i2 ->
                     i == i2
                 }.observe(this@MainActivity, Observer {
-                    Toast.makeText(this@MainActivity, "${it.first} ${it.second}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@MainActivity,
+                        "${it.first} ${it.second}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     if (it.first == FileOperateBinder.state_null) {
                         FileOperationDialog().apply {
                             this.binder = fileOperateBinderLocal
@@ -358,7 +402,8 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
 
     override fun onSuccess(uri: Uri?, originUri: Uri?) {
         scope.launch {
-            Toast.makeText(this@MainActivity, "dest $uri origin $originUri", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this@MainActivity, "dest $uri origin $originUri", Toast.LENGTH_SHORT)
+                .show()
         }
 //        adapter.refresh()
     }
@@ -390,7 +435,10 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
 }
 
 @Suppress("DEPRECATION")
-fun PackageManager.queryIntentActivitiesCompat(searchDocumentProvider: Intent, flags: Long): MutableList<ResolveInfo> {
+fun PackageManager.queryIntentActivitiesCompat(
+    searchDocumentProvider: Intent,
+    flags: Long
+): MutableList<ResolveInfo> {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         queryIntentActivities(searchDocumentProvider, PackageManager.ResolveInfoFlags.of(flags))
     } else {
@@ -399,9 +447,15 @@ fun PackageManager.queryIntentActivitiesCompat(searchDocumentProvider: Intent, f
 }
 
 @Suppress("DEPRECATION")
-fun PackageManager.queryIntentContentProvidersCompat(searchDocumentProvider: Intent, flags: Long): MutableList<ResolveInfo> {
+fun PackageManager.queryIntentContentProvidersCompat(
+    searchDocumentProvider: Intent,
+    flags: Long
+): MutableList<ResolveInfo> {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        queryIntentContentProviders(searchDocumentProvider, PackageManager.ResolveInfoFlags.of(flags))
+        queryIntentContentProviders(
+            searchDocumentProvider,
+            PackageManager.ResolveInfoFlags.of(flags)
+        )
     } else {
         queryIntentContentProviders(searchDocumentProvider, flags.toInt())
     }

@@ -11,5 +11,5 @@ abstract class ForbidChangeLocalFileInstance(uri: Uri) :
 
     override fun deleteFileOrEmptyDirectory() = false
 
-    override fun rename(newName: String?) = false
+    override fun rename(newName: String) = false
 }

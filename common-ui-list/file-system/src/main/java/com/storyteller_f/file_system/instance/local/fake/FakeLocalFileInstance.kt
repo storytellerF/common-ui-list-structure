@@ -32,19 +32,17 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
         }
     )
 
-    override fun getDirectory(): DirectoryItemModel {
-        return DirectoryItemModel("/", uri, false, -1, false)
-    }
+    override val directory: DirectoryItemModel
+        get() = DirectoryItemModel("/", uri, false, -1, false)
 
-    override fun getFileInputStream(): FileInputStream {
-        TODO("Not yet implemented")
-    }
+    override val fileInputStream: FileInputStream
+        get() = TODO("Not yet implemented")
 
-    override fun getFileOutputStream(): FileOutputStream {
-        TODO("Not yet implemented")
-    }
+    override val fileOutputStream: FileOutputStream
+        get() = TODO("Not yet implemented")
 
-    override fun getFileLength() = -1L
+    override val fileLength: Long
+        get() = -1
 
     @WorkerThread
     override fun listInternal(
@@ -98,11 +96,11 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
         TODO("Not yet implemented")
     }
 
-    override fun getDirectorySize(): Long {
-        TODO("Not yet implemented")
-    }
+    override val directorySize: Long
+        get() = TODO("Not yet implemented")
 
-    override fun isHidden() = false
+    override val isHidden: Boolean
+        get() = false
 
     override fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         val (_, child) = child(name)
@@ -117,9 +115,8 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
         TODO("Not yet implemented")
     }
 
-    override fun getParent(): String {
-        TODO("Not yet implemented")
-    }
+    override val parent: String?
+        get() = super.parent
 
     companion object {
         val presetSystemDirectories = mapOf(

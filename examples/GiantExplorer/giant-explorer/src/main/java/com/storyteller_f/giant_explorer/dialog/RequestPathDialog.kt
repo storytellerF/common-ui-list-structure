@@ -11,8 +11,7 @@ import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.FileInstanceFactory
-import com.storyteller_f.file_system.instance.Create
-import com.storyteller_f.file_system.instance.NotCreate
+import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.control.*
 import com.storyteller_f.giant_explorer.databinding.DialogRequestPathBinding
@@ -66,7 +65,7 @@ class RequestPathDialog :
         binding.newFile.setOnClick {
             val requestDialog = request(NewNameDialog::class.java)
             observe(requestDialog, NewNameDialog.NewNameResult::class.java) { nameResult ->
-                observer.fileInstance?.toChild(nameResult.name, Create(false))
+                observer.fileInstance?.toChild(nameResult.name, FileCreatePolicy.Create(false))
             }
         }
         (dialog as? ComponentDialog)?.onBackPressedDispatcher?.addCallback(this) {
@@ -134,7 +133,7 @@ class RequestPathDialog :
                     requireContext(),
                     current,
                     itemHolder.file.name,
-                    NotCreate,
+                    FileCreatePolicy.NotCreate,
                     StoppableTask.Blocking
                 )
             )

@@ -3,9 +3,9 @@ package com.storyteller_f.file_system.operate
 import android.content.Context
 import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.file_system.FileInstanceFactory
-import com.storyteller_f.file_system.instance.Create
+import com.storyteller_f.file_system.instance.FileCreatePolicy.Create
+import com.storyteller_f.file_system.instance.FileCreatePolicy.NotCreate
 import com.storyteller_f.file_system.instance.FileInstance
-import com.storyteller_f.file_system.instance.NotCreate
 import com.storyteller_f.file_system.message.Message
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
@@ -62,13 +62,15 @@ class FileCopyOp(
             //新建一个文件
             copyFileFaster(fileInstance, target)
         } else {
-            copyDirectoryFaster(fileInstance, FileInstanceFactory.toChild(
-                context,
-                target,
-                fileInstance.name,
-                Create(false),
-                task
-            ))
+            copyDirectoryFaster(
+                fileInstance, FileInstanceFactory.toChild(
+                    context,
+                    target,
+                    fileInstance.name,
+                    Create(false),
+                    task
+                )
+            )
         }
     }
 

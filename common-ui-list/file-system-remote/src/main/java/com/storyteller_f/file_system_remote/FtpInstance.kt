@@ -52,25 +52,30 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
         return null
     }
 
-    override fun getFile(): FileItemModel {
-        TODO("Not yet implemented")
-    }
+    override val file: FileItemModel
+        get() {
+            TODO("Not yet implemented")
+        }
 
-    override fun getDirectory(): DirectoryItemModel {
-        TODO("Not yet implemented")
-    }
+    override val directory: DirectoryItemModel
+        get() {
+            TODO("Not yet implemented")
+        }
 
-    override fun getFileLength(): Long {
-        TODO("Not yet implemented")
-    }
+    override val fileLength: Long
+        get() {
+            TODO("Not yet implemented")
+        }
 
-    override fun getFileInputStream(): FileInputStream {
-        TODO("Not yet implemented")
-    }
+    override val fileInputStream: FileInputStream
+        get() {
+            TODO("Not yet implemented")
+        }
 
-    override fun getFileOutputStream(): FileOutputStream {
-        TODO("Not yet implemented")
-    }
+    override val fileOutputStream: FileOutputStream
+        get() {
+            TODO("Not yet implemented")
+        }
 
     override fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
 
@@ -95,10 +100,11 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
         }
     }
 
-    override fun isFile(): Boolean {
-        val current = reconnectIfNeed()
-        return current?.isFile == true
-    }
+    override val isFile: Boolean
+        get() {
+            val current = reconnectIfNeed()
+            return current?.isFile == true
+        }
 
     private fun reconnectIfNeed(): FTPFile? {
         var current = ftpFile
@@ -112,15 +118,16 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
         return reconnectIfNeed() != null
     }
 
-    override fun isDirectory(): Boolean {
-        return reconnectIfNeed()?.isDirectory == true
-    }
+    override val isDirectory: Boolean
+        get() {
+            return reconnectIfNeed()?.isDirectory == true
+        }
 
     override fun deleteFileOrEmptyDirectory(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun rename(newName: String?): Boolean {
+    override fun rename(newName: String): Boolean {
         TODO("Not yet implemented")
     }
 
@@ -132,27 +139,29 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
         TODO("Not yet implemented")
     }
 
-    override fun getDirectorySize(): Long {
-        TODO("Not yet implemented")
-    }
+    override val directorySize: Long
+        get() {
+            TODO("Not yet implemented")
+        }
 
     override fun createFile(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun isHidden(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override val isHidden: Boolean
+        get() {
+            TODO("Not yet implemented")
+        }
 
     override fun createDirectory(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun toChild(name: String, policy: FileCreatePolicy?): FileInstance {
+    override fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         TODO("Not yet implemented")
     }
 
-    override fun changeToChild(name: String, policy: FileCreatePolicy?) {
+    override fun changeToChild(name: String, policy: FileCreatePolicy) {
         TODO("Not yet implemented")
     }
 

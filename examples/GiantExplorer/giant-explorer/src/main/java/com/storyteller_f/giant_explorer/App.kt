@@ -18,8 +18,8 @@ import androidx.work.WorkerParameters
 import com.google.android.material.color.DynamicColors
 import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.file_system.checkPathPermission
+import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
-import com.storyteller_f.file_system.instance.NotCreate
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.TorrentFileItemModel
 import com.storyteller_f.giant_explorer.control.getFileInstanceAsync
@@ -228,7 +228,7 @@ class MDWorker(context: Context, workerParams: WorkerParameters) :
         child: Uri
     ) {
         getFileMD5(
-            fileInstance.toChild(it.name, NotCreate), closeable
+            fileInstance.toChild(it.name, FileCreatePolicy.NotCreate)!!, closeable
         )?.let { data ->
             context.requireDatabase.mdDao()
                 .save(FileMDRecord(child, data, System.currentTimeMillis()))
@@ -274,7 +274,7 @@ class TorrentWorker(context: Context, workerParams: WorkerParameters) :
         child: Uri
     ) {
         TorrentFile.getTorrentName(
-            fileInstance.toChild(it.name, NotCreate),
+            fileInstance.toChild(it.name, FileCreatePolicy.NotCreate)!!,
             closeable
         ).takeIf { it.isNotEmpty() }?.let { torrentName ->
             context.requireDatabase.torrentDao()

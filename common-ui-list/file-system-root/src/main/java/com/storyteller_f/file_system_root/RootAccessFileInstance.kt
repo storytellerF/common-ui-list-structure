@@ -15,21 +15,25 @@ import java.io.FileOutputStream
 class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : FileInstance(uri) {
 
     private var extendedFile = remote.getFile(path)
-    override fun getFile(): FileItemModel {
-        return FileItemModel(extendedFile.name, uri, extendedFile.isHidden, extendedFile.lastModified(), extendedFile.isSymlink, extendedFile.extension)
-    }
+    override val file: FileItemModel
+        get() {
+            return FileItemModel(extendedFile.name, uri, extendedFile.isHidden, extendedFile.lastModified(), extendedFile.isSymlink, extendedFile.extension)
+        }
 
-    override fun getDirectory(): DirectoryItemModel {
-        return DirectoryItemModel(extendedFile.name, uri, extendedFile.isHidden, extendedFile.lastModified(), extendedFile.isSymlink)
-    }
+    override val directory: DirectoryItemModel
+        get() {
+            return DirectoryItemModel(extendedFile.name, uri, extendedFile.isHidden, extendedFile.lastModified(), extendedFile.isSymlink)
+        }
 
-    override fun getFileLength(): Long {
-        return extendedFile.length()
-    }
+    override val fileLength: Long
+        get() {
+            return extendedFile.length()
+        }
 
-    override fun getFileInputStream(): FileInputStream = extendedFile.inputStream()
+    override val fileInputStream get() = extendedFile.inputStream()
 
-    override fun getFileOutputStream(): FileOutputStream = extendedFile.outputStream()
+    override val fileOutputStream
+        get() = extendedFile.outputStream()
 
     override fun listInternal(
         fileItems: MutableList<FileItemModel>,
@@ -55,15 +59,17 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
         return com.storyteller_f.file_system.util.permissions(r, w, e, isFile)
     }
 
-    override fun isFile(): Boolean = extendedFile.isFile
+    override val isFile: Boolean
+        get() = extendedFile.isFile
 
     override fun exists(): Boolean = extendedFile.exists()
 
-    override fun isDirectory(): Boolean = extendedFile.isDirectory
+    override val isDirectory: Boolean
+        get() = extendedFile.isDirectory
 
     override fun deleteFileOrEmptyDirectory(): Boolean = extendedFile.delete()
 
-    override fun rename(newName: String?): Boolean {
+    override fun rename(newName: String): Boolean {
         TODO("Not yet implemented")
     }
 
@@ -76,15 +82,17 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
         TODO("Not yet implemented")
     }
 
-    override fun getDirectorySize(): Long {
-        TODO("Not yet implemented")
-    }
+    override val directorySize: Long
+        get() {
+            TODO("Not yet implemented")
+        }
 
     override fun createFile(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun isHidden() = extendedFile.isHidden
+    override val isHidden: Boolean
+        get() = extendedFile.isHidden
 
     override fun createDirectory(): Boolean {
         TODO("Not yet implemented")
@@ -105,11 +113,11 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
         extendedFile = childFile
     }
 
-    override fun getParent(): String? = extendedFile.parent
+    override val parent: String?
+        get() = extendedFile.parent
 
-    override fun isSymbolicLink(): Boolean {
-        return extendedFile.isSymlink
-    }
+    override val isSymbolicLink: Boolean
+        get() = extendedFile.isSymlink
 
     companion object {
         const val rootFileSystemScheme = "root"
