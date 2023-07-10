@@ -4,8 +4,18 @@ import java.io.File
 
 fun main(args: Array<String>) {
     val logger = LoggerFactory.getLogger("dispatcher")
-    val userHome = System.getProperty("user.home")
-    val adbPath = "$userHome/Library/Android/sdk/platform-tools/adb"
+    val androidHome = System.getenv("ANDROID_HOME")
+    val adbExtension = if (System.getProperty("os.name").lowercase().contains("windows")) {
+        ".exe"
+    } else ""
+    val name = "platform-tools/adb$adbExtension"
+    val adbPath = if (androidHome != null) {
+        File(androidHome, name)
+    } else {
+        val userHome = System.getProperty("user.home")
+       File(userHome, "Library/Android/sdk/$name")
+    }.absolutePath
+
     // Try adding program arguments via Run/Debug configuration.
     // Learn more about running applications: https://www.jetbrains.com/help/idea/running-applications.html.
     logger.info("Program arguments: ${args.joinToString()}")
