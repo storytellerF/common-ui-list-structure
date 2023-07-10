@@ -49,7 +49,14 @@ buildAppInternal() {
 
 #第一个参数是tag，第二个参数是自定义命令，第三个参数是是否开启clean，默认开始，输入cache 会关闭
 customBuild() {
-    customBuildProcess $1 "gradlew clean" "gradlew $2" $3
+    system=$(uname -o)
+    if [ "$system" != "Msys" ]; then
+        extras=""
+    else
+        extras="--no-daemon"
+    fi
+
+    customBuildProcess $1 "gradlew clean" "gradlew $extras $2" $3
 }
 
 #第一个参数是tag，第二个参数是自定义clean命令，第三个参数是自定义build 命令，第四个参数是是否开启clean，默认开始
