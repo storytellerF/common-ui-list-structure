@@ -3,15 +3,6 @@ plugins {
     `kotlin-dsl`
 }
 
-//val javaVersion = JavaVersion.VERSION_17
-//java {
-//    sourceCompatibility = javaVersion
-//    targetCompatibility = javaVersion
-//}
-//tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-//    kotlinOptions.jvmTarget = javaVersion.toString()
-//}
-
 gradlePlugin {
     plugins {
         register("version-manager") {
@@ -24,6 +15,6 @@ gradlePlugin {
 }
 
 dependencies {
-    implementation("com.android.tools.build:gradle:8.0.1")
+    implementation("com.android.tools.build:gradle:8.0.2")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.10")
 }

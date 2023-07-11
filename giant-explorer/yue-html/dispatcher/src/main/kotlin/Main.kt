@@ -18,7 +18,7 @@ fun main(args: Array<String>) {
 
     // Try adding program arguments via Run/Debug configuration.
     // Learn more about running applications: https://www.jetbrains.com/help/idea/running-applications.html.
-    logger.info("Program arguments: ${args.joinToString()}")
+    logger.info("Program arguments: ${args.size} -> ${args.joinToString(", ")}")
     val path = args.firstOrNull() ?: "../"
     logger.debug(File(path).absolutePath)
     SongAction(

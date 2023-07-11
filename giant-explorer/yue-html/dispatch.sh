@@ -11,10 +11,9 @@ else
     #windows 没有可靠的压缩指令，暂时仅打包
   tar -cf build/yue-html.zip src/index.html src/imgTouchCanvas.js config
 fi
-
+checkLastResult "compress yue-html" $?
 
 cd dispatcher
-invokeClean dispatcher "gradlew clean" $1
-sh gradlew installDist
-#invoke command
+customBuild dispatcher installDist $1
 build/install/dispatcher/bin/dispatcher
+checkLastResult dispatcher $?
