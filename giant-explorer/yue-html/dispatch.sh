@@ -1,6 +1,6 @@
-source ../../common.sh
-mkdir -p build
 #!/bin/bash
+. ../../common.sh
+mkdir -p build
 
 command_name="zip"
 command_path=$(command -v $command_name)
