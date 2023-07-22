@@ -19,12 +19,13 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+val javaVersion = JavaVersion.VERSION_1_8
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
 }
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = javaVersion.toString()
 }
 
 application {

@@ -4,14 +4,15 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
     id "com.storyteller_f.version_manager"
 }
+def javaVersion = JavaVersion.VERSION_17
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
 }
 
 compileKotlin {
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = javaVersion.toString()
         freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
     }
 }
