@@ -18,6 +18,7 @@ android {
         minSdk = 21
     }
 
+    @Suppress("UnstableApiUsage")
     buildFeatures {
         dataBinding = true
     }
@@ -26,7 +27,7 @@ android {
 }
 baseLibrary()
 setupCompose(true)
-setupExtFuncSupport()
+setupExtFunc()
 dependencies {
     api(project(":ext-func-definition"))
     implementation(project(":common-ktx"))

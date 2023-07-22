@@ -21,8 +21,7 @@ plugins {
     id("org.jetbrains.kotlin.android") version kotlinVersion apply false
     id("org.jetbrains.kotlin.jvm") version kotlinVersion apply false
     id("com.google.devtools.ksp") version kspVersion apply false
-    //使用includeBuild 时使用，plugins 中无法读取外部变量
-//    id("com.storyteller_f.sml") version ("0.0.2") apply false
+    //使用includeBuild 时使用sml，不需要指定id
     id("io.gitlab.arturbosch.detekt") version ("1.21.0")
 }
 dependencies {

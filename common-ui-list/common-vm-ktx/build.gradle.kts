@@ -14,7 +14,7 @@ android {
     namespace = "com.storyteller_f.common_vm_ktx"
 }
 baseLibrary()
-setupExtFuncSupport()
+setupExtFunc()
 dependencies {
     implementation(project(":ext-func-definition"))
     implementation("androidx.appcompat:appcompat:${Versions.appcompatVersion}")
@@ -22,5 +22,4 @@ dependencies {
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib:${Versions.kotlinVersion}")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
-
 }

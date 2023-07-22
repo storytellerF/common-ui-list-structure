@@ -16,7 +16,7 @@ android {
     namespace = "com.storyteller_f.common_pr"
 }
 baseLibrary()
-setupExtFuncSupport()
+setupExtFunc()
 dependencies {
     implementation(project(":ext-func-definition"))
     implementation(project(":common-ktx"))
