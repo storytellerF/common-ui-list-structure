@@ -25,4 +25,4 @@ dependencies {
 baseApp()
 setupGeneric()
 setupDataBinding()
-setupDipToPx()
+setupPreviewFeature()

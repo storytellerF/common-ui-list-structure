@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.navigation.fragment.findNavController
 import com.storyteller_f.common_ktx.exceptionMessage
+import com.storyteller_f.common_pr.observe
 import com.storyteller_f.common_ui.*
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.BigTimeTask
@@ -38,7 +39,7 @@ class AddTaskFragment : SimpleFragment<FragmentAddTaskBinding>(FragmentAddTaskBi
         binding.selectWorkerName.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, arrayOf("message digest", "torrent name", "folder size"))
         binding.selectPath.setOnClick {
             val requestKey = findNavController().request(R.id.action_select_task_path)
-            observe(requestKey, RequestPathDialog.RequestPathResult::class.java) {result ->
+            requestKey.observe(RequestPathDialog.RequestPathResult::class.java) {result ->
                 binding.path.setText(result.path)
             }
         }

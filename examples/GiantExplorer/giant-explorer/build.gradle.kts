@@ -115,7 +115,7 @@ dependencies {
 baseApp()
 setupGeneric()
 setupDataBinding()
-setupDipToPx()
+setupPreviewFeature()
 
 fun ApplicationDefaultConfig.registerConfigKey(
     identification: String,

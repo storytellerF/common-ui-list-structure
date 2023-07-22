@@ -64,7 +64,7 @@ class RequestPathDialog :
         }
         binding.newFile.setOnClick {
             val requestDialog = request(NewNameDialog::class.java)
-            observe(requestDialog, NewNameDialog.NewNameResult::class.java) { nameResult ->
+            observeResponse(requestDialog, NewNameDialog.NewNameResult::class.java) { nameResult ->
                 observer.fileInstance?.toChild(nameResult.name, FileCreatePolicy.Create(false))
             }
         }

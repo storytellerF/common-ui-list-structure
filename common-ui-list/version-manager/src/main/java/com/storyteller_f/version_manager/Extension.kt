@@ -87,7 +87,7 @@ fun Project.setupDataBinding() {
     }
 }
 
-fun Project.setupDipToPx() {
+fun Project.setupPreviewFeature() {
     androidApp {
         kotlinOptionsApp {
             addArgs("-Xcontext-receivers")

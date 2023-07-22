@@ -27,7 +27,7 @@ dependencies {
 baseApp()
 setupGeneric()
 setupDataBinding()
-setupDipToPx()
+setupPreviewFeature()
 
 //licensee {
 //    allow("Apache-2.0")

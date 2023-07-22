@@ -148,7 +148,7 @@ fun <F> F.request(
 
 private fun UUID.requestKey(): RequestKey = RequestKey(this)
 
-fun <T : Parcelable, F> F.observe(
+fun <T : Parcelable, F> F.observeResponse(
     requestKey: RequestKey,
     result: Class<T>,
     action: F.(T) -> Unit
@@ -157,7 +157,7 @@ fun <T : Parcelable, F> F.observe(
     waitingResponseInFragment(requestKey, action, callback)
 }
 
-fun <T : Parcelable, A> A.observe(
+fun <T : Parcelable, A> A.observeResponse(
     requestKey: RequestKey,
     result: Class<T>,
     action: A.(T) -> Unit

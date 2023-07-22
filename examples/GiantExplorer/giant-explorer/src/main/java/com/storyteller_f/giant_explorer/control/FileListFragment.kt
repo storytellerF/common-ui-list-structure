@@ -28,6 +28,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ktx.safeLet
+import com.storyteller_f.common_pr.observe
 import com.storyteller_f.common_ui.*
 import com.storyteller_f.common_vm_ktx.*
 import com.storyteller_f.file_system.instance.FileCreatePolicy
@@ -89,7 +90,8 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     }
 
     private fun openFolderInNewPage(holder: FileItemHolder) {
-        val uri = observer.fileInstance?.toChild(holder.file.name, FileCreatePolicy.NotCreate)?.uri ?: return
+        val uri = observer.fileInstance?.toChild(holder.file.name, FileCreatePolicy.NotCreate)?.uri
+            ?: return
         startActivity(Intent(requireContext(), MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
             putExtra(
@@ -131,7 +133,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
     private fun addFile(): Boolean {
         val requestKey = findNavController().request(R.id.action_fileListFragment_to_newNameDialog)
-        observe(
+        observeResponse(
             requestKey,
             NewNameDialog.NewNameResult::class.java
         ) { nameResult ->
@@ -220,7 +222,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             )?.getBoolean("notify_before_paste", true) == true
         ) {
             val requestKey = request(TaskConfirmDialog::class.java)
-            observe(requestKey, TaskConfirmDialog.Result::class.java) { result ->
+            requestKey.observe(TaskConfirmDialog.Result::class.java) { result ->
                 if (result.confirm) fileOperateBinderLocal.moveOrCopy(dest, items, null, false, key)
             }
         } else {
@@ -246,7 +248,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                 R.id.action_fileListFragment_to_openFileDialog,
                 OpenFileDialogArgs(uri).toBundle()
             )
-            observe(requestKey, OpenFileDialog.OpenFileResult::class.java) { r ->
+            requestKey.observe(OpenFileDialog.OpenFileResult::class.java) { r ->
                 if (uri.scheme != ContentResolver.SCHEME_FILE) return@observe
                 val file = File(itemHolder.file.fullPath)
                 val uriForFile = FileProvider.getUriForFile(
@@ -331,8 +333,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             override suspend fun requestPath(initUri: String?): String {
                 val completableDeferred = CompletableDeferred<String>()
                 val requestKey = request(RequestPathDialog::class.java)
-                observe(
-                    requestKey,
+                requestKey.observe(
                     RequestPathDialog.RequestPathResult::class.java
                 ) { result ->
                     completableDeferred.complete(result.path)
@@ -455,7 +456,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
     private fun moveOrCopy(move: Boolean, itemHolder: FileItemHolder) {
         val requestKey = request(RequestPathDialog::class.java)
-        observe(requestKey, RequestPathDialog.RequestPathResult::class.java) { result ->
+        requestKey.observe(RequestPathDialog.RequestPathResult::class.java) { result ->
             scope.launch {
                 result.path.safeLet {
                     getFileInstance(requireContext(), File(it).toUri(), stoppableTask = stoppable())
