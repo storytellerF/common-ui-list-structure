@@ -1,33 +1,33 @@
 package com.storyteller_f.giant_explorer.filter
 
 import android.view.View
-import android.view.ViewGroup
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.filter_core.config.SimpleRegExpConfigItem
 import com.storyteller_f.filter_ui.adapter.FilterItemContainer
 import com.storyteller_f.filter_ui.adapter.FilterItemViewHolder
 import com.storyteller_f.filter_ui.adapter.FilterViewHolderFactory
-import com.storyteller_f.filter_ui.filter.SimpleRegexpFilter
+import com.storyteller_f.filter_ui.filter.SimpleRegExpFilter
 
-class NameFilter(item: SimpleRegExpConfigItem?) : SimpleRegexpFilter<FileSystemItemModel>("文件名", item) {
-    override fun getItemViewType(): Int {
-        return 1
+class NameFilter(item: SimpleRegExpConfigItem) : SimpleRegExpFilter<FileSystemItemModel>("文件名", item) {
+    override val itemViewType: Int
+        get() {
+            return 1
+        }
+
+    override fun dup(): Any {
+        return NameFilter(item.dup() as SimpleRegExpConfigItem)
     }
 
-    override fun copy(): Any {
-        return NameFilter(item.copy() as SimpleRegExpConfigItem?)
+    override fun getMatchString(t: FileSystemItemModel): CharSequence {
+        return t.name.orEmpty()
     }
 
-    override fun getMatchString(t: FileSystemItemModel?): CharSequence {
-        return t?.name.orEmpty()
-    }
-
-    class ViewHolder(itemView: View) : SimpleRegexpFilter.ViewHolder(itemView) {
+    class ViewHolder(itemView: View) : SimpleRegExpFilter.ViewHolder<FileSystemItemModel>(itemView) {
 
     }
 
     class Config(regexp: String) : SimpleRegExpConfigItem(regexp) {
-        override fun copy(): Any {
+        override fun dup(): Any {
             return Config(regexp)
         }
 
@@ -35,9 +35,12 @@ class NameFilter(item: SimpleRegExpConfigItem?) : SimpleRegexpFilter<FileSystemI
 
 }
 
-class FilterFactory : FilterViewHolderFactory() {
-    override fun create(parent: ViewGroup, viewType: Int, container: FilterItemContainer): FilterItemViewHolder {
-        SimpleRegexpFilter.ViewHolder.create(parent.context, container.frameLayout)
+class FilterFactory : FilterViewHolderFactory<FileSystemItemModel>() {
+    override fun create(
+        viewType: Int,
+        container: FilterItemContainer
+    ): FilterItemViewHolder<FileSystemItemModel> {
+        SimpleRegExpFilter.ViewHolder.create(container)
         return NameFilter.ViewHolder(container.view)
     }
 

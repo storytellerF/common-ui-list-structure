@@ -25,6 +25,7 @@ import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.FileSystemUriSaver
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
+import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system_remote.RemoteAccessType
 import com.storyteller_f.file_system_root.RootAccessFileInstance
 import com.storyteller_f.giant_explorer.R
@@ -35,7 +36,8 @@ import com.storyteller_f.giant_explorer.control.task.BackgroundTaskConfigActivit
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.ActivityMainBinding
 import com.storyteller_f.giant_explorer.dialog.FileOperationDialog
-import com.storyteller_f.giant_explorer.filter.*
+import com.storyteller_f.giant_explorer.dialog.FilterDialogFragment
+import com.storyteller_f.giant_explorer.dialog.SortDialogFragment
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
 import com.storyteller_f.giant_explorer.service.FileOperateService
 import com.storyteller_f.giant_explorer.service.FileService
@@ -71,21 +73,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     private val filterHiddenFile by svm({}) { it, _ ->
         StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
     }
-    private val dialogImpl = FilterDialogManager()
 
-    private val filters by keyPrefix(
-        { "filter" },
-        svm({ dialogImpl.filterDialog }, vmProducer = buildFilterDialogState)
-    )
-
-    private val sort by keyPrefix(
-        { "sort" },
-        svm({ dialogImpl.sortDialog }, vmProducer = buildSortDialogState)
-    )
-
-    private val uuid by vm({}) {
-        genericValueModel(UUID.randomUUID().toString())
-    }
     private val displayGrid by keyPrefix("display", vm({}) { _ ->
         genericValueModel(false)
     })
@@ -117,8 +105,6 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        uuid
-        initDialog()
         displayGrid.data.distinctUntilChanged().observe(owner, Observer {
             binding.switchDisplay.isActivated = it
         })
@@ -156,16 +142,6 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             ).toUri()
         ).toBundle()
         navController.setGraph(R.navigation.nav_main, startDestinationArgs)
-    }
-
-    private fun initDialog() {
-        dialogImpl.init(this, {
-            filters.data.value = it
-        }, {
-            sort.data.value = it
-        })
-        filters
-        sort
     }
 
     private fun observePathMan(navController: NavController) {
@@ -206,8 +182,8 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         when (item.itemId) {
             R.id.filterHiddenFile -> toggleHiddenFile(item)
             R.id.newWindow -> newWindow()
-            R.id.filter -> dialogImpl.showFilter()
-            R.id.sort -> dialogImpl.showSort()
+            R.id.filter -> request(FilterDialogFragment::class.java)
+            R.id.sort -> request(SortDialogFragment::class.java)
             R.id.open_settings -> startActivity(Intent(this, SettingsActivity::class.java))
             R.id.open_root_access -> startActivity(Intent(this, RootAccessActivity::class.java))
             R.id.about -> startActivity(Intent(this, AboutActivity::class.java))

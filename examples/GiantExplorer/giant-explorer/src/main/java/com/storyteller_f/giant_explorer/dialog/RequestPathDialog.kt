@@ -15,7 +15,6 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.control.*
 import com.storyteller_f.giant_explorer.databinding.DialogRequestPathBinding
-import com.storyteller_f.giant_explorer.filter.FilterDialogManager
 import com.storyteller_f.multi_core.StoppableTask
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import kotlinx.coroutines.channels.awaitClose
@@ -28,7 +27,6 @@ import java.io.File
 class RequestPathDialog :
     SimpleDialogFragment<DialogRequestPathBinding>(DialogRequestPathBinding::inflate),
     Registry {
-    private val dialogImpl = FilterDialogManager()
     private val observer = FileListObserver(this, {
         FileListFragmentArgs(File(FileInstanceFactory.rootUserEmulatedPath).toUri())
     }, activityScope)
@@ -86,21 +84,15 @@ class RequestPathDialog :
             }
         }
         binding.filter.setOnClick {
-            dialogImpl.showFilter()
+            request(FilterDialogFragment::class.java)
         }
         binding.sort.setOnClick {
-            dialogImpl.showSort()
+            request(SortDialogFragment::class.java)
         }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        dialogImpl.init(
-            requireContext(),
-            { observer.filters.data.value = it },
-            { observer.sort.data.value = it })
-        observer.filters
-        observer.sort
         observer.setup(binding.content, adapter, {}) {
             binding.pathMan.drawPath(it)
         }

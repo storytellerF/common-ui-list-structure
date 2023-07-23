@@ -81,7 +81,7 @@ dependencies {
     implementation(project(":giant-explorer-plugin-core"))
     implementation("androidx.webkit:webkit:1.7.0")
     implementation(project(":compat-ktx"))
-    androidTestImplementation("androidx.room:room-testing:2.5.1")
+    androidTestImplementation("androidx.room:room-testing:2.5.2")
     //filter & sort
     val filterArtifact = listOf("config-core", "sort-core", "filter-core", "filter-ui", "sort-ui")
        
@@ -94,7 +94,7 @@ dependencies {
         }
     } else {
         filterArtifact.forEach {
-            implementation("com.github.storytellerF.FilterUIProject:$it:1.1")
+            implementation("com.github.storytellerF.FilterUIProject:$it:2.0")
         }
     }
     implementation(project(":file-system-remote"))

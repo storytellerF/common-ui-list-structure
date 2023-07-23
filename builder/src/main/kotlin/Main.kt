@@ -3,10 +3,11 @@ import java.util.regex.Pattern
 import kotlin.system.exitProcess
 
 fun main() {
+    val regex = "\\d+\\.\\d+(\\.\\d+)?(\\-[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)*)?(\\+[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)*)?"
     val commonUiListGradleText = File("../common-ui-list/build.gradle.kts").readText()
     val versionManagerGradleText = File("../common-ui-list/version-manager/build.gradle.kts").readText()
-    val commonUiListAgpMatcher = Pattern.compile("val androidVersion = \"([\\d.]*)\"").matcher(commonUiListGradleText)
-    val versionManagerAgpMatcher = Pattern.compile("com.android.tools.build:gradle:([\\d.]*)").matcher(versionManagerGradleText)
+    val commonUiListAgpMatcher = Pattern.compile("val androidVersion = \"($regex)\"").matcher(commonUiListGradleText)
+    val versionManagerAgpMatcher = Pattern.compile("com.android.tools.build:gradle:($regex)").matcher(versionManagerGradleText)
     if (commonUiListAgpMatcher.find() && versionManagerAgpMatcher.find()) {
         val commonUiListAgpVersion = commonUiListAgpMatcher.group(1)
         val versionManagerAgpVersion = versionManagerAgpMatcher.group(1)

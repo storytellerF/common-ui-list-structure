@@ -7,9 +7,9 @@ import android.net.Uri
 import android.os.Build
 import android.view.DragEvent
 import android.view.View
+import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.app.ComponentActivity
 import androidx.core.view.DragStartHelper
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -32,6 +32,7 @@ import com.storyteller_f.common_ui.setVisible
 import com.storyteller_f.common_vm_ktx.StateValueModel
 import com.storyteller_f.common_vm_ktx.VMScope
 import com.storyteller_f.common_vm_ktx.combineDao
+import com.storyteller_f.common_vm_ktx.debounce
 import com.storyteller_f.common_vm_ktx.distinctUntilChangedBy
 import com.storyteller_f.common_vm_ktx.genericValueModel
 import com.storyteller_f.common_vm_ktx.keyPrefix
@@ -61,6 +62,8 @@ import com.storyteller_f.giant_explorer.database.LocalDatabase
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileBinding
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileGridBinding
+import com.storyteller_f.giant_explorer.dialog.activeFilters
+import com.storyteller_f.giant_explorer.dialog.activeSortChains
 import com.storyteller_f.giant_explorer.model.FileModel
 import com.storyteller_f.giant_explorer.pc_end_on
 import com.storyteller_f.multi_core.StoppableTask
@@ -122,12 +125,7 @@ class FileListObserver<T>(
         get() = session.fileInstance.value
     val selected: List<Pair<DataItemHolder, Int>>?
         get() = session.selected.value
-    val filters by keyPrefix({ "test" }, owner.svm({}, scope) { it, _ ->
-        StateValueModel(it, default = listOf<Filter<FileSystemItemModel>>())
-    })
-    val sort by keyPrefix({ "sort" }, owner.svm({}, scope) { it, _ ->
-        StateValueModel(it, default = listOf<SortChain<FileSystemItemModel>>())
-    })
+
     val filterHiddenFile by owner.svm({}, scope) { it, _ ->
         StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
     }
@@ -192,10 +190,9 @@ class FileListObserver<T>(
             data,
             session,
             filterHiddenFile.data,
-            filters.data,
-            sort.data,
             displayGrid.data,
-            rightSwipe, updatePath
+            rightSwipe,
+            updatePath
         )
     }
 
@@ -210,8 +207,6 @@ fun LifecycleOwner.fileList(
     viewModel: SimpleSearchViewModel<FileModel, FileExplorerSearch, FileItemHolder>,
     session: FileExplorerSession,
     filterHiddenFileLiveData: LiveData<Boolean>,
-    filtersLiveData: LiveData<List<Filter<FileSystemItemModel>>>,
-    sortLivedata: LiveData<List<SortChain<FileSystemItemModel>>>,
     display: LiveData<Boolean>,
     rightSwipe: (FileItemHolder) -> Unit,
     updatePath: (String) -> Unit
@@ -235,14 +230,14 @@ fun LifecycleOwner.fileList(
         combineDao(
             session.fileInstance,
             filterHiddenFileLiveData,
-            filtersLiveData.same,
-            sortLivedata.same,
+            activeFilters.same,
+            activeSortChains.same,
             display
-        ).observe(owner, Observer {
+        ).debounce(200).observe(owner, Observer {
             val fileInstance = it.d1 ?: return@Observer
             val filterHiddenFile = it.d2 ?: return@Observer
-            val filters = it.d3 ?: return@Observer
-            val sortChains = it.d4 ?: return@Observer
+            val filters = it.d3.orEmpty()
+            val sortChains = it.d4.orEmpty()
             val path = fileInstance.uri
             //检查权限
             owner.lifecycleScope.launch {

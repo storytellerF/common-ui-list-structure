@@ -9,35 +9,39 @@ import com.storyteller_f.sort_ui.adapter.SortItemContainer
 import com.storyteller_f.sort_ui.adapter.SortItemViewHolder
 import com.storyteller_f.sort_ui.adapter.SortViewHolderFactory
 
-class NameSort(item: SortConfigItem?) : SortChain<FileSystemItemModel>("name sort", item) {
-    override fun currentCompare(o1: FileSystemItemModel?, o2: FileSystemItemModel?): Int {
-        return o1?.name.orEmpty().compareTo(o2?.name.orEmpty())
+class NameSort(item: SortConfigItem) : SortChain<FileSystemItemModel>("name sort", item) {
+    override fun currentCompare(o1: FileSystemItemModel, o2: FileSystemItemModel): Int {
+        return o1.name.compareTo(o2.name)
     }
 
-    override fun copy(): Any {
-        return NameSort(item.copy() as SortConfigItem?)
+    override fun dup(): Any {
+        return NameSort(item.dup() as SortConfigItem)
     }
 
-    override fun getItemViewType(): Int {
-        return 1
-    }
+    override val itemViewType: Int
+        get() {
+            return 1
+        }
 
-    class ViewHolder(itemView: View) : SortItemViewHolder.Simple(itemView) {
+    class ViewHolder(itemView: View) : SortItemViewHolder.Simple<FileSystemItemModel>(itemView) {
 
     }
 
     class Item(sortDirection: Int = up) : SortConfigItem(sortDirection) {
 
-        override fun copy(): Any {
+        override fun dup(): Any {
             return Item(sortDirection)
         }
 
     }
 }
 
-class SortFactory : SortViewHolderFactory() {
-    override fun create(parent: ViewGroup, viewType: Int, container: SortItemContainer): SortItemViewHolder {
-        SortItemViewHolder.Simple.create(parent.context, container.frameLayout)
+class SortFactory : SortViewHolderFactory<FileSystemItemModel>() {
+    override fun create(
+        viewType: Int,
+        container: SortItemContainer
+    ): SortItemViewHolder<FileSystemItemModel> {
+        SortItemViewHolder.Simple.create(container)
         return NameSort.ViewHolder(container.view)
     }
 
