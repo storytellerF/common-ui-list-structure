@@ -22,11 +22,11 @@ bash build_plugins.sh
 
 2. **ui-list**： 封装**Jetpack Paging**， **PagingAdapter**
 
-3. **ext-func**：对自动为Context 的扩展函数扩充为View，Fragment 的同名扩展函数。
+3. **ext-func**：自动为Context 的扩展函数生成View，Fragment 的同名扩展函数。
 
 4. **SML**：[自动生成color，drawable的xml 文件](SML)
 
-5. version-manager： 使用includeBuild 导入，暴露一个gradle plugin，用于依赖管理和配置管理
+5. **version-manager**： 使用includeBuild 导入，暴露一个gradle plugin，用于依赖管理和配置管理
 
 ## 示例项目
 
