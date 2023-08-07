@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("../../common-ui-list/version-manager")
     repositories {
         gradlePluginPortal()
         google()
@@ -24,4 +25,5 @@ dependencyResolutionManagement {
 rootProject.name = "yue"
 include ':app'
 include ':yue-plugin'
-include ':giant-explorer-plugin-core'
+include 'giant-explorer-plugin-core'
+project(":giant-explorer-plugin-core").setProjectDir(new File("../../examples/GiantExplorer/giant-explorer-plugin-core"))

@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("../../common-ui-list/version-manager")
     repositories {
         gradlePluginPortal()
         google()
@@ -14,5 +15,6 @@ dependencyResolutionManagement {
 }
 rootProject.name = "li"
 include ':app'
-include ':giant-explorer-plugin-core'
 include ':plugin'
+include 'giant-explorer-plugin-core'
+project(":giant-explorer-plugin-core").setProjectDir(new File("../../examples/GiantExplorer/giant-explorer-plugin-core"))
