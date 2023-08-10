@@ -1,7 +1,10 @@
 package com.storyteller_f.giant_explorer.control
 
 import android.app.Application
-import android.content.*
+import android.content.ComponentName
+import android.content.ContentResolver
+import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.net.Uri
@@ -9,23 +12,39 @@ import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
-import android.view.*
+import android.view.ContextMenu
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import androidx.lifecycle.*
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import androidx.lifecycle.distinctUntilChanged
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.storyteller_f.common_ktx.exceptionMessage
-import com.storyteller_f.common_ui.*
-import com.storyteller_f.common_vm_ktx.*
+import com.storyteller_f.common_ui.CommonActivity
+import com.storyteller_f.common_ui.owner
+import com.storyteller_f.common_ui.request
+import com.storyteller_f.common_ui.scope
+import com.storyteller_f.common_ui.setOnClick
+import com.storyteller_f.common_ui.supportNavigatorBarImmersive
+import com.storyteller_f.common_vm_ktx.StateValueModel
+import com.storyteller_f.common_vm_ktx.genericValueModel
+import com.storyteller_f.common_vm_ktx.keyPrefix
+import com.storyteller_f.common_vm_ktx.svm
+import com.storyteller_f.common_vm_ktx.toDiffNoNull
+import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.FileSystemUriSaver
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
-import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system_remote.RemoteAccessType
 import com.storyteller_f.file_system_root.RootAccessFileInstance
 import com.storyteller_f.giant_explorer.R
@@ -41,7 +60,7 @@ import com.storyteller_f.giant_explorer.dialog.SortDialogFragment
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
 import com.storyteller_f.giant_explorer.service.FileOperateService
 import com.storyteller_f.giant_explorer.service.FileService
-import com.storyteller_f.ui_list.core.*
+import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.event.viewBinding
 import com.topjohnwu.superuser.Shell
 import com.topjohnwu.superuser.ipc.RootService
@@ -52,7 +71,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.io.File
 import java.lang.ref.WeakReference
-import java.util.*
 
 class FileExplorerSession(application: Application, uri: Uri) : AndroidViewModel(application) {
     val selected = MutableLiveData<List<Pair<DataItemHolder, Int>>>()
@@ -255,7 +273,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         }
         info.forEach {
             val authority = it.providerInfo.authority
-            val loadLabel = it.loadLabel(packageManager).toString()
+            val loadLabel = it.loadLabel(packageManager).toString() + " " + (savedUris[authority] ?: "")
 //            val icon = it.loadIcon(packageManager)
             menu.add(loadLabel)
                 .setChecked(hasPermission(savedUris, authority))
@@ -273,7 +291,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     }
 
     private fun hasPermission(
-        savedUris: List<String>,
+        savedUris: Map<String, String>,
         authority: String
     ): Boolean {
         val contains = savedUris.contains(authority) && try {

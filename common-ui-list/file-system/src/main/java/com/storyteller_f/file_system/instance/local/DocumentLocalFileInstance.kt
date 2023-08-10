@@ -3,7 +3,9 @@ package com.storyteller_f.file_system.instance.local
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.documentfile.provider.DocumentFile
 import com.storyteller_f.file_system.FileSystemUriSaver
 import com.storyteller_f.file_system.instance.BaseContextFileInstance
@@ -23,6 +25,7 @@ import java.io.FileOutputStream
  * @param prefix 用来标识对象所在区域，可能是外部，也可能是内部。比如/storage/XXXX-XXXX
  * @param preferenceKey 一般是authority，用于获取document provider 的uri
  */
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class DocumentLocalFileInstance(private val prefix: String, private val preferenceKey: String, context: Context, uri: Uri, initCurrent: Boolean = true) : BaseContextFileInstance(context, uri) {
     private var current: DocumentFile? = null
 
