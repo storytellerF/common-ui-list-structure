@@ -15,3 +15,4 @@
 local.properties
 giant-explorer-plugin-core/build
 /.idea/jarRepositories.xml
+/.idea
