@@ -6,9 +6,6 @@ mkdir -p build/li
 mkdir -p build/yue
 mkdir -p build/yue-html
 
-cd examples/GiantExplorer
-customBuild giant-explorer-plugin giant-explorer-plugin-core:build $1
-cd ../../
 
 cd giant-explorer
 
