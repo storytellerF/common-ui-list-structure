@@ -41,7 +41,12 @@ object FileInstanceFactory {
         val safeUri = uri.buildUpon().path(path).build()
 
         return when (scheme) {
-            ContentResolver.SCHEME_CONTENT -> DocumentLocalFileInstance("", uri.authority!!, context, safeUri)
+            ContentResolver.SCHEME_CONTENT -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                DocumentLocalFileInstance("", uri.authority!!, context, safeUri)
+            } else {
+                TODO("VERSION.SDK_INT < LOLLIPOP")
+            }
+
             else -> getPublicFileSystemInstance(context, safeUri)
         }
     }
