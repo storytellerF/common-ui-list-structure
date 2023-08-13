@@ -116,6 +116,10 @@ fun getFileInstance(
     }
 }
 
+/**
+ * @param owner 一般来说owner 都是this
+ * @param scope viewModel 作用域
+ */
 class FileListObserver<T>(
     private val owner: T,
     args: () -> FileListFragmentArgs,

@@ -71,7 +71,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
     private val args by navArgs<FileListFragmentArgs>()
 
-    private val observer = FileListObserver(this, { args }, selfScope)
+    private val observer = FileListObserver(this, { args }, activityScope)
 
     private val shareTarget by keyPrefix({ "shareTarget" }, pvm({}) {
         SharePasteTargetViewModel()
