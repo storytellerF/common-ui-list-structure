@@ -230,21 +230,6 @@ object FileInstanceFactory {
     @SuppressLint("SdCardPath")
     private fun Context.appDataDir() = "/data/data/$packageName"
 
-    @Suppress("DEPRECATION")
-    fun getSpace(prefix: String?): Long {
-        val stat = StatFs(prefix)
-        val blockSize: Long
-        val availableBlocks: Long
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            blockSize = stat.blockSizeLong
-            availableBlocks = stat.availableBlocksLong
-        } else {
-            blockSize = stat.blockSize.toLong()
-            availableBlocks = stat.availableBlocks.toLong()
-        }
-        return blockSize * availableBlocks
-    }
-
     @Throws(Exception::class)
     fun toChild(
         context: Context,

@@ -6,7 +6,7 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.util.permissions
+import com.storyteller_f.file_system.util.FileUtility.permissions
 import org.apache.commons.net.PrintCommandListener
 import org.apache.commons.net.ftp.FTPClientConfig
 import org.apache.commons.net.ftp.FTPFile

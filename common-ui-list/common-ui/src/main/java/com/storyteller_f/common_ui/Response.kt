@@ -16,6 +16,7 @@ import com.storyteller_f.common_vm_ktx.svm
 import com.storyteller_f.compat_ktx.getParcelableCompat
 import com.storyteller_f.compat_ktx.getSerializableCompat
 import java.util.UUID
+import kotlin.reflect.KClass
 
 class ActivityAction(val action: (FragmentActivity, Parcelable) -> Unit, val requestKey: String)
 class FragmentAction(val action: (Registry, Parcelable) -> Unit, val requestKey: String)
@@ -140,6 +141,11 @@ fun NavController.request(
     navigate(resId, args, navOptions, navigatorExtras)
     return randomUUID.requestKey()
 }
+
+fun <F> F.request(
+    dialog: KClass<out CommonDialogFragment>,
+    parameters: Bundle = Bundle()
+): RequestKey where F : LifecycleOwner = show(dialog.java, parameters).requestKey()
 
 fun <F> F.request(
     dialog: Class<out CommonDialogFragment>,

@@ -57,6 +57,7 @@ import com.storyteller_f.giant_explorer.databinding.ActivityMainBinding
 import com.storyteller_f.giant_explorer.dialog.FileOperationDialog
 import com.storyteller_f.giant_explorer.dialog.FilterDialogFragment
 import com.storyteller_f.giant_explorer.dialog.SortDialogFragment
+import com.storyteller_f.giant_explorer.dialog.VolumeSpaceDialog
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
 import com.storyteller_f.giant_explorer.service.FileOperateService
 import com.storyteller_f.giant_explorer.service.FileService
@@ -200,13 +201,14 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         when (item.itemId) {
             R.id.filterHiddenFile -> toggleHiddenFile(item)
             R.id.newWindow -> newWindow()
-            R.id.filter -> request(FilterDialogFragment::class.java)
-            R.id.sort -> request(SortDialogFragment::class.java)
+            R.id.filter -> request(FilterDialogFragment::class)
+            R.id.sort -> request(SortDialogFragment::class)
             R.id.open_settings -> startActivity(Intent(this, SettingsActivity::class.java))
             R.id.open_root_access -> startActivity(Intent(this, RootAccessActivity::class.java))
             R.id.about -> startActivity(Intent(this, AboutActivity::class.java))
             R.id.plugin_manager -> startActivity(Intent(this, PluginManageActivity::class.java))
             R.id.remote_manager -> startActivity(Intent(this, RemoteManagerActivity::class.java))
+            R.id.volume_space -> request(VolumeSpaceDialog::class)
             R.id.background_task -> startActivity(
                 Intent(
                     this,

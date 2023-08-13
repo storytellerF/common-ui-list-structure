@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.StatFs
 import android.os.storage.StorageManager
 import android.os.storage.StorageVolume
 import android.provider.DocumentsContract
@@ -82,7 +83,7 @@ object FileUtility {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             getStorageVolume(context).map { storageVolume: StorageVolume ->
                 val uuid = storageVolume.uuid
-                File(FileInstanceFactory.storagePath, Objects.requireNonNullElse<String?>(uuid, "emulated"))
+                File(FileInstanceFactory.storagePath, volumePathName(uuid))
             }
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             val externalFilesDirs = context.externalCacheDirs
@@ -94,10 +95,12 @@ object FileUtility {
             }
         } else {
             val file = File("/storage/")
-            val files = file.listFiles()?.toList() ?: return listOf()
-            files
+            file.listFiles()?.toList() ?: return listOf()
         }
     }
+
+    fun volumePathName(uuid: String?): String =
+        Objects.requireNonNullElse(uuid, "emulated")
 
     fun produceSafRequestIntent(activity: Activity, prefix: String): Intent? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -127,5 +130,39 @@ object FileUtility {
             null
         }
         return extension
+    }
+
+    @Suppress("DEPRECATION")
+    fun getSpace(prefix: String?): Long {
+        val stat = StatFs(prefix)
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            stat.availableBytes
+        } else {
+            stat.blockSize.toLong() * stat.availableBlocks.toLong()
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    fun getFree(prefix: String?): Long {
+        val stat = StatFs(prefix)
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            stat.freeBytes
+        } else {
+            stat.blockSize.toLong() * stat.freeBlocks.toLong()
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    fun getTotal(prefix: String?): Long {
+        val stat = StatFs(prefix)
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            stat.totalBytes
+        } else {
+            stat.blockSize.toLong() * stat.blockCount.toLong()
+        }
+    }
+
+    fun permissions(r: Boolean, w: Boolean, e: Boolean, isFile: Boolean): String {
+        return String.format(Locale.CHINA, "%c%c%c%c", if (isFile) '-' else 'd', if (r) 'r' else '-', if (w) 'w' else '-', if (e) 'e' else '-')
     }
 }

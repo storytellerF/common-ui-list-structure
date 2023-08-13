@@ -6,7 +6,7 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.util.permissions
+import com.storyteller_f.file_system.util.FileUtility.permissions
 import org.apache.commons.net.PrintCommandListener
 import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPFile
@@ -77,7 +77,10 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
             TODO("Not yet implemented")
         }
 
-    override fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
+    override fun listInternal(
+        fileItems: MutableList<FileItemModel>,
+        directoryItems: MutableList<DirectoryItemModel>
+    ) {
 
         val listFiles = getInstance()?.listFiles(path)
         listFiles?.forEach {
@@ -89,13 +92,28 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
             val canExecute = it.hasPermission(FTPFile.USER_ACCESS, FTPFile.EXECUTE_PERMISSION)
             val permission = permissions(canRead, canWrite, canExecute, it.isFile)
             if (it.isFile) {
-                fileItems.add(FileItemModel(name, child, false, lastModifiedTime, it.isSymbolicLink, file.extension).apply {
-                    permissions = permission
-                })
+                fileItems.add(
+                    FileItemModel(
+                        name,
+                        child,
+                        false,
+                        lastModifiedTime,
+                        it.isSymbolicLink,
+                        file.extension
+                    ).apply {
+                        permissions = permission
+                    })
             } else {
-                directoryItems.add(DirectoryItemModel(name, child, false, lastModifiedTime, it.isSymbolicLink).apply {
-                    permissions = permission
-                })
+                directoryItems.add(
+                    DirectoryItemModel(
+                        name,
+                        child,
+                        false,
+                        lastModifiedTime,
+                        it.isSymbolicLink
+                    ).apply {
+                        permissions = permission
+                    })
             }
         }
     }

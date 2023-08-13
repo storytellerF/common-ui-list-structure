@@ -45,6 +45,9 @@
         android:orderInCategory="1"
         android:title="@string/background_task_manage" />
     <item
+        android:id="@+id/volume_space"
+        android:title="存储管理" />
+    <item
         android:id="@+id/about"
         android:icon="@drawable/baseline_info_24"
         android:orderInCategory="1"
@@ -54,4 +57,5 @@
         android:icon="@drawable/ic_baseline_settings_24"
         android:orderInCategory="1"
         android:title="@string/settings" />
+
 </menu>

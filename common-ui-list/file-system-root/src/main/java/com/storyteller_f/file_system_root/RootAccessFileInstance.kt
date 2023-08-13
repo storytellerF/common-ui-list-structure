@@ -56,7 +56,7 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
         val w = canWrite()
         val e = canExecute()
         val r = canRead()
-        return com.storyteller_f.file_system.util.permissions(r, w, e, isFile)
+        return com.storyteller_f.file_system.util.FileUtility.permissions(r, w, e, isFile)
     }
 
     override val isFile: Boolean
