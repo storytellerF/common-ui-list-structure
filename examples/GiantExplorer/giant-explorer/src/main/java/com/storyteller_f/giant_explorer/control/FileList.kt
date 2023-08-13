@@ -54,6 +54,8 @@ import com.storyteller_f.file_system_remote.SFtpFileInstance
 import com.storyteller_f.file_system_remote.ShareSpec
 import com.storyteller_f.file_system_remote.SmbFileInstance
 import com.storyteller_f.file_system_remote.WebDavFileInstance
+import com.storyteller_f.file_system_remote.getInstance
+import com.storyteller_f.file_system_remote.supportScheme
 import com.storyteller_f.file_system_root.RootAccessFileInstance
 import com.storyteller_f.filter_core.Filter
 import com.storyteller_f.giant_explorer.R
@@ -106,12 +108,9 @@ fun getFileInstance(
             r,
             uri
         )
-
-        scheme == "ftp" -> FtpFileInstance(RemoteSpec.parse(uri), uri)
-        scheme == "smb" -> SmbFileInstance(ShareSpec.parse(uri), uri)
-        scheme == "sftp" -> SFtpFileInstance(RemoteSpec.parse(uri), uri)
-        scheme == "ftpes" || scheme == "ftps" -> FtpsFileInstance(RemoteSpec.parse(uri), uri)
-        scheme == "webdav" -> WebDavFileInstance(ShareSpec.parse(uri), uri)
+        supportScheme.contains(scheme) -> {
+            getInstance(context, uri)
+        }
         else -> FileInstanceFactory.getFileInstance(context, uri, stoppableTask)
     }
 }

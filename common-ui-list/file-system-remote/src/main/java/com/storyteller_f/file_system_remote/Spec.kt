@@ -1,6 +1,8 @@
 package com.storyteller_f.file_system_remote
 
+import android.content.Context
 import android.net.Uri
+import com.storyteller_f.file_system.instance.FileInstance
 
 data class ShareSpec(val server: String, val port: Int, val user: String, val password: String, val type: String, val share: String) {
     fun toUri(): Uri {
@@ -44,4 +46,18 @@ data class RemoteSpec(val server: String, val port: Int, val user: String, val p
         }
 
     }
+}
+
+val supportScheme = listOf("ftp", "smb", "sftp", "ftpes", "ftps", "webdav")
+
+fun getInstance(context: Context, uri: Uri): FileInstance {
+    return when (uri.scheme) {
+        "ftp" -> FtpFileInstance(RemoteSpec.parse(uri), uri)
+        "smb" -> SmbFileInstance(ShareSpec.parse(uri), uri)
+        "sftp" -> SFtpFileInstance(RemoteSpec.parse(uri), uri)
+        "ftpes", "ftps" -> FtpsFileInstance(RemoteSpec.parse(uri), uri)
+        "webdav" -> WebDavFileInstance(ShareSpec.parse(uri), uri)
+        else -> throw Exception()
+    }
+
 }

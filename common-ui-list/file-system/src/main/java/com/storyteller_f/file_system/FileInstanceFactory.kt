@@ -16,6 +16,80 @@ import com.storyteller_f.multi_core.StoppableTask
 import java.io.File
 import java.util.*
 
+sealed class LocalFileSystemPrefix(val key: String) {
+
+    /**
+     * 公共目录，没有权限限制
+     */
+    object Public : LocalFileSystemPrefix("public")
+
+    /**
+     * /sdcard 本身以及所有的子文件
+     */
+    @SuppressLint("SdCardPath")
+    object SdCard : LocalFileSystemPrefix("/sdcard")
+
+    /**
+     * /storage/self 本身
+     */
+    object Self : LocalFileSystemPrefix("/storage/self")
+
+    /**
+     * /storage/self/primary 本身以及所有的子文件
+     */
+    object SelfPrimary : LocalFileSystemPrefix("/storage/self/primary")
+
+    /**
+     * /storage/emulated/0 本身以及所有的子文件
+     */
+    object RootEmulated : LocalFileSystemPrefix("/storage/emulated/0")
+
+    /**
+     * /storage/emulated 本身
+     */
+    object EmulatedRoot : LocalFileSystemPrefix("/storage/emulated")
+
+    /**
+     * /storage 本身
+     */
+    object Storage : LocalFileSystemPrefix("/storage")
+
+    /**
+     * 外接存储设备
+     */
+    class Mounted(key: String) : LocalFileSystemPrefix(key)
+
+    /**
+     * app 沙盒目录
+     */
+    class AppData(key: String) : LocalFileSystemPrefix(key)
+
+    /**
+     * 用户安装的app
+     */
+    object InstalledApps : LocalFileSystemPrefix("/data/app/")
+
+    object Root : LocalFileSystemPrefix("/")
+
+    /**
+     * /data 本身
+     */
+    object Data: LocalFileSystemPrefix("/data")
+
+    /**
+     * /data/data 本身
+     */
+    object Data2: LocalFileSystemPrefix("/data/data")
+
+    /**
+     * /data/user
+     */
+    object DataUser: LocalFileSystemPrefix("/data/user")
+
+    @SuppressLint("SdCardPath")
+    object DataRootUser: LocalFileSystemPrefix("/data/user/0")
+}
+
 object FileInstanceFactory {
     const val storagePath = "/storage"
     const val emulatedRootPath = "/storage/emulated"
@@ -55,36 +129,53 @@ object FileInstanceFactory {
         assert(uri.scheme == ContentResolver.SCHEME_FILE) {
             "only permit local system $uri"
         }
-        val prefix = getPrefix(context, uri)
 
-        return when {
-            prefix == "" || prefix == sdcardPath || prefix == context.appDataDir() ->
-                RegularLocalFileInstance(context, uri)
+        return when (val prefix = getPrefix(context, uri)!!) {
+            is LocalFileSystemPrefix.AppData -> RegularLocalFileInstance(context, uri)
+            LocalFileSystemPrefix.Data -> FakeLocalFileInstance(context, uri)
+            LocalFileSystemPrefix.Data2 -> FakeLocalFileInstance(context, uri)
+            LocalFileSystemPrefix.DataRootUser -> RegularLocalFileInstance(context, uri)
+            LocalFileSystemPrefix.DataUser -> FakeLocalFileInstance(context, uri)
+            LocalFileSystemPrefix.EmulatedRoot -> FakeLocalFileInstance(context, uri)
+            LocalFileSystemPrefix.InstalledApps -> AppLocalFileInstance(context, uri)
+            is LocalFileSystemPrefix.Mounted -> when {
+                //外接sd卡
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> RegularLocalFileInstance(
+                    context,
+                    uri
+                )
 
-            prefix == currentEmulatedPath -> when (Build.VERSION.SDK_INT) {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> DocumentLocalFileInstance.getMounted(
+                    context,
+                    uri,
+                    prefix.key
+                )
+
+                Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1 -> RegularLocalFileInstance(
+                    context,
+                    uri
+                )
+
+                else -> RegularLocalFileInstance(context, uri)
+            }
+            LocalFileSystemPrefix.Public -> RegularLocalFileInstance(context, uri)
+            LocalFileSystemPrefix.Root -> FakeLocalFileInstance(context, uri)
+            LocalFileSystemPrefix.RootEmulated -> when (Build.VERSION.SDK_INT) {
+                Build.VERSION_CODES.Q ->
+                    DocumentLocalFileInstance.getEmulated(context, uri, prefix.key)
+
+                else -> RegularLocalFileInstance(context, uri)
+            }
+            LocalFileSystemPrefix.SdCard -> RegularLocalFileInstance(context, uri)
+            LocalFileSystemPrefix.Self -> when (Build.VERSION.SDK_INT) {
                 Build.VERSION_CODES.Q -> {
                     FakeLocalFileInstance(context, uri)
                 }
+
                 else -> RegularLocalFileInstance(context, uri)
             }
-
-            prefix == rootUserEmulatedPath -> when (Build.VERSION.SDK_INT) {
-                Build.VERSION_CODES.Q ->
-                    DocumentLocalFileInstance.getEmulated(context, uri, prefix)
-                else -> RegularLocalFileInstance(context, uri)
-            }
-
-            prefix.startsWith(storagePath) -> when {
-                //外接sd卡
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> RegularLocalFileInstance(context, uri)
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> DocumentLocalFileInstance.getMounted(context, uri, prefix)
-                Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1 -> RegularLocalFileInstance(context, uri)
-                else -> RegularLocalFileInstance(context, uri)
-            }
-
-            prefix == "fake" -> FakeLocalFileInstance(context, uri)
-            prefix == "fake-app" -> AppLocalFileInstance(context, uri)
-            else -> throw Exception("无法识别 $uri $prefix")
+            LocalFileSystemPrefix.SelfPrimary -> RegularLocalFileInstance(context, uri)
+            LocalFileSystemPrefix.Storage -> FakeLocalFileInstance(context, uri)
         }
     }
 
@@ -96,7 +187,7 @@ object FileInstanceFactory {
         context: Context,
         uri: Uri,
         stoppableTask: StoppableTask? = StoppableTask.Blocking
-    ): String {
+    ): LocalFileSystemPrefix? {
         val unsafePath = uri.path!!
         assert(!unsafePath.endsWith("/") || unsafePath.length == 1) {
             unsafePath
@@ -106,29 +197,34 @@ object FileInstanceFactory {
          * 只有publicFileSystem 才会有prefix 的区别，其他的都不需要。
          */
         return when {
-            uri.scheme!! != ContentResolver.SCHEME_FILE -> ""
+            uri.scheme!! != ContentResolver.SCHEME_FILE -> null
             else -> getPublicFileSystemPrefix(context, path)
         }
     }
 
-    private fun getPublicFileSystemPrefix(context: Context, path: String): String {
-        return when {
-            publicPath.any { path.startsWith(it) } -> ""
-            path.startsWith(sdcardPath) -> sdcardPath
-            path.startsWith(context.appDataDir()) -> context.appDataDir()
-            path.startsWith(rootUserEmulatedPath) -> rootUserEmulatedPath
-            path.startsWith(currentEmulatedPath) -> currentEmulatedPath
-            path == emulatedRootPath || path == storagePath -> "fake"
-            path.startsWith(storagePath) -> {
-                // /storage/XXXX-XXXX 或者是/storage/XXXX-XXXX/test。最终结果应该是/storage/XXXX-XXXX
-                var endIndex = path.indexOf("/", storagePath.length + 1)
-                if (endIndex == -1) endIndex = path.length
-                path.substring(0, endIndex)
-            }
-
-            path.startsWith("/data/app/") -> "fake-app"
-            else -> "fake"
+    @SuppressLint("SdCardPath")
+    private fun getPublicFileSystemPrefix(context: Context, path: String): LocalFileSystemPrefix = when {
+        publicPath.any { path.startsWith(it) } -> LocalFileSystemPrefix.Public
+        path.startsWith(sdcardPath) -> LocalFileSystemPrefix.SdCard
+        path.startsWith(context.appDataDir()) -> LocalFileSystemPrefix.AppData(context.appDataDir())
+        path.startsWith(rootUserEmulatedPath) -> LocalFileSystemPrefix.RootEmulated
+        path == currentEmulatedPath -> LocalFileSystemPrefix.Self
+        path.startsWith(currentEmulatedPath) -> LocalFileSystemPrefix.SelfPrimary
+        path == emulatedRootPath -> LocalFileSystemPrefix.EmulatedRoot
+        path == storagePath -> LocalFileSystemPrefix.Storage
+        path.startsWith(storagePath) -> {
+            // /storage/XXXX-XXXX 或者是/storage/XXXX-XXXX/test。最终结果应该是/storage/XXXX-XXXX
+            var endIndex = path.indexOf("/", storagePath.length + 1)
+            if (endIndex == -1) endIndex = path.length
+            LocalFileSystemPrefix.Mounted(path.substring(0, endIndex))
         }
+        path == "/" -> LocalFileSystemPrefix.Root
+        path == "/data" -> LocalFileSystemPrefix.Data
+        path.startsWith("/data/data") -> LocalFileSystemPrefix.Data2
+        path == "/data/user" -> LocalFileSystemPrefix.DataUser
+        path.startsWith("/data/user/0") -> LocalFileSystemPrefix.DataRootUser
+        path.startsWith("/data/app/") -> LocalFileSystemPrefix.InstalledApps
+        else -> throw Exception("unrecognized path")
     }
 
     @SuppressLint("SdCardPath")

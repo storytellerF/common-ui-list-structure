@@ -121,7 +121,7 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
     companion object {
         val presetSystemDirectories = mapOf(
             "/" to listOf("sdcard", "storage", "data", "mnt", "system"),
-            "/data" to listOf("user", "data", "app"),
+            "/data" to listOf("user", "data", "app", "local"),
             "/data/user" to listOf("0"),
             "/storage" to listOf("self"),
             "/storage/self" to listOf("primary")
