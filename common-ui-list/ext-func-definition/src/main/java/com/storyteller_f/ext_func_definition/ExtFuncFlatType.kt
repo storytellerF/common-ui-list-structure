@@ -7,6 +7,7 @@ enum class ExtFuncFlatType {
     V5,//axx pxx
     V6,//combineDao
     V7,//Dao
+    V8,//non interface delegate
 }
 
 annotation class ExtFuncFlat(val type: ExtFuncFlatType = ExtFuncFlatType.V2, val isContextReceiver: Boolean = false)

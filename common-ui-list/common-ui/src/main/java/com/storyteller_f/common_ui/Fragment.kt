@@ -16,7 +16,7 @@ import androidx.viewbinding.ViewBinding
  * @author storyteller_f
  */
 
-abstract class CommonFragment : Fragment(), ResponseFragment, Registry {
+abstract class CommonFragment(layoutRes: Int = 0) : Fragment(layoutRes), ResponseFragment, Registry {
 
     override val vm by responseModel
 
@@ -27,12 +27,12 @@ abstract class CommonFragment : Fragment(), ResponseFragment, Registry {
 }
 
 abstract class SimpleFragment<T : ViewBinding>(
-    val viewBindingFactory: (LayoutInflater) -> T
+    val viewBindingInflateFactory: (LayoutInflater) -> T
 ) : CommonFragment() {
     private var _binding: T? = null
     val binding: T get() = _binding!!
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val bindingLocal = viewBindingFactory(layoutInflater)
+        val bindingLocal = viewBindingInflateFactory(layoutInflater)
         _binding = bindingLocal
         (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
         onBindViewEvent(binding)
@@ -55,8 +55,9 @@ abstract class SimpleFragment<T : ViewBinding>(
 abstract class RegularFragment<T : ViewBinding>(
     viewBindingFactory: (LayoutInflater) -> T
 ) : SimpleFragment<T>(viewBindingFactory) {
-    override fun onStart() {
-        super.onStart()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         toolbar.setDisplayHomeAsUpEnabled(up())
         toolbarCompose.setContent { }
     }

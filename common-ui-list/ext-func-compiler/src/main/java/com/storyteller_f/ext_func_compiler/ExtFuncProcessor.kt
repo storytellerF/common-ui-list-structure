@@ -18,28 +18,22 @@ class ExtFuncProcessor(private val codeGenerator: CodeGenerator, private val log
     override fun process(resolver: Resolver): List<KSAnnotated> {
         round++
         val symbols = resolver.getSymbolsWithAnnotation(ExtFuncFlat::class.java.canonicalName)
-        val notValidates = symbols.filter { !it.validate() }.toList()
-        logger.info("round $round not validates ${notValidates.size} ${notValidates.joinToString { 
+        val invalidates = symbols.filter { !it.validate() }.toList()
+        logger.info("round $round invalidates ${invalidates.size} ${invalidates.joinToString { 
             it.toString()
         }}")
-        val filter = symbols
+        val filtered = symbols
             .filter {
                 (it is KSPropertyDeclaration || it is KSFunctionDeclaration || it is KSClassDeclaration) && it.validate()
             }
-        val groupByPackageName = filter.mapNotNull { ksAnnotated ->
+        val groupByPackageName = filtered.mapNotNull { ksAnnotated ->
             val extFuncFlat = ksAnnotated.getAnnotationsByType(ExtFuncFlat::class).first()
             when (ksAnnotated) {
-                is KSPropertyDeclaration -> {
-                    ksAnnotated.packageName.asString() to Task(ksAnnotated.simpleName.getShortName(), extFuncFlat, ksAnnotated)
-                }
+                is KSPropertyDeclaration -> taskPair(ksAnnotated, extFuncFlat)
 
-                is KSFunctionDeclaration -> {
-                    ksAnnotated.packageName.asString() to Task(ksAnnotated.simpleName.getShortName(), extFuncFlat, ksAnnotated)
-                }
+                is KSFunctionDeclaration -> taskPair(ksAnnotated, extFuncFlat)
 
-                is KSClassDeclaration -> {
-                    ksAnnotated.packageName.asString() to Task(ksAnnotated.simpleName.getShortName(), extFuncFlat, ksAnnotated)
-                }
+                is KSClassDeclaration -> taskPair(ksAnnotated, extFuncFlat)
 
                 else -> null
             }
@@ -47,8 +41,13 @@ class ExtFuncProcessor(private val codeGenerator: CodeGenerator, private val log
         groupByPackageName.forEach { (packageName, list) ->
             generateForOnePackage(packageName, list.map { it.second }, symbols)
         }
-        return emptyList()
+        return invalidates
     }
+
+    private fun taskPair(
+        ksAnnotated: KSDeclaration,
+        extFuncFlat: ExtFuncFlat
+    ) = ksAnnotated.packageName.asString() to Task(ksAnnotated.simpleName.getShortName(), extFuncFlat, ksAnnotated)
 
     private fun generateForOnePackage(packageName: String, taskList: List<Task>, symbols: Sequence<KSAnnotated>) {
 
@@ -76,6 +75,7 @@ class ExtFuncProcessor(private val codeGenerator: CodeGenerator, private val log
 
                     ExtFuncFlatType.V6 -> setOf("androidx.lifecycle.LiveData", "androidx.lifecycle.MediatorLiveData") to generateForV6()
                     ExtFuncFlatType.V7 -> setOf<String>() to generateForV7()
+                    ExtFuncFlatType.V8 -> setOf<String>() to generateForV8(it, logger)
 
                     else -> setOf<String>() to ""
                 }
