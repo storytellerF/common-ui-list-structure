@@ -13,7 +13,7 @@ val webdavInstances = mutableMapOf<ShareSpec, WebDavInstance>()
 
 class WebDavFileInstance(private val spec: ShareSpec, uri: Uri) : FileInstance(uri) {
 
-    val instance = getWebDavInstance()
+    private val instance = getWebDavInstance()
 
     private fun getWebDavInstance(): WebDavInstance {
         return webdavInstances.getOrPut(spec) {
@@ -21,32 +21,27 @@ class WebDavFileInstance(private val spec: ShareSpec, uri: Uri) : FileInstance(u
         }
     }
 
-    override val file: FileItemModel
-        get() {
-            TODO("Not yet implemented")
-        }
+    override suspend fun getFile(): FileItemModel {
+        TODO("Not yet implemented")
+    }
 
-    override val directory: DirectoryItemModel
-        get() {
-            TODO("Not yet implemented")
-        }
+    override suspend fun getDirectory(): DirectoryItemModel {
+        TODO("Not yet implemented")
+    }
 
-    override val fileLength: Long
-        get() {
-            TODO("Not yet implemented")
-        }
+    override suspend fun getFileLength(): Long {
+        TODO("Not yet implemented")
+    }
 
-    override val fileInputStream: FileInputStream
-        get() {
-            TODO("Not yet implemented")
-        }
+    override suspend fun getFileInputStream(): FileInputStream {
+        TODO("Not yet implemented")
+    }
 
-    override val fileOutputStream: FileOutputStream
-        get() {
-            TODO("Not yet implemented")
-        }
+    override suspend fun getFileOutputStream(): FileOutputStream {
+        TODO("Not yet implemented")
+    }
 
-    override fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
+    override suspend fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
         instance.list(path).forEach {
             val (file, child) = child(it.name)
             if (it.isFile)
@@ -56,51 +51,47 @@ class WebDavFileInstance(private val spec: ShareSpec, uri: Uri) : FileInstance(u
         }
     }
 
-    override val isFile: Boolean
-        get() {
-            TODO("Not yet implemented")
-        }
-
-    override fun exists(): Boolean {
+    override suspend fun isFile(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override val isDirectory: Boolean
-        get() {
-            TODO("Not yet implemented")
-        }
-
-    override fun deleteFileOrEmptyDirectory(): Boolean {
+    override suspend fun exists(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun rename(newName: String): Boolean {
+    override suspend fun isDirectory(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun toParent(): FileInstance {
+    override suspend fun deleteFileOrEmptyDirectory(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override val directorySize: Long
-        get() {
-            TODO("Not yet implemented")
-        }
-
-    override fun createFile(): Boolean {
+    override suspend fun rename(newName: String): Boolean {
         TODO("Not yet implemented")
     }
 
-    override val isHidden: Boolean
-        get() {
-            TODO("Not yet implemented")
-        }
-
-    override fun createDirectory(): Boolean {
+    override suspend fun toParent(): FileInstance {
         TODO("Not yet implemented")
     }
 
-    override fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
+    override suspend fun getDirectorySize(): Long {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun createFile(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun isHidden(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun createDirectory(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         TODO("Not yet implemented")
     }
 

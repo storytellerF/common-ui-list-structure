@@ -14,6 +14,7 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.giant_explorer.FileSystemProviderResolver
 import com.storyteller_f.giant_explorer.control.getFileInstance
 import com.storyteller_f.plugin_core.FileSystemProviderConstant
+import kotlinx.coroutines.runBlocking
 import java.io.File
 
 
@@ -33,18 +34,22 @@ class FileSystemProvider : ContentProvider() {
         val filePath = FileSystemProviderResolver.resolvePath(uri) ?: return null
         Log.i(TAG, "query: file path:$filePath $uri")
         val fileInstance = getFileInstance(c, File(filePath).toUri())
-        return if (fileInstance.isFile) {
-            MatrixCursor(fileProjection).apply {
-                val file = fileInstance.file
-                addRow(arrayOf(file.name, file.fullPath, fileInstance.fileLength))
+        return runBlocking {
+            if (fileInstance.isFile()) {
+                MatrixCursor(fileProjection).apply {
+                    val file = fileInstance.getFile()
+                    addRow(arrayOf(file.name, file.fullPath, fileInstance.getFileLength()))
+                }
+            } else {
+                queryFileInstanceChild(fileInstance)
             }
-        } else {
-            queryFileInstanceChild(fileInstance)
         }
     }
 
     private fun queryFileInstanceChild(fileInstance: FileInstance): MatrixCursor {
-        val list = fileInstance.list()
+        val list = runBlocking {
+            fileInstance.list()
+        }
         Log.i(TAG, "queryFileInstance: ${fileInstance.path} ${list.directories.size} ${list.files.size}")
         val matrixCursor = MatrixCursor(fileProjection)
         val singleton = MimeTypeMap.getSingleton()

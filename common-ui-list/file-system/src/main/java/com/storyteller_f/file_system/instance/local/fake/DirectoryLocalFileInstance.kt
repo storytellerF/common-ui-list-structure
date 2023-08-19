@@ -8,15 +8,13 @@ import com.storyteller_f.file_system.model.FileItemModel
  * 目录型，用于特殊类型
  */
 abstract class DirectoryLocalFileInstance(uri: Uri) : FileInstance(uri) {
-    override val fileLength: Long
-        get() = -1
+    override suspend fun getFileLength(): Long = -1
 
-    override val file: FileItemModel
-        get() = TODO()
+    override suspend fun getFile(): FileItemModel = TODO()
 
-    override val isFile get() = false
+    override suspend fun isFile() = false
 
-    override val isDirectory get() = true
+    override suspend fun isDirectory() = true
 
-    override fun createFile() = false
+    override suspend fun createFile() = false
 }

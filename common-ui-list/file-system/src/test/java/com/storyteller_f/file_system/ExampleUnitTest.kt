@@ -17,7 +17,7 @@ class ExampleUnitTest {
 
     @Test
     fun testSimplePath() {
-        val simplyPath = FileInstanceFactory.simplyPath(FileInstanceFactory.rootUserEmulatedPath, StoppableTask.Blocking)
+        val simplyPath = FileInstanceFactory.simplyPath(FileInstanceFactory.rootUserEmulatedPath)
         assert(simplyPath == FileInstanceFactory.rootUserEmulatedPath)
     }
 }

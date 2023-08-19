@@ -56,7 +56,7 @@ class YueFragment : Fragment(), GiantExplorerPlugin {
 
     }
 
-    private fun listFiles(u: Uri, list: MutableList<Uri>): Boolean {
+    private suspend fun listFiles(u: Uri, list: MutableList<Uri>): Boolean {
         Log.i(TAG, "onViewCreated: ${u.authority}")
 
         if (u.authority?.contains("storyteller") == true) {

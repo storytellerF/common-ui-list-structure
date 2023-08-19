@@ -5,14 +5,12 @@ import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.os.Build
-import android.os.StatFs
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.file_system.instance.local.RegularLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.AppLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.FakeLocalFileInstance
-import com.storyteller_f.multi_core.StoppableTask
 import java.io.File
 import java.util.*
 
@@ -74,20 +72,20 @@ sealed class LocalFileSystemPrefix(val key: String) {
     /**
      * /data 本身
      */
-    object Data: LocalFileSystemPrefix("/data")
+    object Data : LocalFileSystemPrefix("/data")
 
     /**
      * /data/data 本身
      */
-    object Data2: LocalFileSystemPrefix("/data/data")
+    object Data2 : LocalFileSystemPrefix("/data/data")
 
     /**
      * /data/user
      */
-    object DataUser: LocalFileSystemPrefix("/data/user")
+    object DataUser : LocalFileSystemPrefix("/data/user")
 
     @SuppressLint("SdCardPath")
-    object DataRootUser: LocalFileSystemPrefix("/data/user/0")
+    object DataRootUser : LocalFileSystemPrefix("/data/user/0")
 }
 
 object FileInstanceFactory {
@@ -105,12 +103,12 @@ object FileInstanceFactory {
     /**
      * 除非是根路径，否则不可以是/
      */
-    fun getFileInstance(context: Context, uri: Uri, stoppableTask: StoppableTask): FileInstance {
+    fun getFileInstance(context: Context, uri: Uri): FileInstance {
         val unsafePath = uri.path!!
         assert(!unsafePath.endsWith("/") || unsafePath.length == 1) {
             "invalid path [$unsafePath]"
         }
-        val path = simplyPath(unsafePath, stoppableTask)
+        val path = simplyPath(unsafePath)
         val scheme = uri.scheme!!
         val safeUri = uri.buildUpon().path(path).build()
 
@@ -141,31 +139,30 @@ object FileInstanceFactory {
             is LocalFileSystemPrefix.Mounted -> when {
                 //外接sd卡
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> RegularLocalFileInstance(
-                    context,
-                    uri
+                    context, uri
                 )
 
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> DocumentLocalFileInstance.getMounted(
-                    context,
-                    uri,
-                    prefix.key
+                    context, uri, prefix.key
                 )
 
                 Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1 -> RegularLocalFileInstance(
-                    context,
-                    uri
+                    context, uri
                 )
 
                 else -> RegularLocalFileInstance(context, uri)
             }
+
             LocalFileSystemPrefix.Public -> RegularLocalFileInstance(context, uri)
             LocalFileSystemPrefix.Root -> FakeLocalFileInstance(context, uri)
             LocalFileSystemPrefix.RootEmulated -> when (Build.VERSION.SDK_INT) {
-                Build.VERSION_CODES.Q ->
-                    DocumentLocalFileInstance.getEmulated(context, uri, prefix.key)
+                Build.VERSION_CODES.Q -> DocumentLocalFileInstance.getEmulated(
+                    context, uri, prefix.key
+                )
 
                 else -> RegularLocalFileInstance(context, uri)
             }
+
             LocalFileSystemPrefix.SdCard -> RegularLocalFileInstance(context, uri)
             LocalFileSystemPrefix.Self -> when (Build.VERSION.SDK_INT) {
                 Build.VERSION_CODES.Q -> {
@@ -174,6 +171,7 @@ object FileInstanceFactory {
 
                 else -> RegularLocalFileInstance(context, uri)
             }
+
             LocalFileSystemPrefix.SelfPrimary -> RegularLocalFileInstance(context, uri)
             LocalFileSystemPrefix.Storage -> FakeLocalFileInstance(context, uri)
         }
@@ -186,13 +184,12 @@ object FileInstanceFactory {
     fun getPrefix(
         context: Context,
         uri: Uri,
-        stoppableTask: StoppableTask? = StoppableTask.Blocking
     ): LocalFileSystemPrefix? {
         val unsafePath = uri.path!!
         assert(!unsafePath.endsWith("/") || unsafePath.length == 1) {
             unsafePath
         }
-        val path = simplyPath(unsafePath, stoppableTask)
+        val path = simplyPath(unsafePath)
         /**
          * 只有publicFileSystem 才会有prefix 的区别，其他的都不需要。
          */
@@ -203,40 +200,41 @@ object FileInstanceFactory {
     }
 
     @SuppressLint("SdCardPath")
-    private fun getPublicFileSystemPrefix(context: Context, path: String): LocalFileSystemPrefix = when {
-        publicPath.any { path.startsWith(it) } -> LocalFileSystemPrefix.Public
-        path.startsWith(sdcardPath) -> LocalFileSystemPrefix.SdCard
-        path.startsWith(context.appDataDir()) -> LocalFileSystemPrefix.AppData(context.appDataDir())
-        path.startsWith(rootUserEmulatedPath) -> LocalFileSystemPrefix.RootEmulated
-        path == currentEmulatedPath -> LocalFileSystemPrefix.Self
-        path.startsWith(currentEmulatedPath) -> LocalFileSystemPrefix.SelfPrimary
-        path == emulatedRootPath -> LocalFileSystemPrefix.EmulatedRoot
-        path == storagePath -> LocalFileSystemPrefix.Storage
-        path.startsWith(storagePath) -> {
-            // /storage/XXXX-XXXX 或者是/storage/XXXX-XXXX/test。最终结果应该是/storage/XXXX-XXXX
-            var endIndex = path.indexOf("/", storagePath.length + 1)
-            if (endIndex == -1) endIndex = path.length
-            LocalFileSystemPrefix.Mounted(path.substring(0, endIndex))
+    private fun getPublicFileSystemPrefix(context: Context, path: String): LocalFileSystemPrefix =
+        when {
+            publicPath.any { path.startsWith(it) } -> LocalFileSystemPrefix.Public
+            path.startsWith(sdcardPath) -> LocalFileSystemPrefix.SdCard
+            path.startsWith(context.appDataDir()) -> LocalFileSystemPrefix.AppData(context.appDataDir())
+            path.startsWith(rootUserEmulatedPath) -> LocalFileSystemPrefix.RootEmulated
+            path == currentEmulatedPath -> LocalFileSystemPrefix.Self
+            path.startsWith(currentEmulatedPath) -> LocalFileSystemPrefix.SelfPrimary
+            path == emulatedRootPath -> LocalFileSystemPrefix.EmulatedRoot
+            path == storagePath -> LocalFileSystemPrefix.Storage
+            path.startsWith(storagePath) -> {
+                // /storage/XXXX-XXXX 或者是/storage/XXXX-XXXX/test。最终结果应该是/storage/XXXX-XXXX
+                var endIndex = path.indexOf("/", storagePath.length + 1)
+                if (endIndex == -1) endIndex = path.length
+                LocalFileSystemPrefix.Mounted(path.substring(0, endIndex))
+            }
+
+            path == "/" -> LocalFileSystemPrefix.Root
+            path == "/data" -> LocalFileSystemPrefix.Data
+            path.startsWith("/data/data") -> LocalFileSystemPrefix.Data2
+            path == "/data/user" -> LocalFileSystemPrefix.DataUser
+            path.startsWith("/data/user/0") -> LocalFileSystemPrefix.DataRootUser
+            path.startsWith("/data/app/") -> LocalFileSystemPrefix.InstalledApps
+            else -> throw Exception("unrecognized path")
         }
-        path == "/" -> LocalFileSystemPrefix.Root
-        path == "/data" -> LocalFileSystemPrefix.Data
-        path.startsWith("/data/data") -> LocalFileSystemPrefix.Data2
-        path == "/data/user" -> LocalFileSystemPrefix.DataUser
-        path.startsWith("/data/user/0") -> LocalFileSystemPrefix.DataRootUser
-        path.startsWith("/data/app/") -> LocalFileSystemPrefix.InstalledApps
-        else -> throw Exception("unrecognized path")
-    }
 
     @SuppressLint("SdCardPath")
     private fun Context.appDataDir() = "/data/data/$packageName"
 
     @Throws(Exception::class)
-    fun toChild(
+    suspend fun toChild(
         context: Context,
         fileInstance: FileInstance,
         name: String,
-        policy: FileCreatePolicy,
-        stoppableTask: StoppableTask
+        policy: FileCreatePolicy
     ): FileInstance {
         assert(name.last() != '/') {
             "$name is not a valid name"
@@ -245,40 +243,38 @@ object FileInstanceFactory {
             return fileInstance
         }
         if (name == "..") {
-            return toParent(context, fileInstance, stoppableTask = stoppableTask)
+            return toParent(context, fileInstance)
         }
         val path = File(fileInstance.path, name).absolutePath
         val childUri = fileInstance.uri.buildUpon().path(path).build()
 
-        val currentPrefix = getPrefix(context, fileInstance.uri, stoppableTask = stoppableTask)
-        val childPrefix = getPrefix(context, childUri, stoppableTask = stoppableTask)
+        val currentPrefix = getPrefix(context, fileInstance.uri)
+        val childPrefix = getPrefix(context, childUri)
         return if (currentPrefix == childPrefix) {
             fileInstance.toChild(name, policy)!!
         } else {
-            getFileInstance(context, childUri, stoppableTask = stoppableTask)
+            getFileInstance(context, childUri)
         }
     }
 
     @Throws(Exception::class)
-    fun toParent(
-        context: Context,
-        fileInstance: FileInstance,
-        stoppableTask: StoppableTask
+    suspend fun toParent(
+        context: Context, fileInstance: FileInstance
     ): FileInstance {
         val parentPath = File(fileInstance.path).parent
         val parentUri = fileInstance.uri.buildUpon().path(parentPath).build()
 
-        val parentPrefix = getPrefix(context, parentUri, stoppableTask = stoppableTask)
-        val childPrefix = getPrefix(context, fileInstance.uri, stoppableTask = stoppableTask)
+        val parentPrefix = getPrefix(context, parentUri)
+        val childPrefix = getPrefix(context, fileInstance.uri)
         return if (parentPrefix == childPrefix) {
             fileInstance.toParent()
         } else {
-            getFileInstance(context, parentUri, stoppableTask = stoppableTask)
+            getFileInstance(context, parentUri)
         }
     }
 
     @JvmStatic
-    fun simplyPath(path: String, stoppableTask: StoppableTask?): String {
+    fun simplyPath(path: String): String {
         assert(path[0] == '/') {
             "$path is not valid"
         }
@@ -287,7 +283,6 @@ object FileInstanceFactory {
         stack.add("/")
         val nameStack = LinkedList<Char>()
         while (position < path.length) {
-            if (stoppableTask?.needStop() == true) break
             val current = path[position++]
             if (current == '/') {
                 if (stack.last != "/" || nameStack.size != 0) {

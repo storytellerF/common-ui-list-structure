@@ -50,7 +50,7 @@ data class RemoteSpec(val server: String, val port: Int, val user: String, val p
 
 val supportScheme = listOf("ftp", "smb", "sftp", "ftpes", "ftps", "webdav")
 
-fun getInstance(context: Context, uri: Uri): FileInstance {
+fun getRemoteInstance(context: Context, uri: Uri): FileInstance {
     return when (uri.scheme) {
         "ftp" -> FtpFileInstance(RemoteSpec.parse(uri), uri)
         "smb" -> SmbFileInstance(ShareSpec.parse(uri), uri)

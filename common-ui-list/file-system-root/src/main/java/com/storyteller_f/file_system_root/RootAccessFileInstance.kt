@@ -13,27 +13,36 @@ import java.io.File
 class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : FileInstance(uri) {
 
     private var extendedFile = remote.getFile(path)
-    override val file: FileItemModel
-        get() {
-            return FileItemModel(extendedFile.name, uri, extendedFile.isHidden, extendedFile.lastModified(), extendedFile.isSymlink, extendedFile.extension)
-        }
+    override suspend fun getFile(): FileItemModel {
+        return FileItemModel(
+            extendedFile.name,
+            uri,
+            extendedFile.isHidden,
+            extendedFile.lastModified(),
+            extendedFile.isSymlink,
+            extendedFile.extension
+        )
+    }
 
-    override val directory: DirectoryItemModel
-        get() {
-            return DirectoryItemModel(extendedFile.name, uri, extendedFile.isHidden, extendedFile.lastModified(), extendedFile.isSymlink)
-        }
+    override suspend fun getDirectory(): DirectoryItemModel {
+        return DirectoryItemModel(
+            extendedFile.name,
+            uri,
+            extendedFile.isHidden,
+            extendedFile.lastModified(),
+            extendedFile.isSymlink
+        )
+    }
 
-    override val fileLength: Long
-        get() {
-            return extendedFile.length()
-        }
+    override suspend fun getFileLength(): Long {
+        return extendedFile.length()
+    }
 
-    override val fileInputStream get() = extendedFile.inputStream()
+    override suspend fun getFileInputStream() = extendedFile.inputStream()
 
-    override val fileOutputStream
-        get() = extendedFile.outputStream()
+    override suspend fun getFileOutputStream() = extendedFile.outputStream()
 
-    override fun listInternal(
+    override suspend fun listInternal(
         fileItems: MutableList<FileItemModel>,
         directoryItems: MutableList<DirectoryItemModel>
     ) {
@@ -57,51 +66,43 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
         return com.storyteller_f.file_system.util.FileUtility.permissions(r, w, e, isFile)
     }
 
-    override val isFile: Boolean
-        get() = extendedFile.isFile
+    override suspend fun isFile(): Boolean = extendedFile.isFile
 
-    override fun exists(): Boolean = extendedFile.exists()
+    override suspend fun exists(): Boolean = extendedFile.exists()
 
-    override val isDirectory: Boolean
-        get() = extendedFile.isDirectory
+    override suspend fun isDirectory(): Boolean = extendedFile.isDirectory
 
-    override fun deleteFileOrEmptyDirectory(): Boolean = extendedFile.delete()
+    override suspend fun deleteFileOrEmptyDirectory(): Boolean = extendedFile.delete()
 
-    override fun rename(newName: String): Boolean {
+    override suspend fun rename(newName: String): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun toParent(): FileInstance {
+    override suspend fun toParent(): FileInstance {
         val newUri = uri.buildUpon().path(extendedFile.parent!!).build()
         return RootAccessFileInstance(remote, newUri)
     }
 
-    override val directorySize: Long
-        get() {
-            TODO("Not yet implemented")
-        }
-
-    override fun createFile(): Boolean {
+    override suspend fun getDirectorySize(): Long {
         TODO("Not yet implemented")
     }
 
-    override val isHidden: Boolean
-        get() = extendedFile.isHidden
-
-    override fun createDirectory(): Boolean {
+    override suspend fun createFile(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
+    override suspend fun isHidden(): Boolean = extendedFile.isHidden
+
+    override suspend fun createDirectory(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         val newUri = uri.buildUpon().path(File(extendedFile, name).absolutePath).build()
         return RootAccessFileInstance(remote, newUri)
     }
 
-    override val parent: String?
-        get() = extendedFile.parent
-
-    override val isSymbolicLink: Boolean
-        get() = extendedFile.isSymlink
+    override suspend fun isSymbolicLink(): Boolean = extendedFile.isSymlink
 
     companion object {
         const val rootFileSystemScheme = "root"

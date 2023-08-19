@@ -47,19 +47,11 @@ import com.storyteller_f.file_system.model.TorrentFileItemModel
 import com.storyteller_f.file_system.requestPathPermission
 import com.storyteller_f.file_system_ktx.fileIcon
 import com.storyteller_f.file_system_ktx.isDirectory
-import com.storyteller_f.file_system_remote.FtpFileInstance
-import com.storyteller_f.file_system_remote.FtpsFileInstance
-import com.storyteller_f.file_system_remote.RemoteSpec
-import com.storyteller_f.file_system_remote.SFtpFileInstance
-import com.storyteller_f.file_system_remote.ShareSpec
-import com.storyteller_f.file_system_remote.SmbFileInstance
-import com.storyteller_f.file_system_remote.WebDavFileInstance
-import com.storyteller_f.file_system_remote.getInstance
+import com.storyteller_f.file_system_remote.getRemoteInstance
 import com.storyteller_f.file_system_remote.supportScheme
 import com.storyteller_f.file_system_root.RootAccessFileInstance
 import com.storyteller_f.filter_core.Filter
 import com.storyteller_f.giant_explorer.R
-import com.storyteller_f.giant_explorer.control.plugin.stoppable
 import com.storyteller_f.giant_explorer.database.LocalDatabase
 import com.storyteller_f.giant_explorer.database.requireDatabase
 import com.storyteller_f.giant_explorer.databinding.ViewHolderFileBinding
@@ -68,7 +60,6 @@ import com.storyteller_f.giant_explorer.dialog.activeFilters
 import com.storyteller_f.giant_explorer.dialog.activeSortChains
 import com.storyteller_f.giant_explorer.model.FileModel
 import com.storyteller_f.giant_explorer.pc_end_on
-import com.storyteller_f.multi_core.StoppableTask
 import com.storyteller_f.sort_ui.SortChain
 import com.storyteller_f.sort_ui.SortDialog
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
@@ -84,22 +75,13 @@ import com.storyteller_f.ui_list.ui.ListWithState
 import com.storyteller_f.ui_list.ui.toggle
 import com.storyteller_f.ui_list.ui.valueContains
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.Locale
-import kotlin.concurrent.thread
-import kotlin.coroutines.resumeWithException
 
-suspend fun getFileInstanceAsync(context: Context, uri: Uri) = suspendCancellableCoroutine {
-    thread {
-        val result = Result.success(getFileInstance(context, uri, it.stoppable()))
-        it.resumeWith(result)
-    }
-}
+fun getFileInstanceAsync(context: Context, uri: Uri) = getFileInstance(context, uri)
 
 fun getFileInstance(
     context: Context,
     uri: Uri,
-    stoppableTask: StoppableTask = StoppableTask.Blocking
 ): FileInstance {
     val r = RootAccessFileInstance.remote
     val scheme = uri.scheme!!
@@ -109,9 +91,9 @@ fun getFileInstance(
             uri
         )
         supportScheme.contains(scheme) -> {
-            getInstance(context, uri)
+            getRemoteInstance(context, uri)
         }
-        else -> FileInstanceFactory.getFileInstance(context, uri, stoppableTask)
+        else -> FileInstanceFactory.getFileInstance(context, uri)
     }
 }
 
@@ -404,18 +386,7 @@ fun fileServiceBuilder(
     database: LocalDatabase
 ): suspend (searchQuery: FileExplorerSearch, start: Int, count: Int) -> SimpleResponse<FileModel> {
     return { searchQuery: FileExplorerSearch, start: Int, count: Int ->
-        val listSafe = suspendCancellableCoroutine { continuation ->
-            thread {
-                try {
-                    searchQuery.path.list().run {
-                        continuation.resumeWith(Result.success(this))
-                    }
-                } catch (e: Exception) {
-                    continuation.resumeWithException(e)
-                }
-
-            }
-        }
+        val listSafe = searchQuery.path.list()
 
         val filterList = searchQuery.filters
         val sortChains = searchQuery.sort

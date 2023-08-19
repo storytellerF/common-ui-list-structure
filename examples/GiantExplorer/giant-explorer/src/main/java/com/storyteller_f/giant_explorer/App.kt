@@ -168,7 +168,7 @@ class FolderWorker(context: Context, workerParams: WorkerParameters) :
             val uri = uriString.toUri()
             val fileInstance = getFileInstanceAsync(context, uri)
             val record = context.requireDatabase.sizeDao().search(uri)
-            if (record != null && record.lastUpdateTime > fileInstance.directory.lastModifiedTime) return WorkerResult.SizeWorker(
+            if (record != null && record.lastUpdateTime > fileInstance.getDirectory().lastModifiedTime) return WorkerResult.SizeWorker(
                 record.size
             )
             val listSafe = fileInstance.list()
@@ -340,12 +340,12 @@ inline fun <T, R> List<T>.mapNullNull(
 
 const val pc_end_on = 1024
 
-fun getFileMD5(fileInstance: FileInstance, mdWorker: StoppableTask): String? {
+suspend fun getFileMD5(fileInstance: FileInstance, mdWorker: StoppableTask): String? {
     val buffer = ByteArray(pc_end_on)
     return try {
         var len: Int
         val digest = MessageDigest.getInstance("MD5")
-        fileInstance.fileInputStream.buffered().use { stream ->
+        fileInstance.getFileInputStream().buffered().use { stream ->
             while (stream.read(buffer).also { len = it } != -1) {
                 if (mdWorker.needStop()) return null
                 digest.update(buffer, 0, len)

@@ -117,16 +117,18 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
                 Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
             FileSystemUriSaver.instance.saveUri(this, key, uri)
-            switchRoot(authority)
             currentRequestingKey = null
+            scope.launch {
+                switchRoot(authority)
+            }
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        displayGrid.data.distinctUntilChanged().observe(owner, Observer {
+        displayGrid.data.distinctUntilChanged().observe(owner) {
             binding.switchDisplay.isActivated = it
-        })
+        }
         setSupportActionBar(binding.toolbar)
         supportNavigatorBarImmersive(binding.root)
 
@@ -278,21 +280,26 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             val loadLabel = it.loadLabel(packageManager).toString() + " " + (savedUris[authority] ?: "")
 //            val icon = it.loadIcon(packageManager)
             menu.add(loadLabel)
-                .setChecked(hasPermission(savedUris, authority))
                 .setCheckable(true)
 //                .setActionView(ImageView(this).apply {
 //                    setImageDrawable(icon)
 //                })
                 .setOnMenuItemClickListener {
-                    switchRoot(authority)
+                    scope.launch {
+                        switchRoot(authority)
+                    }
                     true
+                }.let {
+                    scope.launch {
+                        it.setChecked(hasPermission(savedUris, authority))
+                    }
                 }
 
         }
 
     }
 
-    private fun hasPermission(
+    private suspend fun hasPermission(
         savedUris: Map<String, String>,
         authority: String
     ): Boolean {
@@ -310,7 +317,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         return contains
     }
 
-    private fun switchRoot(authority: String): Boolean {
+    private suspend fun switchRoot(authority: String): Boolean {
         val savedUri = FileSystemUriSaver.instance.savedUri(this, authority)
         if (savedUri != null) {
             try {
@@ -363,7 +370,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
                 binder.fileOperateResultContainer = WeakReference(this@MainActivity)
                 binder.state.toDiffNoNull { i, i2 ->
                     i == i2
-                }.observe(this@MainActivity, Observer {
+                }.observe(this@MainActivity) {
                     Toast.makeText(
                         this@MainActivity,
                         "${it.first} ${it.second}",
@@ -374,7 +381,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
                             this.binder = fileOperateBinderLocal
                         }.show(supportFragmentManager, FileOperationDialog.tag)
                     }
-                })
+                }
             }
         }
 

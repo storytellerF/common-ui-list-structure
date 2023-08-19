@@ -7,7 +7,6 @@ import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.model.FilesAndDirectories
-import com.storyteller_f.multi_core.StoppableTask
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -15,85 +14,77 @@ import java.io.FileOutputStream
 //todo getChannel
 //todo file descriptor
 abstract class FileInstance(var uri: Uri) {
-    private var task: StoppableTask? = null
 
-    init {
-        assert(path.trim { it <= ' ' }.isNotEmpty())
-    }
-
-    @get:WorkerThread
-    abstract val file: FileItemModel
-
-    @get:WorkerThread
-    abstract val directory: DirectoryItemModel
-
-    @get:WorkerThread
-    val fileSystemItem: FileSystemItemModel
-        get() = if (isFile) file else directory
-
-    @get:WorkerThread
-    open val name: String
-        get() = File(path).name
-
-    @get:WorkerThread
-    abstract val fileLength: Long
-
-    @get:WorkerThread
-    abstract val fileInputStream: FileInputStream
-
-    @get:WorkerThread
-    abstract val fileOutputStream: FileOutputStream
+    val path: String
+        get() = uri.path!!
 
     /**
      * 获取父路径
      *
      * @return 父路径
      */
-    @get:WorkerThread
-    open val parent: String?
+    val parent: String?
         get() = File(path).parent
 
-    @get:WorkerThread
-    open val isSymbolicLink: Boolean
-        get() = false
+    val name: String
+        get() = File(path).name
 
-    @get:WorkerThread
-    val isSoftLink: Boolean
-        get() = false
+    init {
+        assert(path.trim { it <= ' ' }.isNotEmpty())
+    }
 
-    @get:WorkerThread
-    val isHardLink: Boolean
-        get() = false
+    @WorkerThread
+    abstract suspend fun getFile(): FileItemModel
+
+    @WorkerThread
+    abstract suspend fun getDirectory(): DirectoryItemModel
+
+    @WorkerThread
+    suspend fun getFileSystemItem(): FileSystemItemModel = if (isFile()) getFile() else getDirectory()
+
+    @WorkerThread
+    abstract suspend fun getFileInputStream(): FileInputStream
+
+    @WorkerThread
+    abstract suspend fun getFileOutputStream(): FileOutputStream
+
+    @WorkerThread
+    open suspend fun isSymbolicLink(): Boolean = false
+
+    @WorkerThread
+    open suspend fun isSoftLink(): Boolean = false
+
+    @WorkerThread
+    open suspend fun isHardLink(): Boolean = false
+
+    @WorkerThread
+    abstract suspend fun isHidden(): Boolean
 
     /**
      * 是否是文件
      *
      * @return true 代表是文件
      */
-    @get:WorkerThread
-    abstract val isFile: Boolean
+    @WorkerThread
+    abstract suspend fun isFile(): Boolean
 
-    @get:WorkerThread
-    abstract val isDirectory: Boolean
+    @WorkerThread
+    abstract suspend fun isDirectory(): Boolean
 
-    @get:WorkerThread
-    abstract val directorySize: Long
+    @WorkerThread
+    abstract suspend fun getDirectorySize(): Long
 
-    @get:WorkerThread
-    val path: String
-        get() = uri.path!!
-
-    @get:WorkerThread
-    abstract val isHidden: Boolean
+    @WorkerThread
+    abstract suspend fun getFileLength(): Long
 
     /**
      * 应该仅用于目录。可能会抛出异常，内部不会处理。
      */
     @WorkerThread
-    protected abstract fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>)
+    protected abstract suspend fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>)
 
     @WorkerThread
-    fun list(): FilesAndDirectories {
+    suspend fun list(): FilesAndDirectories {
         val filesAndDirectories = FilesAndDirectories(buildFilesContainer(), buildDirectoryContainer())
         listInternal(filesAndDirectories.files, filesAndDirectories.directories)
         return filesAndDirectories
@@ -105,13 +96,13 @@ abstract class FileInstance(var uri: Uri) {
      * @return true代表存在
      */
     @WorkerThread
-    abstract fun exists(): Boolean
+    abstract suspend fun exists(): Boolean
 
     @WorkerThread
-    abstract fun createFile(): Boolean
+    abstract suspend fun createFile(): Boolean
 
     @WorkerThread
-    abstract fun createDirectory(): Boolean
+    abstract suspend fun createDirectory(): Boolean
 
     /**
      * 调用者只能是一个路径
@@ -122,7 +113,7 @@ abstract class FileInstance(var uri: Uri) {
      * @return 返回子对象
      */
     @WorkerThread
-    abstract fun toChild(name: String, policy: FileCreatePolicy): FileInstance?
+    abstract suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance?
 
     /**
      * 移动指针，指向他的父文件夹
@@ -131,7 +122,7 @@ abstract class FileInstance(var uri: Uri) {
      * @return 返回他的文件夹
      */
     @WorkerThread
-    abstract fun toParent(): FileInstance
+    abstract suspend fun toParent(): FileInstance
 
     /**
      * 删除当前文件
@@ -139,7 +130,7 @@ abstract class FileInstance(var uri: Uri) {
      * @return 返回是否删除成功
      */
     @WorkerThread
-    abstract fun deleteFileOrEmptyDirectory(): Boolean
+    abstract suspend fun deleteFileOrEmptyDirectory(): Boolean
 
     /**
      * 重命名当前文件
@@ -148,7 +139,7 @@ abstract class FileInstance(var uri: Uri) {
      * @return 返回是否重命名成功
      */
     @WorkerThread
-    abstract fun rename(newName: String): Boolean
+    abstract suspend fun rename(newName: String): Boolean
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -167,11 +158,6 @@ abstract class FileInstance(var uri: Uri) {
 
     private fun buildDirectoryContainer(): MutableList<DirectoryItemModel> {
         return mutableListOf()
-    }
-
-    protected fun needStop(): Boolean {
-        if (Thread.currentThread().isInterrupted) return true
-        return if (task != null) task!!.needStop() else false
     }
 
     protected fun child(it: String): Pair<File, Uri> {

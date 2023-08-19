@@ -27,10 +27,6 @@ class FtpsFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
         private const val TAG = "FtpInstance"
     }
 
-    init {
-        initCurrentFile()
-    }
-
     private fun initCurrentFile(): FTPFile? {
         val ftpInstance = getInstance()
         return try {
@@ -53,32 +49,27 @@ class FtpsFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
         return null
     }
 
-    override val file: FileItemModel
-        get() {
-            TODO("Not yet implemented")
-        }
+    override suspend fun getFile(): FileItemModel {
+        TODO("Not yet implemented")
+    }
 
-    override val directory: DirectoryItemModel
-        get() {
-            TODO("Not yet implemented")
-        }
+    override suspend fun getDirectory(): DirectoryItemModel {
+        TODO("Not yet implemented")
+    }
 
-    override val fileLength: Long
-        get() {
-            TODO("Not yet implemented")
-        }
+    override suspend fun getFileLength(): Long {
+        TODO("Not yet implemented")
+    }
 
-    override val fileInputStream: FileInputStream
-        get() {
-            TODO("Not yet implemented")
-        }
+    override suspend fun getFileInputStream(): FileInputStream {
+        TODO("Not yet implemented")
+    }
 
-    override val fileOutputStream: FileOutputStream
-        get() {
-            TODO("Not yet implemented")
-        }
+    override suspend fun getFileOutputStream(): FileOutputStream {
+        TODO("Not yet implemented")
+    }
 
-    override fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
+    override suspend fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
 
         val listFiles = getInstance()?.listFiles(path)
         listFiles?.forEach {
@@ -105,11 +96,10 @@ class FtpsFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
         return permissions(canRead, canWrite, canExecute, isFile)
     }
 
-    override val isFile: Boolean
-        get() {
-            val current = reconnectIfNeed()
-            return current?.isFile == true
-        }
+    override suspend fun isFile(): Boolean {
+        val current = reconnectIfNeed()
+        return current?.isFile == true
+    }
 
     private fun reconnectIfNeed(): FTPFile? {
         var current = ftpFile
@@ -119,46 +109,43 @@ class FtpsFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
         return current
     }
 
-    override fun exists(): Boolean {
+    override suspend fun exists(): Boolean {
         return reconnectIfNeed() != null
     }
 
-    override val isDirectory: Boolean
-        get() {
-            return reconnectIfNeed()?.isDirectory == true
-        }
+    override suspend fun isDirectory(): Boolean {
+        return reconnectIfNeed()?.isDirectory == true
+    }
 
-    override fun deleteFileOrEmptyDirectory(): Boolean {
+    override suspend fun deleteFileOrEmptyDirectory(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun rename(newName: String): Boolean {
+    override suspend fun rename(newName: String): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun toParent(): FileInstance {
+    override suspend fun toParent(): FileInstance {
         TODO("Not yet implemented")
     }
 
-    override val directorySize: Long
-        get() {
-            TODO("Not yet implemented")
-        }
-
-    override fun createFile(): Boolean {
+    override suspend fun getDirectorySize(): Long {
         TODO("Not yet implemented")
     }
 
-    override val isHidden: Boolean
-        get() {
-            TODO("Not yet implemented")
-        }
-
-    override fun createDirectory(): Boolean {
+    override suspend fun createFile(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
+    override suspend fun isHidden(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun createDirectory(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         TODO("Not yet implemented")
     }
 

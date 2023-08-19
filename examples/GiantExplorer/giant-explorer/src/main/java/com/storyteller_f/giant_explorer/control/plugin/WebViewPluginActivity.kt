@@ -113,28 +113,12 @@ class WebViewPluginActivity : AppCompatActivity() {
 
     @Suppress("JavascriptInterface")
     private fun bindApi(webView: WebView, data: Uri?) {
-        val pluginManager = object : DefaultPluginManager(this) {
-
-            @JavascriptInterface
-            override fun fileInputStream(uriString: String) = super.fileInputStream(uriString)
-
-            @JavascriptInterface
-            override fun fileOutputStream(uriString: String) = super.fileOutputStream(uriString)
-
-            @JavascriptInterface
-            override fun listFiles(uriString: String): List<String> = super.listFiles(uriString)
-            override suspend fun requestPath(initUri: String?): String {
-                return ""
-            }
-
-            override fun runInService(block: GiantExplorerService.() -> Boolean) {
-                TODO("Not yet implemented")
-            }
+        val pluginManager = object {
 
             @JavascriptInterface
             fun base64(path: String, callbackId: String) {
-                thread {
-                    val readBytes = fileInputStream(path).readBytes()
+                scope.launch {
+                    val readBytes = fileInputStream1(path).readBytes()
                     val result = Base64.encodeToString(readBytes, Base64.NO_WRAP)
                     webView.post {
                         webView.callback(callbackId, "'$result'")

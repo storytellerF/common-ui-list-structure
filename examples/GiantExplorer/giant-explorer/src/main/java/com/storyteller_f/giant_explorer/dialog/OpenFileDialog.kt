@@ -15,10 +15,7 @@ import com.storyteller_f.file_system.util.FileUtility
 import com.storyteller_f.giant_explorer.control.getFileInstance
 import com.storyteller_f.giant_explorer.databinding.DialogOpenFileBinding
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.parcelize.Parcelize
-import kotlin.concurrent.thread
-import kotlin.coroutines.resumeWithException
 
 interface StringResult {
     fun onResult(string: String)
@@ -53,16 +50,7 @@ class OpenFileDialog : SimpleDialogFragment<DialogOpenFileBinding>(DialogOpenFil
         val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(FileUtility.getExtension(uri.path))
         binding.mimeType = mimeTypeFromExtension
         scope.launch {
-            dataType.data.value = suspendCancellableCoroutine {
-                thread {
-                    try {
-                        val value = ContentInfoUtil().findMatch(fileInstance.fileInputStream.buffered())
-                        it.resumeWith(Result.success(value))
-                    } catch (e: Exception) {
-                        it.resumeWithException(e)
-                    }
-                }
-            }
+            dataType.data.value = ContentInfoUtil().findMatch(fileInstance.getFileInputStream().buffered())
         }
         dataType.data.observe(viewLifecycleOwner) {
             binding.openByPicture.setBackgroundColor(mixColor(mimeTypeFromExtension, it, "image"))

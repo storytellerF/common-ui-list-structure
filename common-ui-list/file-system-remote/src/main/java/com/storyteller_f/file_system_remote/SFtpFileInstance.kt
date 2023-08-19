@@ -47,32 +47,27 @@ class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
         return c to attributes
     }
 
-    override val file: FileItemModel
-        get() {
-            TODO("Not yet implemented")
-        }
+    override suspend fun getFile(): FileItemModel {
+        TODO("Not yet implemented")
+    }
 
-    override val directory: DirectoryItemModel
-        get() {
-            TODO("Not yet implemented")
-        }
+    override suspend fun getDirectory(): DirectoryItemModel {
+        TODO("Not yet implemented")
+    }
 
-    override val fileLength: Long
-        get() {
-            TODO("Not yet implemented")
-        }
+    override suspend fun getFileLength(): Long {
+        TODO("Not yet implemented")
+    }
 
-    override val fileInputStream: FileInputStream
-        get() {
-            TODO("Not yet implemented")
-        }
+    override suspend fun getFileInputStream(): FileInputStream {
+        TODO("Not yet implemented")
+    }
 
-    override val fileOutputStream: FileOutputStream
-        get() {
-            TODO("Not yet implemented")
-        }
+    override suspend fun getFileOutputStream(): FileOutputStream {
+        TODO("Not yet implemented")
+    }
 
-    override fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
+    override suspend fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
         getInstance().ls(path).forEach {
             val attributes = it.attributes
             val (file, child) = child(it.name)
@@ -85,61 +80,56 @@ class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
         }
     }
 
-    override val isFile: Boolean
-        get() {
-            val reconnectIfNeed = reconnectIfNeed()
-            return reconnectIfNeed.second.type == FileMode.Type.REGULAR
-        }
+    override suspend fun isFile(): Boolean {
+        val reconnectIfNeed = reconnectIfNeed()
+        return reconnectIfNeed.second.type == FileMode.Type.REGULAR
+    }
 
-    override fun exists(): Boolean {
+    override suspend fun exists(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override val isDirectory: Boolean
-        get() {
-            val reconnectIfNeed = reconnectIfNeed()
-            return reconnectIfNeed.second.type == FileMode.Type.DIRECTORY
-        }
+    override suspend fun isDirectory(): Boolean {
+        val reconnectIfNeed = reconnectIfNeed()
+        return reconnectIfNeed.second.type == FileMode.Type.DIRECTORY
+    }
 
-    override fun deleteFileOrEmptyDirectory(): Boolean {
+    override suspend fun deleteFileOrEmptyDirectory(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun rename(newName: String): Boolean {
+    override suspend fun rename(newName: String): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun toParent(): FileInstance {
+    override suspend fun toParent(): FileInstance {
         TODO("Not yet implemented")
     }
 
-    override val directorySize: Long
-        get() {
-            TODO("Not yet implemented")
-        }
-
-    override fun createFile(): Boolean {
+    override suspend fun getDirectorySize(): Long {
         TODO("Not yet implemented")
     }
 
-    override val isHidden: Boolean
-        get() {
-            TODO("Not yet implemented")
-        }
-
-    override fun createDirectory(): Boolean {
+    override suspend fun createFile(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
+    override suspend fun isHidden(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override val isSymbolicLink: Boolean
-        get() {
-            val reconnectIfNeed = reconnectIfNeed()
-            return reconnectIfNeed.second.type == FileMode.Type.SYMLINK
-        }
+    override suspend fun createDirectory(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun isSymbolicLink(): Boolean {
+        val reconnectIfNeed = reconnectIfNeed()
+        return reconnectIfNeed.second.type == FileMode.Type.SYMLINK
+    }
 }
 
 fun RemoteSpec.sftpClient(): SFTPClient {

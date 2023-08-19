@@ -38,7 +38,7 @@ class LiPlugin : GiantExplorerShellPlugin {
         }
     }
 
-    private fun compress(dest: ZipOutputStream, fullPath: File, offset: String) {
+    private suspend fun compress(dest: ZipOutputStream, fullPath: File, offset: String) {
         val path = fullPath.absolutePath
         val name = fullPath.name
         if (pluginManager.isFile(path)) {
@@ -88,7 +88,7 @@ class LiPlugin : GiantExplorerShellPlugin {
         }
     }
 
-    private fun processEntry(dest: File, nextEntry: ZipEntry, stream: ZipInputStream) {
+    private suspend fun processEntry(dest: File, nextEntry: ZipEntry, stream: ZipInputStream) {
         val child = File(dest, nextEntry.name)
         println(nextEntry.name)
         if (nextEntry.isDirectory) {

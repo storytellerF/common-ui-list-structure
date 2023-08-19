@@ -2,7 +2,6 @@ package com.storyteller_f.giant_explorer.control.plugin
 
 import android.content.Context
 import android.content.res.Resources
-import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
@@ -14,7 +13,6 @@ import com.storyteller_f.giant_explorer.FragmentPluginConfiguration
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.control.getFileInstance
 import com.storyteller_f.giant_explorer.pluginManagerRegister
-import com.storyteller_f.multi_core.StoppableTask
 import com.storyteller_f.plugin_core.GiantExplorerPlugin
 import com.storyteller_f.plugin_core.GiantExplorerPluginManager
 import com.storyteller_f.plugin_core.GiantExplorerService
@@ -24,22 +22,24 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 
 const val giantExplorerPluginIni = "META-INF/giant-explorer-plugin.ini"
+suspend fun Context.fileInputStream1(uriString: String) =
+    getFileInstance(this, uriString.toUri()).apply {
+        createFile()
+    }.getFileInputStream()
 
 abstract class DefaultPluginManager(val context: Context) : GiantExplorerPluginManager {
-    override fun fileInputStream(uriString: String): FileInputStream {
-        return getFileInstance(context, uriString.toUri(), stoppableTask = StoppableTask.Blocking).apply {
-            createFile()
-        }.fileInputStream
+    override suspend fun fileInputStream(uriString: String): FileInputStream {
+        return context.fileInputStream1(uriString)
     }
 
-    override fun fileOutputStream(uriString: String): FileOutputStream {
-        return getFileInstance(context, uriString.toUri(), stoppableTask = StoppableTask.Blocking).apply {
+    override suspend fun fileOutputStream(uriString: String): FileOutputStream {
+        return getFileInstance(context, uriString.toUri()).apply {
             createFile()
-        }.fileOutputStream
+        }.getFileOutputStream()
     }
 
-    override fun listFiles(uriString: String): List<String> {
-        return getFileInstance(context, uriString.toUri(), stoppableTask = StoppableTask.Blocking).list().let { filesAndDirectories ->
+    override suspend fun listFiles(uriString: String): List<String> {
+        return getFileInstance(context, uriString.toUri()).list().let { filesAndDirectories ->
             filesAndDirectories.files.map {
                 it.fullPath
             } + filesAndDirectories.directories.map {
@@ -63,12 +63,12 @@ abstract class DefaultPluginManager(val context: Context) : GiantExplorerPluginM
         return FileSystemProviderResolver.resolvePath(uriString.toUri())
     }
 
-    override fun ensureDir(uriString: String) {
-        getFileInstance(context, uriString.toUri(), stoppableTask = StoppableTask.Blocking).createDirectory()
+    override suspend fun ensureDir(uriString: String) {
+        getFileInstance(context, uriString.toUri()).createDirectory()
     }
 
-    override fun isFile(uriString: String): Boolean {
-        return getFileInstance(context, uriString.toUri(), stoppableTask = StoppableTask.Blocking).isFile
+    override suspend fun isFile(uriString: String): Boolean {
+        return getFileInstance(context, uriString.toUri()).isFile()
     }
 }
 
@@ -98,13 +98,16 @@ class FragmentPluginActivity : AppCompatActivity() {
                 return ""
             }
 
-            override fun runInService(block: GiantExplorerService.() -> Boolean) {
-                TODO("Not yet implemented")
+            override fun runInService(block: suspend GiantExplorerService.() -> Boolean) {
+
             }
 
         }
         lifecycleScope.launch {
-            val revolvePlugin = pluginManagerRegister.resolvePluginName(pluginName, this@FragmentPluginActivity) as FragmentPluginConfiguration
+            val revolvePlugin = pluginManagerRegister.resolvePluginName(
+                pluginName,
+                this@FragmentPluginActivity
+            ) as FragmentPluginConfiguration
             val dexClassLoader = revolvePlugin.classLoader
             val name = revolvePlugin.startFragment
             pluginFragments = revolvePlugin.pluginFragments

@@ -16,8 +16,8 @@ class TorrentFile {
          * @throws IOException io 异常
          */
         @Throws(Exception::class)
-        fun getTorrentName(fileInstance: FileInstance, worker: StoppableTask): String {
-            val bEncodedDictionary = Decode.bDecode(fileInstance.fileInputStream.buffered(), worker)
+        suspend fun getTorrentName(fileInstance: FileInstance, worker: StoppableTask): String {
+            val bEncodedDictionary = Decode.bDecode(fileInstance.getFileInputStream().buffered(), worker)
             val encodedDictionary =
                 bEncodedDictionary.get("info") as BEncodedDictionary
             return String(

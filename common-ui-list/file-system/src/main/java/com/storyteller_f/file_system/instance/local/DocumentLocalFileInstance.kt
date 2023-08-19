@@ -16,18 +16,31 @@ import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.FileInstanceUtility
 import com.storyteller_f.file_system.util.FileUtility
+import kotlinx.coroutines.yield
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 
 /**
- * @param prefix 用来标识对象所在区域，可能是外部，也可能是内部。比如/storage/XXXX-XXXX
+ * @param prefix 用来标识对象所在区域，可能是外部，也可能是内部。比如/storage/XXXX-XXXX。仅对于本地文件系统有效。其他情况都是空。
  * @param preferenceKey 一般是authority，用于获取document provider 的uri
  */
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-class DocumentLocalFileInstance(private val prefix: String, private val preferenceKey: String, context: Context, uri: Uri, initCurrent: Boolean = true) : BaseContextFileInstance(context, uri) {
-    private var current: DocumentFile? = null
+class DocumentLocalFileInstance(
+    private val prefix: String,
+    private val preferenceKey: String,
+    context: Context,
+    uri: Uri
+) : BaseContextFileInstance(context, uri) {
+    private var _instance: DocumentFile? = null
+    private suspend fun getInstanceRelinkIfNeed(): DocumentFile? {
+        val temp = _instance
+        if (temp == null) {
+            _instance = documentFileFromUri()
+        }
+        return _instance
+    }
 
     /**
      * 有些document provider 的uri 对应的路径不是【/】
@@ -44,19 +57,16 @@ class DocumentLocalFileInstance(private val prefix: String, private val preferen
 
     init {
         assert(path.startsWith(prefix))
-        if (initCurrent) {
-            current = documentFileFromUri()
-        }
     }
 
-    private fun documentFileFromUri(): DocumentFile? = getDocumentFile(NotCreate)
+    private suspend fun documentFileFromUri(): DocumentFile? = getDocumentFile(NotCreate)
 
     /**
      * 获取指定目录的document file
      *
      * @return 返回目标文件
      */
-    private fun getDocumentFile(policy: FileCreatePolicy): DocumentFile? {
+    private suspend fun getDocumentFile(policy: FileCreatePolicy): DocumentFile? {
         //此uri 是当前前缀下的根目录uri。fileInstance 的uri 是fileSystem 使用的uri。
         val rootUri = FileSystemUriSaver.instance.savedUri(context, preferenceKey)
         if (rootUri == null) {
@@ -80,7 +90,7 @@ class DocumentLocalFileInstance(private val prefix: String, private val preferen
         } else nameItemPath
         var temp: DocumentFile = rootFile
         for (name in paths) {
-            if (needStop()) break
+            yield()
             val foundFile = temp.findFile(name)
             temp = if (foundFile == null) {
                 if (policy is NotCreate) {
@@ -104,14 +114,13 @@ class DocumentLocalFileInstance(private val prefix: String, private val preferen
         return temp
     }
 
-    override val directorySize: Long
-        get() = getDocumentFileSize(current)
+    override suspend fun getDirectorySize(): Long = getDocumentFileSize(getInstanceRelinkIfNeed())
 
-    private fun getDocumentFileSize(documentFile: DocumentFile?): Long {
+    private suspend fun getDocumentFileSize(documentFile: DocumentFile?): Long {
         var size: Long = 0
         val documentFiles = documentFile!!.listFiles()
         for (documentFi in documentFiles) {
-            if (needStop()) break
+            yield()
             size += if (documentFile.isFile) {
                 documentFi.length()
             } else {
@@ -121,45 +130,39 @@ class DocumentLocalFileInstance(private val prefix: String, private val preferen
         return size
     }
 
-    override val parent: String?
-        get() {
-            val parentFile = current!!.parentFile ?: return null
-            return parentFile.uri.path
-        }
-
-    override fun createDirectory(): Boolean {
-        if (current != null) return true
+    override suspend fun createDirectory(): Boolean {
+        if (getInstanceRelinkIfNeed() != null) return true
         val created = getDocumentFile(Create(false))
         if (created != null) {
-            current = created
+            _instance = created
             return true
         }
         return false
     }
 
-    override fun createFile(): Boolean {
-        if (current != null) return true
+    override suspend fun createFile(): Boolean {
+        if (getInstanceRelinkIfNeed() != null) return true
         val created = getDocumentFile(Create(true))
         if (created != null) {
-            current = created
+            _instance = created
             return true
         }
         return false
     }
 
     @Throws(Exception::class)
-    override fun toChild(name: String, policy: FileCreatePolicy): FileInstance? {
+    override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance? {
         if (!exists()) {
             Log.e(TAG, "toChild: 未经过初始化或者文件不存在：$path")
             return null
         }
-        if (isFile) {
+        if (isFile()) {
             throw Exception("当前是一个文件，无法向下操作")
         }
 
         val build = uri.buildUpon().path(File(path, name).absolutePath).build()
-        val instance = DocumentLocalFileInstance(prefix, preferenceKey, context, build, false)
-        instance.current = getChild(name, policy)
+        val instance = DocumentLocalFileInstance(prefix, preferenceKey, context, build)
+        instance._instance = getChild(name, policy)
         return instance
     }
 
@@ -169,29 +172,27 @@ class DocumentLocalFileInstance(private val prefix: String, private val preferen
      * @throws Exception 会出现无法预计的结果时，不允许再次继续
      */
     @Throws(Exception::class)
-    fun getChild(name: String?, policy: FileCreatePolicy?): DocumentFile? {
-        val file = current!!.findFile(name!!)
+    suspend fun getChild(name: String?, policy: FileCreatePolicy?): DocumentFile? {
+        val instanceRelinkIfNeed = getInstanceRelinkIfNeed()
+        val file = instanceRelinkIfNeed!!.findFile(name!!)
         return file
             ?: if (policy !is Create) {
                 null
             } else if (policy.isFile) {
-                val createdFile = current!!.createFile("*/*", name)
+                val createdFile = instanceRelinkIfNeed.createFile("*/*", name)
                 createdFile ?: throw Exception("创建文件失败")
             } else {
-                val createdDirectory = current!!.createDirectory(name)
+                val createdDirectory = instanceRelinkIfNeed.createDirectory(name)
                 createdDirectory ?: throw Exception("创建文件夹失败")
             }
     }
 
     @Throws(Exception::class)
-    public override fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
-        if (current == null) {
-            current = documentFileFromUri()
-        }
-        val c = current ?: throw Exception("no permission")
+    public override suspend fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
+        val c = getInstanceRelinkIfNeed() ?: throw Exception("no permission")
         val documentFiles = c.listFiles()
         for (documentFile in documentFiles) {
-            if (needStop()) break
+            yield()
             val documentFileName = documentFile.name!!
             val detailString = FileUtility.getPermissions(documentFile)
             val t = child(documentFile, documentFileName)
@@ -216,79 +217,84 @@ class DocumentLocalFileInstance(private val prefix: String, private val preferen
         }, child.second)
     }
 
-    override fun deleteFileOrEmptyDirectory(): Boolean {
-        return current!!.delete()
+    override suspend fun deleteFileOrEmptyDirectory(): Boolean {
+        return getInstanceRelinkIfNeed()!!.delete()
     }
 
     @Throws(Exception::class)
-    override fun toParent(): BaseContextFileInstance {
+    override suspend fun toParent(): BaseContextFileInstance {
         val parentFile = File(path).parentFile ?: throw Exception("到头了，无法继续向上寻找")
-        val currentParentFile = current!!.parentFile
+        val currentParentFile = getInstanceRelinkIfNeed()!!.parentFile
         return if (currentParentFile == null) {
             throw Exception("查找parent DocumentFile失败")
         } else if (!currentParentFile.isFile) {
             val parent = uri.buildUpon().path(parentFile.absolutePath).build()
-            val instance = DocumentLocalFileInstance(prefix, prefix, context, parent, false)
-            instance.current = currentParentFile
+            val instance = DocumentLocalFileInstance(prefix, prefix, context, parent)
+            instance._instance = currentParentFile
             instance
         } else {
             throw Exception("当前文件已存在，并且类型不同 源文件：" + currentParentFile.isFile)
         }
     }
 
-    override val isFile: Boolean
-        get() {
-            if (current == null) {
-                Log.e(TAG, "isFile: path:$path")
-            }
-            return current!!.isFile
+    override suspend fun isFile(): Boolean {
+        val instanceRelinkIfNeed = getInstanceRelinkIfNeed()
+        if (instanceRelinkIfNeed == null) {
+            Log.e(TAG, "isFile: path:$path")
         }
-
-    override fun exists(): Boolean {
-        return if (current == null) {
-            false
-        } else current!!.exists()
+        return instanceRelinkIfNeed!!.isFile
     }
 
-    override val isDirectory: Boolean
-        get() {
-            if (current == null) {
-                Log.e(TAG, "isDirectory: isDirectory:$path")
-            }
-            return current!!.isDirectory
-        }
-
-    override fun rename(newName: String): Boolean {
-        return current!!.renameTo(newName)
+    override suspend fun exists(): Boolean {
+        return getInstanceRelinkIfNeed()?.exists() ?: false
     }
 
-    override val isHidden: Boolean
-        get() = false
-
-    @get:Throws(FileNotFoundException::class)
-    override val fileInputStream: FileInputStream
-        @SuppressLint("Recycle")
-        get() {
-            val r = context.contentResolver.openFileDescriptor(current!!.uri, "r")
-            return FileInputStream(r!!.fileDescriptor)
+    override suspend fun isDirectory(): Boolean {
+        val instanceRelinkIfNeed = getInstanceRelinkIfNeed()
+        if (instanceRelinkIfNeed == null) {
+            Log.e(TAG, "isDirectory: isDirectory:$path")
         }
+        return instanceRelinkIfNeed!!.isDirectory
+    }
 
-    @get:Throws(FileNotFoundException::class)
-    override val fileOutputStream: FileOutputStream
-        @SuppressLint("Recycle")
-        get() = FileOutputStream(context.contentResolver.openFileDescriptor(current!!.uri, "w")!!.fileDescriptor)
-    override val fileLength: Long
-        get() = current!!.length()
+    override suspend fun rename(newName: String): Boolean {
+        return getInstanceRelinkIfNeed()!!.renameTo(newName)
+    }
 
-    override val file: FileItemModel
-        get() {
-            return FileItemModel(name, uri, false, current!!.lastModified(), false, FileUtility.getExtension(name))
-        }
+    override suspend fun isHidden(): Boolean = false
 
-    override val directory: DirectoryItemModel
-        get() {
-            return DirectoryItemModel(name, uri, false, current!!.lastModified(), false)
-        }
+    @SuppressLint("Recycle")
+    @Throws(FileNotFoundException::class)
+    override suspend fun getFileInputStream(): FileInputStream {
+        val r = context.contentResolver.openFileDescriptor(getInstanceRelinkIfNeed()!!.uri, "r")
+        return FileInputStream(r!!.fileDescriptor)
+    }
+
+    @SuppressLint("Recycle")
+    @Throws(FileNotFoundException::class)
+    override suspend fun getFileOutputStream(): FileOutputStream = FileOutputStream(
+        context.contentResolver.openFileDescriptor(
+            getInstanceRelinkIfNeed()!!.uri,
+            "w"
+        )!!.fileDescriptor
+    )
+
+    override suspend fun getFileLength(): Long = getInstanceRelinkIfNeed()!!.length()
+
+    override suspend fun getFile(): FileItemModel {
+        return FileItemModel(
+            name,
+            uri,
+            false,
+            getInstanceRelinkIfNeed()!!.lastModified(),
+            false,
+            FileUtility.getExtension(name)
+        )
+    }
+
+    override suspend fun getDirectory(): DirectoryItemModel {
+        return DirectoryItemModel(name, uri, false, getInstanceRelinkIfNeed()!!.lastModified(), false)
+    }
 
     companion object {
         private const val TAG = "DocumentLocalFileInstan"

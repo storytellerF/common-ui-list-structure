@@ -7,22 +7,26 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.message.Message
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModelLite
-import com.storyteller_f.file_system.operate.FileCopyOp
 import com.storyteller_f.file_system.operate.FileDeleteOp
-import com.storyteller_f.file_system.operate.FileMoveOp
-import com.storyteller_f.file_system.operate.FileMoveOpInShell
 import com.storyteller_f.file_system.operate.FileOperationForemanProgressListener
 import com.storyteller_f.file_system.operate.FileOperationListener
+import com.storyteller_f.file_system.operate.ScopeFileCopyOp
+import com.storyteller_f.file_system.operate.ScopeFileMoveOp
+import com.storyteller_f.file_system.operate.ScopeFileMoveOpInShell
+import com.storyteller_f.file_system.operate.SuspendCallable
 import com.storyteller_f.giant_explorer.control.getFileInstance
 import com.storyteller_f.multi_core.StoppableTask
 import java.io.File
-import java.util.concurrent.Callable
 
 class TaskOverview(val fileCount: Int, val folderCount: Int, val size: Long) {
     val sumCount = fileCount + folderCount
 }
 
-abstract class FileOperationForeman(val context: Context, val overview: TaskOverview, val key: String) : Callable<Boolean>, StoppableTask, FileOperationListener {
+abstract class FileOperationForeman(
+    val context: Context,
+    val overview: TaskOverview,
+    val key: String
+) : SuspendCallable<Boolean>, StoppableTask, FileOperationListener {
     var fileOperationForemanProgressListener: FileOperationForemanProgressListener? = null
     var leftFileCount = overview.fileCount
     private var leftFolderCount = overview.folderCount
@@ -62,7 +66,11 @@ abstract class FileOperationForeman(val context: Context, val overview: TaskOver
     }
 
     override fun onError(message: Message?, type: Int) {
-        fileOperationForemanProgressListener?.onDetail(message?.name + message?.get(), Log.ERROR, key)
+        fileOperationForemanProgressListener?.onDetail(
+            message?.name + message?.get(),
+            Log.ERROR,
+            key
+        )
     }
 }
 
@@ -96,19 +104,25 @@ class CopyForemanImpl(
             return (if (isMove) "移动" else "复制") + taskName + "到" + target.name
         }
 
-    override fun call(): Boolean {
+    override suspend fun call(): Boolean {
         val isSuccess = !items.any {
             if (needStop()) {
                 emitDetailMessage("已暂停", Log.WARN)
                 return false
             }
-            val fileInstance = getFileInstance(context, File(it.fullPath).toUri(), stoppableTask = StoppableTask.Blocking)
+            val fileInstance = getFileInstance(context, File(it.fullPath).toUri())
             emitStateMessage("处理${fileInstance.path}")
             val operationResult =
                 when {
-                    !isMove -> FileCopyOp(this, fileInstance, target, context).bind(this)
-                    fileInstance.javaClass == target.javaClass -> FileMoveOpInShell(this, fileInstance, target, context).bind(this)
-                    else -> FileMoveOp(this, fileInstance, target, context)
+                    !isMove -> ScopeFileCopyOp(this, fileInstance, target, context).bind(this)
+                    fileInstance.javaClass == target.javaClass -> ScopeFileMoveOpInShell(
+                        this,
+                        fileInstance,
+                        target,
+                        context
+                    ).bind(this)
+
+                    else -> ScopeFileMoveOp(this, fileInstance, target, context)
                 }.call()
             !operationResult//如果失败了，提前结束
         }
@@ -130,7 +144,11 @@ class CopyForemanImpl(
 }
 
 class DeleteForemanImpl(
-    private val detectorTasks: List<FileSystemItemModel>, context: Context, overview: TaskOverview, focused: FileSystemItemModel, key: String
+    private val detectorTasks: List<FileSystemItemModel>,
+    context: Context,
+    overview: TaskOverview,
+    focused: FileSystemItemModel,
+    key: String
 ) : LocalFileOperationForeman(focused, context, overview, key) {
 
     override val description: String
@@ -143,10 +161,14 @@ class DeleteForemanImpl(
             }
         }
 
-    override fun call(): Boolean {
+    override suspend fun call(): Boolean {
         val isSuccess = !detectorTasks.any {//如果有一个失败了，就提前退出
             emitStateMessage("处理${it.fullPath}")
-            !FileDeleteOp(this, getFileInstance(context, File(it.fullPath).toUri(), stoppableTask = StoppableTask.Blocking), context).apply {
+            !FileDeleteOp(
+                this,
+                getFileInstance(context, File(it.fullPath).toUri()),
+                context
+            ).apply {
                 fileOperationListener = this@DeleteForemanImpl
             }.call()
         }

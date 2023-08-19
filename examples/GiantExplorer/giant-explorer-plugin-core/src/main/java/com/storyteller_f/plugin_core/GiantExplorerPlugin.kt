@@ -23,11 +23,11 @@ interface GiantExplorerShellPlugin : GiantExplorerPlugin {
 
 interface GiantExplorerPluginManager {
 
-    fun fileInputStream(uriString: String): FileInputStream
+    suspend fun fileInputStream(uriString: String): FileInputStream
 
-    fun fileOutputStream(uriString: String): FileOutputStream
+    suspend fun fileOutputStream(uriString: String): FileOutputStream
 
-    fun listFiles(uriString: String): List<String>
+    suspend fun listFiles(uriString: String): List<String>
 
     /**
      * @return uriString
@@ -37,9 +37,9 @@ interface GiantExplorerPluginManager {
     /**
      * 没有ensureFile，当请求fileInputStream 或者fileOutputStream 时自动处理
      */
-    fun ensureDir(uriString: String)
+    suspend fun ensureDir(uriString: String)
 
-    fun runInService(block: GiantExplorerService.() -> Boolean)
+    fun runInService(block: suspend GiantExplorerService.() -> Boolean)
 
     /**
      * 获取uri 对应的path 的parent uri
@@ -58,5 +58,5 @@ interface GiantExplorerPluginManager {
      */
     fun resolveParentPath(uriString: String): String?
 
-    fun isFile(uriString: String): Boolean
+    suspend fun isFile(uriString: String): Boolean
 }

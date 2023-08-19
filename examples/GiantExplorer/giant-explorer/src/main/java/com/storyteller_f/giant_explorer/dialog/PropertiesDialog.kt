@@ -36,14 +36,14 @@ class PropertiesDialog : SimpleDialogFragment<DialogFilePropertiesBinding>(Dialo
         binding.lifecycleOwner = viewLifecycleOwner
         val fileInstance = getFileInstance(requireContext(), args.uri)
         scope.launch {
-            val length = if (fileInstance.isFile) fileInstance.fileLength
+            val length = if (fileInstance.isFile()) fileInstance.getFileLength()
             else 0
-            binding.model = FileModel(fileInstance.name, fileInstance.path, length, fileInstance.isHidden, fileInstance.fileSystemItem, fileInstance.isSymbolicLink)
-            binding.videoInfo.setVisible(fileInstance.file.extension == "mp4" && fileInstance.isFile) {
+            binding.model = FileModel(fileInstance.name, fileInstance.path, length, fileInstance.isHidden(), fileInstance.getFileSystemItem(), fileInstance.isSymbolicLink())
+            binding.videoInfo.setVisible(fileInstance.getFile().extension == "mp4" && fileInstance.isFile()) {
                 val trimIndent = videoInfo(fileInstance)
                 binding.videoInfo.text = trimIndent
             }
-            binding.audioInfo.setVisible(fileInstance.file.extension == "mp3" && fileInstance.isFile) {
+            binding.audioInfo.setVisible(fileInstance.getFile().extension == "mp3" && fileInstance.isFile()) {
                 val mediaMetadataRetriever = MediaMetadataRetriever()
                 mediaMetadataRetriever.setDataSource(fileInstance.path)
                 val duration = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)

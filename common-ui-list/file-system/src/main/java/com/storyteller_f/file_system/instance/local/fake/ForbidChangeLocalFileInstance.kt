@@ -7,9 +7,9 @@ import android.net.Uri
  */
 abstract class ForbidChangeLocalFileInstance(uri: Uri) :
     DirectoryLocalFileInstance(uri) {
-    override fun createDirectory() = false
+    override suspend fun createDirectory() = false
 
-    override fun deleteFileOrEmptyDirectory() = false
+    override suspend fun deleteFileOrEmptyDirectory() = false
 
-    override fun rename(newName: String) = false
+    override suspend fun rename(newName: String) = false
 }

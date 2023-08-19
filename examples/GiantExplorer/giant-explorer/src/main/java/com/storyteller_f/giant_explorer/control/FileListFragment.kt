@@ -1,7 +1,11 @@
 package com.storyteller_f.giant_explorer.control
 
 import android.app.Activity
-import android.content.*
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.ComponentName
+import android.content.ContentResolver
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.net.Uri
@@ -29,27 +33,41 @@ import androidx.navigation.fragment.navArgs
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ktx.safeLet
 import com.storyteller_f.common_pr.observe
-import com.storyteller_f.common_ui.*
-import com.storyteller_f.common_vm_ktx.*
+import com.storyteller_f.common_ui.SimpleFragment
+import com.storyteller_f.common_ui.observeResponse
+import com.storyteller_f.common_ui.owner
+import com.storyteller_f.common_ui.request
+import com.storyteller_f.common_ui.scope
+import com.storyteller_f.common_vm_ktx.activityScope
+import com.storyteller_f.common_vm_ktx.avm
+import com.storyteller_f.common_vm_ktx.genericValueModel
+import com.storyteller_f.common_vm_ktx.keyPrefix
+import com.storyteller_f.common_vm_ktx.pvm
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileSystemItemModelLite
 import com.storyteller_f.file_system_ktx.isDirectory
-import com.storyteller_f.giant_explorer.*
 import com.storyteller_f.giant_explorer.BuildConfig
+import com.storyteller_f.giant_explorer.FileSystemProviderResolver
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.control.plugin.DefaultPluginManager
 import com.storyteller_f.giant_explorer.control.plugin.FragmentPluginActivity
 import com.storyteller_f.giant_explorer.control.plugin.WebViewPluginActivity
-import com.storyteller_f.giant_explorer.control.plugin.stoppable
 import com.storyteller_f.giant_explorer.databinding.FragmentFileListBinding
-import com.storyteller_f.giant_explorer.dialog.*
-import com.storyteller_f.plugin_core.*
+import com.storyteller_f.giant_explorer.dialog.NewNameDialog
+import com.storyteller_f.giant_explorer.dialog.OpenFileDialog
+import com.storyteller_f.giant_explorer.dialog.OpenFileDialogArgs
+import com.storyteller_f.giant_explorer.dialog.PropertiesDialogArgs
+import com.storyteller_f.giant_explorer.dialog.RequestPathDialog
+import com.storyteller_f.giant_explorer.dialog.TaskConfirmDialog
+import com.storyteller_f.giant_explorer.pluginManagerRegister
+import com.storyteller_f.plugin_core.GiantExplorerService
+import com.storyteller_f.plugin_core.GiantExplorerShellPlugin
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import java.io.File
-import java.util.*
+import java.util.UUID
 
 class SharePasteTargetViewModel : ViewModel() {
     var list: MutableList<String> = mutableListOf()
@@ -81,7 +99,9 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
 
         observer.setup(binding.content, adapter, { holder ->
-            openFolderInNewPage(holder)
+            scope.launch {
+                openFolderInNewPage(holder)
+            }
         }) {
             (requireContext() as MainActivity).drawPath(it)
         }
@@ -89,7 +109,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         setupMenu()
     }
 
-    private fun openFolderInNewPage(holder: FileItemHolder) {
+    private suspend fun openFolderInNewPage(holder: FileItemHolder) {
         val uri = observer.fileInstance?.toChild(holder.file.name, FileCreatePolicy.NotCreate)?.uri
             ?: return
         startActivity(Intent(requireContext(), MainActivity::class.java).apply {
@@ -137,7 +157,9 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             requestKey,
             NewNameDialog.NewNameResult::class.java
         ) { nameResult ->
-            observer.fileInstance?.toChild(nameResult.name, FileCreatePolicy.Create(true))
+            scope.launch {
+                observer.fileInstance?.toChild(nameResult.name, FileCreatePolicy.Create(true))
+            }
         }
         return true
     }
@@ -157,7 +179,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         Log.i(TAG, "handleClipData: key $key")
         viewLifecycleOwner.lifecycleScope.launch {
             val dest = destDirectory.safeLet {
-                getFileInstance(requireContext(), it, stoppableTask = stoppable())
+                getFileInstance(requireContext(), it)
             } ?: observer.fileInstance ?: kotlin.run {
                 Toast.makeText(requireContext(), "无法确定目的地", Toast.LENGTH_LONG).show()
                 return@launch
@@ -235,13 +257,15 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     fun toChild(itemHolder: FileItemHolder) {
         val old = observer.fileInstance ?: return
         if (itemHolder.file.item.isDirectory) {
-            val uri = old.toChild(itemHolder.file.name, FileCreatePolicy.NotCreate)?.uri ?: return
-            findNavController().navigate(
-                R.id.action_fileListFragment_self,
-                FileListFragmentArgs(
-                    uri,
-                ).toBundle()
-            )
+            scope.launch {
+                val uri = old.toChild(itemHolder.file.name, FileCreatePolicy.NotCreate)?.uri ?: return@launch
+                findNavController().navigate(
+                    R.id.action_fileListFragment_self,
+                    FileListFragmentArgs(
+                        uri,
+                    ).toBundle()
+                )
+            }
         } else {
             val uri = old.uri
             val requestKey = findNavController().request(
@@ -277,9 +301,22 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     fun fileMenu(view: View, itemHolder: FileItemHolder) {
         val fullPath = itemHolder.file.fullPath
         val name = itemHolder.file.name
-        val uri = observer.fileInstance?.toChild(name, FileCreatePolicy.NotCreate)?.uri ?: return
         val key = uuid.data.value ?: return
+        scope.launch {
+            val uri = observer.fileInstance?.toChild(name, FileCreatePolicy.NotCreate)?.uri
+                ?: return@launch
+            showMenu(view, fullPath, itemHolder, key, uri)
+        }
 
+    }
+
+    private fun showMenu(
+        view: View,
+        fullPath: String,
+        itemHolder: FileItemHolder,
+        key: String,
+        uri: Uri
+    ) {
         PopupMenu(requireContext(), view).apply {
             inflate(R.menu.item_context_menu)
             val mimeTypeFromExtension =
@@ -341,7 +378,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                 return completableDeferred.await()
             }
 
-            override fun runInService(block: GiantExplorerService.() -> Boolean) {
+            override fun runInService(block: suspend GiantExplorerService.() -> Boolean) {
                 fileOperateBinder?.pluginTask(key, block)
             }
 
@@ -459,7 +496,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         requestKey.observe(RequestPathDialog.RequestPathResult::class.java) { result ->
             scope.launch {
                 result.path.safeLet {
-                    getFileInstance(requireContext(), File(it).toUri(), stoppableTask = stoppable())
+                    getFileInstance(requireContext(), File(it).toUri())
                 }.safeLet { dest ->
                     moveOrCopy(itemHolder, dest, move)
                 }

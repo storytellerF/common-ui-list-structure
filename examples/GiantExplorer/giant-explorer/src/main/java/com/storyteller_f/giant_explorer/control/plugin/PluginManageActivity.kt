@@ -13,7 +13,7 @@ import com.storyteller_f.common_pr.observe
 import com.storyteller_f.common_ui.CommonActivity
 import com.storyteller_f.common_ui.request
 import com.storyteller_f.file_system.instance.FileInstance
-import com.storyteller_f.file_system.operate.FileCopyOp
+import com.storyteller_f.file_system.operate.ScopeFileCopyOp
 import com.storyteller_f.file_system_ktx.ensureFile
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.control.getFileInstance
@@ -52,7 +52,7 @@ class PluginManageActivity : CommonActivity() {
             requestKey.observe(RequestPathDialog.RequestPathResult::class.java) { result ->
                 lifecycleScope.launch {
                     result.path.safeLet {
-                        getFileInstance(this@PluginManageActivity, File(it).toUri(), stoppableTask = stoppable())
+                        getFileInstance(this@PluginManageActivity, File(it).toUri())
                     }.safeLet { pluginFile ->
                         lifecycleScope.launch {
                             addPlugin(pluginFile, pluginRoot)
@@ -71,14 +71,18 @@ class PluginManageActivity : CommonActivity() {
         val name = pluginFile.name
         val destPluginFile = File(pluginRoot, name).ensureFile() ?: return
         withContext(Dispatchers.IO) {
-            FileCopyOp(this.stoppable(), pluginFile, getFileInstanceAsync( this@PluginManageActivity, destPluginFile.toUri()),this@PluginManageActivity).call()
+            ScopeFileCopyOp(
+                this.stoppable(),
+                pluginFile,
+                getFileInstanceAsync(this@PluginManageActivity, destPluginFile.toUri()),
+                this@PluginManageActivity
+            ).call()
         }
     }
 
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment_content_plugin_manage)
-        return navController.navigateUp(appBarConfiguration)
-                || super.onSupportNavigateUp()
+        return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 }
 

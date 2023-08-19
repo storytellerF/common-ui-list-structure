@@ -8,6 +8,7 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
+import kotlinx.coroutines.yield
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -27,8 +28,7 @@ class HttpFileInstance(uri: Uri, context: Context) : BaseContextFileInstance(con
         assert(uri.scheme == "http" || uri.scheme == "https")
     }
 
-    @Synchronized
-    private fun ensureFile(): File {
+    private suspend fun ensureFile(): File {
         if (::tempFile.isInitialized) {
             return tempFile
         } else {
@@ -61,12 +61,12 @@ class HttpFileInstance(uri: Uri, context: Context) : BaseContextFileInstance(con
         )
     }
 
-    private fun writeStream(body: ResponseBody, file: File) {
+    private suspend fun writeStream(body: ResponseBody, file: File) {
         body.source().buffer.use { int ->
             file.inputStream().channel.use { out ->
                 val byteBuffer = ByteBuffer.allocateDirect(1024)
                 while (int.read(byteBuffer) != -1) {
-                    if (needStop()) throw Exception("stopped")
+                    yield()
                     byteBuffer.flip()
                     out.write(byteBuffer)
                     byteBuffer.clear()
@@ -76,88 +76,74 @@ class HttpFileInstance(uri: Uri, context: Context) : BaseContextFileInstance(con
         }
     }
 
-    override val name: String
-        get() {
-            return ensureFile().name
-        }
+    override suspend fun getFile(): FileItemModel {
+        TODO("Not yet implemented")
+    }
 
-    override val file: FileItemModel
-        get() {
-            TODO("Not yet implemented")
-        }
+    override suspend fun getDirectory(): DirectoryItemModel {
+        TODO("Not yet implemented")
+    }
 
-    override val directory: DirectoryItemModel
-        get() {
-            TODO("Not yet implemented")
-        }
+    override suspend fun getFileLength(): Long {
+        return ensureFile().length()
+    }
 
-    override val fileLength: Long
-        get() {
-            return ensureFile().length()
-        }
+    override suspend fun getFileInputStream(): FileInputStream {
+        return ensureFile().inputStream()
+    }
 
-    override val fileInputStream: FileInputStream
-        get() {
-            return ensureFile().inputStream()
-        }
+    override suspend fun getFileOutputStream(): FileOutputStream {
+        TODO("Not yet implemented")
+    }
 
-    override val fileOutputStream: FileOutputStream
-        get() {
-            TODO("Not yet implemented")
-        }
-
-    override fun listInternal(
+    override suspend fun listInternal(
         fileItems: MutableList<FileItemModel>,
         directoryItems: MutableList<DirectoryItemModel>
     ) {
         TODO("Not yet implemented")
     }
 
-    override val isFile: Boolean
-        get() {
-            return true
-        }
+    override suspend fun isFile(): Boolean {
+        return true
+    }
 
-    override fun exists(): Boolean {
+    override suspend fun exists(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override val isDirectory: Boolean
-        get() {
-            TODO("Not yet implemented")
-        }
-
-    override fun deleteFileOrEmptyDirectory(): Boolean {
+    override suspend fun isDirectory(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun rename(newName: String): Boolean {
+    override suspend fun deleteFileOrEmptyDirectory(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun toParent(): FileInstance {
+    override suspend fun rename(newName: String): Boolean {
         TODO("Not yet implemented")
     }
 
-    override val directorySize: Long
-        get() {
-            TODO("Not yet implemented")
-        }
-
-    override fun createFile(): Boolean {
+    override suspend fun toParent(): FileInstance {
         TODO("Not yet implemented")
     }
 
-    override val isHidden: Boolean
-        get() {
-            TODO("Not yet implemented")
-        }
-
-    override fun createDirectory(): Boolean {
+    override suspend fun getDirectorySize(): Long {
         TODO("Not yet implemented")
     }
 
-    override fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
+    override suspend fun createFile(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun isHidden(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun createDirectory(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         TODO("Not yet implemented")
     }
 

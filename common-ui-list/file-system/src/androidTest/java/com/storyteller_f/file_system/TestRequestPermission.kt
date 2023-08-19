@@ -8,7 +8,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -24,6 +26,7 @@ class TestRequestPermission {
         AndroidTestActivity::class.java
     )
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun testRequestPermission() {
         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
@@ -40,7 +43,9 @@ class TestRequestPermission {
             instance.findObject(UiSelector().text("去授予")).click()
             instance.findObject(UiSelector().textContains("ALLOW")).click()
             instance.findObject(UiSelector().text("ALLOW")).click()
-            assertTrue(appContext.checkPathPermission(uri))
+            runTest {
+                assertTrue(appContext.checkPathPermission(uri))
+            }
         }
 
     }

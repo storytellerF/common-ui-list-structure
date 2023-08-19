@@ -11,6 +11,8 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 private const val arg_uri = "param1"
 private const val arg_position = "param2"
@@ -51,9 +53,11 @@ class ImageViewFragment : Fragment() {
 
         try {
             if (u.scheme == ContentResolver.SCHEME_FILE && path != null) {
-                (requireParentFragment() as? YueFragment)?.plugin?.fileInputStream(path)?.use {
-                    val decodeStream = BitmapFactory.decodeStream(it)
-                    findViewById.setImageBitmap(decodeStream)
+                viewLifecycleOwner.lifecycleScope.launch {
+                    (requireParentFragment() as? YueFragment)?.plugin?.fileInputStream(path)?.use {
+                        val decodeStream = BitmapFactory.decodeStream(it)
+                        findViewById.setImageBitmap(decodeStream)
+                    }
                 }
             } else if (u.scheme == ContentResolver.SCHEME_CONTENT) {
                 val parcelFileDescriptor =

@@ -16,6 +16,7 @@ import com.storyteller_f.file_system.operate.FileOperationForemanProgressListene
 import com.storyteller_f.giant_explorer.control.getFileInstance
 import com.storyteller_f.giant_explorer.service.FileOperateService.FileOperateResultContainer
 import com.storyteller_f.plugin_core.GiantExplorerService
+import kotlinx.coroutines.runBlocking
 import okio.FileNotFoundException
 import java.io.File
 import java.lang.ref.WeakReference
@@ -45,10 +46,7 @@ class FileOperateBinder(val context: Context) : Binder() {
         override fun onLeft(fileCount: Int, folderCount: Int, size: Long, key: String) {
             fileOperationProgressListener[key]?.forEach {
                 it.onLeft(
-                    fileCount,
-                    folderCount,
-                    size,
-                    key
+                    fileCount, folderCount, size, key
                 )
             }
         }
@@ -69,7 +67,9 @@ class FileOperateBinder(val context: Context) : Binder() {
     fun delete(focused: FileSystemItemModel, selected: List<FileSystemItemModel>, key: String) {
         whenStart(key)
         thread {
-            startDeleteTask(focused, selected, key)
+            runBlocking {
+                startDeleteTask(focused, selected, key)
+            }
         }
     }
 
@@ -82,11 +82,13 @@ class FileOperateBinder(val context: Context) : Binder() {
     ) {
         whenStart(key)
         thread {
-            startCopyTask(dest, focused, deleteOrigin, selected, key)
+            runBlocking {
+                startCopyTask(dest, focused, deleteOrigin, selected, key)
+            }
         }
     }
 
-    fun pluginTask(key: String, block: GiantExplorerService.() -> Boolean) {
+    fun pluginTask(key: String, block: suspend GiantExplorerService.() -> Boolean) {
         whenStart(key)
         thread {
             val value = object : GiantExplorerService {
@@ -94,27 +96,25 @@ class FileOperateBinder(val context: Context) : Binder() {
                     whenRunning(key, TaskAssessResult(0, 0, 0))
                 }
             }
-            if (block.invoke(value)) {
-                whenEnd(key)
+            runBlocking {
+                if (block.invoke(value)) {
+                    whenEnd(key)
+                }
             }
         }
     }
 
     @WorkerThread
-    private fun startDeleteTask(
-        focused: FileSystemItemModel,
-        selected: List<FileSystemItemModel>,
-        key: String
+    private suspend fun startDeleteTask(
+        focused: FileSystemItemModel, selected: List<FileSystemItemModel>, key: String
     ) {
         state.postValue(state_computing)
-        val assessResult = TaskAssessor(selected, context, null).assess()
+        val assessResult = runBlocking {
+            TaskAssessor(selected, context, null).assess()
+        }
         state.postValue(state_running)
         val deleteForemanImpl = DeleteForemanImpl(
-            selected,
-            context,
-            assessResult.toOverview(),
-            focused,
-            key
+            selected, context, assessResult.toOverview(), focused, key
         ).attachListener()
         if (deleteForemanImpl.call()) {
             whenEnd(key)
@@ -130,7 +130,7 @@ class FileOperateBinder(val context: Context) : Binder() {
      * @param selected      分配好的任务
      */
     @WorkerThread
-    private fun startCopyTask(
+    private suspend fun startCopyTask(
         dest: FileInstance,
         focused: FileSystemItemModelLite?,
         deleteOrigin: Boolean,
@@ -138,16 +138,12 @@ class FileOperateBinder(val context: Context) : Binder() {
         key: String
     ) {
         state.postValue(state_computing)
-        val assessResult = TaskAssessor(selected, context, dest).assess()
+        val assessResult = runBlocking {
+            TaskAssessor(selected, context, dest).assess()
+        }
         whenRunning(key, assessResult)
         val copyForemanImpl = CopyForemanImpl(
-            selected,
-            deleteOrigin,
-            dest,
-            context,
-            assessResult.toOverview(),
-            focused,
-            key
+            selected, deleteOrigin, dest, context, assessResult.toOverview(), focused, key
         ).attachListener()
         if (copyForemanImpl.call()) {
             whenEnd(key)
@@ -237,7 +233,18 @@ class FileOperateBinder(val context: Context) : Binder() {
          */
         const val state_error = 5
 
-        val supportUri = listOf(ContentResolver.SCHEME_CONTENT, ContentResolver.SCHEME_FILE, "http", "https", "ftp", "ftpes", "ftps", "sftp", "smb", "webdav")
+        val supportUri = listOf(
+            ContentResolver.SCHEME_CONTENT,
+            ContentResolver.SCHEME_FILE,
+            "http",
+            "https",
+            "ftp",
+            "ftpes",
+            "ftps",
+            "sftp",
+            "smb",
+            "webdav"
+        )
 
         fun checkOperationValid(path: String, dest: String): Boolean {
             return dest.contains(path)
@@ -267,11 +274,10 @@ class TaskAssessor(
 ) {
     private var count = 0
     private var folderCount = 0
-    fun assess(): TaskAssessResult {
+    suspend fun assess(): TaskAssessResult {
         val size = detectorTasks.map {
             if (dest != null && FileOperateBinder.checkOperationValid(
-                    it.fullPath,
-                    dest.path
+                    it.fullPath, dest.path
                 )
             ) throw Exception("不能将父文件夹移动到子文件夹")
             val fileInstance = getFileInstance(context, File(it.fullPath).toUri())
@@ -280,7 +286,7 @@ class TaskAssessor(
             }
             if (it is FileItemModel) {
                 count++
-                getFileInstance(context, File(it.fullPath).toUri()).fileLength
+                getFileInstance(context, File(it.fullPath).toUri()).getFileLength()
             } else {
                 getDirectorySize(it)
             }
@@ -289,7 +295,7 @@ class TaskAssessor(
         return TaskAssessResult(count, folderCount, size)
     }
 
-    private fun getDirectorySize(file: FileSystemItemModelLite): Long {
+    private suspend fun getDirectorySize(file: FileSystemItemModelLite): Long {
         folderCount++
         val fileInstance = getFileInstance(context, File(file.fullPath).toUri())
         val listSafe = fileInstance.list()
