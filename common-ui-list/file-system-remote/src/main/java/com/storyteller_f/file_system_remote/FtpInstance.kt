@@ -153,10 +153,6 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
         TODO("Not yet implemented")
     }
 
-    override fun changeToParent() {
-        TODO("Not yet implemented")
-    }
-
     override val directorySize: Long
         get() {
             TODO("Not yet implemented")
@@ -176,14 +172,6 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
     }
 
     override fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
-        TODO("Not yet implemented")
-    }
-
-    override fun changeToChild(name: String, policy: FileCreatePolicy) {
-        TODO("Not yet implemented")
-    }
-
-    override fun changeTo(path: String) {
         TODO("Not yet implemented")
     }
 

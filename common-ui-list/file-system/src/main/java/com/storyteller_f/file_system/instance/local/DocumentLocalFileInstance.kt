@@ -184,15 +184,6 @@ class DocumentLocalFileInstance(private val prefix: String, private val preferen
     }
 
     @Throws(Exception::class)
-    override fun changeToChild(name: String, policy: FileCreatePolicy) {
-        if (isFile) {
-            throw Exception("当前是一个文件，无法向下操作")
-        } else {
-            current = getChild(name, policy)
-        }
-    }
-
-    @Throws(Exception::class)
     public override fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
         if (current == null) {
             current = documentFileFromUri()
@@ -245,19 +236,6 @@ class DocumentLocalFileInstance(private val prefix: String, private val preferen
         }
     }
 
-    @Throws(Exception::class)
-    override fun changeToParent() {
-        File(path).parentFile ?: throw Exception("无法继续向上寻找")
-        val documentFile = current!!.parentFile
-        current = if (documentFile == null) {
-            throw Exception("查找parent DocumentFile失败")
-        } else if (!documentFile.isFile) {
-            documentFile
-        } else {
-            throw Exception("当前文件已存在，并且类型不同 源文件：" + documentFile.isFile)
-        }
-    }
-
     override val isFile: Boolean
         get() {
             if (current == null) {
@@ -279,13 +257,6 @@ class DocumentLocalFileInstance(private val prefix: String, private val preferen
             }
             return current!!.isDirectory
         }
-
-    override fun changeTo(path: String) {
-        if (path == this.path) return
-        if (path.startsWith(prefix)) {
-            current = documentFileFromUri()
-        }
-    }
 
     override fun rename(newName: String): Boolean {
         return current!!.renameTo(newName)

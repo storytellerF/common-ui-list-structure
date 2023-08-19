@@ -11,7 +11,6 @@ import net.schmizz.sshj.sftp.FileMode
 import net.schmizz.sshj.sftp.RemoteFile
 import net.schmizz.sshj.sftp.SFTPClient
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier
-import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
@@ -114,10 +113,6 @@ class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
         TODO("Not yet implemented")
     }
 
-    override fun changeToParent() {
-        TODO("Not yet implemented")
-    }
-
     override val directorySize: Long
         get() {
             TODO("Not yet implemented")
@@ -137,14 +132,6 @@ class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
     }
 
     override fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
-        TODO("Not yet implemented")
-    }
-
-    override fun changeToChild(name: String, policy: FileCreatePolicy) {
-        TODO("Not yet implemented")
-    }
-
-    override fun changeTo(path: String) {
         TODO("Not yet implemented")
     }
 

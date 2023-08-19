@@ -9,8 +9,6 @@ import com.storyteller_f.file_system.util.FileInstanceUtility
 import com.topjohnwu.superuser.nio.ExtendedFile
 import com.topjohnwu.superuser.nio.FileSystemManager
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 
 class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : FileInstance(uri) {
 
@@ -78,10 +76,6 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
         return RootAccessFileInstance(remote, newUri)
     }
 
-    override fun changeToParent() {
-        TODO("Not yet implemented")
-    }
-
     override val directorySize: Long
         get() {
             TODO("Not yet implemented")
@@ -101,16 +95,6 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
     override fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         val newUri = uri.buildUpon().path(File(extendedFile, name).absolutePath).build()
         return RootAccessFileInstance(remote, newUri)
-    }
-
-    override fun changeToChild(name: String, policy: FileCreatePolicy) {
-        val childFile = remote.getFile(extendedFile.absolutePath)
-        extendedFile = childFile
-    }
-
-    override fun changeTo(path: String) {
-        val childFile = remote.getFile(path)
-        extendedFile = childFile
     }
 
     override val parent: String?

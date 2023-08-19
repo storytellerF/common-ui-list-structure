@@ -6,7 +6,6 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import kotlinx.coroutines.runBlocking
-import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
@@ -83,10 +82,6 @@ class WebDavFileInstance(private val spec: ShareSpec, uri: Uri) : FileInstance(u
         TODO("Not yet implemented")
     }
 
-    override fun changeToParent() {
-        TODO("Not yet implemented")
-    }
-
     override val directorySize: Long
         get() {
             TODO("Not yet implemented")
@@ -109,13 +104,6 @@ class WebDavFileInstance(private val spec: ShareSpec, uri: Uri) : FileInstance(u
         TODO("Not yet implemented")
     }
 
-    override fun changeToChild(name: String, policy: FileCreatePolicy) {
-        TODO("Not yet implemented")
-    }
-
-    override fun changeTo(path: String) {
-        TODO("Not yet implemented")
-    }
 }
 
 class WebDavInstance(spec: ShareSpec) {

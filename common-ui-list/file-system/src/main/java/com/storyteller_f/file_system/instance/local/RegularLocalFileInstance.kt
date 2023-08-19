@@ -3,7 +3,6 @@ package com.storyteller_f.file_system.instance.local
 import android.content.Context
 import android.net.Uri
 import android.os.Build
-import android.util.Log
 import androidx.annotation.WorkerThread
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileCreatePolicy.*
@@ -55,18 +54,6 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
                 } else if (!file.mkdirs()) throw Exception("新建文件失败")
             } else throw Exception("不存在，且不能创建")
         }
-    }
-
-    @Throws(Exception::class)
-    override fun changeToChild(name: String, policy: FileCreatePolicy) {
-        Log.d(TAG, "changeToChild() called with: name = [$name], policy = [$policy]")
-        checkChildExistsOtherwiseCreate(innerFile, policy)
-        innerFile = File(innerFile, name)
-    }
-
-    override fun changeTo(path: String) {
-        if (path == this.path) return
-        innerFile = File(path)
     }
 
     @get:Throws(FileNotFoundException::class)
@@ -134,10 +121,6 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
 
     override fun toParent(): LocalFileInstance {
         return RegularLocalFileInstance(context, getUri(innerFile.parentFile!!))
-    }
-
-    override fun changeToParent() {
-        innerFile = innerFile.parentFile!!
     }
 
     override val directorySize: Long

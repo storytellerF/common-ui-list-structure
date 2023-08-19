@@ -92,10 +92,6 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
         TODO("Not yet implemented")
     }
 
-    override fun changeToParent() {
-        TODO("Not yet implemented")
-    }
-
     override val directorySize: Long
         get() = TODO("Not yet implemented")
 
@@ -105,14 +101,6 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
     override fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         val (_, child) = child(name)
         return FakeLocalFileInstance(context, child)
-    }
-
-    override fun changeToChild(name: String, policy: FileCreatePolicy) {
-        TODO("Not yet implemented")
-    }
-
-    override fun changeTo(path: String) {
-        TODO("Not yet implemented")
     }
 
     override val parent: String?
