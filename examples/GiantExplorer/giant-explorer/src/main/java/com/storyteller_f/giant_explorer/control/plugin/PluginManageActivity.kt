@@ -15,9 +15,8 @@ import com.storyteller_f.common_ui.request
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.operate.ScopeFileCopyOp
 import com.storyteller_f.file_system_ktx.ensureFile
+import com.storyteller_f.file_system_ktx.getFileInstance
 import com.storyteller_f.giant_explorer.R
-import com.storyteller_f.giant_explorer.control.getFileInstance
-import com.storyteller_f.giant_explorer.control.getFileInstanceAsync
 import com.storyteller_f.giant_explorer.databinding.ActivityPluginManageBinding
 import com.storyteller_f.giant_explorer.dialog.RequestPathDialog
 import com.storyteller_f.multi_core.StoppableTask
@@ -74,7 +73,7 @@ class PluginManageActivity : CommonActivity() {
             ScopeFileCopyOp(
                 this.stoppable(),
                 pluginFile,
-                getFileInstanceAsync(this@PluginManageActivity, destPluginFile.toUri()),
+                getFileInstance(this@PluginManageActivity, destPluginFile.toUri()),
                 this@PluginManageActivity
             ).call()
         }

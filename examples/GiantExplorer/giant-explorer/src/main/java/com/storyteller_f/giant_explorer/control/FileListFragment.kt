@@ -46,6 +46,7 @@ import com.storyteller_f.common_vm_ktx.pvm
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileSystemItemModelLite
+import com.storyteller_f.file_system_ktx.getFileInstance
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.BuildConfig
 import com.storyteller_f.giant_explorer.FileSystemProviderResolver

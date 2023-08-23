@@ -121,19 +121,19 @@ class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey
     private val sourceRepository: SimpleDataRepository<D, RK>,
     processFactory: (D, D?) -> Holder,
 ) : ViewModel() {
-    var last: D? = null
+    var lastDatum: D? = null
 
-    val content: MediatorLiveData<FatData<D, Holder, RK>> = liveData {
+    val content: LiveData<FatData<D, Holder, RK>> = liveData {
         val asLiveData = sourceRepository.request().asLiveData(Dispatchers.Main)
         val source = asLiveData.map {
-            FatData(this@SimpleDataViewModel, it.map { repo ->
-                val holder = processFactory(repo, last)
-                last = repo
+            FatData(this@SimpleDataViewModel, it.map { datum ->
+                val holder = processFactory(datum, lastDatum)
+                lastDatum = datum
                 holder
-            })
+            }.toMutableList())
         }
         emitSource(source)
-    } as MediatorLiveData<FatData<D, Holder, RK>>
+    }
 
     val loadState: LiveData<MoreInfoLoadState> = liveData {
         emitSource(sourceRepository.loadState.asLiveData())
@@ -157,15 +157,12 @@ class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey
         }
     }
 
-    fun reset(last: MutableList<Holder>) {
-        content.value = FatData(this, last as List<Holder>)
-    }
-
     class FatData<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey>(
         val viewModel: SimpleDataViewModel<D, Holder, RK>,
-        val list: List<Holder>
+        val list: MutableList<Holder>
     ) {
         fun swap(from: Int, to: Int) {
+            Collections.swap(list, from, to)
             viewModel.sourceRepository.swap(from, to)
         }
     }

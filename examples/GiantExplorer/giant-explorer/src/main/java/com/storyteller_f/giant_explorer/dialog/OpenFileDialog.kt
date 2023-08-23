@@ -12,7 +12,7 @@ import com.storyteller_f.common_ui.setFragmentResult
 import com.storyteller_f.common_vm_ktx.GenericValueModel
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.file_system.util.FileUtility
-import com.storyteller_f.giant_explorer.control.getFileInstance
+import com.storyteller_f.file_system_ktx.getFileInstance
 import com.storyteller_f.giant_explorer.databinding.DialogOpenFileBinding
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize

@@ -17,10 +17,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 @Suppress("UNCHECKED_CAST")
 class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val key: String? = null) :
     ListAdapter<IH, VH>(common_diff_util as DiffUtil.ItemCallback<IH>) {
-    private var last = mutableListOf<IH>()
 
     /**
-     * 下一次的observe 不处理
+     * 决定下一次的live 出发的observe 是否处理
      */
     private val receiveDataChange: AtomicBoolean = AtomicBoolean(true)
 
@@ -35,26 +34,13 @@ class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val ke
 
     override fun onBindViewHolder(holder: VH, position: Int) = d.onBindViewHolder(holder, position)
 
-    override fun submitList(list: MutableList<IH>?) {
-        super.submitList(list)
-        if (list != null) {
-            last = list
-        }
-    }
-
     fun submitData(fatData: SimpleDataViewModel.FatData<*, IH, *>) {
-        if (receiveDataChange.get()) {
-            this.fatData = fatData
-            submitList(fatData.list.toMutableList())
-        }
-        receiveDataChange.compareAndSet(false, true)
+        this.fatData = fatData
+        submitList(fatData.list)
     }
 
     fun swap(from: Int, to: Int) {
-        Collections.swap(last, from, to)
         fatData?.swap(from, to)
-        receiveDataChange.set(false)
-        fatData?.viewModel?.reset(last)
         notifyItemMoved(from, to)
     }
 

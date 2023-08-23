@@ -47,6 +47,7 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.file_system_remote.RemoteAccessType
 import com.storyteller_f.file_system_root.RootAccessFileInstance
+import com.storyteller_f.file_system_ktx.getFileInstance
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.control.plugin.PluginManageActivity
 import com.storyteller_f.giant_explorer.control.remote.RemoteManagerActivity
@@ -79,7 +80,7 @@ class FileExplorerSession(application: Application, uri: Uri) : AndroidViewModel
 
     init {
         viewModelScope.launch {
-            getFileInstanceAsync(application.applicationContext, uri).let {
+            getFileInstance(application.applicationContext, uri).let {
                 fileInstance.value = it
             }
         }

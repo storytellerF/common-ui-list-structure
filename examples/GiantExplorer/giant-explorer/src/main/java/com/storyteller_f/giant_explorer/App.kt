@@ -24,10 +24,10 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.TorrentFileItemModel
+import com.storyteller_f.file_system_ktx.getFileInstance
 import com.storyteller_f.filter_core.config.FilterConfig
 import com.storyteller_f.filter_core.config.FilterConfigItem
 import com.storyteller_f.filter_ui.FilterDialog
-import com.storyteller_f.giant_explorer.control.getFileInstanceAsync
 import com.storyteller_f.giant_explorer.control.ui_list.HolderBuilder
 import com.storyteller_f.giant_explorer.database.FileMDRecord
 import com.storyteller_f.giant_explorer.database.FileSizeRecord
@@ -166,7 +166,7 @@ class FolderWorker(context: Context, workerParams: WorkerParameters) :
     override suspend fun doWork(context: Context, uriString: String): WorkerResult {
         return try {
             val uri = uriString.toUri()
-            val fileInstance = getFileInstanceAsync(context, uri)
+            val fileInstance = getFileInstance(context, uri)
             val record = context.requireDatabase.sizeDao().search(uri)
             if (record != null && record.lastUpdateTime > fileInstance.getDirectory().lastModifiedTime) return WorkerResult.SizeWorker(
                 record.size
@@ -218,7 +218,7 @@ class MDWorker(context: Context, workerParams: WorkerParameters) :
     override suspend fun doWork(context: Context, uriString: String): WorkerResult {
         return try {
             val uri = uriString.toUri()
-            val fileInstance = getFileInstanceAsync(context, uri)
+            val fileInstance = getFileInstance(context, uri)
             val listSafe = fileInstance.list()
             listSafe.directories.mapNullNull {
                 if (isStopped) return WorkerResult.Stopped
@@ -263,7 +263,7 @@ class TorrentWorker(context: Context, workerParams: WorkerParameters) :
     override suspend fun doWork(context: Context, uriString: String): WorkerResult {
         return try {
             val uri = uriString.toUri()
-            val fileInstance = getFileInstanceAsync(context, uri)
+            val fileInstance = getFileInstance(context, uri)
             val listSafe = fileInstance.list()
             listSafe.directories.mapNullNull {
                 if (isStopped) return WorkerResult.Stopped

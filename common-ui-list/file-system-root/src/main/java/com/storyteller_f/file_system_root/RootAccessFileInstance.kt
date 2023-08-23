@@ -107,5 +107,12 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
     companion object {
         const val rootFileSystemScheme = "root"
         var remote: FileSystemManager? = null
+
+        val isReady get() = remote != null
+
+        fun instance(uri: Uri): RootAccessFileInstance? {
+            val r = remote ?: return null
+            return RootAccessFileInstance(r, uri)
+        }
     }
 }

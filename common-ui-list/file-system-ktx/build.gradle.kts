@@ -17,6 +17,8 @@ android {
 baseLibrary()
 dependencies {
     implementation(project(":file-system"))
+    implementation(project(":file-system-remote"))
+    implementation(project(":file-system-root"))
     implementation("androidx.core:core-ktx:${Versions.coreVersion}")
     implementation("androidx.appcompat:appcompat:${Versions.appcompatVersion}")
     implementation("com.google.android.material:material:${Versions.materialVersion}")

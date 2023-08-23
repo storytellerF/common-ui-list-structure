@@ -11,8 +11,8 @@ import android.util.Log
 import android.webkit.MimeTypeMap
 import androidx.core.net.toUri
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system_ktx.getFileInstance
 import com.storyteller_f.giant_explorer.FileSystemProviderResolver
-import com.storyteller_f.giant_explorer.control.getFileInstance
 import com.storyteller_f.plugin_core.FileSystemProviderConstant
 import kotlinx.coroutines.runBlocking
 import java.io.File

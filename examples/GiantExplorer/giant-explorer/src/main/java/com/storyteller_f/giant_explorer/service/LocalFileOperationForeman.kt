@@ -14,7 +14,7 @@ import com.storyteller_f.file_system.operate.ScopeFileCopyOp
 import com.storyteller_f.file_system.operate.ScopeFileMoveOp
 import com.storyteller_f.file_system.operate.ScopeFileMoveOpInShell
 import com.storyteller_f.file_system.operate.SuspendCallable
-import com.storyteller_f.giant_explorer.control.getFileInstance
+import com.storyteller_f.file_system_ktx.getFileInstance
 import com.storyteller_f.multi_core.StoppableTask
 import java.io.File
 

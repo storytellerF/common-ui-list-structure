@@ -156,12 +156,25 @@ private fun UUID.requestKey(): RequestKey = RequestKey(this)
 
 fun <T : Parcelable, F> F.observeResponse(
     requestKey: RequestKey,
+    result: KClass<T>,
+    action: F.(T) -> Unit
+) where F : Fragment, F : Registry = observeResponse(requestKey, result.java, action)
+
+
+fun <T : Parcelable, F> F.observeResponse(
+    requestKey: RequestKey,
     result: Class<T>,
     action: F.(T) -> Unit
 ) where F : Fragment, F : Registry {
     val callback = buildCallback(result, action)
     waitingResponseInFragment(requestKey, action, callback)
 }
+
+fun <T : Parcelable, A> A.observeResponse(
+    requestKey: RequestKey,
+    result: KClass<T>,
+    action: A.(T) -> Unit
+) where A : FragmentActivity, A : Registry = observeResponse(requestKey, result.java, action)
 
 fun <T : Parcelable, A> A.observeResponse(
     requestKey: RequestKey,

@@ -13,7 +13,7 @@ import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModelLite
 import com.storyteller_f.file_system.operate.FileOperationForemanProgressListener
-import com.storyteller_f.giant_explorer.control.getFileInstance
+import com.storyteller_f.file_system_ktx.getFileInstance
 import com.storyteller_f.giant_explorer.service.FileOperateService.FileOperateResultContainer
 import com.storyteller_f.plugin_core.GiantExplorerService
 import kotlinx.coroutines.runBlocking

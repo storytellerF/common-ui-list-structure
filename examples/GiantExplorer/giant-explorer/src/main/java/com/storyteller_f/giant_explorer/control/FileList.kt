@@ -47,9 +47,6 @@ import com.storyteller_f.file_system.model.TorrentFileItemModel
 import com.storyteller_f.file_system.requestPathPermission
 import com.storyteller_f.file_system_ktx.fileIcon
 import com.storyteller_f.file_system_ktx.isDirectory
-import com.storyteller_f.file_system_remote.getRemoteInstance
-import com.storyteller_f.file_system_remote.supportScheme
-import com.storyteller_f.file_system_root.RootAccessFileInstance
 import com.storyteller_f.filter_core.Filter
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.LocalDatabase
@@ -76,26 +73,6 @@ import com.storyteller_f.ui_list.ui.toggle
 import com.storyteller_f.ui_list.ui.valueContains
 import kotlinx.coroutines.launch
 import java.util.Locale
-
-fun getFileInstanceAsync(context: Context, uri: Uri) = getFileInstance(context, uri)
-
-fun getFileInstance(
-    context: Context,
-    uri: Uri,
-): FileInstance {
-    val r = RootAccessFileInstance.remote
-    val scheme = uri.scheme!!
-    return when {
-        scheme == RootAccessFileInstance.rootFileSystemScheme && r != null -> RootAccessFileInstance(
-            r,
-            uri
-        )
-        supportScheme.contains(scheme) -> {
-            getRemoteInstance(context, uri)
-        }
-        else -> FileInstanceFactory.getFileInstance(context, uri)
-    }
-}
 
 /**
  * @param owner 一般来说owner 都是this
