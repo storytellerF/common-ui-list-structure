@@ -9,8 +9,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.storyteller_f.compat_ktx.packageInfoCompat
 import com.storyteller_f.file_system_ktx.getFileInstance
-import com.storyteller_f.giant_explorer.FileSystemProviderResolver
-import com.storyteller_f.giant_explorer.FragmentPluginConfiguration
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.pluginManagerRegister
 import com.storyteller_f.plugin_core.GiantExplorerPlugin

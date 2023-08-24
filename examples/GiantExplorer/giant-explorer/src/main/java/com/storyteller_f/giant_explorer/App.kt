@@ -28,6 +28,7 @@ import com.storyteller_f.file_system_ktx.getFileInstance
 import com.storyteller_f.filter_core.config.FilterConfig
 import com.storyteller_f.filter_core.config.FilterConfigItem
 import com.storyteller_f.filter_ui.FilterDialog
+import com.storyteller_f.giant_explorer.control.plugin.PluginManager
 import com.storyteller_f.giant_explorer.control.ui_list.HolderBuilder
 import com.storyteller_f.giant_explorer.database.FileMDRecord
 import com.storyteller_f.giant_explorer.database.FileSizeRecord

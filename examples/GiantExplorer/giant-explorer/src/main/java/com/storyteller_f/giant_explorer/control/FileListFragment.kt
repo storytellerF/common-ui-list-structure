@@ -49,7 +49,7 @@ import com.storyteller_f.file_system.model.FileSystemItemModelLite
 import com.storyteller_f.file_system_ktx.getFileInstance
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.BuildConfig
-import com.storyteller_f.giant_explorer.FileSystemProviderResolver
+import com.storyteller_f.giant_explorer.control.plugin.FileSystemProviderResolver
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.control.plugin.DefaultPluginManager
 import com.storyteller_f.giant_explorer.control.plugin.FragmentPluginActivity

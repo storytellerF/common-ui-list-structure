@@ -7,8 +7,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.navArgs
 import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.common_ui.scope
-import com.storyteller_f.giant_explorer.FragmentPluginConfiguration
-import com.storyteller_f.giant_explorer.HtmlPluginConfiguration
 import com.storyteller_f.giant_explorer.databinding.FragmentPluginInfoBinding
 import com.storyteller_f.giant_explorer.pluginManagerRegister
 import kotlinx.coroutines.Dispatchers

@@ -18,11 +18,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val key: String? = null) :
     ListAdapter<IH, VH>(common_diff_util as DiffUtil.ItemCallback<IH>) {
 
-    /**
-     * 决定下一次的live 出发的observe 是否处理
-     */
-    private val receiveDataChange: AtomicBoolean = AtomicBoolean(true)
-
     private var fatData: SimpleDataViewModel.FatData<*, IH, *>? = null
     val d = DefaultAdapter<IH, VH>(key).apply {
         target = this@SimpleDataAdapter

@@ -1,11 +1,10 @@
-package com.storyteller_f.giant_explorer
+package com.storyteller_f.giant_explorer.control.plugin
 
 import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import androidx.annotation.WorkerThread
-import com.storyteller_f.giant_explorer.control.plugin.ensureExtract
-import com.storyteller_f.giant_explorer.control.plugin.giantExplorerPluginIni
+import com.storyteller_f.giant_explorer.BuildConfig
 import com.storyteller_f.ui_list.core.Model
 import dalvik.system.DexClassLoader
 import kotlinx.coroutines.runBlocking
@@ -87,7 +86,9 @@ class PluginManager {
         val pluginType = if (extension == "apk") PluginType.fragment else PluginType.html
         if (raw.contains(name)) raw.remove(name)
         val pluginMeta = PluginMeta("1.0", path, name, "other")
-        val configuration = if (pluginType == PluginType.fragment) FragmentPluginConfiguration.resolve(pluginMeta)
+        val configuration = if (pluginType == PluginType.fragment) FragmentPluginConfiguration.resolve(
+            pluginMeta
+        )
         else runBlocking {
             HtmlPluginConfiguration.resolve(pluginMeta, context)
         }

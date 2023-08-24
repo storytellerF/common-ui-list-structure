@@ -35,4 +35,6 @@
     <string name="title_activity_remote_manager" translatable="false">RemoteManagerActivity</string>
     <string name="duration_ms" translatable="false">duration: %1$s ms</string>
     <string name="remote_access" translatable="false">远程访问</string>
+    <string name="item_show_as_linear">linear</string>
+    <string name="item_show_as_grid">grid</string>
 </resources>

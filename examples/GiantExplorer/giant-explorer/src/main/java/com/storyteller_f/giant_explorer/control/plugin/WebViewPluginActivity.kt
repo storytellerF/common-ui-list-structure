@@ -14,11 +14,8 @@ import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.file_system_ktx.ensureFile
-import com.storyteller_f.giant_explorer.FileSystemProviderResolver
-import com.storyteller_f.giant_explorer.HtmlPluginConfiguration
 import com.storyteller_f.giant_explorer.databinding.ActivityWebviewPluginBinding
 import com.storyteller_f.giant_explorer.pluginManagerRegister
-import com.storyteller_f.plugin_core.GiantExplorerService
 import com.storyteller_f.ui_list.event.viewBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -27,7 +24,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.zip.ZipInputStream
-import kotlin.concurrent.thread
 
 class WebViewPluginActivity : AppCompatActivity() {
     private val binding by viewBinding(ActivityWebviewPluginBinding::inflate)
