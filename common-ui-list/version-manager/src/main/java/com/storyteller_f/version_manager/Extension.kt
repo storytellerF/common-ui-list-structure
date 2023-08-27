@@ -21,13 +21,6 @@ fun Project.setupExtFunc() {
     dependencies {
         "ksp"(project(":ext-func-compiler"))
     }
-    kotlin {
-        sourceSets {
-            getByName("debug") {
-                kotlin.srcDir("build/generated/ksp/debug/kotlin")
-            }
-        }
-    }
 }
 
 fun Project.setupCompose(isLibrary: Boolean = false, supportUiList: Boolean = true) {
