@@ -1,6 +1,12 @@
 package com.storyteller_f.ui_list.source
 
-import androidx.lifecycle.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.liveData
+import androidx.lifecycle.map
+import androidx.lifecycle.viewModelScope
 import androidx.paging.LoadState
 import androidx.savedstate.SavedStateRegistryOwner
 import com.storyteller_f.common_vm_ktx.vm
@@ -14,19 +20,13 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
-import java.util.*
-
-
-sealed class ReloadCause {
-    object CacheExpired : ReloadCause()
-    object PullToRefresh : ReloadCause()
-}
+import java.util.Collections
 
 val LoadState?.isError get() = this is LoadState.Error
 val LoadState?.isLoading get() = this is LoadState.Loading
 val LoadState?.isNotLoading get() = this is LoadState.NotLoading
 
-class MoreInfoLoadState(val loadState: LoadState, val itemCount: Int, val cause: ReloadCause?)
+class MoreInfoLoadState(val loadState: LoadState, val itemCount: Int)
 
 class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
     private val service: suspend (Int, Int) -> CommonResponse<D, RK>,
@@ -41,7 +41,6 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
 
     // 保存上一次请求的页数，如果成功，自增
     private var lastRequestedPage = STARTING_PAGE_INDEX
-    private var causeTempSaved = LinkedList<ReloadCause?>()
     private var tryToIntercept = false
 
     // 避免同一时刻进行多个请求
@@ -50,14 +49,12 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
     suspend fun request(): Flow<List<D>> {
         lastRequestedPage = 1
         inMemoryCache.clear()
-        causeTempSaved.offer(null)
         requestAndSaveData(lastRequestedPage)
         return results
     }
 
     suspend fun requestMore() {
         if (isRequestInProgress) return
-        causeTempSaved.offer(null)
         val successful = requestAndSaveData(lastRequestedPage + 1)
         if (successful) {
             lastRequestedPage++
@@ -66,13 +63,11 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
 
     suspend fun retry() {
         if (isRequestInProgress) return
-        causeTempSaved.offer(null)
         requestAndSaveData(lastRequestedPage + 1)
     }
 
-    suspend fun refresh(cause: ReloadCause = ReloadCause.PullToRefresh) {
+    suspend fun refresh() {
         tryToIntercept = true
-        causeTempSaved.offer(cause)
         lastRequestedPage = 1
         inMemoryCache.clear()
         requestAndSaveData(lastRequestedPage)
@@ -81,8 +76,7 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
     private suspend fun requestAndSaveData(pages: Int): Boolean {
         isRequestInProgress = true
         tryToIntercept = false
-        loadState.emit(MoreInfoLoadState(LoadState.Loading, 0, null))
-        var successful = false
+        loadState.emit(MoreInfoLoadState(LoadState.Loading, 0))
         try {
             val response = service(pages, 30)
             if (tryToIntercept) return false
@@ -93,19 +87,17 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
                 MoreInfoLoadState(
                     LoadState.NotLoading(elements.isEmpty()),
                     inMemoryCache.size,
-                    null
                 )
             )
-            successful = true
+            return true
         } catch (exception: IOException) {
-            loadState.emit(MoreInfoLoadState(LoadState.Error(exception), inMemoryCache.size, null))
+            loadState.emit(MoreInfoLoadState(LoadState.Error(exception), inMemoryCache.size))
         } catch (exception: HttpException) {
-            loadState.emit(MoreInfoLoadState(LoadState.Error(exception), inMemoryCache.size, null))
+            loadState.emit(MoreInfoLoadState(LoadState.Error(exception), inMemoryCache.size))
         } finally {
-            causeTempSaved.pop()
             isRequestInProgress = false
         }
-        return successful
+        return false
     }
 
     fun swap(from: Int, to: Int) {
@@ -121,14 +113,16 @@ class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey
     private val sourceRepository: SimpleDataRepository<D, RK>,
     processFactory: (D, D?) -> Holder,
 ) : ViewModel() {
-    var lastDatum: D? = null
+
+    private var preDatum: D? = null
 
     val content: LiveData<FatData<D, Holder, RK>> = liveData {
         val asLiveData = sourceRepository.request().asLiveData(Dispatchers.Main)
         val source = asLiveData.map {
+            preDatum = null
             FatData(this@SimpleDataViewModel, it.map { datum ->
-                val holder = processFactory(datum, lastDatum)
-                lastDatum = datum
+                val holder = processFactory(datum, preDatum)
+                preDatum = datum
                 holder
             }.toMutableList())
         }

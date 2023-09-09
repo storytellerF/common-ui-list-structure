@@ -5,7 +5,7 @@ import android.view.View
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.storyteller_f.common_ui.CommonFragment
-import com.storyteller_f.common_ui.RegularFragment
+import com.storyteller_f.common_ui.repeatOnViewResumed
 import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui_list_structure.R
 import com.storyteller_f.common_ui_list_structure.RepoViewHolder
@@ -33,7 +33,7 @@ open class TestDataViewModelFragment : CommonFragment(R.layout.fragment_test_dat
      */
     @Suppress("unused")
     @ExtFuncFlat(ExtFuncFlatType.V8)
-    public val test = Test()
+    val test = Test()
 
     private val data by data(
         DataProducer(
@@ -49,11 +49,9 @@ open class TestDataViewModelFragment : CommonFragment(R.layout.fragment_test_dat
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.listWithState.dataUp(adapter, viewLifecycleOwner, data)
-        scope.launch {
-            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                data.content.observe(viewLifecycleOwner) {
-                    adapter.submitData(it)
-                }
+        repeatOnViewResumed {
+            data.content.observe(viewLifecycleOwner) {
+                adapter.submitData(it)
             }
         }
     }

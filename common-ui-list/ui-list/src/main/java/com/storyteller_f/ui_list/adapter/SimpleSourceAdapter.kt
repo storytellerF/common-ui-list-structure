@@ -9,11 +9,11 @@ import com.storyteller_f.ui_list.core.DefaultAdapter
 import com.storyteller_f.ui_list.core.DefaultAdapter.Companion.common_diff_util
 
 @Suppress("UNCHECKED_CAST")
-open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val key: String? = null) :
+open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(group: String? = null) :
     PagingDataAdapter<IH, VH>(
         common_diff_util as DiffUtil.ItemCallback<IH>
     ) {
-    private val proxy = object : DefaultAdapter<IH, VH>(key) {
+    private val proxy = object : DefaultAdapter<IH, VH>(group) {
         override fun getItemAbstract(position: Int) = getItem(position)
     }.apply {
         target = this@SimpleSourceAdapter

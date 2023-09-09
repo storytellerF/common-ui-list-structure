@@ -105,11 +105,9 @@ class MainActivity : AppCompatActivity() {
 
         })
         supportNavigatorBarImmersive(binding.root)
-        scope.launch {
-            repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                viewModel.content?.collectLatest {
-                    adapter.submitData(it)
-                }
+        repeatOnViewResumed {
+            viewModel.content.collectLatest {
+                adapter.submitData(it)
             }
         }
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->

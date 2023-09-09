@@ -14,27 +14,26 @@ import com.storyteller_f.ui_list.database.CommonRoomDatabase
 import com.storyteller_f.ui_list.database.RemoteKey
 import com.storyteller_f.ui_list.database.SimpleRemoteMediator
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 
 const val STARTING_PAGE_INDEX = 1
 
 class SimpleSourceRepository<D : Datum<RK>, RK : RemoteKey, DT : RoomDatabase>(
-    private val service: suspend (Int, Int) -> CommonResponse<D, RK>,
-    private val database: CommonRoomDatabase<D, RK, DT>,
-    private val pagingSourceFactory: () -> PagingSource<Int, D>,
+    service: suspend (Int, Int) -> CommonResponse<D, RK>,
+    database: CommonRoomDatabase<D, RK, DT>,
+    pagingSourceFactory: () -> PagingSource<Int, D>,
 
     ) {
     @OptIn(ExperimentalPagingApi::class)
-    fun resultStream(): Flow<PagingData<D>> {
-        return Pager(
-            config = PagingConfig(pageSize = NETWORK_PAGE_SIZE, enablePlaceholders = false),
-            remoteMediator = SimpleRemoteMediator(
-                service,
-                database,
-            ),
-            pagingSourceFactory = pagingSourceFactory
-        ).flow
-    }
+    val resultStream: Flow<PagingData<D>> = Pager(
+        config = PagingConfig(pageSize = NETWORK_PAGE_SIZE, enablePlaceholders = false),
+        remoteMediator = SimpleRemoteMediator(
+            service,
+            database,
+        ),
+        pagingSourceFactory = pagingSourceFactory
+    ).flow
 
     companion object {
         const val NETWORK_PAGE_SIZE = 30
@@ -47,31 +46,36 @@ class SimpleSourceViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteK
     interceptorFactory: ((Holder?, Holder?) -> DataItemHolder?)? = null
 ) : ViewModel() {
 
-    var content: Flow<PagingData<DataItemHolder>>? = null
+    val content: Flow<PagingData<DataItemHolder>>
 
     /**
-     * 如果你想要使用 interceptor factory ，那应observe content
+     * 如果你想要使用 interceptor，那应observe 前者
      */
-    var content2: Flow<PagingData<Holder>>? = null
-    private var last: D? = null
+    @Suppress("MemberVisibilityCanBePrivate")
+    val content2: Flow<PagingData<Holder>>
+
+    private var preDatum: D? = null
 
     init {
-        val map = sourceRepository.resultStream()
+        val dataFlow = sourceRepository.resultStream
             .map {
+                preDatum = null
                 it.map { repo ->
-                    val holder = processFactory(repo, last)
-                    last = repo
+                    val holder = processFactory(repo, preDatum)
+                    preDatum = repo
                     holder
                 }
             }
         if (interceptorFactory != null) {
-            content = map.map {
+            content = dataFlow.map {
                 it.insertSeparators { before: Holder?, after: Holder? ->
                     interceptorFactory(before, after)
                 }
             }.cachedIn(viewModelScope)
+            content2 = emptyFlow()
         } else {
-            content2 = map.cachedIn(viewModelScope)
+            content = emptyFlow()
+            content2 = dataFlow.cachedIn(viewModelScope)
         }
     }
 }

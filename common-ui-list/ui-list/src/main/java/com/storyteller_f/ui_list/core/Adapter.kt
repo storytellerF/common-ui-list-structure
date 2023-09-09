@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
-import java.util.*
 
 typealias BuildViewHolderFunction = (ViewGroup, String) -> AbstractViewHolder<out DataItemHolder>
 
@@ -59,9 +58,10 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(val view: View) :
     private var _itemHolder: IH? = null
 
     /**
-     * 一个View 可能会找到不属于自己的Fragment，需要针对holder 指定key
+     * 所属的group
      */
-    lateinit var keyed: String
+    lateinit var grouped: String
+    //需要保证当前已经绑定过数据了
     val itemHolder get() = _itemHolder as IH
     fun onBind(itemHolder: IH) {
         this._itemHolder = itemHolder
@@ -76,7 +76,7 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(val view: View) :
 abstract class BindingViewHolder<IH : DataItemHolder>(binding: ViewBinding) :
     AbstractViewHolder<IH>(binding.root)
 
-open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val key: String? = null) : RecyclerView.Adapter<VH>() {
+open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(private val group: String? = null) : RecyclerView.Adapter<VH>() {
     lateinit var target: RecyclerView.Adapter<VH>
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val size = list.size
@@ -85,7 +85,7 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(val 
             list[functionPosition](parent, variant)
         } else list[viewType](parent, "")
         return (viewHolder as VH).apply {
-            keyed = key ?: "default"
+            grouped = group ?: "default"
         }
     }
 

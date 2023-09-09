@@ -321,13 +321,13 @@ class AdapterProcessor : AbstractProcessor() {
     private fun produceClickBlockForCompose(e: Event<Element>, parameterList: String): String {
         return if (e.receiver.contains("Activity"))
             """
-            if("${e.key}".equals(viewHolder.keyed)) ViewJava.doWhenIs(context, ${e.receiver}.class, (activity) -> {
+            if("${e.key}".equals(viewHolder.grouped)) ViewJava.doWhenIs(context, ${e.receiver}.class, (activity) -> {
                 activity.${e.functionName}($parameterList);
                 return null;//activity return
             });//activity end
             """.trimIndent()
         else """
-            if("${e.key}".equals(viewHolder.keyed)) ViewJava.findActionReceiverOrNull(composeView.getComposeView(), ${e.receiver}.class, (fragment) -> {
+            if("${e.key}".equals(viewHolder.grouped)) ViewJava.findActionReceiverOrNull(composeView.getComposeView(), ${e.receiver}.class, (fragment) -> {
                 fragment.${e.functionName}($parameterList);
                 return null;//fragment return
             });//fragment end
@@ -358,14 +358,14 @@ class AdapterProcessor : AbstractProcessor() {
             val parameterList = event.parameterList
             if (event.receiver.contains("Activity")) {
                 """
-                    if("${event.key}" == viewHolder.keyed) ViewJava.doWhenIs(context, ${event.receiver}.class, (activity)->{
+                    if("${event.key}" == viewHolder.grouped) ViewJava.doWhenIs(context, ${event.receiver}.class, (activity)->{
                         activity.${event.functionName}($parameterList);
                         return null;
                     });
                 """.trimIndent()
             } else {
                 """
-                    if("${event.key}" == viewHolder.keyed) ViewJava.findActionReceiverOrNull(v, ${event.receiver}.class, (fragment) -> {
+                    if("${event.key}" == viewHolder.grouped) ViewJava.findActionReceiverOrNull(v, ${event.receiver}.class, (fragment) -> {
                         fragment.${event.functionName}($parameterList);
                         return null;
                     });
