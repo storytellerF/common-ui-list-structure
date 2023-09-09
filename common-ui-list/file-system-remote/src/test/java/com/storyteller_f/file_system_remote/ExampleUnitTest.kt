@@ -1,12 +1,11 @@
 package com.storyteller_f.file_system_remote
 
 import org.junit.After
-import org.junit.Test
-
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.FixMethodOrder
 import org.junit.Ignore
+import org.junit.Test
 import org.junit.runners.MethodSorters
 import org.mockftpserver.fake.FakeFtpServer
 import org.mockftpserver.fake.UserAccount
@@ -18,6 +17,7 @@ import java.io.File
 import java.io.IOException
 import java.net.URL
 import java.nio.file.Files
+import java.util.Locale
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -33,6 +33,7 @@ class ExampleUnitTest {
         const val server = "localhost"
         const val scheme = "ftp"
     }
+
     private var fakeFtpServer: FakeFtpServer? = null
 
     private var ftpInstance: FtpInstance? = null
@@ -51,7 +52,15 @@ class ExampleUnitTest {
         }
         Thread.sleep(2000)
 
-        ftpInstance = FtpInstance(RemoteSpec(server, fakeFtpServer!!.serverControlPort, username, password, scheme)).apply {
+        ftpInstance = FtpInstance(
+            RemoteSpec(
+                server,
+                fakeFtpServer!!.serverControlPort,
+                username,
+                password,
+                scheme
+            )
+        ).apply {
             open()
         }
     }
@@ -66,7 +75,11 @@ class ExampleUnitTest {
     @Test
     @Throws(IOException::class)
     fun testUrlConnectionDownload() {
-        val ftpUrl = String.format("$scheme://$username:$password@$server:%d/foobar.txt", fakeFtpServer!!.serverControlPort)
+        val ftpUrl = String.format(
+            Locale.getDefault(),
+            "$scheme://$username:$password@$server:%d/foobar.txt",
+            fakeFtpServer!!.serverControlPort
+        )
         val urlConnection = URL(ftpUrl).openConnection()
         val inputStream = urlConnection.getInputStream()
         val downloadedFile = File("downloaded_foobar.txt")
@@ -89,7 +102,7 @@ class ExampleUnitTest {
     @Test
     @Throws(IOException::class)
     fun testUploadAndDownload() {
-        //上传文件
+        // 上传文件
         val localFile = File(javaClass.classLoader?.getResource("baz.txt")?.toURI()!!)
         val path = "/buz.txt"
         ftpInstance!!.putFileToPath(localFile, path)
@@ -98,7 +111,7 @@ class ExampleUnitTest {
         }
         Thread.sleep(2000)
         assert(fakeFtpServer!!.fileSystem.exists(path))
-        //然后下载
+        // 然后下载
         val downloadFilePath = "downloaded_buz.txt"
         val file = File(downloadFilePath)
         if (file.exists()) file.delete()
@@ -106,5 +119,4 @@ class ExampleUnitTest {
         assert(file.exists())
         file.delete() // cleanup
     }
-
 }

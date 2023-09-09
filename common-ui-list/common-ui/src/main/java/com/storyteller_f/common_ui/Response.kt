@@ -99,27 +99,42 @@ inline fun <T : Parcelable, A> A.buildCallback(
 /**
  * 如果启动是通过navigation 启动dialog，需要使用parentFragmentManager 接受结果
  */
-fun <T : Parcelable, F> F.waitingResponseInFragment(requestKey: RequestKey, action: F.(T) -> Unit, callback: (String, Bundle) -> Unit) where F : Registry, F : Fragment {
+fun <T : Parcelable, F> F.waitingResponseInFragment(
+    requestKey: RequestKey,
+    action: F.(T) -> Unit,
+    callback: (String, Bundle) -> Unit
+) where F : Registry, F : Fragment {
     val key = requestKey.toString()
     val registerKey = registryKey()
-    @Suppress("UNCHECKED_CAST") val actions = waitingInFragment.getOrPut(registerKey) {
+
+    @Suppress("UNCHECKED_CAST")
+    val actions = waitingInFragment.getOrPut(registerKey) {
         listOf()
     } + FragmentAction(action as (Registry, Parcelable) -> Unit, key)
     waitingInFragment[registerKey] = actions
     fm.setFragmentResultListener(key, owner, callback)
 }
 
-private fun <A, T : Parcelable> A.waitingResponseInActivity(requestKey: RequestKey, action: A.(T) -> Unit, callback: (String, Bundle) -> Unit) where A : FragmentActivity, A : Registry {
+private fun <A, T : Parcelable> A.waitingResponseInActivity(
+    requestKey: RequestKey,
+    action: A.(T) -> Unit,
+    callback: (String, Bundle) -> Unit
+) where A : FragmentActivity, A : Registry {
     val key = requestKey.toString()
     val registerKey = registryKey()
-    @Suppress("UNCHECKED_CAST") val actions = waitingInActivity.getOrPut(registerKey) {
+
+    @Suppress("UNCHECKED_CAST")
+    val actions = waitingInActivity.getOrPut(registerKey) {
         listOf()
     } + ActivityAction(action as (FragmentActivity, Parcelable) -> Unit, key)
     waitingInActivity[registerKey] = actions
     fm.setFragmentResultListener(key, this, callback)
 }
 
-private fun <A> A.show(dialog: Class<out CommonDialogFragment>, parameters: Bundle?): UUID where A : LifecycleOwner {
+private fun <A> A.show(
+    dialog: Class<out CommonDialogFragment>,
+    parameters: Bundle?
+): UUID where A : LifecycleOwner {
     val randomUUID = UUID.randomUUID()
     parameters?.putSerializable("uuid", randomUUID)
     val dialogFragment = dialog.newInstance().apply {
@@ -129,7 +144,7 @@ private fun <A> A.show(dialog: Class<out CommonDialogFragment>, parameters: Bund
     return randomUUID
 }
 
-//todo 自定义NavController
+// todo 自定义NavController
 fun NavController.request(
     @IdRes resId: Int,
     args: Bundle = Bundle(),
@@ -159,7 +174,6 @@ fun <T : Parcelable, F> F.observeResponse(
     result: KClass<T>,
     action: F.(T) -> Unit
 ) where F : Fragment, F : Registry = observeResponse(requestKey, result.java, action)
-
 
 fun <T : Parcelable, F> F.observeResponse(
     requestKey: RequestKey,

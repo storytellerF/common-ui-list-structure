@@ -44,7 +44,9 @@ fun ImageView.fileIcon(fileSystemItemModel: FileSystemItemModel) {
         } else {
             setImageResource(R.drawable.ic_binary)
         }
-    } else setImageResource(R.drawable.ic_folder_explorer)
+    } else {
+        setImageResource(R.drawable.ic_folder_explorer)
+    }
 }
 
 suspend fun File.ensureFile(): File? {

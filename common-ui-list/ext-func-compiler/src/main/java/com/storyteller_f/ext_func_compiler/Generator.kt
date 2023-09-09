@@ -5,7 +5,6 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.storyteller_f.ext_func_definition.ExtFuncFlat
 
-
 internal fun generatePropertyV2(name: String) = """
     val Fragment.$name get() = requireContext().$name
     val View.$name get() = context.$name
@@ -22,7 +21,7 @@ internal fun generatePropertyV4(name: String, annotation: ExtFuncFlat): String {
     ${if (annotation.isContextReceiver) "context(Context)" else ""}
     val Int.$name
     get() = toFloat().dipToInt
-""".trimIndent()
+    """.trimIndent()
 }
 
 internal fun generateForV7(): String {
@@ -61,5 +60,6 @@ internal fun generateForV8(task: ExtFuncProcessor.Task, logger: KSPLogger): Stri
     val className = parent.simpleName.asString()
     return """class ${className}Impl : $className() {
         |   $methods
-        |}""".trimMargin()
+        |}
+    """.trimMargin()
 }

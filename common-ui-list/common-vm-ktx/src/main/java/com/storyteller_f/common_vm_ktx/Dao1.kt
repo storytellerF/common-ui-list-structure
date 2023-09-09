@@ -4,14 +4,13 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import com.storyteller_f.ext_func_definition.ExtFuncFlat
 import com.storyteller_f.ext_func_definition.ExtFuncFlatType
-import java.io.Serializable
 
 /**
  * @author storyteller_f
  */
 
 @ExtFuncFlat(ExtFuncFlatType.V7)
-data class Dao1<out D1>(val d1: D1) : Serializable
+data class Dao1<out D1>(val d1: D1)
 
 @ExtFuncFlat(ExtFuncFlatType.V6)
 fun <T1> combineDao(s1: LiveData<T1?>): MediatorLiveData<Dao1<T1?>> {

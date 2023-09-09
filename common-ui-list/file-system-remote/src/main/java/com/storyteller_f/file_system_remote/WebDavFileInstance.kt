@@ -41,13 +41,34 @@ class WebDavFileInstance(private val spec: ShareSpec, uri: Uri) : FileInstance(u
         TODO("Not yet implemented")
     }
 
-    override suspend fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
+    override suspend fun listInternal(
+        fileItems: MutableList<FileItemModel>,
+        directoryItems: MutableList<DirectoryItemModel>
+    ) {
         instance.list(path).forEach {
             val (file, child) = child(it.name)
-            if (it.isFile)
-                fileItems.add(FileItemModel(it.name, child, false, it.lastModified, false, file.extension))
-            else
-                directoryItems.add(DirectoryItemModel(it.name, child, false, it.lastModified, false))
+            if (it.isFile) {
+                fileItems.add(
+                    FileItemModel(
+                        it.name,
+                        child,
+                        false,
+                        it.lastModified,
+                        false,
+                        file.extension
+                    )
+                )
+            } else {
+                directoryItems.add(
+                    DirectoryItemModel(
+                        it.name,
+                        child,
+                        false,
+                        it.lastModified,
+                        false
+                    )
+                )
+            }
         }
     }
 
@@ -94,16 +115,15 @@ class WebDavFileInstance(private val spec: ShareSpec, uri: Uri) : FileInstance(u
     override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         TODO("Not yet implemented")
     }
-
 }
 
 class WebDavInstance(spec: ShareSpec) {
-    val instance = WebDavClient("http://${spec.server}:${spec.port}/${spec.share}", spec.user, spec.password)
+    val instance =
+        WebDavClient("http://${spec.server}:${spec.port}/${spec.share}", spec.user, spec.password)
 
     fun list(path: String): MutableList<WebDavDatum> {
         return runBlocking {
             instance.list(path)
         }
     }
-
 }

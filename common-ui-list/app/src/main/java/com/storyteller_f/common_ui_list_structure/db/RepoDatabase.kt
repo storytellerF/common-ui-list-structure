@@ -57,7 +57,6 @@ abstract class RepoDatabase : RoomDatabase() {
     abstract fun reposDao(): RepoDao
     abstract fun remoteKeyDao(): RemoteKeysDao
 
-
     companion object {
 
         @Volatile
@@ -71,7 +70,8 @@ abstract class RepoDatabase : RoomDatabase() {
         private fun buildDatabase(context: Context) =
             Room.databaseBuilder(
                 context.applicationContext,
-                RepoDatabase::class.java, "repo.db"
+                RepoDatabase::class.java,
+                "repo.db"
             )
                 .fallbackToDestructiveMigration()
                 .build()

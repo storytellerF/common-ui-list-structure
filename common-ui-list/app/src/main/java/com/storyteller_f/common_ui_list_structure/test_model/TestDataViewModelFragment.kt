@@ -17,7 +17,7 @@ import com.storyteller_f.ui_list.source.DataProducer
 import com.storyteller_f.ui_list.source.data
 
 class Test {
-    fun test() {
+    fun sayTest() {
         println("test")
     }
 }
@@ -36,7 +36,7 @@ open class TestDataViewModelFragment : CommonFragment(R.layout.fragment_test_dat
             { p, size ->
                 requireReposService.searchRepos(p, size)
             },
-            { it, _ -> RepoItemHolder(it) },
+            { repo, _ -> RepoItemHolder(repo) },
         )
     )
     private val adapter = SimpleDataAdapter<RepoItemHolder, RepoViewHolder>()
@@ -51,5 +51,4 @@ open class TestDataViewModelFragment : CommonFragment(R.layout.fragment_test_dat
             }
         }
     }
-
 }

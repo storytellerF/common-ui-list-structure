@@ -8,13 +8,18 @@ internal fun generatePropertyV5(task: ExtFuncProcessor.Task): Pair<Set<String>, 
         task.ksAnnotated.parameters.map {
             it.type.element
         }.joinToString(",")
-    } else null
-    val imports = getImports(task.ksAnnotated) + listOf("androidx.fragment.app.Fragment", "androidx.activity.ComponentActivity")
+    } else {
+        null
+    }
+    val imports = getImports(task.ksAnnotated) + listOf(
+        "androidx.fragment.app.Fragment", "androidx.activity.ComponentActivity"
+    )
     return imports to extendVm(arguments, task)
 }
 
 private fun extendVm(extra: String?, task: ExtFuncProcessor.Task): String {
-    val parameterList = getParameterListExcludeDefaultList(task.ksAnnotated as KSFunctionDeclaration)
+    val parameterList =
+        getParameterListExcludeDefaultList(task.ksAnnotated as KSFunctionDeclaration)
     val parameterString = parameterList.joinToString(",\n").yes(3).indentRest()
     val second = parameterList.toMutableList().apply {
         add(1, "vmScope: VMScope")
@@ -33,5 +38,5 @@ private fun extendVm(extra: String?, task: ExtFuncProcessor.Task): String {
         inline fun <reified VM : ViewModel, T, ARG> T.${task.name}(
             $second
         )  where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = ${task.name}(arg, vmScope.storeProducer, vmScope.ownerProducer, vmProducer)
-        """.trimIndent()
+    """.trimIndent()
 }

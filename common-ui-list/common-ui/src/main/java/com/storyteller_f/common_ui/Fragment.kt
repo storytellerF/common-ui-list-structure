@@ -70,4 +70,4 @@ val Fragment.toolbar: ActionBar
 
 val Fragment.toolbarCompose
     get() = (activity!!.findViewById<Toolbar>(R.id.toolbar)).getChildAt(0) as
-            ComposeView
+        ComposeView

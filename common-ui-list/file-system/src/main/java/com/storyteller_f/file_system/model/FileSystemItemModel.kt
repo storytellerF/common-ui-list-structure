@@ -40,13 +40,13 @@ open class FileSystemItemModel(
 
     override fun toString(): String {
         return "FileSystemItemModel{" +
-                "name='" + name + '\'' +
-                ", absPath='" + fullPath + '\'' +
-                ", isHidden=" + isHidden +
-                ", size=" + size +
-                ", lastAccessTime='" + lastModifiedTime + '\'' +
-                ", permissions='" + permissions + '\'' +
-                '}'
+            "name='" + name + '\'' +
+            ", absPath='" + fullPath + '\'' +
+            ", isHidden=" + isHidden +
+            ", size=" + size +
+            ", lastAccessTime='" + lastModifiedTime + '\'' +
+            ", permissions='" + permissions + '\'' +
+            '}'
     }
 
     fun editAccessTime(childFile: File) {
@@ -56,7 +56,7 @@ open class FileSystemItemModel(
                 val basicFileAttributes = Files.readAttributes(childFile.toPath(), BasicFileAttributes::class.java)
                 fileSystemItemModel.createdTime = basicFileAttributes.creationTime().toMillis()
                 fileSystemItemModel.lastAccessTime = basicFileAttributes.lastAccessTime().toMillis()
-            } catch (e: IOException) {
+            } catch (_: IOException) {
                 Log.w(TAG, "list: 获取BasicFileAttribute失败" + childFile.absolutePath)
             }
         }

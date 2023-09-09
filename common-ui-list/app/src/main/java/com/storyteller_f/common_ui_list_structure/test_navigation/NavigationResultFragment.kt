@@ -11,7 +11,9 @@ import kotlinx.parcelize.Parcelize
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.
  */
-class NavigationResultFragment : SimpleFragment<FragmentNavigationResultBinding>(FragmentNavigationResultBinding::inflate) {
+class NavigationResultFragment : SimpleFragment<FragmentNavigationResultBinding>(
+    FragmentNavigationResultBinding::inflate
+) {
 
     override fun onBindViewEvent(binding: FragmentNavigationResultBinding) {
         binding.buttonSecond.setOnClickListener {

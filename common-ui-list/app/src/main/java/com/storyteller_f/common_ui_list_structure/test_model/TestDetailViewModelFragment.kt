@@ -13,7 +13,8 @@ class TestDetailViewModelFragment : RegularFragment<FragmentTestDetailBinding>(F
     private val detail by detail(DetailProducer(
         {
             requireReposService.searchRepos(1, 1).items.first()
-        }, {
+        },
+        {
             requireRepoDatabase.reposDao().select()
         }
     ))
@@ -24,5 +25,4 @@ class TestDetailViewModelFragment : RegularFragment<FragmentTestDetailBinding>(F
             textView.text = it.fullName
         }
     }
-
 }

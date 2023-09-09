@@ -1,10 +1,23 @@
 package com.storyteller_f.ui_list_annotation_compiler_ksp
 
-import com.example.ui_list_annotation_common.*
+import com.example.ui_list_annotation_common.Entry
+import com.example.ui_list_annotation_common.Event
+import com.example.ui_list_annotation_common.Holder
+import com.example.ui_list_annotation_common.UIListHolderZoom
+import com.example.ui_list_annotation_common.doubleLayerGroupBy
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
-import com.google.devtools.ksp.processing.*
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
+import com.google.devtools.ksp.processing.SymbolProcessorProvider
+import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSClassifierReference
+import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.validate
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
@@ -18,12 +31,16 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
     private var count = 0
     private val zoom = UIListHolderZoom<KSAnnotated>()
 
+    @Suppress("LongMethod")
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val logger = environment.logger
         count++
-        val viewHolders = resolver.getSymbolsWithAnnotation(BindItemHolder::class.java.canonicalName)
-        val clickEvents = resolver.getSymbolsWithAnnotation(BindClickEvent::class.java.canonicalName)
-        val longClickEvents = resolver.getSymbolsWithAnnotation(BindLongClickEvent::class.java.canonicalName)
+        val viewHolders =
+            resolver.getSymbolsWithAnnotation(BindItemHolder::class.java.canonicalName)
+        val clickEvents =
+            resolver.getSymbolsWithAnnotation(BindClickEvent::class.java.canonicalName)
+        val longClickEvents =
+            resolver.getSymbolsWithAnnotation(BindLongClickEvent::class.java.canonicalName)
         val viewHolderMap = viewHolders.groupBy {
             it.validate()
         }
@@ -41,7 +58,8 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
         logger.warn("round $count holder ${viewHolderMap[true]?.count()} ${viewHolderMap[false]?.size}")
         logger.warn("round $count click: ${clickEventMap[true]?.count()} ${clickEventMap[false]?.size}")
         logger.warn("round $count long ${longClickEventMap[true]?.count()} ${longClickEventMap[false]?.size}")
-        val invalidate = viewHolderMap[false].orEmpty() + clickEventMap[false].orEmpty() + longClickEventMap[false].orEmpty()
+        val invalidate =
+            viewHolderMap[false].orEmpty() + clickEventMap[false].orEmpty() + longClickEventMap[false].orEmpty()
         invalidate.forEach {
             logger.warn("invalidate $it")
         }
@@ -56,10 +74,14 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
         zoom.addLongClick(processEvent(longClickEvents, isLong = true))
         val real = "$packageName.ui_list"
         logger.warn("package $real")
-        val dependencies = Dependencies(aggregating = false, *resolver.getAllFiles().toList().toTypedArray())
+        val dependencies =
+            Dependencies(aggregating = false, *resolver.getAllFiles().toList().toTypedArray())
         val createNewFile = environment.codeGenerator.createNewFile(dependencies, real, className)
-        val importComposeLibrary = if (zoom.hasComposeView) "import androidx.compose.ui.platform.ComposeView;\n"
-        else ""
+        val importComposeLibrary = if (zoom.hasComposeView) {
+            "import androidx.compose.ui.platform.ComposeView;\n"
+        } else {
+            ""
+        }
         val importBindingClass = zoom.importHolders()
         val importReceiverClass = zoom.importReceiverClass()
         BufferedWriter(OutputStreamWriter(createNewFile)).use { writer ->
@@ -84,14 +106,29 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
     }
 
     @OptIn(KspExperimental::class)
-    private fun processEvent(clickEvents: Sequence<KSAnnotated>, isLong: Boolean): Map<String, Map<String, List<Event<KSAnnotated>>>> {
+    private fun processEvent(
+        clickEvents: Sequence<KSAnnotated>,
+        isLong: Boolean
+    ): Map<String, Map<String, List<Event<KSAnnotated>>>> {
         return clickEvents.doubleLayerGroupBy({
             val (itemHolderFullName, _) = getItemHolderDetail(it)
-            val viewName = if (isLong) it.getAnnotationsByType(BindLongClickEvent::class).first().viewName else it.getAnnotationsByType(BindClickEvent::class).first().viewName
+            val viewName = if (isLong) {
+                it.getAnnotationsByType(
+                    BindLongClickEvent::class
+                ).first().viewName
+            } else {
+                it.getAnnotationsByType(BindClickEvent::class).first().viewName
+            }
             itemHolderFullName to viewName
         }) {
             it as KSFunctionDeclaration
-            val key = if (isLong) it.getAnnotationsByType(BindLongClickEvent::class).first().key else it.getAnnotationsByType(BindClickEvent::class).first().key
+            val key = if (isLong) {
+                it.getAnnotationsByType(
+                    BindLongClickEvent::class
+                ).first().key
+            } else {
+                it.getAnnotationsByType(BindClickEvent::class).first().key
+            }
             val parent = it.parent as KSClassDeclaration
             val r = parent.identity()
             val parameterList = it.parameters.joinToString(", ") { parameter ->
@@ -106,11 +143,19 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
                     "v"
                 }
             }
-            Event(r.name, r.fullName, it.simpleName.asString(), parameterList, key, it as KSAnnotated)
+            Event(
+                r.name,
+                r.fullName,
+                it.simpleName.asString(),
+                parameterList,
+                key,
+                it as KSAnnotated
+            )
         }
     }
 
-    fun KSDeclaration.identity() = Identity("${packageName.asString()}.${simpleName.asString()}", simpleName.asString())
+    fun KSDeclaration.identity() =
+        Identity("${packageName.asString()}.${simpleName.asString()}", simpleName.asString())
 
     fun Identity.toPair() = fullName to name
 
@@ -122,7 +167,19 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
             val (itemHolderFullName, itemHolderName) = getItemHolderDetail(viewHolder)
             val (bindingName, bindingFullName) = getBindingDetail(viewHolder)
             val (viewHolderFullName, viewHolderName) = viewHolder.identity().toPair()
-            Entry(itemHolderName, itemHolderFullName, mutableMapOf(type to Holder(bindingName, bindingFullName, viewHolderName, viewHolderFullName)), viewHolder as KSAnnotated)
+            Entry(
+                itemHolderName,
+                itemHolderFullName,
+                mutableMapOf(
+                    type to Holder(
+                        bindingName,
+                        bindingFullName,
+                        viewHolderName,
+                        viewHolderFullName
+                    )
+                ),
+                viewHolder as KSAnnotated
+            )
         }
     }
 
@@ -136,7 +193,8 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
         val propertyName = firstProperties.simpleName.getShortName()
         return if (propertyName == "binding") {
             val bindingPackageName = firstProperties.packageName.asString()
-            val bindingName = (firstProperties.type.element as KSClassifierReference).referencedName()
+            val bindingName =
+                (firstProperties.type.element as KSClassifierReference).referencedName()
             val bindingFullName = "$bindingPackageName.databinding.$bindingName"
             Pair(bindingName, bindingFullName)
         } else {
@@ -150,12 +208,10 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
     companion object {
         private const val className = "Temp"
     }
-
 }
 
 class ProcessingProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
         return Processing(environment)
     }
-
 }

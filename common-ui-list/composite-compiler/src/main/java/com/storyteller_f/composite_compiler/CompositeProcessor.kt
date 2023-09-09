@@ -21,7 +21,8 @@ class CompositeProcessor : AbstractProcessor() {
         roundEnvironment: RoundEnvironment?
     ): Boolean {
 //        println("composite set:$p0 is over ${roundEnvironment?.processingOver()}")
-        if (p0 == null || p0.isEmpty()) return false
+
+        if (p0.isNullOrEmpty()) return false
         roundEnvironment?.getElementsAnnotatedWith(Composite::class.java)
             ?.forEach ElementRound@{ ele ->
                 val packageElement = processingEnv.elementUtils.getPackageOf(ele)
@@ -39,14 +40,21 @@ class CompositeProcessor : AbstractProcessor() {
                     it.key.toString().contains("entities")
                 }?.firstNotNullOf { it.value }?.toString()?.let { s ->
                     s.substring(1, s.length - 1)
-                }?.split(",")?.map { it.trim() }
-                    ?.map { "import ${it.substring(0, it.length - 6)};" } ?: listOf()
-                val name = if (annotation.name.trim().isNotEmpty()) annotation.name
-                else getName(simpleName.toString())
+                }?.split(",")
+                    ?.map { it.trim() }
+                    ?.map { "import ${it.substring(0, it.length - Companion.offset)};" }.orEmpty()
+                val name = if (annotation.name.trim().isNotEmpty()) {
+                    annotation.name
+                } else {
+                    getName(simpleName.toString())
+                }
                 val packageName = packageElement.toString()
                 val fileContent =
                     produceFileContent(name, packageName, dataDao, clazzList, databaseClass)
-                processingEnv.filer.createSourceFile("${packageElement}.composite.${name}Composite", ele)
+                processingEnv.filer.createSourceFile(
+                    "$packageElement.composite.${name}Composite",
+                    ele
+                )
                     .openWriter()?.use {
                         it.write(fileContent)
                         it.flush()
@@ -65,6 +73,7 @@ class CompositeProcessor : AbstractProcessor() {
         return origin
     }
 
+    @Suppress("LongMethod")
     private fun produceFileContent(
         name: String,
         packageName: String,
@@ -116,7 +125,7 @@ public class ${name}Composite extends CommonRoomDatabase<$name, $remoteKeyType, 
 
     @Nullable
     @Override
-    public Object insertAllData(@NonNull List<? extends $name> ${dataParam}, @NonNull Continuation<? super Unit> ${"$"}completion) {
+    public Object insertAllData(@NonNull List<? extends $name> $dataParam, @NonNull Continuation<? super Unit> ${"$"}completion) {
         getDatabase().$dataDao().insertAll($dataParam, ${"$"}completion);
         return null;
     }
@@ -132,4 +141,7 @@ public class ${name}Composite extends CommonRoomDatabase<$name, $remoteKeyType, 
 }"""
     }
 
+    companion object {
+        const val offset = 6
+    }
 }

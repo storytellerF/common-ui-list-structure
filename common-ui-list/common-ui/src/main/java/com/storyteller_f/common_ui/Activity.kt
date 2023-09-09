@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Bundle
-import android.os.Parcelable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
@@ -21,7 +20,7 @@ abstract class CommonActivity : AppCompatActivity(), Registry {
 
     override fun onStart() {
         super.onStart()
-        //主要用于旋转屏幕
+        // 主要用于旋转屏幕
         observeResponse()
     }
 }

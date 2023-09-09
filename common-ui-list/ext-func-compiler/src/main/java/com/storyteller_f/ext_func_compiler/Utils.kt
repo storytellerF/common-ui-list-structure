@@ -10,11 +10,13 @@ import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSValueParameter
 
-
 fun getParameterListExcludeDefaultList(ksAnnotated: KSFunctionDeclaration) =
     ksAnnotated.parameters.mapNotNull {
-        if (it.hasDefault) null
-        else ("${if (it.isCrossInline) "crossinline" else ""} ${it.name?.getShortName()} : ${it.type}")
+        if (it.hasDefault) {
+            null
+        } else {
+            ("${if (it.isCrossInline) "crossinline" else ""} ${it.name?.getShortName()} : ${it.type}")
+        }
     }
 
 private val setFold: (acc: Set<String>, Set<String>) -> Set<String> = { i, n ->
@@ -44,15 +46,15 @@ fun getImports(annotated: KSAnnotated?): Set<String> {
     return when (annotated) {
         is KSFunctionDeclaration -> {
             getImports(annotated.extensionReceiver) +
-                    annotated.typeParameters.map {
-                        getImports(it)
-                    }.fold(setOf(), setFold) +
-                    annotated.annotations.map {
-                        getImports(it.annotationType)
-                    }.fold(setOf(), setFold) +
-                    annotated.parameters.map {
-                        getImports(it)
-                    }.fold(setOf(), setFold)
+                annotated.typeParameters.map {
+                    getImports(it)
+                }.fold(setOf(), setFold) +
+                annotated.annotations.map {
+                    getImports(it.annotationType)
+                }.fold(setOf(), setFold) +
+                annotated.parameters.map {
+                    getImports(it)
+                }.fold(setOf(), setFold)
         }
 
         is KSTypeParameter -> annotated.bounds.map { reference ->
@@ -60,7 +62,9 @@ fun getImports(annotated: KSAnnotated?): Set<String> {
         }.fold(setOf(), setFold)
 
         is KSTypeReference -> {
-            val typeString = annotated.resolve().takeIf { it.declaration.closestClassDeclaration() != null }?.declaration?.qualifiedName?.asString()
+            val typeString = annotated.resolve().takeIf {
+                it.declaration.closestClassDeclaration() != null
+            }?.declaration?.qualifiedName?.asString()
             typeString?.let { setOf(it) }.orEmpty() + getImports(annotated.element)
         }
 

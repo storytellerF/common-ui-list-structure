@@ -13,6 +13,10 @@ fun <T, R> T?.safeLet(block: (T) -> R): R? {
 
 fun <T> List<T>.same(list: List<T>): Boolean {
     if (size != list.size) return false
+    return sameInternal(list)
+}
+
+private fun <T> List<T>.sameInternal(list: List<T>): Boolean {
     forEachIndexed { index, t ->
         if (list[index] != t) {
             return false

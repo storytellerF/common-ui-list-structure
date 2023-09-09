@@ -20,16 +20,20 @@ private fun combineDao(count: Int, type: String): String {
             ${liveDataAddSource(count).yes(3).indentRest()}
             return mediatorLiveData
         }
-        """.trimIndent()
+    """.trimIndent()
 }
 
 private fun liveDataAddSource(count: Int): String {
     return MutableList(count) {
         val current = it + 1
         """
-        mediatorLiveData.addSource(s${current}) {
-            d${current} = it
-            mediatorLiveData.value = Dao$count(${repeat("d1", current - 1, end = ", ")}it, ${repeat("d1", count - current, current + 1)})
+        mediatorLiveData.addSource(s$current) {
+            d$current = it
+            mediatorLiveData.value = Dao$count(${repeat(
+            "d1",
+            current - 1,
+            end = ", "
+        )}it, ${repeat("d1", count - current, current + 1)})
         }
         """.trimIndent()
     }.joinToString("\n")

@@ -11,8 +11,8 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
-//todo getChannel
-//todo file descriptor
+// todo getChannel
+// todo file descriptor
 abstract class FileInstance(var uri: Uri) {
 
     val path: String
@@ -81,7 +81,10 @@ abstract class FileInstance(var uri: Uri) {
      * 应该仅用于目录。可能会抛出异常，内部不会处理。
      */
     @WorkerThread
-    protected abstract suspend fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>)
+    protected abstract suspend fun listInternal(
+        fileItems: MutableList<FileItemModel>,
+        directoryItems: MutableList<DirectoryItemModel>
+    )
 
     @WorkerThread
     suspend fun list(): FilesAndDirectories {

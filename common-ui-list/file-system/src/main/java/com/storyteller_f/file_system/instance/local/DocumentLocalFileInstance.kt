@@ -21,7 +21,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
-import java.lang.IllegalStateException
 
 /**
  * @param prefix 用来标识对象所在区域，可能是外部，也可能是内部。比如/storage/XXXX-XXXX。仅对于本地文件系统有效。其他情况都是空。
@@ -68,7 +67,7 @@ class DocumentLocalFileInstance(
      * @return 返回目标文件
      */
     private suspend fun getDocumentFile(policy: FileCreatePolicy): DocumentFile? {
-        //此uri 是当前前缀下的根目录uri。fileInstance 的uri 是fileSystem 使用的uri。
+        // 此uri 是当前前缀下的根目录uri。fileInstance 的uri 是fileSystem 使用的uri。
         val rootUri = FileSystemUriSaver.instance.savedUri(context, preferenceKey)
         if (rootUri == null) {
             Log.e(TAG, "getDocumentFile: rootUri is null")
@@ -84,11 +83,15 @@ class DocumentLocalFileInstance(
             return null
         }
         if (pathRelativeRoot == "/") return rootFile
-        val nameItemPath = pathRelativeRoot.substring(1).split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        val nameItemPath = pathRelativeRoot.substring(
+            1
+        ).split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         val endElementIsFileName = policy is Create && policy.isFile
         val paths = if (endElementIsFileName) {
             nameItemPath.copyOfRange(0, nameItemPath.size - 1)
-        } else nameItemPath
+        } else {
+            nameItemPath
+        }
         var temp: DocumentFile = rootFile
         for (name in paths) {
             yield()
@@ -102,11 +105,15 @@ class DocumentLocalFileInstance(
                 if (created == null) {
                     Log.e(TAG, "getDocumentFile: 文件创建失败$path prefix: $prefix")
                     return null
-                } else created
-            } else foundFile
+                } else {
+                    created
+                }
+            } else {
+                foundFile
+            }
         }
 
-        //find file
+        // find file
         if (endElementIsFileName) {
             val fileName = nameItemPath[nameItemPath.size - 1]
             val file = temp.findFile(fileName)
@@ -189,7 +196,10 @@ class DocumentLocalFileInstance(
     }
 
     @Throws(Exception::class)
-    public override suspend fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
+    public override suspend fun listInternal(
+        fileItems: MutableList<FileItemModel>,
+        directoryItems: MutableList<DirectoryItemModel>
+    ) {
         val c = getInstanceRelinkIfNeed() ?: throw Exception("no permission")
         val documentFiles = c.listFiles()
         for (documentFile in documentFiles) {
@@ -198,7 +208,8 @@ class DocumentLocalFileInstance(
             val detailString = FileUtility.getPermissions(documentFile)
             val t = child(documentFile, documentFileName)
             if (documentFile.isFile) {
-                FileInstanceUtility.addFile(fileItems, t, detailString)!!.size = documentFile.length()
+                FileInstanceUtility.addFile(fileItems, t, detailString)!!.size =
+                    documentFile.length()
             } else {
                 FileInstanceUtility.addDirectory(directoryItems, t, detailString)
             }
@@ -207,15 +218,18 @@ class DocumentLocalFileInstance(
 
     private fun child(documentFile: DocumentFile, documentFileName: String): Pair<File, Uri?> {
         val child = child(documentFileName)
-        return Pair<File, Uri?>(object : File(child.first.absolutePath) {
-            override fun lastModified(): Long {
-                return documentFile.lastModified()
-            }
+        return Pair<File, Uri?>(
+            object : File(child.first.absolutePath) {
+                override fun lastModified(): Long {
+                    return documentFile.lastModified()
+                }
 
-            override fun length(): Long {
-                return documentFile.length()
-            }
-        }, child.second)
+                override fun length(): Long {
+                    return documentFile.length()
+                }
+            },
+            child.second
+        )
     }
 
     override suspend fun deleteFileOrEmptyDirectory(): Boolean {
@@ -226,16 +240,17 @@ class DocumentLocalFileInstance(
     override suspend fun toParent(): BaseContextFileInstance {
         val parentFile = File(path).parentFile ?: throw Exception("到头了，无法继续向上寻找")
         val currentParentFile = getInstanceRelinkIfNeed()!!.parentFile
-        return if (currentParentFile == null) {
-            throw IllegalStateException("查找parent DocumentFile失败")
-        } else if (!currentParentFile.isFile) {
-            val parent = uri.buildUpon().path(parentFile.absolutePath).build()
-            val instance = DocumentLocalFileInstance(prefix, prefix, context, parent)
-            instance._instance = currentParentFile
-            instance
-        } else {
-            throw IllegalStateException("当前文件已存在，并且类型不同 源文件：" + currentParentFile.isFile)
+        checkNotNull(currentParentFile) {
+            "查找parent DocumentFile失败"
         }
+        check(currentParentFile.isFile) {
+            "当前文件已存在，并且类型不同 源文件：" + currentParentFile.isFile
+        }
+
+        val parent = uri.buildUpon().path(parentFile.absolutePath).build()
+        val instance = DocumentLocalFileInstance(prefix, prefix, context, parent)
+        instance._instance = currentParentFile
+        return instance
     }
 
     override suspend fun isFile(): Boolean {
@@ -294,7 +309,13 @@ class DocumentLocalFileInstance(
     }
 
     override suspend fun getDirectory(): DirectoryItemModel {
-        return DirectoryItemModel(name, uri, false, getInstanceRelinkIfNeed()!!.lastModified(), false)
+        return DirectoryItemModel(
+            name,
+            uri,
+            false,
+            getInstanceRelinkIfNeed()!!.lastModified(),
+            false
+        )
     }
 
     companion object {
@@ -308,7 +329,7 @@ class DocumentLocalFileInstance(
          * sd 卡使用特殊的preferenceKey，就是路径
          */
         fun getMounted(context: Context, uri: Uri, prefix: String): DocumentLocalFileInstance {
-            //fixme sdCard 与emulated authority 相同，只是rootId 不同
+            // fixme sdCard 与emulated authority 相同，只是rootId 不同
             return DocumentLocalFileInstance(prefix, prefix, context, uri)
         }
     }

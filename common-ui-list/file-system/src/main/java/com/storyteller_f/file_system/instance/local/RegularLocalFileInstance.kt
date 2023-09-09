@@ -22,7 +22,7 @@ import java.nio.file.Files
 
 @Suppress("unused")
 class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(context, uri) {
-    private var innerFile = File(path)
+    private val innerFile = File(path)
 
     @Throws(IOException::class)
     override suspend fun createFile(): Boolean {
@@ -40,11 +40,12 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
         val subFile = File(innerFile, name)
         val uri = getUri(subFile)
         val internalFileInstance = RegularLocalFileInstance(context, uri)
-        //检查目标文件是否存在
+        // 检查目标文件是否存在
         checkChildExistsOtherwiseCreate(subFile, policy)
         return internalFileInstance
     }
 
+    @Suppress("ThrowsCount")
     @Throws(IOException::class)
     private suspend fun checkChildExistsOtherwiseCreate(file: File, policy: FileCreatePolicy) {
         when {
@@ -55,7 +56,10 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
                 policy.isFile -> {
                     if (!withContext(Dispatchers.IO) {
                             file.createNewFile()
-                        }) throw IOException("新建文件失败")
+                        }
+                    ) {
+                        throw IOException("新建文件失败")
+                    }
                 }
                 !file.mkdirs() -> throw IOException("新建文件失败")
             }
@@ -100,17 +104,19 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
         fileItems: MutableList<FileItemModel>,
         directoryItems: MutableList<DirectoryItemModel>
     ) {
-        val listFiles = innerFile.listFiles() //获取子文件
+        val listFiles = innerFile.listFiles() // 获取子文件
         if (listFiles != null) {
             for (childFile in listFiles) {
                 val child = child(childFile.name)
                 val permissions = FileUtility.getPermissionStringByFile(childFile)
                 // 判断是否为文件夹
-                (if (childFile.isDirectory) {
-                    FileInstanceUtility.addDirectory(directoryItems, child, permissions)
-                } else {
-                    FileInstanceUtility.addFile(fileItems, child, permissions)
-                })?.editAccessTime(childFile)
+                (
+                    if (childFile.isDirectory) {
+                        FileInstanceUtility.addDirectory(directoryItems, child, permissions)
+                    } else {
+                        FileInstanceUtility.addFile(fileItems, child, permissions)
+                    }
+                    )?.editAccessTime(childFile)
             }
         }
     }
@@ -159,10 +165,12 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
     override suspend fun isSymbolicLink(): Boolean =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Files.isSymbolicLink(innerFile.toPath())
-        } else try {
-            innerFile.absolutePath == innerFile.canonicalPath
-        } catch (e: IOException) {
-            false
+        } else {
+            try {
+                innerFile.absolutePath == innerFile.canonicalPath
+            } catch (_: IOException) {
+                false
+            }
         }
 
     companion object {

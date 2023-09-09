@@ -29,7 +29,11 @@ open class FileItemModel : FileSystemItemModel {
         isSymLink: Boolean,
         extension: String? = null,
     ) : super(
-        name, uri, isHidden, lastModifiedTime, isSymLink
+        name,
+        uri,
+        isHidden,
+        lastModifiedTime,
+        isSymLink
     ) {
         this.extension = extension
     }

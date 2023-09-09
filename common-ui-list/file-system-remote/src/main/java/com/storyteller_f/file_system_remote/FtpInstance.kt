@@ -72,7 +72,6 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
         fileItems: MutableList<FileItemModel>,
         directoryItems: MutableList<DirectoryItemModel>
     ) {
-
         val listFiles = getInstance()?.listFiles(path)
         listFiles?.forEach {
             val name = it.name
@@ -93,7 +92,8 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
                         file.extension
                     ).apply {
                         permissions = permission
-                    })
+                    }
+                )
             } else {
                 directoryItems.add(
                     DirectoryItemModel(
@@ -104,7 +104,8 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
                         it.isSymbolicLink
                     ).apply {
                         permissions = permission
-                    })
+                    }
+                )
             }
         }
     }
@@ -161,7 +162,6 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
     override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         TODO("Not yet implemented")
     }
-
 }
 
 class FtpInstance(private val spec: RemoteSpec) {
@@ -206,12 +206,15 @@ class FtpInstance(private val spec: RemoteSpec) {
     }
 
     fun connectIfNeed(): Boolean {
-        return if (ftp.isConnected) true
-        else try {
-            open()
-        } catch (e: Exception) {
-            Log.e(TAG, "connectIfNeed: ", e)
-            false
+        return if (ftp.isConnected) {
+            true
+        } else {
+            try {
+                open()
+            } catch (e: Exception) {
+                Log.e(TAG, "connectIfNeed: ", e)
+                false
+            }
         }
     }
 

@@ -40,5 +40,4 @@ class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(group:
         fatData?.swap(from, to)
         notifyItemMoved(from, to)
     }
-
 }

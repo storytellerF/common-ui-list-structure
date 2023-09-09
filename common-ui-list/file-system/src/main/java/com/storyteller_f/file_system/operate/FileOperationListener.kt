@@ -72,5 +72,4 @@ open class DefaultForemanProgressListener : FileOperationForemanProgressListener
     override fun onLeft(fileCount: Int, folderCount: Int, size: Long, key: String) = Unit
 
     override fun onComplete(dest: String?, isSuccess: Boolean, key: String) = Unit
-
 }

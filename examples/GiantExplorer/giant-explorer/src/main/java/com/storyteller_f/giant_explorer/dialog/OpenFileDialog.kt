@@ -47,7 +47,7 @@ class OpenFileDialog : SimpleDialogFragment<DialogOpenFileBinding>(DialogOpenFil
                 dismiss()
             }
         }
-        val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(FileUtility.getExtension(uri.path))
+        val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(FileUtility.getExtension(uri.path!!))
         binding.mimeType = mimeTypeFromExtension
         scope.launch {
             dataType.data.value = ContentInfoUtil().findMatch(fileInstance.getFileInputStream().buffered())

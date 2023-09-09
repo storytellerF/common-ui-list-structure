@@ -137,17 +137,21 @@ object FileInstanceFactory {
             LocalFileSystemPrefix.EmulatedRoot -> FakeLocalFileInstance(context, uri)
             LocalFileSystemPrefix.InstalledApps -> AppLocalFileInstance(context, uri)
             is LocalFileSystemPrefix.Mounted -> when {
-                //外接sd卡
+                // 外接sd卡
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> RegularLocalFileInstance(
-                    context, uri
+                    context,
+                    uri
                 )
 
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> DocumentLocalFileInstance.getMounted(
-                    context, uri, prefix.key
+                    context,
+                    uri,
+                    prefix.key
                 )
 
                 Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1 -> RegularLocalFileInstance(
-                    context, uri
+                    context,
+                    uri
                 )
 
                 else -> RegularLocalFileInstance(context, uri)
@@ -157,7 +161,9 @@ object FileInstanceFactory {
             LocalFileSystemPrefix.Root -> FakeLocalFileInstance(context, uri)
             LocalFileSystemPrefix.RootEmulated -> when (Build.VERSION.SDK_INT) {
                 Build.VERSION_CODES.Q -> DocumentLocalFileInstance.getEmulated(
-                    context, uri, prefix.key
+                    context,
+                    uri,
+                    prefix.key
                 )
 
                 else -> RegularLocalFileInstance(context, uri)
@@ -259,7 +265,8 @@ object FileInstanceFactory {
 
     @Throws(Exception::class)
     suspend fun toParent(
-        context: Context, fileInstance: FileInstance
+        context: Context,
+        fileInstance: FileInstance
     ): FileInstance {
         val parentPath = File(fileInstance.path).parent
         val parentUri = fileInstance.uri.buildUpon().path(parentPath).build()
@@ -284,27 +291,7 @@ object FileInstanceFactory {
         val nameStack = LinkedList<Char>()
         while (position < path.length) {
             val current = path[position++]
-            if (current == '/') {
-                if (stack.last != "/" || nameStack.size != 0) {
-                    val name = nameStack.joinToString("")
-                    nameStack.clear()
-                    when (name) {
-                        ".." -> {
-                            stack.removeLast()
-                            stack.removeLast()//弹出上一个 name
-                        }
-
-                        "." -> {
-                            //无效操作
-                        }
-
-                        else -> {
-                            stack.add(name)
-                            stack.add("/")
-                        }
-                    }
-                }
-            } else nameStack.add(current)
+            checkPath(current, stack, nameStack)
         }
         val s = nameStack.joinToString("")
         if (s.isNotEmpty()) {
@@ -317,5 +304,35 @@ object FileInstanceFactory {
         }
         if (stack.size > 1 && stack.last == "/") stack.removeLast()
         return stack.joinToString("")
+    }
+
+    private fun checkPath(
+        current: Char,
+        stack: LinkedList<String>,
+        nameStack: LinkedList<Char>
+    ) {
+        if (current == '/') {
+            if (stack.last != "/" || nameStack.size != 0) {
+                val name = nameStack.joinToString("")
+                nameStack.clear()
+                when (name) {
+                    ".." -> {
+                        stack.removeLast()
+                        stack.removeLast() // 弹出上一个 name
+                    }
+
+                    "." -> {
+                        // 无效操作
+                    }
+
+                    else -> {
+                        stack.add(name)
+                        stack.add("/")
+                    }
+                }
+            }
+        } else {
+            nameStack.add(current)
+        }
     }
 }

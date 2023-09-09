@@ -37,11 +37,14 @@ class FileSystemUriSaver {
         if (::saved.isInitialized) return
 
         val readText = context.file.readText()
-        saved = if (readText.isEmpty()) SavedUris(mutableMapOf()) else
+        saved = if (readText.isEmpty()) {
+            SavedUris(mutableMapOf())
+        } else {
             gson.fromJson(
                 readText,
                 SavedUris::class.java
             )
+        }
     }
 
     fun savedUri(context: Context, sharedPreferenceKey: String): Uri? {
@@ -56,7 +59,6 @@ class FileSystemUriSaver {
         val toJson = gson.toJson(saved)
         context.file.writeText(toJson)
     }
-
 
     fun savedUris(context: Context): Map<String, String> {
         restoreCheck(context)

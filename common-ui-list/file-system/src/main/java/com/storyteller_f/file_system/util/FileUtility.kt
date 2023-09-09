@@ -42,7 +42,14 @@ object FileUtility {
         val w = Files.isWritable(path)
         val e = Files.isExecutable(path)
         val r = Files.isReadable(path)
-        return String.format(Locale.CHINA, "%c%c%c%c", if (b) '-' else 'd', if (r) 'r' else '-', if (w) 'w' else '-', if (e) 'e' else '-')
+        return String.format(
+            Locale.CHINA,
+            "%c%c%c%c",
+            if (b) '-' else 'd',
+            if (r) 'r' else '-',
+            if (w) 'w' else '-',
+            if (e) 'e' else '-'
+        )
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -113,7 +120,10 @@ object FileUtility {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && prefix == FileInstanceFactory.rootUserEmulatedPath) {
-                val primary = DocumentsContract.buildRootUri(DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS, "primary")
+                val primary = DocumentsContract.buildRootUri(
+                    DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS,
+                    "primary"
+                )
                 intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, primary)
             }
             return intent
@@ -121,9 +131,9 @@ object FileUtility {
         return null
     }
 
-    fun getExtension(name: String?): String? {
+    fun getExtension(name: String): String? {
         val extension: String?
-        val index = name!!.lastIndexOf('.')
+        val index = name.lastIndexOf('.')
         extension = if (index != -1) {
             name.substring(index + 1)
         } else {
@@ -163,6 +173,13 @@ object FileUtility {
     }
 
     fun permissions(r: Boolean, w: Boolean, e: Boolean, isFile: Boolean): String {
-        return String.format(Locale.CHINA, "%c%c%c%c", if (isFile) '-' else 'd', if (r) 'r' else '-', if (w) 'w' else '-', if (e) 'e' else '-')
+        return String.format(
+            Locale.CHINA,
+            "%c%c%c%c",
+            if (isFile) '-' else 'd',
+            if (r) 'r' else '-',
+            if (w) 'w' else '-',
+            if (e) 'e' else '-'
+        )
     }
 }

@@ -18,7 +18,7 @@ class InsetLayout @JvmOverloads constructor(
 ) : FrameLayout(context, attributeSet, defStyleAttr) {
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        //保存view 原始padding margin
+        // 保存view 原始padding margin
         getInsetBlock()
     }
 }
@@ -61,15 +61,26 @@ fun View.inset(
 
 fun Int.insetBlock(v: Int) =
     Direction(
-        if (this and InsetBlockDirection.start == InsetBlockDirection.start)
+        if (this and InsetBlockDirection.start == InsetBlockDirection.start) {
             v
-        else 0, if (this and InsetBlockDirection.top == InsetBlockDirection.top)
+        } else {
+            0
+        },
+        if (this and InsetBlockDirection.top == InsetBlockDirection.top) {
             v
-        else 0, if (this and InsetBlockDirection.end == InsetBlockDirection.end)
+        } else {
+            0
+        },
+        if (this and InsetBlockDirection.end == InsetBlockDirection.end) {
             v
-        else 0, if (this and InsetBlockDirection.bottom == InsetBlockDirection.bottom)
+        } else {
+            0
+        },
+        if (this and InsetBlockDirection.bottom == InsetBlockDirection.bottom) {
             v
-        else 0
+        } else {
+            0
+        }
     )
 
 fun View.updatePadding(block: Direction) {
@@ -99,7 +110,8 @@ fun View.getInsetBlock() =
                     it
                 )
             }
-        })
+        }
+    )
 
 class Direction(val start: Int, val top: Int, val end: Int, val bottom: Int) {
     operator fun plus(r: Direction): Direction {
@@ -109,8 +121,10 @@ class Direction(val start: Int, val top: Int, val end: Int, val bottom: Int) {
     override fun toString(): String {
         return "Direction(start=$start, top=$top, end=$end, bottom=$bottom)"
     }
-
 }
 
-@IntDef(flag = true, value = [InsetBlockDirection.top, InsetBlockDirection.start, InsetBlockDirection.end, InsetBlockDirection.bottom])
+@IntDef(
+    flag = true,
+    value = [InsetBlockDirection.top, InsetBlockDirection.start, InsetBlockDirection.end, InsetBlockDirection.bottom]
+)
 internal annotation class InsetBlockFlag

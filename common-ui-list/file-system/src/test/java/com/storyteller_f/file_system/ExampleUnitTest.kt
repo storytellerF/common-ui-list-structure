@@ -1,6 +1,5 @@
 package com.storyteller_f.file_system
 
-import com.storyteller_f.multi_core.StoppableTask
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

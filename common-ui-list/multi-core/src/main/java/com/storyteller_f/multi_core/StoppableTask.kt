@@ -7,6 +7,5 @@ interface StoppableTask {
         override fun needStop(): Boolean {
             return false
         }
-
     }
 }

@@ -62,7 +62,7 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(val view: View) :
      */
     lateinit var grouped: String
 
-    //需要保证当前已经绑定过数据了
+    // 需要保证当前已经绑定过数据了
     val itemHolder get() = _itemHolder as IH
     fun onBind(itemHolder: IH) {
         this._itemHolder = itemHolder
@@ -85,7 +85,9 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(priv
         val viewHolder = if (viewType >= size) {
             val (variant, functionPosition) = secondList[viewType - size]
             list[functionPosition](parent, variant)
-        } else list[viewType](parent, "")
+        } else {
+            list[viewType](parent, "")
+        }
         return (viewHolder as VH).apply {
             grouped = group ?: "default"
         }
@@ -98,7 +100,9 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(priv
     protected open fun getItemAbstract(position: Int): IH? {
         return if (target is ListAdapter<*, *>) {
             (target as ListAdapter<IH, VH>).currentList[position] as IH
-        } else throw NotImplementedError("${target::class.java.canonicalName}无法获取对应item holder")
+        } else {
+            throw NotImplementedError("${target::class.java.canonicalName}无法获取对应item holder")
+        }
     }
 
     override fun getItemCount() = 0
@@ -118,8 +122,9 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(priv
                 secondList.add(secondRegisterKey.variant to functionPosition)
                 (secondList.size - 1) + list.size
             }
-        } else
+        } else {
             functionPosition
+        }
     }
 
     companion object {
@@ -145,5 +150,4 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(priv
                 oldItem.areContentsTheSame(newItem)
         }
     }
-
 }

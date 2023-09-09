@@ -29,7 +29,9 @@ class SimpleDetailViewModel<D : Any>(
                 val value = withContext(Dispatchers.IO) {
                     if (local != null) {
                         local() ?: producer()
-                    } else producer()
+                    } else {
+                        producer()
+                    }
                 }
                 content.value = value
                 loadState.value = LoadState.NotLoading(true)
@@ -49,7 +51,6 @@ class DetailProducer<D : Any>(
     val local: (suspend () -> D)? = null
 )
 
-
 fun <D : Any, T> T.detail(
     detailContent: DetailProducer<D>,
 ) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = vm({}) {
@@ -63,4 +64,3 @@ fun <D : Any, ARG, T> T.detail(
     arg: () -> ARG,
     detailContentProducer: (ARG) -> DetailProducer<D>,
 ) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = detail(detailContentProducer(arg()))
-

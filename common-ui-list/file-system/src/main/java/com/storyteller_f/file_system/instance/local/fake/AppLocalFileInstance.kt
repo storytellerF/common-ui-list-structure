@@ -11,7 +11,9 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import java.io.*
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 
 /**
  * 标识一个apk 文件
@@ -23,7 +25,8 @@ class AppLocalFileInstance(context: Context, uri: Uri) : BaseContextFileInstance
         TODO("Not yet implemented")
     }
 
-    private val publicSourceDir: String = context.packageManager.getApplicationInfoCompat(name, 0).publicSourceDir
+    private val publicSourceDir: String =
+        context.packageManager.getApplicationInfoCompat(name, 0).publicSourceDir
 
     override suspend fun getFileLength() = File(publicSourceDir).length()
 
@@ -31,7 +34,10 @@ class AppLocalFileInstance(context: Context, uri: Uri) : BaseContextFileInstance
 
     override suspend fun getFileOutputStream() = FileOutputStream(publicSourceDir)
 
-    override suspend fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
+    override suspend fun listInternal(
+        fileItems: MutableList<FileItemModel>,
+        directoryItems: MutableList<DirectoryItemModel>
+    ) {
         TODO("Not yet implemented")
     }
 
@@ -72,14 +78,15 @@ class AppLocalFileInstance(context: Context, uri: Uri) : BaseContextFileInstance
     override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         TODO("Not yet implemented")
     }
-
 }
 
 @Suppress("DEPRECATION")
 fun PackageManager.getApplicationInfoCompat(packageName: String, flag: Long): ApplicationInfo {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         getApplicationInfo(packageName, PackageManager.ApplicationInfoFlags.of(flag))
-    } else getApplicationInfo(packageName, flag.toInt())
+    } else {
+        getApplicationInfo(packageName, flag.toInt())
+    }
 }
 
 @SuppressLint("QueryPermissionsNeeded")
@@ -87,5 +94,7 @@ fun PackageManager.getApplicationInfoCompat(packageName: String, flag: Long): Ap
 fun PackageManager.getInstalledApplicationsCompat(flag: Long): MutableList<ApplicationInfo> {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         getInstalledApplications(PackageManager.ApplicationInfoFlags.of(flag))
-    } else getInstalledApplications(flag.toInt())
+    } else {
+        getInstalledApplications(flag.toInt())
+    }
 }

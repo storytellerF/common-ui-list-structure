@@ -48,7 +48,6 @@ object ObjectPool {
                 Record(isFullVersion, MutableLiveData(model), System.currentTimeMillis())
         } else {
             objMap[model.commonId()]?.let {
-
             }
         }
     }
@@ -87,9 +86,12 @@ object ObjectPool {
             return null
         }
         return objMap[model]?.let {
-            if (isFullVersion && !it.isFullVersion) null
-            else it.obj.map { any ->
-                any as? T
+            if (isFullVersion && !it.isFullVersion) {
+                null
+            } else {
+                it.obj.map { any ->
+                    any as? T
+                }
             }
         }
     }

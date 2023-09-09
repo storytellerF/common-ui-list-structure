@@ -38,9 +38,9 @@ class FragmentViewBindingDelegate<T : ViewBinding>(
             return binding
         }
         val lifecycle = fragment.viewLifecycleOwner.lifecycle
-        if (!lifecycle.currentState.isAtLeast(Lifecycle.State.INITIALIZED)) {
-            throw IllegalStateException("Should not attempt to get bindings when Fragment views are destroyed.")
-        }
+        check(
+            lifecycle.currentState.isAtLeast(Lifecycle.State.INITIALIZED)
+        ) { "Should not attempt to get bindings when Fragment views are destroyed." }
         return viewBindingFactory(thisRef.requireView()).also { this.binding = it }
     }
 }
@@ -61,7 +61,7 @@ inline fun <T : ViewBinding> AppCompatActivity.viewBinding(crossinline bindingIn
 inline fun <reified T> View.findActionReceiverOrNull(): T? {
     var fragment: Fragment? = try {
         findFragment(this)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         null
     }
     while (fragment != null) {

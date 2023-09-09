@@ -10,7 +10,10 @@ class UIListHolderZoom<T> {
     val longClickEventMapTemp = mutableMapOf<String?, Map<String, List<Event<T>>>>()
 
     fun debugState(): String {
-        return "click:${clickEventMapTemp.size} long:${longClickEventMapTemp.size} holder:${holderEntryTemp.size} package-set:${packagesTemp.size}"
+        return "click:${clickEventMapTemp.size} " +
+            "long:${longClickEventMapTemp.size} " +
+            "holder:${holderEntryTemp.size} " +
+            "package-set:${packagesTemp.size}"
     }
 
     fun addHolderEntry(list: List<Entry<T>>) {
@@ -57,7 +60,7 @@ class UIListHolderZoom<T> {
             val bindings = entry.viewHolders.values.map {
                 it.bindingFullName
             }.distinct().joinToString("\n") {
-                "import ${it};"
+                "import $it;"
             }
             val viewHolders = entry.viewHolders.values.joinToString("\n") {
                 "import ${it.viewHolderFullName};"
@@ -77,8 +80,7 @@ class UIListHolderZoom<T> {
 
     private fun receiverList(longClickEvent: Map<String?, Map<String, List<Event<T>>>>) =
         longClickEvent.flatMap { it.value.flatMap { entry -> entry.value } }
-            .map { it.receiverFullName }
-            .distinct()
+            .map { it.receiverFullName }.distinct()
 
     fun importReceiverClass(): String {
         val flatMap = receiverList(this.clickEventMapTemp)
@@ -89,7 +91,10 @@ class UIListHolderZoom<T> {
     }
 }
 
-inline fun <T, K1 : Any, K2 : Any, V> Iterable<T>.doubleLayerGroupBy(doubleKeySelector: (T) -> Pair<K1, K2>?, valueTransform: (T) -> V): Map<K1, Map<K2, List<V>>> {
+inline fun <T, K1 : Any, K2 : Any, V> Iterable<T>.doubleLayerGroupBy(
+    doubleKeySelector: (T) -> Pair<K1, K2>?,
+    valueTransform: (T) -> V
+): Map<K1, Map<K2, List<V>>> {
     val destination = mutableMapOf<K1, MutableMap<K2, MutableList<V>>>()
     for (element in this) {
         val key = doubleKeySelector(element)
@@ -100,12 +105,14 @@ inline fun <T, K1 : Any, K2 : Any, V> Iterable<T>.doubleLayerGroupBy(doubleKeySe
             }
             secondMap.add(valueTransform(element))
         }
-
     }
     return destination
 }
 
-inline fun <T, K1, K2, V> Sequence<T>.doubleLayerGroupBy(doubleKeySelector: (T) -> Pair<K1, K2>?, valueTransform: (T) -> V): Map<K1, Map<K2, List<V>>> {
+inline fun <T, K1, K2, V> Sequence<T>.doubleLayerGroupBy(
+    doubleKeySelector: (T) -> Pair<K1, K2>?,
+    valueTransform: (T) -> V
+): Map<K1, Map<K2, List<V>>> {
     val destination = mutableMapOf<K1, MutableMap<K2, MutableList<V>>>()
     for (element in this) {
         val key = doubleKeySelector(element)
@@ -116,7 +123,6 @@ inline fun <T, K1, K2, V> Sequence<T>.doubleLayerGroupBy(doubleKeySelector: (T) 
             }
             secondMap.add(valueTransform(element))
         }
-
     }
     return destination
 }

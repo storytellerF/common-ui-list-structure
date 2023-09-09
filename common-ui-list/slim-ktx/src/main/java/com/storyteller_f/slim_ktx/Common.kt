@@ -1,15 +1,14 @@
 package com.storyteller_f.slim_ktx
 
-
 /**
  * 添加intent，除了第一行
  */
-fun String.indentRest(indent: String = "    "): String = lineSequence().mapIndexed { index, it ->
+fun String.indentRest(indent: String = "    "): String = lineSequence().mapIndexed { index, element ->
     when {
-        index == 0 -> it
-        it.isNotBlank() -> indent + it
-        it.length < indent.length -> indent
-        else -> it
+        index == 0 -> element
+        element.isNotBlank() -> indent + element
+        element.length < indent.length -> indent
+        else -> element
     }
 }.joinToString("\n")
 

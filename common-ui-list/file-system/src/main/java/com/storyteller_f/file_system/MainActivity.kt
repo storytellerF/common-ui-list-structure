@@ -32,16 +32,17 @@ class MainActivity : AppCompatActivity() {
         const val REQUEST_CODE_EMULATED = 3
 
         fun Intent.putBundle(type: String, uri: Uri) {
-            putExtras(Bundle().apply {
-                putParcelable("path", uri)
-                putString("permission", type)
-            })
+            putExtras(
+                Bundle().apply {
+                    putParcelable("path", uri)
+                    putString("permission", type)
+                }
+            )
         }
 
         fun Intent.fromBundle() = extras!!.let {
             it.getString("permission")!! to it.getParcelableCompat("path", Uri::class.java)!!
         }
-
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,7 +51,9 @@ class MainActivity : AppCompatActivity() {
         val (code, uri) = intent.fromBundle()
         when (code) {
             REQUEST_EMULATED -> ActivityCompat.requestPermissions(
-                this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), REQUEST_CODE_EMULATED
+                this,
+                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                REQUEST_CODE_EMULATED
             )
 
             REQUEST_SAF_EMULATED -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -72,9 +75,13 @@ class MainActivity : AppCompatActivity() {
             ) { result: ActivityResult ->
                 if (result.resultCode == RESULT_OK) {
                     success()
-                } else failure()
+                } else {
+                    failure()
+                }
             }.launch(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
-        } else throw Exception("错误使用request manage！")
+        } else {
+            throw Exception("错误使用request manage！")
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -119,11 +126,14 @@ class MainActivity : AppCompatActivity() {
                     it,
                     DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS
                 )
-            ) return@registerForActivityResult
+            ) {
+                return@registerForActivityResult
+            }
             failure()
         }.launch(
             FileUtility.produceSafRequestIntent(
-                this, prefix.key
+                this,
+                prefix.key
             )
         )
     }
@@ -140,7 +150,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<String?>, grantResults: IntArray
+        requestCode: Int,
+        permissions: Array<String?>,
+        grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_EMULATED) {

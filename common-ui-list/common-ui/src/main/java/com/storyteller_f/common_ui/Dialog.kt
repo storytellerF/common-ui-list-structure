@@ -48,7 +48,6 @@ abstract class SimpleDialogFragment<T : ViewBinding>(
     }
 }
 
-
 class WaitingDialog : DialogFragment(R.layout.dialog_waiting) {
     lateinit var deferred: CompletableDeferred<Unit>
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,7 +68,6 @@ fun LifecycleOwner.waitingDialog(): CompletableDeferred<Unit> {
     }.show(fm, "waiting")
     return deferred
 }
-
 
 fun LifecycleOwner.waitingDialog(block: suspend () -> Unit) {
     scope.launch {

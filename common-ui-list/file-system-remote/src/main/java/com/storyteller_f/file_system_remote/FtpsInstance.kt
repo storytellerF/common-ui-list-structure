@@ -69,8 +69,10 @@ class FtpsFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
         TODO("Not yet implemented")
     }
 
-    override suspend fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
-
+    override suspend fun listInternal(
+        fileItems: MutableList<FileItemModel>,
+        directoryItems: MutableList<DirectoryItemModel>
+    ) {
         val listFiles = getInstance()?.listFiles(path)
         listFiles?.forEach {
             val name = it.name
@@ -78,13 +80,28 @@ class FtpsFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
             val lastModifiedTime = it.timestamp.timeInMillis
             val permission = it.getPermissions()
             if (it.isFile) {
-                fileItems.add(FileItemModel(name, child, false, lastModifiedTime, it.isSymbolicLink, file.extension).apply {
+                fileItems.add(FileItemModel(
+                    name,
+                    child,
+                    false,
+                    lastModifiedTime,
+                    it.isSymbolicLink,
+                    file.extension
+                ).apply {
                     permissions = permission
                 })
             } else if (it.isDirectory) {
-                directoryItems.add(DirectoryItemModel(name, child, false, lastModifiedTime, it.isSymbolicLink).apply {
-                    permissions = permission
-                })
+                directoryItems.add(
+                    DirectoryItemModel(
+                        name,
+                        child,
+                        false,
+                        lastModifiedTime,
+                        it.isSymbolicLink
+                    ).apply {
+                        permissions = permission
+                    }
+                )
             }
         }
     }
@@ -148,7 +165,6 @@ class FtpsFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
     override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         TODO("Not yet implemented")
     }
-
 }
 
 class FtpsInstance(private val spec: RemoteSpec) {
@@ -202,12 +218,15 @@ class FtpsInstance(private val spec: RemoteSpec) {
     }
 
     fun connectIfNeed(): Boolean {
-        return if (ftps.isAvailable) true
-        else try {
-            open()
-        } catch (e: Exception) {
-            Log.e(TAG, "connectIfNeed: ", e)
-            false
+        return if (ftps.isAvailable) {
+            true
+        } else {
+            try {
+                open()
+            } catch (e: Exception) {
+                Log.e(TAG, "connectIfNeed: ", e)
+                false
+            }
         }
     }
 

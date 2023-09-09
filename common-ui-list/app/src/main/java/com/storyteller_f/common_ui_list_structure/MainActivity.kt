@@ -93,21 +93,44 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding.content.sourceUp(adapter, this)
         val dp24 = 24.dipToInt
-        binding.content.setupClickSelectableSupport(editing, owner, object : ListWithState.SelectableDrawer {
-            override fun width(view: View, parent: RecyclerView, state: RecyclerView.State, childAdapterPosition: Int, absoluteAdapterPosition: DataItemHolder): Int {
-                return dp24 * 3
-            }
+        binding.content.setupClickSelectableSupport(
+            editing,
+            owner,
+            object : ListWithState.SelectableDrawer {
+                override fun width(
+                    view: View,
+                    parent: RecyclerView,
+                    state: RecyclerView.State,
+                    childAdapterPosition: Int,
+                    absoluteAdapterPosition: DataItemHolder
+                ): Int {
+                    return dp24 * 3
+                }
 
-            override fun draw(c: Canvas, top: Int, bottom: Int, childWidth: Int, childHeight: Int, parentWidth: Int, parentHeight: Int, child: View, parent: RecyclerView, state: RecyclerView.State) {
-                val offset = (childHeight - dp24) / 2
-                val t = top + offset
-                ContextCompat.getDrawable(this@MainActivity, R.drawable.ic_baseline_radio_button_unchecked_24)?.run {
-                    setBounds(parentWidth - dp24 * 2, t, (parentWidth - dp24), t + dp24)
-                    draw(c)
+                override fun draw(
+                    c: Canvas,
+                    top: Int,
+                    bottom: Int,
+                    childWidth: Int,
+                    childHeight: Int,
+                    parentWidth: Int,
+                    parentHeight: Int,
+                    child: View,
+                    parent: RecyclerView,
+                    state: RecyclerView.State
+                ) {
+                    val offset = (childHeight - dp24) / 2
+                    val t = top + offset
+                    ContextCompat.getDrawable(
+                        this@MainActivity,
+                        R.drawable.ic_baseline_radio_button_unchecked_24
+                    )?.run {
+                        setBounds(parentWidth - dp24 * 2, t, (parentWidth - dp24), t + dp24)
+                        draw(c)
+                    }
                 }
             }
-
-        })
+        )
         supportNavigatorBarImmersive(binding.root)
         repeatOnViewResumed {
             viewModel.content.collectLatest {
@@ -128,7 +151,12 @@ class MainActivity : AppCompatActivity() {
                 ButtonGroup({
                     startActivity(Intent(this@MainActivity, TestViewModelActivity::class.java))
                 }) {
-                    startActivity(Intent(this@MainActivity, TestNavigationResultActivity::class.java))
+                    startActivity(
+                        Intent(
+                            this@MainActivity,
+                            TestNavigationResultActivity::class.java
+                        )
+                    )
                 }
             }
         }
@@ -210,7 +238,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
 }
 
 class RepoItemHolder(val repo: Repo) : DataItemHolder {
@@ -248,9 +275,7 @@ class RepoViewHolder(private val binding: RepoViewItemBinding) :
         }
         binding.repoLanguage.visibility = languageVisibility
     }
-
 }
-
 
 class SeparatorItemHolder(val info: String) : DataItemHolder {
     override fun areItemsTheSame(other: DataItemHolder): Boolean {
@@ -271,10 +296,7 @@ class SeparatorItemHolder(val info: String) : DataItemHolder {
     override fun hashCode(): Int {
         return info.hashCode()
     }
-
-
 }
-
 
 @BindItemHolder(SeparatorItemHolder::class)
 class SeparatorViewHolder(edComposeView: EDComposeView) :
@@ -284,7 +306,6 @@ class SeparatorViewHolder(edComposeView: EDComposeView) :
             Separator(itemHolder, edComposeView)
         }
     }
-
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -294,15 +315,18 @@ private fun Separator(
     @PreviewParameter(RepoSeparatorProvider::class) itemHolder: SeparatorItemHolder,
     edComposeView: EdComposeViewEventEmitter = EdComposeViewEventEmitter.default
 ) {
-    Card(backgroundColor = colorResource(id = R.color.separatorBackground),
+    Card(
+        backgroundColor = colorResource(id = R.color.separatorBackground),
         modifier = Modifier
             .combinedClickable(
                 onClick = { edComposeView.notifyClickEvent("card") },
                 onLongClick = { edComposeView.notifyLongClickEvent("card") }
             )
-            .fillMaxWidth()) {
+            .fillMaxWidth()
+    ) {
         Text(
-            text = itemHolder.info, modifier = Modifier.padding(12.dp),
+            text = itemHolder.info,
+            modifier = Modifier.padding(12.dp),
             color = colorResource(
                 id = R.color.separatorText
             ),
@@ -316,7 +340,6 @@ class RepoSeparatorProvider : PreviewParameterProvider<SeparatorItemHolder> {
         get() = sequence {
             yield(SeparatorItemHolder("90.000+ starts"))
         }
-
 }
 
 private val RepoItemHolder.roundedStarCount: Int

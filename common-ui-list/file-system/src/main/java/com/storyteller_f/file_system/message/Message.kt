@@ -26,5 +26,4 @@ class Message(val name: String) {
     fun get(): String {
         return content.toString()
     }
-
 }

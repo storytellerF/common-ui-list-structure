@@ -39,13 +39,13 @@ class HttpFileInstance(uri: Uri, context: Context) : BaseContextFileInstance(con
                 throw Exception("$uri code is ${execute.code}")
             } else {
                 val body = execute.body
-                if (body == null) throw Exception("$uri body is empty")
-                else {
+                if (body == null) {
+                    throw Exception("$uri body is empty")
+                } else {
                     val file = createFile(execute)
                     writeStream(body, file)
                     return file
                 }
-
             }
         }
     }
@@ -146,5 +146,4 @@ class HttpFileInstance(uri: Uri, context: Context) : BaseContextFileInstance(con
     override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         TODO("Not yet implemented")
     }
-
 }

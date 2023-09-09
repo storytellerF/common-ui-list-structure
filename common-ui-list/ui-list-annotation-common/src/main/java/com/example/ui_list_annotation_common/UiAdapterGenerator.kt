@@ -19,10 +19,9 @@ class KotlinGenerator : UiAdapterGenerator() {
     override fun buildAddFunction(entry: List<Entry<Element>>): String {
         TODO("Not yet implemented")
     }
-
 }
 
-class JavaGenerator: UiAdapterGenerator() {
+class JavaGenerator : UiAdapterGenerator() {
     override fun buildAddFunction(entry: List<Entry<Element>>): String {
         var index = 0
         val addFunctions = entry.joinToString("\n") {
@@ -38,6 +37,5 @@ class JavaGenerator: UiAdapterGenerator() {
     private fun buildRegisterBlock(it: Entry<Element>, index: Int) = """
                 getRegisterCenter().put(${it.itemHolderName}.class, $index + offset);
                 getList().add($className::buildFor${it.itemHolderName});
-            """.trimIndent()
-
+    """.trimIndent()
 }

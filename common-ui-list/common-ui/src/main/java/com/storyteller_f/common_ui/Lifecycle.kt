@@ -11,14 +11,12 @@ import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-
 val LifecycleOwner.scope
     get() = owner.lifecycleScope
 
 val LifecycleOwner.cycle
     @SuppressLint("RestrictedApi")
     get() = owner.lifecycle
-
 
 fun LifecycleOwner.repeatOnViewResumed(block: suspend CoroutineScope.() -> Unit) {
     scope.launch {

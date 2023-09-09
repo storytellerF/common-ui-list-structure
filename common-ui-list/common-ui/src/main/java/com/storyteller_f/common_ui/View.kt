@@ -42,14 +42,17 @@ fun View.updateMargin(rect: Direction) {
 
 fun <T : View> T.setVisible(visible: Boolean, block: (T) -> Unit) {
     isVisible = visible
-    if (visible)
+    if (visible) {
         block(this)
+    }
 }
 
 inline fun <T : View, reified V> T.setVisible(obj: Any, visible: (V) -> Boolean, block: (T, V) -> Unit) {
     val b = if (obj is V) {
         visible(obj)
-    } else false
+    } else {
+        false
+    }
     isVisible = b
     if (b) block(this, obj as V)
 }

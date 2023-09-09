@@ -18,7 +18,5 @@ class UpwardLayout @JvmOverloads constructor(
             minimumHeight = maxOf
             invalidate()
         }
-
-
     }
 }

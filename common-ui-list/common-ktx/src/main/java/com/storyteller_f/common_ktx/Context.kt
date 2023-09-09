@@ -7,13 +7,9 @@ import androidx.lifecycle.LifecycleOwner
 
 fun <T> LifecycleOwner.context(function: Context.() -> T) = (
     when (this) {
-        is ComponentActivity -> {
-            this
-        }
-        is Fragment -> {
-            requireContext()
-        }
-        else -> throw Exception("context is null")
+        is ComponentActivity -> this
+        is Fragment -> requireContext()
+        else -> throw UnsupportedOperationException("context is null")
     }
     ).run(function)
 
@@ -21,5 +17,5 @@ val LifecycleOwner.ctx
     get() = when (this) {
         is ComponentActivity -> this
         is Fragment -> requireContext()
-        else -> throw Exception("unknown type $this")
+        else -> throw UnsupportedOperationException("unknown type $this")
     }

@@ -60,7 +60,6 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
         requestNextPage()
     }
 
-
     suspend fun retry() {
         requestNextPage()
     }
@@ -111,7 +110,6 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
         Collections.swap(inMemoryCache, from, to)
     }
 }
-
 
 /**
  * 与 SimpleSourceViewModel 类似，不过支持排序
@@ -169,12 +167,10 @@ class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey
     }
 }
 
-
 class DataProducer<RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder>(
     val service: suspend (Int, Int) -> CommonResponse<D, RK>,
     val processFactory: (D, D?) -> Holder,
 )
-
 
 fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, T> T.data(
     dataContent: DataProducer<RK, D, Holder>,
@@ -182,7 +178,8 @@ fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, T> T.data(
     SimpleDataViewModel(
         SimpleDataRepository(
             dataContent.service,
-        ), dataContent.processFactory
+        ),
+        dataContent.processFactory
     )
 }
 
@@ -190,4 +187,3 @@ fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, ARG, T> T.data(
     arg: () -> ARG,
     dataContentProducer: (ARG) -> DataProducer<RK, D, Holder>,
 ) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = data(dataContentProducer(arg()))
-

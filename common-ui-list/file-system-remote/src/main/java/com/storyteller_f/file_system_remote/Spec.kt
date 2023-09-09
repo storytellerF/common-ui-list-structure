@@ -3,7 +3,14 @@ package com.storyteller_f.file_system_remote
 import android.net.Uri
 import com.storyteller_f.file_system.instance.FileInstance
 
-data class ShareSpec(val server: String, val port: Int, val user: String, val password: String, val type: String, val share: String) {
+data class ShareSpec(
+    val server: String,
+    val port: Int,
+    val user: String,
+    val password: String,
+    val type: String,
+    val share: String
+) {
     fun toUri(): Uri {
         return Uri.parse("$type://$user:$password@$server:$port:$share")!!
     }
@@ -20,11 +27,16 @@ data class ShareSpec(val server: String, val port: Int, val user: String, val pa
             val (loc, port, share) = split.last().split(":")
             return ShareSpec(loc, port.toInt(), user, pass, parse.scheme!!, share)
         }
-
     }
 }
 
-data class RemoteSpec(val server: String, val port: Int, val user: String, val password: String, val type: String) {
+data class RemoteSpec(
+    val server: String,
+    val port: Int,
+    val user: String,
+    val password: String,
+    val type: String
+) {
     fun toUri(): Uri {
         val scheme = type
         return Uri.parse("$scheme://$user:$password@$server:$port/")!!
@@ -43,7 +55,6 @@ data class RemoteSpec(val server: String, val port: Int, val user: String, val p
             val (loc, port) = split.last().split(":")
             return RemoteSpec(loc, port.toInt(), user, pass, type = scheme)
         }
-
     }
 }
 
@@ -56,7 +67,6 @@ fun getRemoteInstance(uri: Uri): FileInstance {
         "sftp" -> SFtpFileInstance(RemoteSpec.parse(uri), uri)
         "ftpes", "ftps" -> FtpsFileInstance(RemoteSpec.parse(uri), uri)
         "webdav" -> WebDavFileInstance(ShareSpec.parse(uri), uri)
-        else -> throw Exception()
+        else -> throw Exception(uri.scheme)
     }
-
 }

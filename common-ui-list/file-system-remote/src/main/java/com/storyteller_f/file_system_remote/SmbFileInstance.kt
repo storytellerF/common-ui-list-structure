@@ -79,7 +79,10 @@ class SmbFileInstance(private val shareSpec: ShareSpec, uri: Uri) : FileInstance
         TODO("Not yet implemented")
     }
 
-    override suspend fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
+    override suspend fun listInternal(
+        fileItems: MutableList<FileItemModel>,
+        directoryItems: MutableList<DirectoryItemModel>
+    ) {
         val (share, _) = reconnectIfNeed()
         share.list(path).filter {
             it.fileName != "." && it.fileName != ".."
@@ -88,9 +91,26 @@ class SmbFileInstance(private val shareSpec: ShareSpec, uri: Uri) : FileInstance
             val fileInformation = share.getFileInformation(file.absolutePath)
             val lastModifiedTime = fileInformation.basicInformation.changeTime.windowsTimeStamp
             if (fileInformation.standardInformation.isDirectory) {
-                directoryItems.add(DirectoryItemModel(it.fileName, child, false, lastModifiedTime, false))
+                directoryItems.add(
+                    DirectoryItemModel(
+                        it.fileName,
+                        child,
+                        false,
+                        lastModifiedTime,
+                        false
+                    )
+                )
             } else {
-                fileItems.add(FileItemModel(it.fileName, child, false, lastModifiedTime, false, file.extension))
+                fileItems.add(
+                    FileItemModel(
+                        it.fileName,
+                        child,
+                        false,
+                        lastModifiedTime,
+                        false,
+                        file.extension
+                    )
+                )
             }
         }
     }
@@ -139,5 +159,4 @@ class SmbFileInstance(private val shareSpec: ShareSpec, uri: Uri) : FileInstance
     override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         TODO("Not yet implemented")
     }
-
 }

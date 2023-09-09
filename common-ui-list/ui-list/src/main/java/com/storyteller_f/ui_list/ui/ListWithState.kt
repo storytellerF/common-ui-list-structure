@@ -87,8 +87,13 @@ class ListWithState @JvmOverloads constructor(
         flash: (CombinedLoadStates, Int) -> UIState = Companion::simple,
     ) {
         setAdapter(
-            adapter.withLoadStateHeaderAndFooter(header = SimpleLoadStateAdapter { adapter.retry() },
-                footer = SimpleLoadStateAdapter { adapter.retry() }), adapter, refresh, plugLayoutManager
+            adapter.withLoadStateHeaderAndFooter(
+                header = SimpleLoadStateAdapter { adapter.retry() },
+                footer = SimpleLoadStateAdapter { adapter.retry() }
+            ),
+            adapter,
+            refresh,
+            plugLayoutManager
         )
         val callbackFlow = callbackFlow {
             val listener: (CombinedLoadStates) -> Unit = {
@@ -104,7 +109,11 @@ class ListWithState @JvmOverloads constructor(
                     callbackFlow.map {
                         Log.d(TAG, "sourceUp: ${it.debugEmoji()}")
                         flash(it, adapter.itemCount)
-                    }.stateIn(lifecycleOwner.lifecycleScope, SharingStarted.WhileSubscribed(), UIState.empty).collectLatest {
+                    }.stateIn(
+                        lifecycleOwner.lifecycleScope,
+                        SharingStarted.WhileSubscribed(),
+                        UIState.empty
+                    ).collectLatest {
                         flash(it)
                     }
                 }
@@ -147,7 +156,11 @@ class ListWithState @JvmOverloads constructor(
         setupSwapSupport(adapter)
     }
 
-    fun manualUp(adapter: ManualAdapter<*, *>, dampingSwipe: ((RecyclerView.ViewHolder, Int) -> Unit)? = null, refresh: (() -> Unit)? = null) {
+    fun manualUp(
+        adapter: ManualAdapter<*, *>,
+        dampingSwipe: ((RecyclerView.ViewHolder, Int) -> Unit)? = null,
+        refresh: (() -> Unit)? = null
+    ) {
         recyclerView.adapter = adapter
         setupLinearLayoutManager()
         if (dampingSwipe != null) setupDampingSwipeSupport(dampingSwipe)
@@ -160,6 +173,7 @@ class ListWithState @JvmOverloads constructor(
         }
     }
 
+    @Suppress("UnusedPrivateMember")
     private fun CoroutineScope.autoScrollToTop(
         callbackFlow: Flow<CombinedLoadStates>,
         lifecycleOwner: LifecycleOwner
@@ -201,12 +215,10 @@ class ListWithState @JvmOverloads constructor(
                 super.onSelectedChanged(viewHolder, actionState)
                 binding.refreshLayout.isEnabled = viewHolder == null
             }
-
         }).attachToRecyclerView(binding.list)
     }
 
     private fun setupDampingSwipeSupport(block: (AbstractViewHolder<out DataItemHolder>, Int) -> Unit) {
-
         ItemTouchHelper(object :
             ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.START or ItemTouchHelper.END) {
             private var swipeEvent = false
@@ -214,7 +226,6 @@ class ListWithState @JvmOverloads constructor(
             override fun getSwipeEscapeVelocity(defaultValue: Float) = 1000000F
 
             override fun getSwipeThreshold(viewHolder: RecyclerView.ViewHolder) = 10F
-
 
             override fun onMove(
                 recyclerView: RecyclerView,
@@ -229,8 +240,15 @@ class ListWithState @JvmOverloads constructor(
                 binding.refreshLayout.isEnabled = viewHolder == null
             }
 
-
-            override fun onChildDraw(c: Canvas, recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean) {
+            override fun onChildDraw(
+                c: Canvas,
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                dX: Float,
+                dY: Float,
+                actionState: Int,
+                isCurrentlyActive: Boolean
+            ) {
                 if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
                     val firstLine = 200
                     val secondLine = firstLine + 100
@@ -241,55 +259,98 @@ class ListWithState @JvmOverloads constructor(
                             if (swipeEvent) {
                                 swipeEvent = false
                             }
-                            super.onChildDraw(c, recyclerView, viewHolder, dX / 2, dY, actionState, isCurrentlyActive)
+                            super.onChildDraw(
+                                c,
+                                recyclerView,
+                                viewHolder,
+                                dX / 2,
+                                dY,
+                                actionState,
+                                isCurrentlyActive
+                            )
                         }
 
                         dx < secondLine -> {
                             val firstMax = firstLine / 2
                             val x = firstMax + (dx - firstLine) / 4
-                            super.onChildDraw(c, recyclerView, viewHolder, if (isRight) x else -x, dY, actionState, isCurrentlyActive)
+                            super.onChildDraw(
+                                c,
+                                recyclerView,
+                                viewHolder,
+                                if (isRight) x else -x,
+                                dY,
+                                actionState,
+                                isCurrentlyActive
+                            )
                         }
 
                         dx >= secondLine -> {
                             if (!swipeEvent) {
-                                block(viewHolder as AbstractViewHolder<out DataItemHolder>, if (isRight) ItemTouchHelper.RIGHT else ItemTouchHelper.LEFT)
+                                block(
+                                    viewHolder as AbstractViewHolder<out DataItemHolder>,
+                                    if (isRight) ItemTouchHelper.RIGHT else ItemTouchHelper.LEFT
+                                )
                                 swipeEvent = true
                             }
                         }
                     }
                 }
             }
-
         }).attachToRecyclerView(binding.list)
     }
 
-    fun setupClickSelectableSupport(editing: MutableLiveData<Boolean>, lifecycleOwner: LifecycleOwner, selectableDrawer: SelectableDrawer) {
+    fun setupClickSelectableSupport(
+        editing: MutableLiveData<Boolean>,
+        lifecycleOwner: LifecycleOwner,
+        selectableDrawer: SelectableDrawer
+    ) {
         editing.observe(lifecycleOwner) {
             val adapter = binding.list.adapter
             binding.list.adapter = adapter
         }
         val value = object : RecyclerView.ItemDecoration() {
-            override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
+            override fun getItemOffsets(
+                outRect: Rect,
+                view: View,
+                parent: RecyclerView,
+                state: RecyclerView.State
+            ) {
                 super.getItemOffsets(outRect, view, parent, state)
                 if (editing.value == true) {
                     val childAdapterPosition = parent.getChildAdapterPosition(view)
                     val childViewHolder = parent.getChildViewHolder(view)
-                    val absoluteAdapterPosition = (childViewHolder as AbstractViewHolder<*>).itemHolder
-                    outRect.right = selectableDrawer.width(view, parent, state, childAdapterPosition, absoluteAdapterPosition)
-                } else outRect.right = 0
+                    val absoluteAdapterPosition =
+                        (childViewHolder as AbstractViewHolder<*>).itemHolder
+                    outRect.right = selectableDrawer.width(
+                        view, parent, state, childAdapterPosition, absoluteAdapterPosition
+                    )
+                } else {
+                    outRect.right = 0
+                }
             }
 
             override fun onDraw(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
                 super.onDraw(c, parent, state)
-                if (editing.value == true)
+                if (editing.value == true) {
                     for (i in 0 until parent.childCount) {
                         val child = parent.getChildAt(i)
                         val top = child.top
                         val bottom = child.bottom
-                        selectableDrawer.draw(c, top, bottom, child.width, child.height, parent.width, parent.height, child, parent, state)
+                        selectableDrawer.draw(
+                            c,
+                            top,
+                            bottom,
+                            child.width,
+                            child.height,
+                            parent.width,
+                            parent.height,
+                            child,
+                            parent,
+                            state
+                        )
                     }
+                }
             }
-
         }
         binding.list.addItemDecoration(value)
     }
@@ -305,8 +366,9 @@ class ListWithState @JvmOverloads constructor(
         refresh: () -> Unit,
         plugLayoutManager: Boolean = true,
     ) {
-        if (plugLayoutManager)
+        if (plugLayoutManager) {
             setupLinearLayoutManager()
+        }
         binding.list.adapter = concatAdapter
         setupRefresh(adapter, refresh)
     }
@@ -333,10 +395,30 @@ class ListWithState @JvmOverloads constructor(
         val showErrorPage get() = retry || error != null
 
         companion object {
-            val data = UIState(retry = false, data = true, empty = false, progress = false, error = null, refresh = false)
-            val empty = UIState(retry = false, data = false, empty = false, progress = false, error = null, refresh = null)
-            val loading = UIState(retry = false, data = false, empty = false, progress = true, error = null, refresh = null)
-
+            val data = UIState(
+                retry = false,
+                data = true,
+                empty = false,
+                progress = false,
+                error = null,
+                refresh = false
+            )
+            val empty = UIState(
+                retry = false,
+                data = false,
+                empty = false,
+                progress = false,
+                error = null,
+                refresh = null
+            )
+            val loading = UIState(
+                retry = false,
+                data = false,
+                empty = false,
+                progress = true,
+                error = null,
+                refresh = null
+            )
         }
     }
 
@@ -348,8 +430,7 @@ class ListWithState @JvmOverloads constructor(
             val refresh = if (loadState.mediator?.refresh !is LoadState.Loading) false else null
             val error = loadState.source.append as? LoadState.Error
                 ?: loadState.source.prepend as? LoadState.Error
-                ?: loadState.append as? LoadState.Error
-                ?: loadState.prepend as? LoadState.Error
+                ?: loadState.append as? LoadState.Error ?: loadState.prepend as? LoadState.Error
                 ?: loadState.mediator?.append as? LoadState.Error
                 ?: loadState.mediator?.prepend as? LoadState.Error
                 ?: loadState.mediator?.refresh as? LoadState.Error
@@ -361,7 +442,8 @@ class ListWithState @JvmOverloads constructor(
                 loadState.mediator?.refresh.isNotLoading && itemCount > 0,
                 loadState.mediator?.refresh.isNotLoading && itemCount == 0,
                 loadState.mediator?.refresh.isLoading,
-                errorSpannable, refresh
+                errorSpannable,
+                refresh
             )
         }
 
@@ -373,8 +455,7 @@ class ListWithState @JvmOverloads constructor(
             val error = loadState.source.append as? LoadState.Error
                 ?: loadState.source.refresh as? LoadState.Error
                 ?: loadState.source.prepend as? LoadState.Error
-                ?: loadState.append as? LoadState.Error
-                ?: loadState.prepend as? LoadState.Error
+                ?: loadState.append as? LoadState.Error ?: loadState.prepend as? LoadState.Error
                 ?: loadState.mediator?.append as? LoadState.Error
                 ?: loadState.mediator?.prepend as? LoadState.Error
                 ?: loadState.mediator?.refresh as? LoadState.Error
@@ -386,7 +467,8 @@ class ListWithState @JvmOverloads constructor(
                 loadState.source.refresh.isNotLoading && itemCount > 0,
                 loadState.source.refresh.isNotLoading && itemCount == 0,
                 loadState.source.refresh.isLoading,
-                errorSpannable, refresh
+                errorSpannable,
+                refresh
             )
         }
 
@@ -403,12 +485,29 @@ class ListWithState @JvmOverloads constructor(
         }
 
         private const val TAG = "ListWithState"
-
     }
 
     interface SelectableDrawer {
-        fun width(view: View, parent: RecyclerView, state: RecyclerView.State, childAdapterPosition: Int, absoluteAdapterPosition: DataItemHolder): Int
-        fun draw(c: Canvas, top: Int, bottom: Int, childWidth: Int, childHeight: Int, parentWidth: Int, parentHeight: Int, child: View, parent: RecyclerView, state: RecyclerView.State)
+        fun width(
+            view: View,
+            parent: RecyclerView,
+            state: RecyclerView.State,
+            childAdapterPosition: Int,
+            absoluteAdapterPosition: DataItemHolder
+        ): Int
+
+        fun draw(
+            c: Canvas,
+            top: Int,
+            bottom: Int,
+            childWidth: Int,
+            childHeight: Int,
+            parentWidth: Int,
+            parentHeight: Int,
+            child: View,
+            parent: RecyclerView,
+            state: RecyclerView.State
+        )
     }
 }
 
@@ -418,15 +517,22 @@ fun LoadState.debugEmoji() = when (this) {
     is LoadState.Error -> "❌"
 }
 
-fun LoadStates?.debugEmoji() = if (this == null) "\uD83D\uDD72" else "${prepend.debugEmoji()} ${refresh.debugEmoji()} ${append.debugEmoji()}"
+fun LoadStates?.debugEmoji() =
+    if (this == null) "\uD83D\uDD72" else "${prepend.debugEmoji()} ${refresh.debugEmoji()} ${append.debugEmoji()}"
 
 fun CombinedLoadStates.debugEmoji() =
-    "source: ${source.debugEmoji()}  mediator: ${mediator.debugEmoji()} prepend: ${prepend.debugEmoji()} refresh: ${refresh.debugEmoji()} append: ${append.debugEmoji()}"
+    "source: ${source.debugEmoji()}  " +
+        "mediator: ${mediator.debugEmoji()} " +
+        "prepend: ${prepend.debugEmoji()} " +
+        "refresh: ${refresh.debugEmoji()} " +
+        "append: ${append.debugEmoji()}"
 
 /**
  * 反选。pair 的first 作为key。
  */
-fun List<Pair<DataItemHolder, Int>>?.toggle(pair: Pair<DataItemHolder, Int>): Pair<List<Pair<DataItemHolder, Int>>, Boolean> {
+fun List<Pair<DataItemHolder, Int>>?.toggle(
+    pair: Pair<DataItemHolder, Int>
+): Pair<List<Pair<DataItemHolder, Int>>, Boolean> {
     val oldSelectedHolders = this ?: mutableListOf()
     val otherHolders = oldSelectedHolders.filter {
         !it.first.areItemsTheSame(pair.first)

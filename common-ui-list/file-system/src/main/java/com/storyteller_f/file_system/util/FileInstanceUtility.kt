@@ -66,7 +66,11 @@ object FileInstanceUtility {
     /**
      * 添加普通目录，判断过滤监听事件
      */
-    fun addDirectory(directories: MutableCollection<DirectoryItemModel>, uriPair: Pair<File?, Uri?>?, permissions: String?): FileSystemItemModel? {
+    fun addDirectory(
+        directories: MutableCollection<DirectoryItemModel>,
+        uriPair: Pair<File?, Uri?>?,
+        permissions: String?
+    ): FileSystemItemModel? {
         val childDirectory = uriPair!!.first
         val hidden = childDirectory!!.isHidden
         val name = childDirectory.name
@@ -77,7 +81,11 @@ object FileInstanceUtility {
     /**
      * 添加普通目录，判断过滤监听事件
      */
-    fun addFile(directories: MutableCollection<FileItemModel>, uriPair: Pair<File?, Uri?>?, permissions: String?): FileSystemItemModel? {
+    fun addFile(
+        directories: MutableCollection<FileItemModel>,
+        uriPair: Pair<File?, Uri?>?,
+        permissions: String?
+    ): FileSystemItemModel? {
         val childFile = uriPair!!.first
         val hidden = childFile!!.isHidden
         val name = childFile.name

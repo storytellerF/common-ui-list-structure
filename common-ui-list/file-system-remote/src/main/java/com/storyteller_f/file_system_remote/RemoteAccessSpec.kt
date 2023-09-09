@@ -20,14 +20,13 @@ object RemoteAccessType {
     val list = listOf("", smb, sftp, ftp, ftpes, ftps, webDav)
 }
 
-
 @Entity(tableName = "remote-access", primaryKeys = ["server", "port", "user", "password", "share"])
 class RemoteAccessSpec(
     val server: String = "",
     val port: Int = 0,
     val user: String = "",
     val password: String = "",
-    @ColumnInfo(defaultValue = "") val share: String = "",//smb 专用
+    @ColumnInfo(defaultValue = "") val share: String = "", // smb 专用
     @ColumnInfo(defaultValue = RemoteAccessType.ftp) val type: String
 ) {
     fun toFtpSpec(): RemoteSpec {
@@ -37,7 +36,6 @@ class RemoteAccessSpec(
     fun toShareSpec(): ShareSpec {
         return ShareSpec(server, port, user, password, type, share)
     }
-
 }
 
 @Dao

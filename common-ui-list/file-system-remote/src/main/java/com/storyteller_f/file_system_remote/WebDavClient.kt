@@ -50,7 +50,7 @@ class WebDavClient(private val baseUrl: String, user: String, password: String) 
         }
     }
 
-
+    @Suppress("NestedBlockDepth")
     private fun parseWebDAVResponse(responseBody: String): MutableList<WebDavDatum> {
         val resultList = mutableListOf<WebDavDatum>()
         val factory = XmlPullParserFactory.newInstance()
@@ -64,37 +64,10 @@ class WebDavClient(private val baseUrl: String, user: String, password: String) 
         while (eventType != XmlPullParser.END_DOCUMENT) {
             when (eventType) {
                 XmlPullParser.START_TAG -> {
-                    when (xpp.name) {
-                        "response" -> {
-                            node = WebDavDatum()
-                        }
-
-                        "href" -> {
-                            val nextText = xpp.nextText()
-                            val startsWith = nextText.startsWith(baseUrl)
-                            node!!.href = if (startsWith) nextText else "$baseUrl$nextText"
-                            node.path = if (startsWith) nextText.substring(baseUrl.length) else nextText
-                        }
-
-                        "getlastmodified" -> {
-                            val date = dateFormat.parse(xpp.nextText())!!
-                            node!!.lastModified = date.time
-                        }
-
-                        "displayname" -> {
-                            node!!.name = xpp.nextText()
-                        }
-
-                        "ishidden" -> {
-                            node!!.isHidden = xpp.nextText().toBoolean()
-                        }
-
-                        "isfolder"-> {
-                            node!!.isFile = false
-                        }
-                        "collection" -> {
-                            node!!.isFile = false
-                        }
+                    if (xpp.name == "response") {
+                        node = WebDavDatum()
+                    } else {
+                        handleNodeProperty(xpp, node, dateFormat)
                     }
                 }
 
@@ -110,6 +83,43 @@ class WebDavClient(private val baseUrl: String, user: String, password: String) 
         }
 
         return resultList
+    }
+
+    private fun handleNodeProperty(
+        xpp: XmlPullParser,
+        node: WebDavDatum?,
+        dateFormat: SimpleDateFormat
+    ) {
+        when (xpp.name) {
+            "href" -> {
+                val nextText = xpp.nextText()
+                val startsWith = nextText.startsWith(baseUrl)
+                node!!.href = if (startsWith) nextText else "$baseUrl$nextText"
+                node.path =
+                    if (startsWith) nextText.substring(baseUrl.length) else nextText
+            }
+
+            "getlastmodified" -> {
+                val date = dateFormat.parse(xpp.nextText())!!
+                node!!.lastModified = date.time
+            }
+
+            "displayname" -> {
+                node!!.name = xpp.nextText()
+            }
+
+            "ishidden" -> {
+                node!!.isHidden = xpp.nextText().toBoolean()
+            }
+
+            "isfolder" -> {
+                node!!.isFile = false
+            }
+
+            "collection" -> {
+                node!!.isFile = false
+            }
+        }
     }
 }
 

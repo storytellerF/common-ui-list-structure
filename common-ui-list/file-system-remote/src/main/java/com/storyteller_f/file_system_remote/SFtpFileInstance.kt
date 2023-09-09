@@ -42,7 +42,7 @@ class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
         if (c == null || attributes == null) {
             val initCurrent = initCurrent()
             c = initCurrent.first
-            attributes= initCurrent.second
+            attributes = initCurrent.second
         }
         return c to attributes
     }
@@ -67,15 +67,35 @@ class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
         TODO("Not yet implemented")
     }
 
-    override suspend fun listInternal(fileItems: MutableList<FileItemModel>, directoryItems: MutableList<DirectoryItemModel>) {
+    override suspend fun listInternal(
+        fileItems: MutableList<FileItemModel>,
+        directoryItems: MutableList<DirectoryItemModel>
+    ) {
         getInstance().ls(path).forEach {
             val attributes = it.attributes
             val (file, child) = child(it.name)
             val isSymLink = attributes.mode.type == FileMode.Type.SYMLINK
             if (it.isDirectory) {
-                directoryItems.add(DirectoryItemModel(it.name, child, false, attributes.mtime, isSymLink))
+                directoryItems.add(
+                    DirectoryItemModel(
+                        it.name,
+                        child,
+                        false,
+                        attributes.mtime,
+                        isSymLink
+                    )
+                )
             } else {
-                fileItems.add(FileItemModel(it.name, child, false, attributes.mtime, isSymLink, file.extension))
+                fileItems.add(
+                    FileItemModel(
+                        it.name,
+                        child,
+                        false,
+                        attributes.mtime,
+                        isSymLink,
+                        file.extension
+                    )
+                )
             }
         }
     }

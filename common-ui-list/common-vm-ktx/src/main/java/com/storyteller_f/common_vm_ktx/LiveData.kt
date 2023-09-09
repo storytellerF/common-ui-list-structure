@@ -88,38 +88,6 @@ fun combine(vararg arrayOfPairs: Pair<String, LiveData<out Any?>>): LiveData<Map
     }
 }
 
-private fun <E> MutableList<E?>.addOrSet(e: Int, it: E) {
-    synchronized(this) {
-        if (size <= e) {
-            // 追加到指定位置
-            for (i in size..e) {
-                add(null)
-            }
-        }
-    }
-    set(e, it)
-}
-
-fun List<Any?>.gon(index: Int): Any? {
-    return getOrNull(index)
-}
-
-fun <T> copyList(list: List<T?>?): MutableList<T?> {
-    val newly = mutableListOf<T?>()
-    list?.forEach {
-        newly.add(it)
-    }
-    return newly
-}
-
-fun <T> copyListNotNull(list: List<T?>?): MutableList<T> {
-    val newly = mutableListOf<T>()
-    list?.forEach {
-        it?.let { it1 -> newly.add(it1) }
-    }
-    return newly
-}
-
 fun copyMap(map: Map<String, Any?>?): MutableMap<String, Any?> {
     val newly = mutableMapOf<String, Any?>()
     map?.forEach {
@@ -269,6 +237,7 @@ fun <T> LiveData<T>.state(owner: LifecycleOwner, ob: Observer<in T>) {
 /**
  * @param f 返回是否相等
  */
+@Suppress("ComplexCondition")
 fun <X> LiveData<X>.distinctUntilChangedBy(f: (X, X) -> Boolean): LiveData<X?> {
     val outputLiveData: MediatorLiveData<X?> = MediatorLiveData<X?>()
     outputLiveData.addSource(
@@ -281,7 +250,7 @@ fun <X> LiveData<X>.distinctUntilChangedBy(f: (X, X) -> Boolean): LiveData<X?> {
                 if (mFirstTime ||
                     previousValue == null && value != null ||
                     previousValue != null && (
-                        previousValue != value ||
+                        previousValue !== value ||
                             !f(previousValue, value)
                         )
                 ) {

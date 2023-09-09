@@ -83,7 +83,6 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
 
     override suspend fun exists() = true
 
-
     override suspend fun toParent(): FileInstance {
         TODO("Not yet implemented")
     }

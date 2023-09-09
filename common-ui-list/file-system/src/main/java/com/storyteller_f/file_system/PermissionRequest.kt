@@ -43,9 +43,11 @@ suspend fun Context.requestPathPermission(uri: Uri): Boolean {
 private suspend fun Context.requestWriteExternalStorage(task: CompletableDeferred<Boolean>) {
     if (yesOrNo("权限不足", "查看文件夹系统必须授予权限", "授予", "取消")) {
         MainActivity.task = task
-        startActivity(Intent(this, MainActivity::class.java).apply {
-            putBundle(MainActivity.REQUEST_EMULATED, Uri.EMPTY)
-        })
+        startActivity(
+            Intent(this, MainActivity::class.java).apply {
+                putBundle(MainActivity.REQUEST_EMULATED, Uri.EMPTY)
+            }
+        )
     } else {
         task.complete(false)
     }
@@ -58,9 +60,11 @@ private suspend fun Context.requestSAFPermission(
 ) {
     if (yesOrNo("需要授予权限", "在Android 10 或者访问存储卡，需要获取SAF权限", "去授予", "取消")) {
         MainActivity.task = task
-        startActivity(Intent(this, MainActivity::class.java).apply {
-            putBundle(requestCodeSAF, uri)
-        })
+        startActivity(
+            Intent(this, MainActivity::class.java).apply {
+                putBundle(requestCodeSAF, uri)
+            }
+        )
     } else {
         task.complete(false)
     }
@@ -70,9 +74,11 @@ private suspend fun Context.requestSAFPermission(
 private suspend fun Context.requestManageExternalPermission(task: CompletableDeferred<Boolean>) {
     if (yesOrNo("需要授予权限", "在Android 11上，需要获取Manage External Storage权限", "去授予", "取消")) {
         MainActivity.task = task
-        startActivity(Intent(this, MainActivity::class.java).apply {
-            putBundle(MainActivity.REQUEST_MANAGE, Uri.EMPTY)
-        })
+        startActivity(
+            Intent(this, MainActivity::class.java).apply {
+                putBundle(MainActivity.REQUEST_MANAGE, Uri.EMPTY)
+            }
+        )
     } else {
         task.complete(false)
     }
