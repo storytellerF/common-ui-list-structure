@@ -2,14 +2,11 @@ package com.storyteller_f.common_ui_list_structure.test_model
 
 import android.os.Bundle
 import android.view.View
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.repeatOnLifecycle
 import com.storyteller_f.common_ui.CommonFragment
 import com.storyteller_f.common_ui.repeatOnViewResumed
-import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui_list_structure.R
-import com.storyteller_f.common_ui_list_structure.RepoViewHolder
 import com.storyteller_f.common_ui_list_structure.RepoItemHolder
+import com.storyteller_f.common_ui_list_structure.RepoViewHolder
 import com.storyteller_f.common_ui_list_structure.api.requireReposService
 import com.storyteller_f.common_ui_list_structure.databinding.FragmentTestDataBinding
 import com.storyteller_f.ext_func_definition.ExtFuncFlat
@@ -18,7 +15,6 @@ import com.storyteller_f.ui_list.adapter.SimpleDataAdapter
 import com.storyteller_f.ui_list.event.viewBinding
 import com.storyteller_f.ui_list.source.DataProducer
 import com.storyteller_f.ui_list.source.data
-import kotlinx.coroutines.launch
 
 class Test {
     fun test() {

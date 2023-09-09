@@ -28,14 +28,17 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_pr.dipToInt
-import com.storyteller_f.common_ui.*
+import com.storyteller_f.common_ui.navigator
+import com.storyteller_f.common_ui.owner
+import com.storyteller_f.common_ui.repeatOnViewResumed
+import com.storyteller_f.common_ui.status
+import com.storyteller_f.common_ui.supportNavigatorBarImmersive
+import com.storyteller_f.common_ui.updateMargins
 import com.storyteller_f.common_ui_list_structure.api.requireReposService
 import com.storyteller_f.common_ui_list_structure.databinding.ActivityMainBinding
 import com.storyteller_f.common_ui_list_structure.databinding.RepoViewItemBinding
@@ -45,7 +48,9 @@ import com.storyteller_f.common_ui_list_structure.model.Repo
 import com.storyteller_f.common_ui_list_structure.test_model.TestViewModelActivity
 import com.storyteller_f.common_ui_list_structure.test_navigation.TestNavigationResultActivity
 import com.storyteller_f.common_vm_ktx.combine
-import com.storyteller_f.ui_list.core.*
+import com.storyteller_f.ui_list.core.AbstractViewHolder
+import com.storyteller_f.ui_list.core.BindingViewHolder
+import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.event.viewBinding
 import com.storyteller_f.ui_list.source.SourceProducer
 import com.storyteller_f.ui_list.source.source
@@ -55,7 +60,6 @@ import com.storyteller_f.view_holder_compose.ComposeViewHolder
 import com.storyteller_f.view_holder_compose.EDComposeView
 import com.storyteller_f.view_holder_compose.EdComposeViewEventEmitter
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private val binding by viewBinding(ActivityMainBinding::inflate)

@@ -15,9 +15,12 @@ import com.storyteller_f.ui_list.core.Datum
 import com.storyteller_f.ui_list.data.CommonResponse
 import com.storyteller_f.ui_list.database.RemoteKey
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import retrofit2.HttpException
 import java.io.IOException
 import java.util.Collections
@@ -40,46 +43,52 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
     val loadState = MutableSharedFlow<MoreInfoLoadState>(replay = 1)
 
     // 保存上一次请求的页数，如果成功，自增
-    private var lastRequestedPage = STARTING_PAGE_INDEX
-    private var tryToIntercept = false
+    private var lastRequestedPage = 0
 
     // 避免同一时刻进行多个请求
-    private var isRequestInProgress = false
+    private var isRequestInProgress = Mutex()
 
-    suspend fun request(): Flow<List<D>> {
-        lastRequestedPage = 1
-        inMemoryCache.clear()
-        requestAndSaveData(lastRequestedPage)
+    suspend fun obtainResult(): Flow<List<D>> {
+        coroutineScope {
+            requestNextPage()
+        }
         return results
     }
 
     suspend fun requestMore() {
-        if (isRequestInProgress) return
+        if (isRequestInProgress.isLocked) return
+        requestNextPage()
+    }
+
+
+    suspend fun retry() {
+        requestNextPage()
+    }
+
+    suspend fun refresh() {
+        if (isRequestInProgress.isLocked) return
+        lastRequestedPage = 0
+        inMemoryCache.clear()
+        requestNextPage()
+    }
+
+    private suspend fun requestNextPage() {
         val successful = requestAndSaveData(lastRequestedPage + 1)
         if (successful) {
             lastRequestedPage++
         }
     }
 
-    suspend fun retry() {
-        if (isRequestInProgress) return
-        requestAndSaveData(lastRequestedPage + 1)
+    private suspend fun requestAndSaveData(pageCount: Int): Boolean {
+        return isRequestInProgress.withLock {
+            requestPage(pageCount)
+        }
     }
 
-    suspend fun refresh() {
-        tryToIntercept = true
-        lastRequestedPage = 1
-        inMemoryCache.clear()
-        requestAndSaveData(lastRequestedPage)
-    }
-
-    private suspend fun requestAndSaveData(pages: Int): Boolean {
-        isRequestInProgress = true
-        tryToIntercept = false
+    private suspend fun SimpleDataRepository<D, RK>.requestPage(pages: Int): Boolean {
         loadState.emit(MoreInfoLoadState(LoadState.Loading, 0))
         try {
             val response = service(pages, 30)
-            if (tryToIntercept) return false
             val elements = response.items
             inMemoryCache.addAll(elements)
             results.emit(inMemoryCache)
@@ -94,8 +103,6 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
             loadState.emit(MoreInfoLoadState(LoadState.Error(exception), inMemoryCache.size))
         } catch (exception: HttpException) {
             loadState.emit(MoreInfoLoadState(LoadState.Error(exception), inMemoryCache.size))
-        } finally {
-            isRequestInProgress = false
         }
         return false
     }
@@ -117,7 +124,7 @@ class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey
     private var preDatum: D? = null
 
     val content: LiveData<FatData<D, Holder, RK>> = liveData {
-        val asLiveData = sourceRepository.request().asLiveData(Dispatchers.Main)
+        val asLiveData = sourceRepository.obtainResult().asLiveData(Dispatchers.Main)
         val source = asLiveData.map {
             preDatum = null
             FatData(this@SimpleDataViewModel, it.map { datum ->
