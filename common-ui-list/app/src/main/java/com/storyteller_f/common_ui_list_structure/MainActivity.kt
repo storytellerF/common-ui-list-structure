@@ -290,7 +290,10 @@ class SeparatorViewHolder(edComposeView: EDComposeView) :
 @OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
-private fun Separator(@PreviewParameter(RepoSeparatorProvider::class) itemHolder: SeparatorItemHolder, edComposeView: EdComposeViewEventEmitter = EdComposeViewEventEmitter.default) {
+private fun Separator(
+    @PreviewParameter(RepoSeparatorProvider::class) itemHolder: SeparatorItemHolder,
+    edComposeView: EdComposeViewEventEmitter = EdComposeViewEventEmitter.default
+) {
     Card(backgroundColor = colorResource(id = R.color.separatorBackground),
         modifier = Modifier
             .combinedClickable(

@@ -30,4 +30,3 @@ infix fun <A, B> MutableList<Pair<A, Any?>>.plus(that: Pair<A, B>): List<Pair<A,
     apply {
         add(that)
     }
-

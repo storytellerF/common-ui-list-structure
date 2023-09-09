@@ -83,13 +83,25 @@ class KeyedViewModelLazy<VM : ViewModel>(
 inline fun <reified VM : ViewModel> keyPrefix(
     noinline keyPrefixProvider: () -> String,
     lazy: ViewModelLazy<VM>
-) = KeyedViewModelLazy(keyPrefixProvider, lazy.viewModelClass, lazy.storeProducer, lazy.factoryProducer, lazy.extrasProducer)
+) = KeyedViewModelLazy(
+    keyPrefixProvider,
+    lazy.viewModelClass,
+    lazy.storeProducer,
+    lazy.factoryProducer,
+    lazy.extrasProducer
+)
 
 @MainThread
 inline fun <reified VM : ViewModel> keyPrefix(
     keyPrefixProvider: String,
     lazy: ViewModelLazy<VM>
-) = KeyedViewModelLazy({ keyPrefixProvider }, lazy.viewModelClass, lazy.storeProducer, lazy.factoryProducer, lazy.extrasProducer)
+) = KeyedViewModelLazy(
+    { keyPrefixProvider },
+    lazy.viewModelClass,
+    lazy.storeProducer,
+    lazy.factoryProducer,
+    lazy.extrasProducer
+)
 
 inline fun <reified VM : ViewModel, T, ARG> T.defaultFactory(
     crossinline arg: () -> ARG,
@@ -181,7 +193,7 @@ class StateValueModel<T>(stateHandle: SavedStateHandle, key: String = "default",
 }
 
 fun <T> stateValueModel(t: T, stateHandle: SavedStateHandle): StateValueModel<T> {
-    return StateValueModel(stateHandle, default = t);
+    return StateValueModel(stateHandle, default = t)
 }
 
 fun HasDefaultViewModelProviderFactory.buildExtras(block: MutableCreationExtras.() -> Unit): CreationExtras {

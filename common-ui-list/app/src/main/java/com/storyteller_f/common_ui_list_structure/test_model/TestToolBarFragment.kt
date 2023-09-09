@@ -17,9 +17,7 @@ import com.storyteller_f.common_ui_list_structure.databinding.FragmentTestToolba
 
 class TestToolBarFragment : RegularFragment<FragmentTestToolbarBinding>(FragmentTestToolbarBinding::inflate) {
 
-    override fun onBindViewEvent(binding: FragmentTestToolbarBinding) {
-
-    }
+    override fun onBindViewEvent(binding: FragmentTestToolbarBinding) = Unit
 
     override fun onStart() {
         super.onStart()

@@ -5,15 +5,17 @@ import androidx.activity.ComponentActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 
-fun <T> LifecycleOwner.context(function: Context.() -> T) = (when (this) {
-    is ComponentActivity -> {
-        this
+fun <T> LifecycleOwner.context(function: Context.() -> T) = (
+    when (this) {
+        is ComponentActivity -> {
+            this
+        }
+        is Fragment -> {
+            requireContext()
+        }
+        else -> throw Exception("context is null")
     }
-    is Fragment -> {
-        requireContext()
-    }
-    else -> throw Exception("context is null")
-}).run(function)
+    ).run(function)
 
 val LifecycleOwner.ctx
     get() = when (this) {

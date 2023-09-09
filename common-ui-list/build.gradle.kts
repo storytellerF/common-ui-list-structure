@@ -65,6 +65,7 @@ allprojects {
             io.gitlab.arturbosch.detekt.extensions.DetektExtension.DEFAULT_TEST_SRC_DIR_KOTLIN,
         )
         buildUponDefaultConfig = true
+        autoCorrect = true
         config.setFrom("$rootDir/config/detekt/detekt.yml")
         baseline = file("$rootDir/config/detekt/baseline.xml")
     }

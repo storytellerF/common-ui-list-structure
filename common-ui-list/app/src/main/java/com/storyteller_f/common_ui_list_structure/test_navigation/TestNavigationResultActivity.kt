@@ -10,8 +10,8 @@ import com.storyteller_f.common_pr.observe
 import com.storyteller_f.common_ui.CommonActivity
 import com.storyteller_f.common_ui.request
 import com.storyteller_f.common_ui_list_structure.R
-import com.storyteller_f.common_ui_list_structure.dialog.TestDialog2
 import com.storyteller_f.common_ui_list_structure.databinding.ActivityTestNavigationResultBinding
+import com.storyteller_f.common_ui_list_structure.dialog.TestDialog2
 import com.storyteller_f.ui_list.event.viewBinding
 
 class TestNavigationResultActivity : CommonActivity() {
@@ -38,7 +38,6 @@ class TestNavigationResultActivity : CommonActivity() {
 
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
-        return navController.navigateUp(appBarConfiguration)
-                || super.onSupportNavigateUp()
+        return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 }

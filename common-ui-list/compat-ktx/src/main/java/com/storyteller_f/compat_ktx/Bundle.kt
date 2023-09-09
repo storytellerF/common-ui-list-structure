@@ -18,5 +18,7 @@ fun <T : Parcelable> Bundle.getParcelableCompat(key: String, clazz: Class<T>): T
     @Suppress("DEPRECATION")
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         getParcelable(key, clazz)
-    } else getParcelable(key) as? T
+    } else {
+        getParcelable(key) as? T
+    }
 }

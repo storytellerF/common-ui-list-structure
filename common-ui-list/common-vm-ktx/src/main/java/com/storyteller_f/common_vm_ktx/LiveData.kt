@@ -32,7 +32,9 @@ class KeyedLiveData<T>(value: T, val key: String = "") : MutableLiveData<T>(valu
 fun LiveData<out Any>.plus(source: LiveData<out Any>, key: String = ""): MediatorLiveData<out Any> {
     val sourceKey = if (source is KeyedLiveData<*> && source.key.trim().isNotEmpty()) {
         source.key
-    } else key
+    } else {
+        key
+    }
     if (this is CountableMediatorLiveData) {
         val index = currentIndex
         val k = if (sourceKey.trim().isEmpty()) index.toString() else key
@@ -89,7 +91,7 @@ fun combine(vararg arrayOfPairs: Pair<String, LiveData<out Any?>>): LiveData<Map
 private fun <E> MutableList<E?>.addOrSet(e: Int, it: E) {
     synchronized(this) {
         if (size <= e) {
-            //追加到指定位置
+            // 追加到指定位置
             for (i in size..e) {
                 add(null)
             }
@@ -97,7 +99,6 @@ private fun <E> MutableList<E?>.addOrSet(e: Int, it: E) {
     }
     set(e, it)
 }
-
 
 fun List<Any?>.gon(index: Int): Any? {
     return getOrNull(index)
@@ -110,7 +111,6 @@ fun <T> copyList(list: List<T?>?): MutableList<T?> {
     }
     return newly
 }
-
 
 fun <T> copyListNotNull(list: List<T?>?): MutableList<T> {
     val newly = mutableListOf<T>()
@@ -208,7 +208,6 @@ class SingleLiveEvent<T> : MutableLiveData<T?>() {
     }
 }
 
-
 fun <T> LiveData<T>.toDiff(compare: ((T, T) -> Boolean)? = null): MediatorLiveData<Pair<T?, T?>> {
     val mediatorLiveData = MediatorLiveData<Pair<T?, T?>>()
     var oo: T? = value
@@ -238,7 +237,6 @@ fun <T> LiveData<T>.toDiffNoNull(compare: ((T, T) -> Boolean)? = null): Mediator
     return mediatorLiveData
 }
 
-
 fun <T> LiveData<T>.debounce(ms: Long): MediatorLiveData<T> {
     val mediatorLiveData = MediatorLiveData<T>()
     var lastTime: Long? = null
@@ -250,11 +248,14 @@ fun <T> LiveData<T>.debounce(ms: Long): MediatorLiveData<T> {
             mediatorLiveData.value = it
             lastTime = System.currentTimeMillis()
         } else {
-            timer.schedule(object : TimerTask() {
-                override fun run() {
-                    mediatorLiveData.postValue(it)
-                }
-            }, ms)
+            timer.schedule(
+                object : TimerTask() {
+                    override fun run() {
+                        mediatorLiveData.postValue(it)
+                    }
+                },
+                ms
+            )
         }
     }
     return mediatorLiveData
@@ -270,21 +271,26 @@ fun <T> LiveData<T>.state(owner: LifecycleOwner, ob: Observer<in T>) {
  */
 fun <X> LiveData<X>.distinctUntilChangedBy(f: (X, X) -> Boolean): LiveData<X?> {
     val outputLiveData: MediatorLiveData<X?> = MediatorLiveData<X?>()
-    outputLiveData.addSource(this, object : Observer<X?> {
-        var mFirstTime = true
-        var previous: X? = null
-        override fun onChanged(value: X?) {
-            val previousValue = previous
-            if (mFirstTime ||
-                previousValue == null && value != null ||
-                previousValue != null && (previousValue != value ||
-                        !f(previousValue, value))
-            ) {
-                mFirstTime = false
-                outputLiveData.value = value
-                previous = value
+    outputLiveData.addSource(
+        this,
+        object : Observer<X?> {
+            var mFirstTime = true
+            var previous: X? = null
+            override fun onChanged(value: X?) {
+                val previousValue = previous
+                if (mFirstTime ||
+                    previousValue == null && value != null ||
+                    previousValue != null && (
+                        previousValue != value ||
+                            !f(previousValue, value)
+                        )
+                ) {
+                    mFirstTime = false
+                    outputLiveData.value = value
+                    previous = value
+                }
             }
         }
-    })
+    )
     return outputLiveData
 }
