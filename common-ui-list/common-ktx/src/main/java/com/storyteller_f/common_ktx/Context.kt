@@ -1,7 +1,7 @@
 package com.storyteller_f.common_ktx
 
 import android.content.Context
-import androidx.core.app.ComponentActivity
+import androidx.activity.ComponentActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 

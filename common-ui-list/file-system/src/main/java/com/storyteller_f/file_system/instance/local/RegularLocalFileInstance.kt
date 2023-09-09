@@ -10,6 +10,8 @@ import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.FileInstanceUtility
 import com.storyteller_f.file_system.util.FileUtility
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import java.io.File
 import java.io.FileInputStream
@@ -43,16 +45,20 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
         return internalFileInstance
     }
 
-    @Throws(Exception::class)
+    @Throws(IOException::class)
     private suspend fun checkChildExistsOtherwiseCreate(file: File, policy: FileCreatePolicy) {
-        if (!exists()) {
-            throw Exception("当前文件或者文件夹不存在。path:$path")
-        } else if (isFile()) throw Exception("当前是一个文件，无法向下操作") else if (!file.exists()) {
-            if (policy is Create) {
-                if (policy.isFile) {
-                    if (!file.createNewFile()) throw Exception("新建文件失败")
-                } else if (!file.mkdirs()) throw Exception("新建文件失败")
-            } else throw Exception("不存在，且不能创建")
+        when {
+            !exists() -> throw IOException("当前文件或者文件夹不存在。path:$path")
+            isFile() -> throw IOException("当前是一个文件，无法向下操作")
+            !file.exists() -> when {
+                policy !is Create -> throw IOException("不存在，且不能创建")
+                policy.isFile -> {
+                    if (!withContext(Dispatchers.IO) {
+                            file.createNewFile()
+                        }) throw IOException("新建文件失败")
+                }
+                !file.mkdirs() -> throw IOException("新建文件失败")
+            }
         }
     }
 

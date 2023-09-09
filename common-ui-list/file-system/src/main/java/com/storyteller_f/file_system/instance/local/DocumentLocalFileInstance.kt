@@ -21,6 +21,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
+import java.lang.IllegalStateException
 
 /**
  * @param prefix 用来标识对象所在区域，可能是外部，也可能是内部。比如/storage/XXXX-XXXX。仅对于本地文件系统有效。其他情况都是空。
@@ -226,14 +227,14 @@ class DocumentLocalFileInstance(
         val parentFile = File(path).parentFile ?: throw Exception("到头了，无法继续向上寻找")
         val currentParentFile = getInstanceRelinkIfNeed()!!.parentFile
         return if (currentParentFile == null) {
-            throw Exception("查找parent DocumentFile失败")
+            throw IllegalStateException("查找parent DocumentFile失败")
         } else if (!currentParentFile.isFile) {
             val parent = uri.buildUpon().path(parentFile.absolutePath).build()
             val instance = DocumentLocalFileInstance(prefix, prefix, context, parent)
             instance._instance = currentParentFile
             instance
         } else {
-            throw Exception("当前文件已存在，并且类型不同 源文件：" + currentParentFile.isFile)
+            throw IllegalStateException("当前文件已存在，并且类型不同 源文件：" + currentParentFile.isFile)
         }
     }
 

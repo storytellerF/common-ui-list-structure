@@ -61,6 +61,7 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(val view: View) :
      * 所属的group
      */
     lateinit var grouped: String
+
     //需要保证当前已经绑定过数据了
     val itemHolder get() = _itemHolder as IH
     fun onBind(itemHolder: IH) {
@@ -76,7 +77,8 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(val view: View) :
 abstract class BindingViewHolder<IH : DataItemHolder>(binding: ViewBinding) :
     AbstractViewHolder<IH>(binding.root)
 
-open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(private val group: String? = null) : RecyclerView.Adapter<VH>() {
+open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(private val group: String? = null) :
+    RecyclerView.Adapter<VH>() {
     lateinit var target: RecyclerView.Adapter<VH>
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val size = list.size
@@ -104,19 +106,20 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(priv
     override fun getItemViewType(position: Int): Int {
         val item = getItemAbstract(position) ?: return super.getItemViewType(position)
         val ihClass = item::class.java
-        return getType(ihClass, item) ?: throw Exception("${ihClass.canonicalName} not found.registerCenter count: ${registerCenter.size}")
+        return getType(ihClass, item)
+            ?: throw Exception("${ihClass.canonicalName} not found.registerCenter count: ${registerCenter.size}")
     }
 
     private fun getType(ihClass: Class<out IH>, item: IH): Int? {
         val functionPosition = registerCenter[ihClass] ?: return null
-        if (item.variant.isNotEmpty()) {
+        return if (item.variant.isNotEmpty()) {
             val secondRegisterKey = SecondRegisterKey(ihClass, item.variant)
-            return secondRegisterCenter.getOrPut(secondRegisterKey) {
+            secondRegisterCenter.getOrPut(secondRegisterKey) {
                 secondList.add(secondRegisterKey.variant to functionPosition)
                 (secondList.size - 1) + list.size
             }
-        }
-        return functionPosition
+        } else
+            functionPosition
     }
 
     companion object {

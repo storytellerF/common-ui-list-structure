@@ -10,10 +10,6 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.text.SimpleDateFormat
 import java.util.*
 
-class FormattedData<T>(val t: T, val formatted: String? = null) {
-
-}
-
 open class FileSystemItemModel(
     name: String,
     uri: Uri,

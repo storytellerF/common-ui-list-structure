@@ -5,11 +5,14 @@ package com.storyteller_f.common_vm_ktx
 import android.util.Log
 import androidx.annotation.MainThread
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.*
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import com.storyteller_f.ext_func_definition.ExtFuncFlat
-import com.storyteller_f.ext_func_definition.ExtFuncFlatType
-import java.util.*
+import androidx.lifecycle.map
+import java.util.Timer
+import java.util.TimerTask
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.collections.set
 
@@ -272,7 +275,11 @@ fun <X> LiveData<X>.distinctUntilChangedBy(f: (X, X) -> Boolean): LiveData<X?> {
         var previous: X? = null
         override fun onChanged(value: X?) {
             val previousValue = previous
-            if (mFirstTime || previousValue == null && value != null || previousValue != null && (previousValue != value || !f(previousValue, value))) {
+            if (mFirstTime ||
+                previousValue == null && value != null ||
+                previousValue != null && (previousValue != value ||
+                        !f(previousValue, value))
+            ) {
                 mFirstTime = false
                 outputLiveData.value = value
                 previous = value

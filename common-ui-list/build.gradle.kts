@@ -1,3 +1,9 @@
+@file:Suppress("UnstableApiUsage")
+
+import io.gitlab.arturbosch.detekt.Detekt
+import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
+import io.gitlab.arturbosch.detekt.report.ReportMergeTask
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     dependencies {
@@ -22,36 +28,7 @@ plugins {
     id("org.jetbrains.kotlin.jvm") version kotlinVersion apply false
     id("com.google.devtools.ksp") version kspVersion apply false
     //使用includeBuild 时使用sml，不需要指定id
-    id("io.gitlab.arturbosch.detekt") version ("1.21.0")
-}
-dependencies {
-    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.16.0")
-}
-val projectSource = file(projectDir)
-val configFile = files("$rootDir/config/detekt/detekt.yml")
-//def baselineFile = file("$rootDir/config/detekt/baseline.xml")
-val kotlinFiles = "**/*.kt"
-val resourceFiles = "**/resources/**"
-val buildFiles = "**/build/**"
-
-tasks.register<io.gitlab.arturbosch.detekt.Detekt>("detektAll") {
-    val autoFix = project.hasProperty("detektAutoFix")
-
-    description = "Custom DETEKT build for all modules"
-    parallel = true
-    ignoreFailures = false
-    autoCorrect = autoFix
-    buildUponDefaultConfig = true
-    setSource(projectSource)
-//    baseline.set(baselineFile)
-    config.setFrom(configFile)
-    include(kotlinFiles)
-    exclude(resourceFiles, buildFiles)
-    reports {
-        html.required.set(true)
-        xml.required.set(false)
-        txt.required.set(false)
-    }
+    id("io.gitlab.arturbosch.detekt") version ("1.23.1")
 }
 
 tasks.register("clean", Delete::class) {
@@ -68,3 +45,49 @@ tasks.register("clean", Delete::class) {
 //    }
 //
 //}
+
+val detektReportMergeSarif by tasks.registering(ReportMergeTask::class) {
+    output = layout.buildDirectory.file("reports/detekt/merge.sarif")
+}
+
+allprojects {
+
+    apply(plugin = "io.gitlab.arturbosch.detekt")
+
+    detekt {
+        source.setFrom(
+            io.gitlab.arturbosch.detekt.extensions.DetektExtension.DEFAULT_SRC_DIR_JAVA,
+            io.gitlab.arturbosch.detekt.extensions.DetektExtension.DEFAULT_TEST_SRC_DIR_JAVA,
+            io.gitlab.arturbosch.detekt.extensions.DetektExtension.DEFAULT_SRC_DIR_KOTLIN,
+            io.gitlab.arturbosch.detekt.extensions.DetektExtension.DEFAULT_TEST_SRC_DIR_KOTLIN,
+        )
+        buildUponDefaultConfig = true
+        config.setFrom("$rootDir/config/detekt/detekt.yml")
+        baseline = file("$rootDir/config/detekt/baseline.xml")
+    }
+
+    dependencies {
+        detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.1")
+        detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-libraries:1.23.1")
+        detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-ruleauthors:1.23.1")
+    }
+
+    tasks.withType<Detekt>().configureEach {
+        jvmTarget = "1.8"
+        reports {
+            xml.required = true
+            html.required = true
+            txt.required = true
+            sarif.required = true
+            md.required = true
+        }
+        basePath = rootDir.absolutePath
+        finalizedBy(detektReportMergeSarif)
+    }
+    detektReportMergeSarif {
+        input.from(tasks.withType<Detekt>().map { it.sarifReportFile })
+    }
+    tasks.withType<DetektCreateBaselineTask>().configureEach {
+        jvmTarget = "1.8"
+    }
+}

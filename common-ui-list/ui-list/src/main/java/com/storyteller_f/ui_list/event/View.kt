@@ -62,7 +62,6 @@ inline fun <reified T> View.findActionReceiverOrNull(): T? {
     var fragment: Fragment? = try {
         findFragment(this)
     } catch (e: Exception) {
-        e.printStackTrace()
         null
     }
     while (fragment != null) {
