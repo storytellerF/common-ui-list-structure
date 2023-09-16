@@ -47,24 +47,31 @@ class FileSystemUriSaver {
         }
     }
 
-    fun savedUri(context: Context, sharedPreferenceKey: String): Uri? {
+    fun savedUri(context: Context, sharedPreferenceKey: String, tree: String): Uri? {
         restoreCheck(context)
-        return uris[sharedPreferenceKey]?.values?.first()?.toUri()
+        return uris[sharedPreferenceKey]?.get(tree)?.toUri()
     }
 
-    fun saveUri(context: Context, key: String, uri: Uri) {
+    fun saveUri(context: Context, authority: String, uri: Uri, tree: String?) {
         restoreCheck(context)
-        val rootId = DocumentsContract.getTreeDocumentId(uri)
-        uris[key] = mutableMapOf(rootId to uri.toString())
+        val rootId = tree ?: DocumentsContract.getTreeDocumentId(uri)
+        uris.getOrPut(authority) {
+            mutableMapOf()
+        }.run {
+            put(rootId, uri.toString())
+        }
         val toJson = gson.toJson(saved)
         context.file.writeText(toJson)
     }
 
-    fun savedUris(context: Context): Map<String, String> {
+    fun savedUris(context: Context): Map<String, List<String>> {
         restoreCheck(context)
-        val map = mutableMapOf<String, String>()
+        val map = mutableMapOf<String, List<String>>()
         uris.keys.forEach {
-            map[it] = uris[it]?.keys?.firstOrNull()!!
+            val treeList = uris[it]?.keys?.toList().orEmpty()
+            if (treeList.isNotEmpty()) {
+                map[it] = treeList
+            }
         }
         return map
     }

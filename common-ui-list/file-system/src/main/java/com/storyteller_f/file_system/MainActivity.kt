@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
         registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) {
-            if (processResult(it, prefix.key)) return@registerForActivityResult
+            if (processResult(it)) return@registerForActivityResult
             failure()
         }.launch(
             FileUtility.produceSafRequestIntent(this, prefix.key)
@@ -98,7 +98,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    private fun processResult(it: ActivityResult, preferenceKey: String): Boolean {
+    private fun processResult(it: ActivityResult): Boolean {
         if (it.resultCode == RESULT_OK) {
             val uri = it.data?.data
             if (uri != null) {
@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity() {
                         Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                     )
                 }
-                FileSystemUriSaver.instance.saveUri(this, preferenceKey, uri)
+                FileSystemUriSaver.instance.saveUri(this, DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS, uri, null)
                 success()
                 return true
             }
@@ -123,8 +123,7 @@ class MainActivity : AppCompatActivity() {
             ActivityResultContracts.StartActivityForResult()
         ) {
             if (processResult(
-                    it,
-                    DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS
+                    it
                 )
             ) {
                 return@registerForActivityResult

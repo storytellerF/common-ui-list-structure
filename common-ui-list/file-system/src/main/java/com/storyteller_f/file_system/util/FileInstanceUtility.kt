@@ -29,8 +29,7 @@ object FileInstanceUtility {
         permission: String?,
         size: Long
     ): FileItemModel? {
-        val fileItemModel: FileItemModel
-        fileItemModel = if ("torrent" == extension) {
+        val fileItemModel = if ("torrent" == extension) {
             TorrentFileItemModel(name, uri!!, isHidden, lastModifiedTime, false)
         } else {
             FileItemModel(name, uri!!, isHidden, lastModifiedTime, false, extension)

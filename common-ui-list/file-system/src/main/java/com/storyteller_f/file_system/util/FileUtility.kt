@@ -119,12 +119,21 @@ object FileUtility {
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && prefix == FileInstanceFactory.rootUserEmulatedPath) {
-                val primary = DocumentsContract.buildRootUri(
-                    DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS,
-                    "primary"
-                )
-                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, primary)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (prefix == FileInstanceFactory.rootUserEmulatedPath) {
+                    val primary = DocumentsContract.buildRootUri(
+                        DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS,
+                        DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS_TREE
+                    )
+                    intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, primary)
+                } else if (prefix.startsWith("/storage/")) {
+                    val tree = DocumentLocalFileInstance.getMountedTree(prefix)
+                    val primary = DocumentsContract.buildRootUri(
+                        DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS,
+                        tree
+                    )
+                    intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, primary)
+                }
             }
             return intent
         }

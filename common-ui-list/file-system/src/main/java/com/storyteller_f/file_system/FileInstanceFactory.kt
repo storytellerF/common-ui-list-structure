@@ -114,7 +114,8 @@ object FileInstanceFactory {
 
         return when (scheme) {
             ContentResolver.SCHEME_CONTENT -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                DocumentLocalFileInstance("", uri.authority!!, context, safeUri)
+                val tree = uri.pathSegments.first()
+                DocumentLocalFileInstance("/$tree", uri.authority!!, tree, context, safeUri)
             } else {
                 TODO("VERSION.SDK_INT < LOLLIPOP")
             }
@@ -216,13 +217,7 @@ object FileInstanceFactory {
             path.startsWith(currentEmulatedPath) -> LocalFileSystemPrefix.SelfPrimary
             path == emulatedRootPath -> LocalFileSystemPrefix.EmulatedRoot
             path == storagePath -> LocalFileSystemPrefix.Storage
-            path.startsWith(storagePath) -> {
-                // /storage/XXXX-XXXX 或者是/storage/XXXX-XXXX/test。最终结果应该是/storage/XXXX-XXXX
-                var endIndex = path.indexOf("/", storagePath.length + 1)
-                if (endIndex == -1) endIndex = path.length
-                LocalFileSystemPrefix.Mounted(path.substring(0, endIndex))
-            }
-
+            path.startsWith(storagePath) -> LocalFileSystemPrefix.Mounted(extractSdName(path))
             path == "/" -> LocalFileSystemPrefix.Root
             path == "/data" -> LocalFileSystemPrefix.Data
             path.startsWith("/data/data") -> LocalFileSystemPrefix.Data2
@@ -231,6 +226,13 @@ object FileInstanceFactory {
             path.startsWith("/data/app/") -> LocalFileSystemPrefix.InstalledApps
             else -> throw Exception("unrecognized path")
         }
+
+    private fun extractSdName(path: String): String {
+        // /storage/XXXX-XXXX 或者是/storage/XXXX-XXXX/test。最终结果应该是/storage/XXXX-XXXX
+        var endIndex = path.indexOf("/", storagePath.length + 1)
+        if (endIndex == -1) endIndex = path.length
+        return path.substring(0, endIndex)
+    }
 
     @SuppressLint("SdCardPath")
     private fun Context.appDataDir() = "/data/data/$packageName"

@@ -12,14 +12,17 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.provider.DocumentsContract
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.SubMenu
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.core.text.htmlEncode
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.distinctUntilChanged
@@ -72,6 +75,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.io.File
 import java.lang.ref.WeakReference
+import java.util.Properties
 
 class FileExplorerSession(application: Application, uri: Uri) : AndroidViewModel(application) {
     val selected = MutableLiveData<List<Pair<DataItemHolder, Int>>>()
@@ -97,7 +101,8 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         genericValueModel(false)
     })
 
-    private var currentRequestingKey: String? = null
+    private var currentRequestingAuthority: String? = null
+    private var currentRequestingTree: String? = null
     private val requestDocumentProvider =
         registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) {
             processDocumentProvider(it)
@@ -107,28 +112,31 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     }
 
     private fun processDocumentProvider(uri: Uri?) {
-        val key = currentRequestingKey
-        Log.i(TAG, "uri: $uri key: $key")
-        if (uri != null && key != null) {
+        val requestingAuthority = currentRequestingAuthority
+        val requestingTree = currentRequestingTree
+        Log.i(TAG, "uri: $uri key: $requestingAuthority")
+        if (uri != null && requestingAuthority != null) {
             val authority = uri.authority
-            if (key != authority) {
+            val tree = DocumentsContract.getTreeDocumentId(uri)
+            if (requestingAuthority != authority || (requestingTree != null && requestingTree != tree)) {
                 Toast.makeText(this, "选择错误", Toast.LENGTH_LONG).show()
                 return
             }
-            currentRequestingKey = null
-            saveUriAndSwitch(uri, key, authority)
+            currentRequestingAuthority = null
+            currentRequestingTree = null
+            saveUriAndSwitch(uri, tree, authority)
             flashFileSystemRootMenu()
         }
     }
 
-    private fun saveUriAndSwitch(uri: Uri, key: String, authority: String) {
+    private fun saveUriAndSwitch(uri: Uri, tree: String, authority: String) {
         contentResolver.takePersistableUriPermission(
             uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
         )
-        FileSystemUriSaver.instance.saveUri(this, key, uri)
+        FileSystemUriSaver.instance.saveUri(this, authority, uri, tree)
 
         scope.launch {
-            switchRoot(authority)
+            switchRoot(authority, tree)
         }
     }
 
@@ -261,7 +269,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     }
 
     private fun inflateDefault(menu: Menu) {
-        menu.add("DEFAULT").setOnMenuItemClickListener {
+        menu.add("DEFAULT").setIcon(R.drawable.baseline_home_24).setOnMenuItemClickListener {
             closeDrawer()
             findNavControl().navigate(
                 R.id.fileListFragment, FileListFragmentArgs(File("/").toUri()).toBundle()
@@ -276,33 +284,44 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         val provider = Intent("android.content.action.DOCUMENTS_PROVIDER")
         val info = packageManager.queryIntentContentProvidersCompat(provider, 0)
         val savedUris = FileSystemUriSaver.instance.savedUris(this)
-        info.forEach {
-            val authority = it.providerInfo.authority
-            val loadLabel = it.loadLabel(packageManager).toString()
+        info.forEach { resolveInfo ->
+            val authority = resolveInfo.providerInfo.authority
+            val loadLabel = resolveInfo.loadLabel(packageManager).toString()
             val applicationIcon = try {
-                packageManager.getApplicationIcon(it.resolvePackageName)
-            } catch (_: Exception) {
+                resolveInfo.loadIcon(packageManager)
+            } catch (e: Exception) {
                 null
             }
             val menuItem = menu.addSubMenu(loadLabel).setIcon(applicationIcon)
-            menuItem.add("ADD").setIcon(R.drawable.baseline_add_circle_24)
-                .setOnMenuItemClickListener {
-                    scope.launch {
-                        switchRoot(authority)
-                    }
-                    true
+            inflateTree(menuItem, authority, savedUris)
+        }
+    }
+
+    private fun inflateTree(
+        menuItem: SubMenu,
+        authority: String,
+        savedUris: Map<String, List<String>>
+    ) {
+        menuItem.add(authority).setIcon(R.drawable.baseline_info_24).run {
+            isEnabled = false
+        }
+        menuItem.add("ADD").setIcon(R.drawable.baseline_add_circle_24)
+            .setOnMenuItemClickListener {
+                scope.launch {
+                    switchRoot(authority, null)
                 }
-            savedUris[authority]?.let { s ->
-                menuItem.add(s).setOnMenuItemClickListener {
-                    scope.launch {
-                        switchRoot(authority)
-                    }
-                    true
-                }.let {
-                    scope.launch {
-                        if (hasPermission(savedUris, authority)) {
-                            it.setIcon(R.drawable.baseline_verified_24)
-                        }
+                true
+            }
+        savedUris[authority]?.forEach { key ->
+            menuItem.add(key).setOnMenuItemClickListener {
+                scope.launch {
+                    switchRoot(authority, key)
+                }
+                true
+            }.let {
+                scope.launch {
+                    if (fileSystemRoot(authority, key) != null) {
+                        it.setIcon(R.drawable.baseline_verified_24)
                     }
                 }
             }
@@ -336,53 +355,46 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         }
     }
 
-    private suspend fun hasPermission(
-        savedUris: Map<String, String>, authority: String
-    ): Boolean {
-        val contains = savedUris.contains(authority) && try {
-            DocumentLocalFileInstance(
-                "", authority,
-                this@MainActivity,
-                uriFromAuthority(authority),
-
-                ).exists()
+    private suspend fun fileSystemRoot(
+        authority: String,
+        tree: String,
+    ): Uri? {
+        val savedUris = FileSystemUriSaver.instance.savedUris(this)
+        val uri = DocumentLocalFileInstance.uriFromAuthority(authority, tree)
+        return if (!savedUris.contains(authority))
+            null
+        else try {
+            if (getFileInstance(this, uri).exists()) uri else null
         } catch (e: Exception) {
             Log.e(TAG, "onCreateContextMenu: ", e)
-            false
+            null
         }
-        return contains
     }
 
-    private suspend fun switchRoot(authority: String): Boolean {
+    private suspend fun switchRoot(authority: String, tree: String?): Boolean {
         closeDrawer()
-        val savedUri = FileSystemUriSaver.instance.savedUri(this, authority)
-        if (savedUri != null) {
-            try {
-                val root = uriFromAuthority(authority)
-                val instance = DocumentLocalFileInstance("", authority, this, root)
-                if (instance.exists()) {
-                    findNavControl().navigate(
-                        R.id.fileListFragment, FileListFragmentArgs(root).toBundle()
-                    )
-                    return true
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "switchRoot: ", e)
+        if (tree != null) {
+            fileSystemRoot(authority, tree)?.let {
+                findNavControl().navigate(
+                    R.id.fileListFragment, FileListFragmentArgs(it).toBundle()
+                )
+                return true
             }
-
         }
-        currentRequestingKey = authority
-        requestDocumentProvider.launch(null)
+        currentRequestingAuthority = authority
+        currentRequestingTree = tree
+
+        val defaultTreeDocumentUri = Properties().apply {
+            load(assets.open("tree.keys"))
+        }.getProperty(authority)?.let {
+            DocumentsContract.buildRootUri(authority, it)
+        }
+        requestDocumentProvider.launch(defaultTreeDocumentUri)
         return false
     }
 
     private fun closeDrawer() {
         binding.drawer.close()
-    }
-
-    private fun uriFromAuthority(authority: String): Uri {
-        return Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT).authority(authority).path("/")
-            .build()
     }
 
     private fun findNavControl(): NavController {

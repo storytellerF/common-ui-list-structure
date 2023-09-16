@@ -1,6 +1,7 @@
 package com.storyteller_f.file_system.instance.local
 
 import android.annotation.SuppressLint
+import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.os.Build
@@ -12,6 +13,7 @@ import com.storyteller_f.file_system.instance.BaseContextFileInstance
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileCreatePolicy.*
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.GetDocumentFile
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.FileInstanceUtility
@@ -23,27 +25,40 @@ import java.io.FileNotFoundException
 import java.io.FileOutputStream
 
 /**
- * @param prefix 用来标识对象所在区域，可能是外部，也可能是内部。比如/storage/XXXX-XXXX。仅对于本地文件系统有效。其他情况都是空。
- * @param preferenceKey 一般是authority，用于获取document provider 的uri
+ * 如果是通过挂载路径 访问/storage/emulated/0，uri 是file:///storage/emulated/0/Downloads，prefix 是/storage/emulated/0，tree 是primary:
+ * 如果是通过DocumentProvider 访问前者，uri 是content://authority/primary:/Downloads，prefix 是primary:，tree 是primary:
+ * @param prefix 用来标识对象所在区域，便于从path 中截取root对应的真正的路径。
+ * 如果是内存卡就是/storage/XXXX-XXXX。
+ * 如果是mounted，就是/storage/emulated/0。
+ * 如果是DocumentProvider，就是/ 加上treeId，并且treeId可以是/。内存卡和mounted 也可以通过DocumentProvider 直接访问
+ * @param preferenceKey 一般是authority，用于获取存储在FileSystemUriSaver 中取出rootUri。
+ * 如果是DocumentProvider，tree 也是必须的。
+ * @param tree 是DocumentProvider 的treeId，用来区分不同DocumentProvider 多个根的情况
  */
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class DocumentLocalFileInstance(
     private val prefix: String,
     private val preferenceKey: String,
+    private val tree: String,
     context: Context,
     uri: Uri
 ) : BaseContextFileInstance(context, uri) {
     private var _instance: DocumentFile? = null
+
     private suspend fun getInstanceRelinkIfNeed(): DocumentFile? {
         val temp = _instance
         if (temp == null) {
-            _instance = documentFileFromUri()
+            _instance = (getDocumentFile(NotCreate) as? GetDocumentFile.Success)?.file
         }
         return _instance
     }
 
     /**
-     * 有些document provider 的uri 对应的路径不是【/】
+     * 有些document provider 的uri 对应的路径不是path，所以需要从中截取真正的路径
+     * 比如mounted 路径，完整路径是/storage/emulated/0/Downloads，
+     * prefix 是/storage/emulated/0，
+     * path 是/storage/emulated/0/Downloads，
+     * pathRelativeRoot 是/Downloads
      */
     private val pathRelativeRoot: String by lazy {
         if (path == prefix) {
@@ -59,67 +74,72 @@ class DocumentLocalFileInstance(
         assert(path.startsWith(prefix))
     }
 
-    private suspend fun documentFileFromUri(): DocumentFile? = getDocumentFile(NotCreate)
-
     /**
      * 获取指定目录的document file
      *
      * @return 返回目标文件
      */
-    private suspend fun getDocumentFile(policy: FileCreatePolicy): DocumentFile? {
+    private suspend fun getDocumentFile(policy: FileCreatePolicy): GetDocumentFile {
         // 此uri 是当前前缀下的根目录uri。fileInstance 的uri 是fileSystem 使用的uri。
-        val rootUri = FileSystemUriSaver.instance.savedUri(context, preferenceKey)
-        if (rootUri == null) {
-            Log.e(TAG, "getDocumentFile: rootUri is null")
-            return null
-        }
+        val rootUri = FileSystemUriSaver.instance.savedUri(context, preferenceKey, tree)
+            ?: return GetDocumentFile.Failed(Exception("rootUri is null"))
         val rootFile = DocumentFile.fromTreeUri(context, rootUri)
-        if (rootFile == null) {
-            Log.e(TAG, "getDocumentFile: fromTreeUri is null")
-            return null
-        }
+            ?: return GetDocumentFile.Failed(Exception("fromTreeUri is null"))
         if (!rootFile.canRead()) {
-            Log.e(TAG, "getDocumentFile: 权限过期, 不可读写 $path prefix: $prefix")
-            return null
+            return GetDocumentFile.Failed(Exception("权限过期, 不可读写"))
         }
-        if (pathRelativeRoot == "/") return rootFile
+        if (pathRelativeRoot == "/") return GetDocumentFile.Success(rootFile)
         val nameItemPath = pathRelativeRoot.substring(
             1
         ).split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-        val endElementIsFileName = policy is Create && policy.isFile
-        val paths = if (endElementIsFileName) {
+        val createdLastFileIfNeed = policy is Create && policy.isFile
+        val paths = if (createdLastFileIfNeed) {
             nameItemPath.copyOfRange(0, nameItemPath.size - 1)
         } else {
             nameItemPath
         }
+        return loopDocumentFile(
+            rootFile,
+            paths,
+            policy,
+            if (createdLastFileIfNeed) nameItemPath.last() else null
+        )
+    }
+
+    private suspend fun loopDocumentFile(
+        rootFile: DocumentFile,
+        paths: Array<String>,
+        policy: FileCreatePolicy,
+        fileName: String?
+    ): GetDocumentFile {
         var temp: DocumentFile = rootFile
         for (name in paths) {
             yield()
             val foundFile = temp.findFile(name)
-            temp = if (foundFile == null) {
-                if (policy is NotCreate) {
-                    Log.e(TAG, "getDocumentFile: 文件找不到$path prefix: $prefix")
-                    return null
+            temp = when {
+                foundFile != null -> foundFile
+                policy is NotCreate -> {
+                    return GetDocumentFile.Failed(Exception("文件找不到$path prefix: $prefix"))
                 }
-                val created = temp.createDirectory(name)
-                if (created == null) {
-                    Log.e(TAG, "getDocumentFile: 文件创建失败$path prefix: $prefix")
-                    return null
-                } else {
-                    created
-                }
-            } else {
-                foundFile
+
+                else -> temp.createDirectory(name)
+                    ?: return GetDocumentFile.Failed(Exception("文件创建失败$path prefix: $prefix"))
             }
         }
 
-        // find file
-        if (endElementIsFileName) {
-            val fileName = nameItemPath[nameItemPath.size - 1]
+        return if (fileName == null)
+            GetDocumentFile.Success(temp)
+        else {
             val file = temp.findFile(fileName)
-            return file ?: temp.createFile("*/*", fileName)
+            if (file != null) {
+                GetDocumentFile.Success(file)
+            } else {
+                val created: DocumentFile? = temp.createFile("*/*", fileName)
+                if (created != null) GetDocumentFile.Success(created)
+                else
+                    GetDocumentFile.Failed(Exception("创建失败"))
+            }
         }
-        return temp
     }
 
     override suspend fun getDirectorySize(): Long = getDocumentFileSize(getInstanceRelinkIfNeed())
@@ -140,7 +160,7 @@ class DocumentLocalFileInstance(
 
     override suspend fun createDirectory(): Boolean {
         if (getInstanceRelinkIfNeed() != null) return true
-        val created = getDocumentFile(Create(false))
+        val created = tryCreate(false)
         if (created != null) {
             _instance = created
             return true
@@ -150,13 +170,16 @@ class DocumentLocalFileInstance(
 
     override suspend fun createFile(): Boolean {
         if (getInstanceRelinkIfNeed() != null) return true
-        val created = getDocumentFile(Create(true))
+        val created = tryCreate(true)
         if (created != null) {
             _instance = created
             return true
         }
         return false
     }
+
+    private suspend fun tryCreate(isFile: Boolean) =
+        (getDocumentFile(Create(isFile)) as? GetDocumentFile.Success)?.file
 
     @Throws(Exception::class)
     override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance? {
@@ -169,7 +192,7 @@ class DocumentLocalFileInstance(
         }
 
         val build = uri.buildUpon().path(File(path, name).absolutePath).build()
-        val instance = DocumentLocalFileInstance(prefix, preferenceKey, context, build)
+        val instance = DocumentLocalFileInstance(prefix, preferenceKey, tree, context, build)
         instance._instance = getChild(name, policy)
         return instance
     }
@@ -248,7 +271,7 @@ class DocumentLocalFileInstance(
         }
 
         val parent = uri.buildUpon().path(parentFile.absolutePath).build()
-        val instance = DocumentLocalFileInstance(prefix, prefix, context, parent)
+        val instance = DocumentLocalFileInstance(prefix, prefix, tree, context, parent)
         instance._instance = currentParentFile
         return instance
     }
@@ -321,16 +344,38 @@ class DocumentLocalFileInstance(
     companion object {
         private const val TAG = "DocumentLocalFileInstan"
         const val EXTERNAL_STORAGE_DOCUMENTS = "com.android.externalstorage.documents"
+        const val EXTERNAL_STORAGE_DOCUMENTS_TREE = "primary:"
+
+        /**
+         * 不是通过DocumentProvider 直接访问的。
+         */
         fun getEmulated(context: Context, uri: Uri, prefix: String): DocumentLocalFileInstance {
-            return DocumentLocalFileInstance(prefix, EXTERNAL_STORAGE_DOCUMENTS, context, uri)
+            assert(uri.scheme == ContentResolver.SCHEME_FILE)
+            return DocumentLocalFileInstance(
+                prefix,
+                EXTERNAL_STORAGE_DOCUMENTS,
+                EXTERNAL_STORAGE_DOCUMENTS_TREE,
+                context,
+                uri
+            )
         }
 
         /**
-         * sd 卡使用特殊的preferenceKey，就是路径
+         * 不是通过DocumentProvider 直接访问的。
+         * sd 卡使用特殊的preferenceKey，正常来说就是路径
          */
         fun getMounted(context: Context, uri: Uri, prefix: String): DocumentLocalFileInstance {
-            // fixme sdCard 与emulated authority 相同，只是rootId 不同
-            return DocumentLocalFileInstance(prefix, prefix, context, uri)
+            assert(uri.scheme == ContentResolver.SCHEME_FILE)
+            val tree = getMountedTree(prefix)
+            return DocumentLocalFileInstance(prefix, EXTERNAL_STORAGE_DOCUMENTS, tree, context, uri)
+        }
+
+        fun getMountedTree(prefix: String) = prefix.substring(prefix.lastIndexOf("/") + 1)
+
+        fun uriFromAuthority(authority: String, tree: String): Uri {
+            return Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT).authority(authority)
+                .path("/${tree}")
+                .build()
         }
     }
 }
