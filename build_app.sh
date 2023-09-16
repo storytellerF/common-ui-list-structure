@@ -19,11 +19,11 @@ if [ "$1" != "cache" ]; then
 
 fi
 
-if [ "$2" = "sml" ]; then
-    cd SML
-    customBuild sml ":plugin:publish" $1
-    cd ..
-fi
+#if [ "$2" = "sml" ]; then
+#    cd SML
+#    customBuild sml ":plugin:publish" $1
+#    cd ..
+#fi
 
 
 #compile common-ui-list

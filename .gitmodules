@@ -1,6 +1,0 @@
-[submodule "FilterUIProject"]
-	path = FilterUIProject
-	url = https://github.com/storytellerF/FilterUIProject.git
-[submodule "SML"]
-	path = SML
-	url = https://github.com/storytellerF/SML.git
