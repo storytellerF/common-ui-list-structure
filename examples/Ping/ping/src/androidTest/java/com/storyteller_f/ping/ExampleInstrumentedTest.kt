@@ -5,6 +5,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -18,5 +19,13 @@ class ExampleInstrumentedTest {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("com.storyteller_f.ping", appContext.packageName)
+        val root = appContext.root!!
+        assertEquals(root.absolutePath, getDocument(root, null).absolutePath)
+        assertEquals(
+            root.absolutePath,
+            getDocument(root, StorageProvider.ELEMENT_ID).absolutePath
+        )
+        assertEquals("${StorageProvider.ELEMENT_ID}/test", subDocumentId(File(root, "test"), root))
+        assertEquals(StorageProvider.ELEMENT_ID, subDocumentId(root, root))
     }
 }

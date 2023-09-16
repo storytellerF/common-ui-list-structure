@@ -26,6 +26,7 @@ class StorageProvider : DocumentsProvider() {
 
     companion object {
         private const val DEFAULT_ROOT_ID = "0"
+        internal const val ELEMENT_ID = "ping"
 
         private val DEFAULT_ROOT_PROJECTION: Array<String> = arrayOf(
             DocumentsContract.Root.COLUMN_ROOT_ID,
@@ -68,8 +69,8 @@ class StorageProvider : DocumentsProvider() {
                 add(DocumentsContract.Root.COLUMN_FLAGS, flags)
                 add(DocumentsContract.Root.COLUMN_ICON, R.drawable.ic_launcher_foreground)
                 add(DocumentsContract.Root.COLUMN_TITLE, context?.getString(R.string.app_name))
-                add(DocumentsContract.Root.COLUMN_SUMMARY, "your private data")
-                add(DocumentsContract.Root.COLUMN_DOCUMENT_ID, "/")
+                add(DocumentsContract.Root.COLUMN_SUMMARY, "Your private data")
+                add(DocumentsContract.Root.COLUMN_DOCUMENT_ID, ELEMENT_ID)
             }
         }
     }
@@ -81,8 +82,7 @@ class StorageProvider : DocumentsProvider() {
         )
         return MatrixCursor(projection ?: DEFAULT_DOCUMENT_PROJECTION).apply {
             val root = context.root ?: return@apply
-            val document = documentId ?: "/"
-            val file = File(root, document)
+            val file = getDocument(root, documentId)
             newRow().apply {
                 fileRow(file, root)
             }
@@ -91,47 +91,16 @@ class StorageProvider : DocumentsProvider() {
 
     private fun MatrixCursor.handleChild(documentId: String?) {
         if (documentId != null) {
+
             val root = context.root ?: return
             context?.let {
-                File(root, documentId).listFiles()?.forEach {
+                File(root, getPath(documentId,)).listFiles()?.forEach {
                     newRow().apply {
                         fileRow(it, root)
                     }
                 }
             }
         }
-    }
-
-    private val Context?.root: File?
-        get() {
-            return this?.filesDir?.parentFile
-        }
-
-    private fun MatrixCursor.RowBuilder.fileRow(it: File, root: File) {
-        val subDocumentId = it.absolutePath.substring(root.absolutePath.length)
-        add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, subDocumentId.ifBlank { "/" })
-        val type = if (it.isFile) {
-            MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
-        } else {
-            DocumentsContract.Document.MIME_TYPE_DIR
-        }
-        add(DocumentsContract.Document.COLUMN_MIME_TYPE, type)
-        val copyFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            DocumentsContract.Document.FLAG_SUPPORTS_COPY
-        } else {
-            0
-        }
-        val thumbnailFlag = if (it.extension == "mp4") {
-            DocumentsContract.Document.FLAG_SUPPORTS_THUMBNAIL
-        } else 0
-        add(DocumentsContract.Document.COLUMN_FLAGS, copyFlag or thumbnailFlag)
-        add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, it.name)
-        add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, it.lastModified())
-        val size = if (it.isFile) {
-            it.length()
-        } else 0
-        add(DocumentsContract.Document.COLUMN_SIZE, size)
-        Log.d(TAG, "fileRow: $subDocumentId ${it.name}")
     }
 
     override fun queryChildDocuments(
@@ -233,4 +202,52 @@ class StorageProvider : DocumentsProvider() {
         mediaExtractor.setDataSource(file.absolutePath)
         return mediaExtractor.getFrameAtTime(0)!!
     }
+}
+
+val Context?.root: File?
+    get() {
+        return this?.filesDir?.parentFile
+    }
+
+fun getDocument(root: File, documentId: String?): File {
+    val subPath = if (documentId == null || documentId == StorageProvider.ELEMENT_ID) "/"
+    else documentId.substring(
+        StorageProvider.ELEMENT_ID.length
+    )
+    return File(root, subPath)
+}
+
+fun MatrixCursor.RowBuilder.fileRow(it: File, root: File) {
+    val subDocumentId = subDocumentId(it, root)
+    add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, subDocumentId)
+    val type = if (it.isFile) {
+        MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
+    } else {
+        DocumentsContract.Document.MIME_TYPE_DIR
+    }
+    add(DocumentsContract.Document.COLUMN_MIME_TYPE, type)
+    val copyFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        DocumentsContract.Document.FLAG_SUPPORTS_COPY
+    } else {
+        0
+    }
+    val thumbnailFlag = if (it.extension == "mp4") {
+        DocumentsContract.Document.FLAG_SUPPORTS_THUMBNAIL
+    } else 0
+    add(DocumentsContract.Document.COLUMN_FLAGS, copyFlag or thumbnailFlag)
+    add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, it.name)
+    add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, it.lastModified())
+    val size = if (it.isFile) {
+        it.length()
+    } else 0
+    add(DocumentsContract.Document.COLUMN_SIZE, size)
+    Log.d("StorageProvider", "fileRow: $subDocumentId ${it.name}")
+}
+
+fun subDocumentId(it: File, root: File): String {
+    return "${StorageProvider.ELEMENT_ID}${it.absolutePath.substring(root.absolutePath.length)}"
+}
+
+fun getPath(documentId: String): String {
+    return documentId.substring(StorageProvider.ELEMENT_ID.length)
 }
