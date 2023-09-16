@@ -14,7 +14,6 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStoreOwner
@@ -37,6 +36,7 @@ import com.storyteller_f.common_vm_ktx.debounce
 import com.storyteller_f.common_vm_ktx.distinctUntilChangedBy
 import com.storyteller_f.common_vm_ktx.svm
 import com.storyteller_f.common_vm_ktx.vm
+import com.storyteller_f.common_vm_ktx.wait5
 import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
@@ -204,14 +204,9 @@ fun LifecycleOwner.fileList(
             activeFilters.same,
             activeSortChains.same,
             fileListViewModel.displayGrid
-        ).distinctUntilChanged().debounce(200)
-            .observe(owner, Observer { (fileInstance, filterHiddenFile, filters, sortChains, d5) ->
-                fileInstance ?: return@Observer
-                filterHiddenFile ?: return@Observer
-                filters ?: return@Observer
-                sortChains ?: return@Observer
-                d5 ?: return@Observer
-                val display = if (d5 == true) "grid" else ""
+        ).wait5().distinctUntilChanged().debounce(200)
+            .observe(owner) { (fileInstance, filterHiddenFile, filters, sortChains, d5) ->
+                val display = if (d5) "grid" else ""
 
                 viewModel.observerInScope(
                     owner,
@@ -225,7 +220,7 @@ fun LifecycleOwner.fileList(
                 ) { pagingData ->
                     adapter.submitData(pagingData)
                 }
-            })
+            }
 
     }
 }

@@ -13,11 +13,25 @@ internal fun generateForV6(): String {
 }
 
 private fun combineDao(count: Int, type: String): String {
+    val typeSafe = type.replace("?", "")
+    val checkNull = repeat("it.d1 != null", count, sp = " && ")
+    val params = repeat("it.d1", count)
+    val genericList = repeat("T1", count)
     return """
-        fun<${repeat("T1", count)}> combineDao(${repeat("s1: LiveData<T1>", count)}): $type {
+        fun<$genericList> combineDao(${repeat("s1: LiveData<T1>", count)}): $type {
             val mediatorLiveData = $type()
             ${repeat("var d1 = s1.value\n", count, sp = "\n").yes(3).indentRest()}
             ${liveDataAddSource(count).yes(3).indentRest()}
+            return mediatorLiveData
+        }
+        
+        fun<$genericList> $type.wait$count() : $typeSafe {
+            val mediatorLiveData = $typeSafe()
+            mediatorLiveData.addSource(this) {
+                if ($checkNull) {
+                    mediatorLiveData.value = Dao$count($params)
+                }
+            }
             return mediatorLiveData
         }
     """.trimIndent()
