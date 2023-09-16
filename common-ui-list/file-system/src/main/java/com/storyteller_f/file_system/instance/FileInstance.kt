@@ -15,8 +15,7 @@ import java.io.FileOutputStream
 // todo file descriptor
 abstract class FileInstance(var uri: Uri) {
 
-    val path: String
-        get() = uri.path!!
+    open val path: String = uri.path!!
 
     /**
      * 获取父路径
@@ -28,10 +27,6 @@ abstract class FileInstance(var uri: Uri) {
 
     val name: String
         get() = File(path).name
-
-    init {
-        assert(path.trim { it <= ' ' }.isNotEmpty())
-    }
 
     @WorkerThread
     abstract suspend fun getFile(): FileItemModel

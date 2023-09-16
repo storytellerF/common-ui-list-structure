@@ -3,6 +3,7 @@ package com.storyteller_f.giant_explorer.control
 import android.app.Activity
 import android.app.Application
 import android.content.ComponentName
+import android.content.ContentResolver
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
@@ -45,6 +46,7 @@ import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.FileSystemUriSaver
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
+import com.storyteller_f.file_system.tree
 import com.storyteller_f.file_system_ktx.getFileInstance
 import com.storyteller_f.file_system_root.RootAccessFileInstance
 import com.storyteller_f.giant_explorer.R
@@ -206,7 +208,12 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             }.flowWithLifecycle(lifecycle).collectLatest {
                 val bundle =
                     findNavControl().currentBackStackEntry?.arguments ?: return@collectLatest
-                val build = FileListFragmentArgs.fromBundle(bundle).uri.buildUpon().path(it).build()
+                val uri = FileListFragmentArgs.fromBundle(bundle).uri
+                val build = if (uri.scheme == ContentResolver.SCHEME_CONTENT) {
+                    val path = if (it == "/") "" else it
+                    val tree = uri.tree
+                    uri.buildUpon().path("/$tree$path").build()
+                } else uri.buildUpon().path(it).build()
                 navController.navigate(
                     R.id.fileListFragment, FileListFragmentArgs(build).toBundle()
                 )

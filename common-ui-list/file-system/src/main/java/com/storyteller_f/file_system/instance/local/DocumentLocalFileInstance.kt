@@ -26,11 +26,12 @@ import java.io.FileOutputStream
 
 /**
  * 如果是通过挂载路径 访问/storage/emulated/0，uri 是file:///storage/emulated/0/Downloads，prefix 是/storage/emulated/0，tree 是primary:
+ * 如果是访问/storage/XXXX-XXXX，uri 是file:///storage/XXXX-XXXX/Downloads，prefix 是/storage/XXXX-XXXX，tree 是XXXX-XXXX:
  * 如果是通过DocumentProvider 访问前者，uri 是content://authority/primary:/Downloads，prefix 是primary:，tree 是primary:
- * @param prefix 用来标识对象所在区域，便于从path 中截取root对应的真正的路径。
- * 如果是内存卡就是/storage/XXXX-XXXX。
- * 如果是mounted，就是/storage/emulated/0。
- * 如果是DocumentProvider，就是/ 加上treeId，并且treeId可以是/。内存卡和mounted 也可以通过DocumentProvider 直接访问
+ * @param prefix 用于从path 中截取root对应的真正的路径。
+ * 如果是内存卡就是/storage/XXXX-XXXX。对应的tree 是XXXX-XXXX:。
+ * 如果是mounted，就是/storage/emulated/0。包含tree 部分。对应的tree 是primary:
+ * 如果是DocumentProvider，就是/ 加上treeId，并且treeId可以是/。内存卡和mounted 也可以通过DocumentProvider 直接访问。
  * @param preferenceKey 一般是authority，用于获取存储在FileSystemUriSaver 中取出rootUri。
  * 如果是DocumentProvider，tree 也是必须的。
  * @param tree 是DocumentProvider 的treeId，用来区分不同DocumentProvider 多个根的情况
@@ -53,25 +54,35 @@ class DocumentLocalFileInstance(
         return _instance
     }
 
+    private val uriFullPath = uri.path!!
+
+    override val path: String = if (uri.scheme == ContentResolver.SCHEME_FILE) {
+        uriFullPath
+    } else {
+        uri.path!!.substring(
+            tree.length + 1
+        )
+    }
+
     /**
-     * 有些document provider 的uri 对应的路径不是path，所以需要从中截取真正的路径
+     * 有些document provider 的uri 对应的路径不是完整的path，所以需要从中截取真正的路径
      * 比如mounted 路径，完整路径是/storage/emulated/0/Downloads，
      * prefix 是/storage/emulated/0，
      * path 是/storage/emulated/0/Downloads，
      * pathRelativeRoot 是/Downloads
      */
     private val pathRelativeRoot: String by lazy {
-        if (path == prefix) {
+        if (uriFullPath == prefix) {
             "/"
         } else {
-            path.substring(prefix.length)
+            uriFullPath.substring(prefix.length)
         }.apply {
             assert(startsWith("/"))
         }
     }
 
     init {
-        assert(path.startsWith(prefix))
+        assert(uriFullPath.startsWith(prefix))
     }
 
     /**
@@ -119,11 +130,11 @@ class DocumentLocalFileInstance(
             temp = when {
                 foundFile != null -> foundFile
                 policy is NotCreate -> {
-                    return GetDocumentFile.Failed(Exception("文件找不到$path prefix: $prefix"))
+                    return GetDocumentFile.Failed(Exception("文件找不到$uriFullPath prefix: $prefix"))
                 }
 
                 else -> temp.createDirectory(name)
-                    ?: return GetDocumentFile.Failed(Exception("文件创建失败$path prefix: $prefix"))
+                    ?: return GetDocumentFile.Failed(Exception("文件创建失败$uriFullPath prefix: $prefix"))
             }
         }
 
@@ -186,14 +197,14 @@ class DocumentLocalFileInstance(
     @Throws(Exception::class)
     override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance? {
         if (!exists()) {
-            Log.e(TAG, "toChild: 未经过初始化或者文件不存在：$path")
+            Log.e(TAG, "toChild: 未经过初始化或者文件不存在：$uriFullPath")
             return null
         }
         if (isFile()) {
             throw Exception("当前是一个文件，无法向下操作")
         }
 
-        val build = uri.buildUpon().path(File(path, name).absolutePath).build()
+        val build = uri.buildUpon().path(File(uriFullPath, name).absolutePath).build()
         val instance = DocumentLocalFileInstance(prefix, preferenceKey, tree, context, build)
         instance._instance = getChild(name, policy)
         return instance
@@ -263,7 +274,7 @@ class DocumentLocalFileInstance(
 
     @Throws(Exception::class)
     override suspend fun toParent(): BaseContextFileInstance {
-        val parentFile = File(path).parentFile ?: throw Exception("到头了，无法继续向上寻找")
+        val parentFile = File(uriFullPath).parentFile ?: throw Exception("到头了，无法继续向上寻找")
         val currentParentFile = getInstanceRelinkIfNeed()!!.parentFile
         checkNotNull(currentParentFile) {
             "查找parent DocumentFile失败"
@@ -281,7 +292,7 @@ class DocumentLocalFileInstance(
     override suspend fun isFile(): Boolean {
         val instanceRelinkIfNeed = getInstanceRelinkIfNeed()
         if (instanceRelinkIfNeed == null) {
-            Log.e(TAG, "isFile: path:$path")
+            Log.e(TAG, "isFile: path:$uriFullPath")
         }
         return instanceRelinkIfNeed!!.isFile
     }
@@ -293,7 +304,7 @@ class DocumentLocalFileInstance(
     override suspend fun isDirectory(): Boolean {
         val instanceRelinkIfNeed = getInstanceRelinkIfNeed()
         if (instanceRelinkIfNeed == null) {
-            Log.e(TAG, "isDirectory: isDirectory:$path")
+            Log.e(TAG, "isDirectory: isDirectory:$uriFullPath")
         }
         return instanceRelinkIfNeed!!.isDirectory
     }
@@ -372,7 +383,7 @@ class DocumentLocalFileInstance(
             return DocumentLocalFileInstance(prefix, EXTERNAL_STORAGE_DOCUMENTS, tree, context, uri)
         }
 
-        fun getMountedTree(prefix: String) = prefix.substring(prefix.lastIndexOf("/") + 1)
+        fun getMountedTree(prefix: String) = prefix.substring(prefix.lastIndexOf("/") + 1) + ":"
 
         fun uriFromAuthority(authority: String, tree: String): Uri {
             return Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT).authority(authority)

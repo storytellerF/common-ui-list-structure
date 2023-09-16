@@ -114,7 +114,7 @@ object FileInstanceFactory {
 
         return when (scheme) {
             ContentResolver.SCHEME_CONTENT -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                val tree = uri.pathSegments.first()
+                val tree = uri.tree
                 DocumentLocalFileInstance("/$tree", uri.authority!!, tree, context, safeUri)
             } else {
                 TODO("VERSION.SDK_INT < LOLLIPOP")
@@ -338,3 +338,9 @@ object FileInstanceFactory {
         }
     }
 }
+
+val Uri.tree: String
+    get() {
+        assert(scheme == ContentResolver.SCHEME_CONTENT)
+        return pathSegments.first()!!
+    }
