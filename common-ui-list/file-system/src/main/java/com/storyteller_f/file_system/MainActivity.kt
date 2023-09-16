@@ -108,7 +108,12 @@ class MainActivity : AppCompatActivity() {
                         Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                     )
                 }
-                FileSystemUriSaver.instance.saveUri(this, DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS, uri, null)
+                FileSystemUriSaver.instance.saveUri(
+                    this,
+                    DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS,
+                    uri,
+                    null
+                )
                 success()
                 return true
             }

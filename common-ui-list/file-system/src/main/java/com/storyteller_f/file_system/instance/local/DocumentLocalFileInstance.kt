@@ -127,17 +127,19 @@ class DocumentLocalFileInstance(
             }
         }
 
-        return if (fileName == null)
+        return if (fileName == null) {
             GetDocumentFile.Success(temp)
-        else {
+        } else {
             val file = temp.findFile(fileName)
             if (file != null) {
                 GetDocumentFile.Success(file)
             } else {
                 val created: DocumentFile? = temp.createFile("*/*", fileName)
-                if (created != null) GetDocumentFile.Success(created)
-                else
+                if (created != null) {
+                    GetDocumentFile.Success(created)
+                } else {
                     GetDocumentFile.Failed(Exception("创建失败"))
+                }
             }
         }
     }
@@ -374,7 +376,7 @@ class DocumentLocalFileInstance(
 
         fun uriFromAuthority(authority: String, tree: String): Uri {
             return Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT).authority(authority)
-                .path("/${tree}")
+                .path("/$tree")
                 .build()
         }
     }
