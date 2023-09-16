@@ -1,7 +1,6 @@
 package com.storyteller_f.common_ui
 
 import android.annotation.SuppressLint
-import androidx.activity.ComponentActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
@@ -18,17 +17,15 @@ val LifecycleOwner.cycle
     @SuppressLint("RestrictedApi")
     get() = owner.lifecycle
 
-fun LifecycleOwner.repeatOnViewResumed(block: suspend CoroutineScope.() -> Unit) {
+fun LifecycleOwner.repeatOnViewResumed(block: suspend CoroutineScope.() -> Unit) =
     scope.launch {
         cycle.repeatOnLifecycle(Lifecycle.State.RESUMED, block)
     }
-}
 
 val LifecycleOwner.owner
     get() = when (this) {
         is Fragment -> viewLifecycleOwner
-        is ComponentActivity -> this
-        else -> throw Exception("unknown type $this")
+        else -> this
     }
 
 val LifecycleOwner.fm

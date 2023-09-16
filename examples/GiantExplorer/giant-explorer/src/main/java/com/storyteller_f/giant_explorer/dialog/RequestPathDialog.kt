@@ -59,12 +59,13 @@ class RequestPathDialog :
                 dismiss()
             }
         }
-        observer.filterHiddenFile.data.observe(viewLifecycleOwner) {
+        val filterHiddenFile = observer.fileListViewModel.filterHiddenFile
+        filterHiddenFile.observe(viewLifecycleOwner) {
             binding.filterHiddenFile.isActivated = it
         }
         binding.filterHiddenFile.setOnClick {
-            observer.filterHiddenFile.data.value =
-                observer.filterHiddenFile.data.value?.not() ?: false
+            filterHiddenFile.value =
+                filterHiddenFile.value?.not() ?: false
         }
         binding.bottom.negative.setOnClick {
             dismiss()

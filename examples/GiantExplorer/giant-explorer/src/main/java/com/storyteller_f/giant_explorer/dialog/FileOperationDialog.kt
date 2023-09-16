@@ -4,15 +4,13 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.core.view.isVisible
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.distinctUntilChanged
-import androidx.lifecycle.repeatOnLifecycle
 import com.storyteller_f.common_pr.state
 import com.storyteller_f.common_ui.SimpleDialogFragment
 import com.storyteller_f.common_ui.onVisible
 import com.storyteller_f.common_ui.owner
 import com.storyteller_f.common_ui.pp
-import com.storyteller_f.common_ui.scope
+import com.storyteller_f.common_ui.repeatOnViewResumed
 import com.storyteller_f.common_vm_ktx.GenericValueModel
 import com.storyteller_f.common_vm_ktx.avm
 import com.storyteller_f.common_vm_ktx.debounce
@@ -25,7 +23,6 @@ import com.storyteller_f.giant_explorer.databinding.DialogFileOperationBinding
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.launch
 import java.util.UUID
 
 class FileOperationDialog :
@@ -106,11 +103,9 @@ class FileOperationDialog :
             awaitClose { orPut.remove(defaultProgressListener) }
         }
         val detail = binding.textViewDetail
-        scope.launch {
-            owner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                callbackFlow.collect {
-                    detail.append(it)
-                }
+        repeatOnViewResumed {
+            callbackFlow.collect {
+                detail.append(it)
             }
         }
     }

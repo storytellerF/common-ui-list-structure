@@ -3,7 +3,6 @@ package com.storyteller_f.giant_explorer.control
 import android.content.ClipData
 import android.content.ClipDescription
 import android.content.Context
-import android.net.Uri
 import android.os.Build
 import android.view.DragEvent
 import android.view.View
@@ -16,7 +15,10 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.PagingData
 import androidx.recyclerview.widget.GridLayoutManager
@@ -29,16 +31,12 @@ import com.storyteller_f.common_ktx.same
 import com.storyteller_f.common_ui.cycle
 import com.storyteller_f.common_ui.owner
 import com.storyteller_f.common_ui.setVisible
-import com.storyteller_f.common_vm_ktx.StateValueModel
 import com.storyteller_f.common_vm_ktx.VMScope
 import com.storyteller_f.common_vm_ktx.combineDao
 import com.storyteller_f.common_vm_ktx.debounce
 import com.storyteller_f.common_vm_ktx.distinctUntilChangedBy
-import com.storyteller_f.common_vm_ktx.genericValueModel
-import com.storyteller_f.common_vm_ktx.keyPrefix
 import com.storyteller_f.common_vm_ktx.svm
 import com.storyteller_f.common_vm_ktx.vm
-import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.checkPathPermission
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
@@ -74,6 +72,11 @@ import com.storyteller_f.ui_list.ui.valueContains
 import kotlinx.coroutines.launch
 import java.util.Locale
 
+class FileListViewModel(stateHandle: SavedStateHandle): ViewModel() {
+    val displayGrid = stateHandle.getLiveData("display", false)
+    val filterHiddenFile = stateHandle.getLiveData("filterHiddenFile", false)
+}
+
 /**
  * @param owner 一般来说owner 都是this
  * @param scope viewModel 作用域
@@ -88,12 +91,9 @@ class FileListObserver<T>(
     val selected: List<Pair<DataItemHolder, Int>>?
         get() = session.selected.value
 
-    val filterHiddenFile by owner.svm({}, scope) { it, _ ->
-        StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
+    val fileListViewModel by owner.svm({}, scope) { it, _ ->
+        FileListViewModel(it)
     }
-    private val displayGrid by keyPrefix("display", owner.vm({}, scope) { _ ->
-        genericValueModel(false)
-    })
 
     private val session by owner.vm(args) {
         FileExplorerSession(
@@ -138,7 +138,7 @@ class FileListObserver<T>(
         updatePath: (String) -> Unit
     ) {
 
-        displayGrid.data.observe(owner) {
+        fileListViewModel.displayGrid.observe(owner) {
             listWithState.recyclerView.isVisible = false
             adapter.submitData(cycle, PagingData.empty())
             listWithState.recyclerView.layoutManager = when {
@@ -151,8 +151,7 @@ class FileListObserver<T>(
             adapter,
             data,
             session,
-            filterHiddenFile.data,
-            displayGrid.data,
+            fileListViewModel,
             rightSwipe,
             updatePath
         )
@@ -168,8 +167,7 @@ fun LifecycleOwner.fileList(
     adapter: SimpleSourceAdapter<FileItemHolder, FileViewHolder>,
     viewModel: SimpleSearchViewModel<FileModel, FileExplorerSearch, FileItemHolder>,
     session: FileExplorerSession,
-    filterHiddenFileLiveData: LiveData<Boolean>,
-    display: LiveData<Boolean>,
+    fileListViewModel: FileListViewModel,
     rightSwipe: (FileItemHolder) -> Unit,
     updatePath: (String) -> Unit
 ) {
@@ -189,18 +187,8 @@ fun LifecycleOwner.fileList(
         session.fileInstance.observe(owner) {
             updatePath(it.path)
         }
-        combineDao(
-            session.fileInstance,
-            filterHiddenFileLiveData,
-            activeFilters.same,
-            activeSortChains.same,
-            display
-        ).debounce(200).observe(owner, Observer {
-            val fileInstance = it.d1 ?: return@Observer
-            val filterHiddenFile = it.d2 ?: return@Observer
-            val filters = it.d3.orEmpty()
-            val sortChains = it.d4.orEmpty()
-            val path = fileInstance.uri
+        session.fileInstance.observe(owner) {
+            val path = it.uri
             //检查权限
             owner.lifecycleScope.launch {
                 if (!checkPathPermission(path)) {
@@ -209,20 +197,35 @@ fun LifecycleOwner.fileList(
                     }
                 }
             }
+        }
+        combineDao(
+            session.fileInstance,
+            fileListViewModel.filterHiddenFile,
+            activeFilters.same,
+            activeSortChains.same,
+            fileListViewModel.displayGrid
+        ).distinctUntilChanged().debounce(200)
+            .observe(owner, Observer { (fileInstance, filterHiddenFile, filters, sortChains, d5) ->
+                fileInstance ?: return@Observer
+                filterHiddenFile ?: return@Observer
+                filters ?: return@Observer
+                sortChains ?: return@Observer
+                d5 ?: return@Observer
+                val display = if (d5 == true) "grid" else ""
 
-            viewModel.observerInScope(
-                owner,
-                FileExplorerSearch(
-                    fileInstance,
-                    filterHiddenFile,
-                    filters,
-                    sortChains,
-                    if (it.d5 == true) "grid" else ""
-                )
-            ) { pagingData ->
-                adapter.submitData(pagingData)
-            }
-        })
+                viewModel.observerInScope(
+                    owner,
+                    FileExplorerSearch(
+                        fileInstance,
+                        filterHiddenFile,
+                        filters,
+                        sortChains,
+                        display
+                    )
+                ) { pagingData ->
+                    adapter.submitData(pagingData)
+                }
+            })
 
     }
 }
