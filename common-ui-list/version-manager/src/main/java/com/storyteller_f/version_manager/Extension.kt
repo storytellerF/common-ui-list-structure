@@ -144,6 +144,14 @@ fun Project.baseApp() {
             includeInApk = false
         }
     }
+
+    dependencies {
+        val baoModule = findProject(":bao:startup")
+        if (baoModule != null)
+            "implementation"(baoModule)
+        else
+            "implementation"("com.github.storytellerF.Bao:startup:2.2.0")
+    }
 }
 
 fun Project.baseLibrary() {

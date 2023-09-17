@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import com.google.gson.typeadapters.RuntimeTypeAdapterFactory
 import com.storyteller_f.common_ui.CommonDialogFragment
 import com.storyteller_f.config_core.ConfigItem
-import com.storyteller_f.config_edit.DefaultDialog
+import com.storyteller_f.config_core.DefaultDialog
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.filter_core.Filter
 import com.storyteller_f.filter_core.config.FilterConfigItem
@@ -32,16 +32,20 @@ class FilterDialogFragment : CommonDialogFragment() {
 
     private val listener =
         object : DefaultDialog.Listener<Filter<FileSystemItemModel>, FilterConfigItem> {
-            override fun onSaveState(oList: List<Filter<FileSystemItemModel>>) =
+            override fun onSaveState(oList: List<Filter<FileSystemItemModel>>): List<FilterConfigItem> =
                 oList.map {
                     (it as NameFilter).item
                 }.toMutableList()
 
-            override fun onActiveListSelected(configItems: List<FilterConfigItem>) =
-                configItems.buildFilters()
-
             override fun onActiveChanged(activeList: List<Filter<FileSystemItemModel>>) {
                 activeFilters.value = activeList
+            }
+
+            override fun onEditingChanged(editing: List<Filter<FileSystemItemModel>>) {
+            }
+
+            override fun onRestoreState(configItems: List<FilterConfigItem>): List<Filter<FileSystemItemModel>> {
+                return configItems.buildFilters()
             }
         }
 
@@ -51,7 +55,7 @@ class FilterDialogFragment : CommonDialogFragment() {
         }
 
     companion object {
-        val suffix = "filter"
+        const val suffix = "filter"
         val factory: RuntimeTypeAdapterFactory<ConfigItem> = RuntimeTypeAdapterFactory.of(
             ConfigItem::class.java, "config-item-key"
         ).registerSubtype(NameFilter.Config::class.java, "name")!!

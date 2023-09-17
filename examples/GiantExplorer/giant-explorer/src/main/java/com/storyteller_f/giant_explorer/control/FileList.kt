@@ -55,8 +55,8 @@ import com.storyteller_f.giant_explorer.dialog.activeFilters
 import com.storyteller_f.giant_explorer.dialog.activeSortChains
 import com.storyteller_f.giant_explorer.model.FileModel
 import com.storyteller_f.giant_explorer.pc_end_on
-import com.storyteller_f.sort_ui.SortChain
-import com.storyteller_f.sort_ui.SortDialog
+import com.storyteller_f.sort_core.config.SortChain
+import com.storyteller_f.sort_core.config.SortChains
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import com.storyteller_f.ui_list.core.BindingViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
@@ -371,12 +371,13 @@ fun fileServiceBuilder(
                 f.filter(it)
             })
         }
-        val directories = listSafe.directories.toList()
-        val files = listSafe.files.toList()
+        val directories = listSafe.directories
+        val files = listSafe.files
 
         if (sortChains.isNotEmpty()) {
-            SortDialog.sortInternal(directories, sortChains)
-            SortDialog.sortInternal(files, sortChains)
+            val sortChains1 = SortChains(sortChains)
+            directories.sortWith(sortChains1)
+            files.sortWith(sortChains1)
         }
         val listFiles = if (searchQuery.filterHiddenFile || filterList.isNotEmpty()) {
             directories.filter(filterPredicate).plus(files.filter(filterPredicate))

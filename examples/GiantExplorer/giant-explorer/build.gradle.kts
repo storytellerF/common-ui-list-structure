@@ -56,14 +56,14 @@ dependencies {
     implementation("androidx.appcompat:appcompat:${Versions.appcompatVersion}")
     implementation("com.google.android.material:material:${Versions.materialVersion}")
     implementation("androidx.constraintlayout:constraintlayout:${Versions.constraintLayoutVersion}")
-    implementation("androidx.navigation:navigation-fragment-ktx:2.6.0")
-    implementation("androidx.navigation:navigation-ui-ktx:2.6.0")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.7.2")
+    implementation("androidx.navigation:navigation-ui-ktx:2.7.2")
     fileSystemDependency()
     networkDependency()
     workerDependency()
-    implementation("androidx.preference:preference-ktx:1.2.0")
+    implementation("androidx.preference:preference-ktx:1.2.1")
     implementation("com.j256.simplemagic:simplemagic:1.17")
-    implementation("androidx.browser:browser:1.5.0")
+    implementation("androidx.browser:browser:1.6.0")
 
     val libsuVersion = "5.0.3"
 
@@ -79,12 +79,12 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.15.1")
 
     implementation(project(":giant-explorer-plugin-core"))
-    implementation("androidx.webkit:webkit:1.7.0")
+    implementation("androidx.webkit:webkit:1.8.0")
     implementation(project(":compat-ktx"))
     androidTestImplementation("androidx.room:room-testing:2.5.2")
     //filter & sort
     val filterArtifact = listOf("config-core", "sort-core", "filter-core", "filter-ui", "sort-ui")
-       
+
     val filterModules = filterArtifact.mapNotNull {
         findProject(":filter:$it")
     }
@@ -94,19 +94,15 @@ dependencies {
         }
     } else {
         filterArtifact.forEach {
-            implementation("com.github.storytellerF.FilterUIProject:$it:2.0")
+            implementation("com.github.storytellerF.Shun:$it:1.0.0")
         }
     }
     implementation(project(":file-system-remote"))
     implementation(project(":file-system-root"))
     implementation("com.madgag.spongycastle:core:1.58.0.0")
     implementation("com.madgag.spongycastle:prov:1.58.0.0")
-    val baoModule = findProject(":bao:startup")
-    if (baoModule != null)
-        implementation(baoModule)
-    else
-        implementation("com.github.storytellerF.Bao:startup:2.2.0")
-    implementation("androidx.window:window:1.2.0-alpha02")
+
+    implementation("androidx.window:window:1.2.0-beta01")
     val liPluginModule = findProject(":li-plugin")
     if (liPluginModule != null) {
         implementation(liPluginModule)

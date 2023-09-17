@@ -9,7 +9,7 @@
 
 ```shell
 # 编译全部
-bash build_all.sh
+bash build_full.sh
 # 仅编译app
 bash build_app.sh
 # 仅编译插件

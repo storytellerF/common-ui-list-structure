@@ -5,12 +5,12 @@ import androidx.lifecycle.MutableLiveData
 import com.google.gson.typeadapters.RuntimeTypeAdapterFactory
 import com.storyteller_f.common_ui.CommonDialogFragment
 import com.storyteller_f.config_core.ConfigItem
-import com.storyteller_f.config_edit.DefaultDialog
+import com.storyteller_f.config_core.DefaultDialog
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.giant_explorer.filter.NameSort
 import com.storyteller_f.giant_explorer.filter.SortFactory
+import com.storyteller_f.sort_core.config.SortChain
 import com.storyteller_f.sort_core.config.SortConfigItem
-import com.storyteller_f.sort_ui.SortChain
 import com.storyteller_f.sort_ui.SortDialog
 import java.io.IOException
 
@@ -37,11 +37,15 @@ class SortDialogFragment : CommonDialogFragment() {
                     NameSort.Item()
                 }.toMutableList()
 
-            override fun onActiveListSelected(configItems: List<SortConfigItem>) =
+            override fun onRestoreState(configItems: List<SortConfigItem>): List<SortChain<FileSystemItemModel>> =
                 configItems.buildSorts()
 
             override fun onActiveChanged(activeList: List<SortChain<FileSystemItemModel>>) {
                 activeSortChains.value = activeList
+            }
+
+            override fun onEditingChanged(editing: List<SortChain<FileSystemItemModel>>) {
+
             }
         }
 
@@ -51,7 +55,7 @@ class SortDialogFragment : CommonDialogFragment() {
         }
 
     companion object {
-        val suffix = "sort"
+        const val suffix = "sort"
         val adapterFactory: RuntimeTypeAdapterFactory<ConfigItem> =
             RuntimeTypeAdapterFactory.of(
                 ConfigItem::class.java,

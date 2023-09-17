@@ -9,8 +9,8 @@ object Versions {
     const val kotlinVersion = "1.8.21"
     const val agpVersion = "8.1.0"
     const val kspVersion = "1.8.21-1.0.11"
-    const val compileSdkVersion = 33
-    const val targetSdkVersion = 33
+    const val compileSdkVersion = 34
+    const val targetSdkVersion = 34
     const val appcompatVersion = "1.6.1"
     const val coreVersion = "1.10.1"
     const val recyclerViewVersion = "1.3.0"

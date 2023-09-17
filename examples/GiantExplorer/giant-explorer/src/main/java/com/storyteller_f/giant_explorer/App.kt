@@ -27,7 +27,7 @@ import com.storyteller_f.file_system.model.TorrentFileItemModel
 import com.storyteller_f.file_system_ktx.getFileInstance
 import com.storyteller_f.filter_core.config.FilterConfig
 import com.storyteller_f.filter_core.config.FilterConfigItem
-import com.storyteller_f.filter_ui.FilterDialog
+import com.storyteller_f.filter_core.filterConfigAdapterFactory
 import com.storyteller_f.giant_explorer.control.plugin.PluginManager
 import com.storyteller_f.giant_explorer.control.ui_list.HolderBuilder
 import com.storyteller_f.giant_explorer.database.FileMDRecord
@@ -44,7 +44,7 @@ import com.storyteller_f.giant_explorer.utils.TorrentFile
 import com.storyteller_f.multi_core.StoppableTask
 import com.storyteller_f.sort_core.config.SortConfig
 import com.storyteller_f.sort_core.config.SortConfigItem
-import com.storyteller_f.sort_ui.SortDialog
+import com.storyteller_f.sort_core.config.sortConfigAdapterFactory
 import com.storyteller_f.ui_list.core.holders
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
@@ -100,12 +100,22 @@ class App : Application() {
             }
             refreshPlugin(this@App)
         }
-        activeFilters.value = EditorKey.createEditorKey(filesDir.absolutePath, FilterDialogFragment.suffix).editor(FilterConfig.emptyFilterListener, FilterDialog.configAdapterFactory, FilterDialogFragment.factory).lastConfig?.run {
-            configItems.filterIsInstance<FilterConfigItem>().buildFilters()
-        }
-        activeSortChains.value = EditorKey.createEditorKey(filesDir.absolutePath, SortDialogFragment.suffix).editor(SortConfig.emptySortListener, SortDialog.configAdapterFactory, SortDialogFragment.adapterFactory).lastConfig?.run {
-            configItems.filterIsInstance<SortConfigItem>().buildSorts()
-        }
+        activeFilters.value =
+            EditorKey.createEditorKey(filesDir.absolutePath, FilterDialogFragment.suffix).editor(
+                FilterConfig.emptyFilterListener,
+                filterConfigAdapterFactory,
+                FilterDialogFragment.factory
+            ).lastConfig?.run {
+                configItems.filterIsInstance<FilterConfigItem>().buildFilters()
+            }
+        activeSortChains.value =
+            EditorKey.createEditorKey(filesDir.absolutePath, SortDialogFragment.suffix).editor(
+                SortConfig.emptySortListener,
+                sortConfigAdapterFactory,
+                SortDialogFragment.adapterFactory
+            ).lastConfig?.run {
+                configItems.filterIsInstance<SortConfigItem>().buildSorts()
+            }
     }
 
     private fun setupBouncyCastle() {
@@ -139,7 +149,12 @@ abstract class BigTimeWorker(
         return withContext(Dispatchers.IO) {
             val results = uriStringArray.asList().map { uriString ->
                 when {
-                    !context.checkPathPermission(uriString.toUri()) -> WorkerResult.Failure(java.lang.Exception("don't have permission"))
+                    !context.checkPathPermission(uriString.toUri()) -> WorkerResult.Failure(
+                        java.lang.Exception(
+                            "don't have permission"
+                        )
+                    )
+
                     isStopped -> WorkerResult.Stopped
                     else -> doWork(context, uriString)
                 }

@@ -1,16 +1,15 @@
 package com.storyteller_f.giant_explorer.filter
 
 import android.view.View
-import android.view.ViewGroup
 import com.storyteller_f.file_system.model.FileSystemItemModel
+import com.storyteller_f.sort_core.config.SortChain
 import com.storyteller_f.sort_core.config.SortConfigItem
-import com.storyteller_f.sort_ui.SortChain
 import com.storyteller_f.sort_ui.adapter.SortItemContainer
 import com.storyteller_f.sort_ui.adapter.SortItemViewHolder
 import com.storyteller_f.sort_ui.adapter.SortViewHolderFactory
 
 class NameSort(item: SortConfigItem) : SortChain<FileSystemItemModel>("name sort", item) {
-    override fun currentCompare(o1: FileSystemItemModel, o2: FileSystemItemModel): Int {
+    override fun compare(o1: FileSystemItemModel, o2: FileSystemItemModel): Int {
         return o1.name.compareTo(o2.name)
     }
 
@@ -23,9 +22,7 @@ class NameSort(item: SortConfigItem) : SortChain<FileSystemItemModel>("name sort
             return 1
         }
 
-    class ViewHolder(itemView: View) : SortItemViewHolder.Simple<FileSystemItemModel>(itemView) {
-
-    }
+    class ViewHolder(itemView: View) : SortItemViewHolder.Simple<FileSystemItemModel>(itemView)
 
     class Item(sortDirection: Int = up) : SortConfigItem(sortDirection) {
 
