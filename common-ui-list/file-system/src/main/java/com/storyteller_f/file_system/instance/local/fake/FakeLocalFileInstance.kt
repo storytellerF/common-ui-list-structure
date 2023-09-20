@@ -3,6 +3,9 @@ package com.storyteller_f.file_system.instance.local.fake
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
+import android.os.Build
+import android.os.Process
+import android.os.UserManager
 import androidx.annotation.WorkerThread
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.FileCreatePolicy
@@ -14,16 +17,26 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
+fun Context.getMyId() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+    getSystemService(UserManager::class.java)
+        .getSerialNumberForUser(Process.myUserHandle())
+} else {
+    TODO("VERSION.SDK_INT < M")
+}
+
 /**
  * 预定义的用于无法访问的中间目录，不能标识一个文件类型
  */
 class FakeLocalFileInstance(val context: Context, uri: Uri) :
     ForbidChangeLocalFileInstance(uri) {
+    private val myId = context.getMyId()
+
     @SuppressLint("SdCardPath")
     private val presetDirectories: MutableMap<String, List<String>> = mutableMapOf(
-        "/data/user/0" to listOf(context.packageName),
+        "/data/user/$myId" to listOf(context.packageName),
         "/data/data" to listOf(context.packageName),
-        FileInstanceFactory.emulatedRootPath to listOf("0")
+        FileInstanceFactory.emulatedRootPath to listOf(myId.toString()),
+        "/data/user" to listOf(myId.toString()),
     )
 
     private val presetFiles: MutableMap<String, List<String>> = mutableMapOf(
@@ -32,7 +45,8 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
         }
     )
 
-    override suspend fun getDirectory(): DirectoryItemModel = DirectoryItemModel("/", uri, false, -1, false)
+    override suspend fun getDirectory(): DirectoryItemModel =
+        DirectoryItemModel("/", uri, false, -1, false)
 
     override suspend fun getFileInputStream(): FileInputStream = TODO("Not yet implemented")
 
@@ -100,7 +114,6 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
         val presetSystemDirectories = mapOf(
             "/" to listOf("sdcard", "storage", "data", "mnt", "system"),
             "/data" to listOf("user", "data", "app", "local"),
-            "/data/user" to listOf("0"),
             "/storage" to listOf("self"),
             "/storage/self" to listOf("primary")
         )

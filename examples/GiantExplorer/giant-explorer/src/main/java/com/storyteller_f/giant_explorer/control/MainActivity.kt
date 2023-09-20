@@ -192,7 +192,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         observePathMan(navController)
         val startDestinationArgs = intent.getBundleExtra("start") ?: FileListFragmentArgs(
             File(
-                FileInstanceFactory.rootUserEmulatedPath
+                FileInstanceFactory.getCurrentUserEmulatedPath(this)
             ).toUri()
         ).toBundle()
         navController.setGraph(R.navigation.nav_main, startDestinationArgs)
@@ -401,7 +401,6 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
     }
 }
 
-@Suppress("DEPRECATION")
 fun PackageManager.queryIntentActivitiesCompat(
     searchDocumentProvider: Intent, flags: Long
 ): MutableList<ResolveInfo> {
@@ -412,7 +411,6 @@ fun PackageManager.queryIntentActivitiesCompat(
     }
 }
 
-@Suppress("DEPRECATION")
 fun PackageManager.queryIntentContentProvidersCompat(
     searchDocumentProvider: Intent, flags: Long
 ): MutableList<ResolveInfo> {

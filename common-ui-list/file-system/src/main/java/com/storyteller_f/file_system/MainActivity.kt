@@ -93,7 +93,7 @@ class MainActivity : AppCompatActivity() {
             if (processResult(it)) return@registerForActivityResult
             failure()
         }.launch(
-            FileUtility.produceSafRequestIntent(this, prefix.key)
+            FileUtility.generateSAFRequestIntent(this, prefix)
         )
     }
 
@@ -135,9 +135,9 @@ class MainActivity : AppCompatActivity() {
             }
             failure()
         }.launch(
-            FileUtility.produceSafRequestIntent(
+            FileUtility.generateSAFRequestIntent(
                 this,
-                prefix.key
+                prefix
             )
         )
     }
@@ -175,7 +175,7 @@ class MainActivity : AppCompatActivity() {
 suspend fun Context.checkPathPermission(uri: Uri): Boolean {
     if (uri.scheme != ContentResolver.SCHEME_FILE) return true
     return when (val prefix = FileInstanceFactory.getPrefix(this, uri)!!) {
-        LocalFileSystemPrefix.RootEmulated -> when {
+        is LocalFileSystemPrefix.RootEmulated -> when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> Environment.isExternalStorageManager()
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> DocumentLocalFileInstance.getEmulated(
                 this,

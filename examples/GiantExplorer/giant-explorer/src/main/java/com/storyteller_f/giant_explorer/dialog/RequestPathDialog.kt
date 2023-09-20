@@ -1,5 +1,6 @@
 package com.storyteller_f.giant_explorer.dialog
 
+import android.content.Context
 import android.os.Bundle
 import android.os.Parcelable
 import android.view.View
@@ -7,6 +8,7 @@ import androidx.activity.ComponentDialog
 import androidx.activity.addCallback
 import androidx.core.net.toUri
 import androidx.lifecycle.flowWithLifecycle
+import androidx.navigation.fragment.navArgs
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ui.Registry
 import com.storyteller_f.common_ui.SimpleDialogFragment
@@ -36,8 +38,10 @@ import java.io.File
 class RequestPathDialog :
     SimpleDialogFragment<DialogRequestPathBinding>(DialogRequestPathBinding::inflate),
     Registry {
+    private val args by navArgs<RequestPathDialogArgs>()
+
     private val observer = FileListObserver(this, {
-        FileListFragmentArgs(File(FileInstanceFactory.rootUserEmulatedPath).toUri())
+        FileListFragmentArgs(args.start)
     }, activityScope)
 
     @Parcelize
@@ -47,6 +51,15 @@ class RequestPathDialog :
 
     companion object {
         const val requestKey = "request-path"
+
+        fun bundle(context: Context): Bundle {
+            val path = FileInstanceFactory.getCurrentUserEmulatedPath(context)
+            return RequestPathDialogArgs(
+                File(
+                    path
+                ).toUri()
+            ).toBundle()
+        }
     }
 
     override fun onBindViewEvent(binding: DialogRequestPathBinding) {
@@ -81,7 +94,7 @@ class RequestPathDialog :
         (dialog as? ComponentDialog)?.onBackPressedDispatcher?.addCallback(this) {
             val value = observer.fileInstance
             if (value != null) {
-                if (value.path == "/" || value.path == FileInstanceFactory.rootUserEmulatedPath) {
+                if (value.path == "/" || value.path.startsWith(FileInstanceFactory.userEmulatedFrontPath)) {
                     isEnabled = false
                     @Suppress("DEPRECATION") dialog?.onBackPressed()
                 } else {

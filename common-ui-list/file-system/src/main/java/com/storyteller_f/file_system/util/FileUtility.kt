@@ -12,6 +12,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.documentfile.provider.DocumentFile
 import com.storyteller_f.file_system.FileInstanceFactory
+import com.storyteller_f.file_system.LocalFileSystemPrefix
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import java.io.File
 import java.nio.file.Files
@@ -109,10 +110,10 @@ object FileUtility {
     fun volumePathName(uuid: String?): String =
         Objects.requireNonNullElse(uuid, "emulated")
 
-    fun produceSafRequestIntent(activity: Activity, prefix: String): Intent? {
+    fun generateSAFRequestIntent(activity: Activity, prefix: LocalFileSystemPrefix): Intent? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             val sm = activity.getSystemService(StorageManager::class.java)
-            val volume = sm.getStorageVolume(File(prefix))
+            val volume = sm.getStorageVolume(File(prefix.key))
             if (volume != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 return volume.createOpenDocumentTreeIntent()
             }
@@ -120,14 +121,14 @@ object FileUtility {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                if (prefix == FileInstanceFactory.rootUserEmulatedPath) {
+                if (prefix is LocalFileSystemPrefix.RootEmulated) {
                     val primary = DocumentsContract.buildRootUri(
                         DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS,
                         DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS_TREE
                     )
                     intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, primary)
-                } else if (prefix.startsWith("/storage/")) {
-                    val tree = DocumentLocalFileInstance.getMountedTree(prefix)
+                } else if (prefix is LocalFileSystemPrefix.Mounted) {
+                    val tree = DocumentLocalFileInstance.getMountedTree(prefix.key)
                     val primary = DocumentsContract.buildRootUri(
                         DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS,
                         tree
@@ -141,14 +142,8 @@ object FileUtility {
     }
 
     fun getExtension(name: String): String? {
-        val extension: String?
         val index = name.lastIndexOf('.')
-        extension = if (index != -1) {
-            name.substring(index + 1)
-        } else {
-            null
-        }
-        return extension
+        return if (index == -1) null else name.substring(index + 1)
     }
 
     @Suppress("DEPRECATION")

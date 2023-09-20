@@ -11,6 +11,7 @@ import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.file_system.instance.local.RegularLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.AppLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.FakeLocalFileInstance
+import com.storyteller_f.file_system.instance.local.fake.getMyId
 import java.io.File
 import java.util.*
 
@@ -40,7 +41,7 @@ sealed class LocalFileSystemPrefix(val key: String) {
     /**
      * /storage/emulated/0 本身以及所有的子文件
      */
-    object RootEmulated : LocalFileSystemPrefix("/storage/emulated/0")
+    class RootEmulated(uid: Long) : LocalFileSystemPrefix("/storage/emulated/$uid")
 
     /**
      * /storage/emulated 本身
@@ -65,7 +66,7 @@ sealed class LocalFileSystemPrefix(val key: String) {
     /**
      * 用户安装的app
      */
-    object InstalledApps : LocalFileSystemPrefix("/data/app/")
+    object InstalledApps : LocalFileSystemPrefix("/data/app")
 
     object Root : LocalFileSystemPrefix("/")
 
@@ -85,20 +86,24 @@ sealed class LocalFileSystemPrefix(val key: String) {
     object DataUser : LocalFileSystemPrefix("/data/user")
 
     @SuppressLint("SdCardPath")
-    object DataRootUser : LocalFileSystemPrefix("/data/user/0")
+    class DataRootUser(uid: Long) : LocalFileSystemPrefix("/data/user/$uid")
 }
 
 object FileInstanceFactory {
     const val storagePath = "/storage"
     const val emulatedRootPath = "/storage/emulated"
 
+    @SuppressLint("SdCardPath")
+    private const val userDataFrontPath = "/data/user/"
+    const val userEmulatedFrontPath = "/storage/emulated/"
     const val rootUserEmulatedPath = "/storage/emulated/0"
     const val currentEmulatedPath = "/storage/self"
 
-    @SuppressLint("SdCardPath")
-    private const val sdcardPath = "/sdcard"
-
     private val publicPath = listOf("/system", "/mnt")
+
+    fun getCurrentUserEmulatedPath(context: Context): String {
+        return File(emulatedRootPath, context.getMyId().toString()).absolutePath
+    }
 
     /**
      * 除非是根路径，否则不可以是/
@@ -133,7 +138,7 @@ object FileInstanceFactory {
             is LocalFileSystemPrefix.AppData -> RegularLocalFileInstance(context, uri)
             LocalFileSystemPrefix.Data -> FakeLocalFileInstance(context, uri)
             LocalFileSystemPrefix.Data2 -> FakeLocalFileInstance(context, uri)
-            LocalFileSystemPrefix.DataRootUser -> RegularLocalFileInstance(context, uri)
+            is LocalFileSystemPrefix.DataRootUser -> RegularLocalFileInstance(context, uri)
             LocalFileSystemPrefix.DataUser -> FakeLocalFileInstance(context, uri)
             LocalFileSystemPrefix.EmulatedRoot -> FakeLocalFileInstance(context, uri)
             LocalFileSystemPrefix.InstalledApps -> AppLocalFileInstance(context, uri)
@@ -160,7 +165,7 @@ object FileInstanceFactory {
 
             LocalFileSystemPrefix.Public -> RegularLocalFileInstance(context, uri)
             LocalFileSystemPrefix.Root -> FakeLocalFileInstance(context, uri)
-            LocalFileSystemPrefix.RootEmulated -> when (Build.VERSION.SDK_INT) {
+            is LocalFileSystemPrefix.RootEmulated -> when (Build.VERSION.SDK_INT) {
                 Build.VERSION_CODES.Q -> DocumentLocalFileInstance.getEmulated(
                     context,
                     uri,
@@ -170,7 +175,12 @@ object FileInstanceFactory {
                 else -> RegularLocalFileInstance(context, uri)
             }
 
-            LocalFileSystemPrefix.SdCard -> RegularLocalFileInstance(context, uri)
+            LocalFileSystemPrefix.SdCard -> if (Build.VERSION_CODES.Q == Build.VERSION.SDK_INT) {
+                DocumentLocalFileInstance.getEmulated(context, uri, prefix.key)
+            } else {
+                RegularLocalFileInstance(context, uri)
+            }
+
             LocalFileSystemPrefix.Self -> when (Build.VERSION.SDK_INT) {
                 Build.VERSION_CODES.Q -> {
                     FakeLocalFileInstance(context, uri)
@@ -179,7 +189,12 @@ object FileInstanceFactory {
                 else -> RegularLocalFileInstance(context, uri)
             }
 
-            LocalFileSystemPrefix.SelfPrimary -> RegularLocalFileInstance(context, uri)
+            LocalFileSystemPrefix.SelfPrimary -> if (Build.VERSION_CODES.Q == Build.VERSION.SDK_INT) {
+                DocumentLocalFileInstance.getEmulated(context, uri, prefix.key)
+            } else {
+                RegularLocalFileInstance(context, uri)
+            }
+
             LocalFileSystemPrefix.Storage -> FakeLocalFileInstance(context, uri)
         }
     }
@@ -210,25 +225,37 @@ object FileInstanceFactory {
     private fun getPublicFileSystemPrefix(context: Context, path: String): LocalFileSystemPrefix =
         when {
             publicPath.any { path.startsWith(it) } -> LocalFileSystemPrefix.Public
-            path.startsWith(sdcardPath) -> LocalFileSystemPrefix.SdCard
+            path.startsWith(LocalFileSystemPrefix.SdCard.key) -> LocalFileSystemPrefix.SdCard
             path.startsWith(context.appDataDir()) -> LocalFileSystemPrefix.AppData(context.appDataDir())
-            path.startsWith(rootUserEmulatedPath) -> LocalFileSystemPrefix.RootEmulated
+            path.startsWith(userEmulatedFrontPath) -> LocalFileSystemPrefix.RootEmulated(
+                path.substring(
+                    userEmulatedFrontPath.length
+                ).toLong()
+            )
+
             path == currentEmulatedPath -> LocalFileSystemPrefix.Self
             path.startsWith(currentEmulatedPath) -> LocalFileSystemPrefix.SelfPrimary
-            path == emulatedRootPath -> LocalFileSystemPrefix.EmulatedRoot
-            path == storagePath -> LocalFileSystemPrefix.Storage
+            path == LocalFileSystemPrefix.EmulatedRoot.key -> LocalFileSystemPrefix.EmulatedRoot
+            path == LocalFileSystemPrefix.Storage.key -> LocalFileSystemPrefix.Storage
             path.startsWith(storagePath) -> LocalFileSystemPrefix.Mounted(extractSdName(path))
-            path == "/" -> LocalFileSystemPrefix.Root
-            path == "/data" -> LocalFileSystemPrefix.Data
-            path.startsWith("/data/data") -> LocalFileSystemPrefix.Data2
-            path == "/data/user" -> LocalFileSystemPrefix.DataUser
-            path.startsWith("/data/user/0") -> LocalFileSystemPrefix.DataRootUser
-            path.startsWith("/data/app/") -> LocalFileSystemPrefix.InstalledApps
+            path == LocalFileSystemPrefix.Root.key -> LocalFileSystemPrefix.Root
+            path == LocalFileSystemPrefix.Data.key -> LocalFileSystemPrefix.Data
+            path.startsWith(LocalFileSystemPrefix.Data2.key) -> LocalFileSystemPrefix.Data2
+            path == LocalFileSystemPrefix.DataUser.key -> LocalFileSystemPrefix.DataUser
+            path.startsWith(userDataFrontPath) -> LocalFileSystemPrefix.DataRootUser(
+                path.substring(
+                    userDataFrontPath.length
+                ).toLong()
+            )
+
+            path.startsWith(LocalFileSystemPrefix.InstalledApps.key) -> LocalFileSystemPrefix.InstalledApps
             else -> throw Exception("unrecognized path")
         }
 
+    /**
+     * /storage/XXXX-XXXX 或者是/storage/XXXX-XXXX/test。最终结果应该是/storage/XXXX-XXXX
+     */
     private fun extractSdName(path: String): String {
-        // /storage/XXXX-XXXX 或者是/storage/XXXX-XXXX/test。最终结果应该是/storage/XXXX-XXXX
         var endIndex = path.indexOf("/", storagePath.length + 1)
         if (endIndex == -1) endIndex = path.length
         return path.substring(0, endIndex)

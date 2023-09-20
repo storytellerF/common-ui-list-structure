@@ -27,5 +27,9 @@
     <dialog
         android:id="@+id/requestPathDialog"
         android:name="com.storyteller_f.giant_explorer.dialog.RequestPathDialog"
-        android:label="RequestPathDialog" />
+        android:label="RequestPathDialog">
+        <argument
+            android:name="start"
+            app:argType="android.net.Uri" />
+    </dialog>
 </navigation>

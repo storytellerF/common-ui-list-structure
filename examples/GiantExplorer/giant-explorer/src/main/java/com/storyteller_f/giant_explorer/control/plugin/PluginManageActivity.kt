@@ -20,7 +20,6 @@ import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.databinding.ActivityPluginManageBinding
 import com.storyteller_f.giant_explorer.dialog.RequestPathDialog
 import com.storyteller_f.multi_core.StoppableTask
-import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
@@ -47,7 +46,8 @@ class PluginManageActivity : CommonActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         val pluginRoot = File(filesDir, "plugins")
         binding.fab.setOnClickListener {
-            val requestKey = request(RequestPathDialog::class.java)
+            val requestPathDialogArgs = RequestPathDialog.bundle(this)
+            val requestKey = request(RequestPathDialog::class.java, requestPathDialogArgs)
             requestKey.observe(RequestPathDialog.RequestPathResult::class.java) { result ->
                 lifecycleScope.launch {
                     result.path.safeLet {
@@ -86,14 +86,6 @@ class PluginManageActivity : CommonActivity() {
 }
 
 fun CoroutineScope.stoppable(): StoppableTask {
-    return object : StoppableTask {
-        override fun needStop(): Boolean {
-            return !this@stoppable.isActive
-        }
-    }
-}
-
-fun <T> CancellableContinuation<T>.stoppable(): StoppableTask {
     return object : StoppableTask {
         override fun needStop(): Boolean {
             return !this@stoppable.isActive

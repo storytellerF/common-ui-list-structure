@@ -6,7 +6,7 @@ import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.storyteller_f.multi_core.StoppableTask
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,24 +26,26 @@ class ExampleInstrumentedTest {
             FileInstanceFactory.storagePath to "fake"
         ).forEach {
             val prefix = FileInstanceFactory.getPrefix(appContext, File(it.first).toUri())
-            assertEquals(it.second, prefix)
+            assertEquals(it.second, prefix?.key)
         }
     }
 
     @Test
     fun testList() {
-        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        listOf(
-            "/storage/self" to listOf("primary"),
-            "/storage/self/primary" to listOf(),
-        ).forEach { (it, expected) ->
-            val fileInstance = FileInstanceFactory.getFileInstance(
-                appContext,
-                File(it).toUri(),
-                StoppableTask.Blocking
-            )
-            assertEquals(expected.size, fileInstance.list().count)
+        runBlocking {
+            val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+            listOf(
+                "/storage/self" to listOf("primary"),
+                "/storage/self/primary" to listOf(),
+            ).forEach { (it, expected) ->
+                val fileInstance = FileInstanceFactory.getFileInstance(
+                    appContext,
+                    File(it).toUri(),
+                )
+                assertEquals(expected.size, fileInstance.list().count)
+            }
         }
+
     }
 
 }

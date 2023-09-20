@@ -49,9 +49,9 @@ import com.storyteller_f.file_system.model.FileSystemItemModelLite
 import com.storyteller_f.file_system_ktx.getFileInstance
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.BuildConfig
-import com.storyteller_f.giant_explorer.control.plugin.FileSystemProviderResolver
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.control.plugin.DefaultPluginManager
+import com.storyteller_f.giant_explorer.control.plugin.FileSystemProviderResolver
 import com.storyteller_f.giant_explorer.control.plugin.FragmentPluginActivity
 import com.storyteller_f.giant_explorer.control.plugin.WebViewPluginActivity
 import com.storyteller_f.giant_explorer.databinding.FragmentFileListBinding
@@ -259,7 +259,8 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         val old = observer.fileInstance ?: return
         if (itemHolder.file.item.isDirectory) {
             scope.launch {
-                val uri = old.toChild(itemHolder.file.name, FileCreatePolicy.NotCreate)?.uri ?: return@launch
+                val uri = old.toChild(itemHolder.file.name, FileCreatePolicy.NotCreate)?.uri
+                    ?: return@launch
                 findNavController().navigate(
                     R.id.action_fileListFragment_self,
                     FileListFragmentArgs(
@@ -345,7 +346,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         fullPath: String
     ) {
         val liPlugin = try {
-            javaClass.classLoader?.loadClass("com.storyteller_f.li.plugin.LiPlugin")
+            javaClass.classLoader?.loadClass("com.storyteller_f.li.plugin.LiPlugin")?.getDeclaredConstructor()
                 ?.newInstance() as? GiantExplorerShellPlugin
         } catch (e: Exception) {
             null
@@ -370,7 +371,10 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         object : DefaultPluginManager(requireContext()) {
             override suspend fun requestPath(initUri: String?): String {
                 val completableDeferred = CompletableDeferred<String>()
-                val requestKey = request(RequestPathDialog::class.java)
+                val requestPathDialogArgs = RequestPathDialog.bundle(requireContext())
+                val requestKey = request(
+                    RequestPathDialog::class.java, requestPathDialogArgs
+                )
                 requestKey.observe(
                     RequestPathDialog.RequestPathResult::class.java
                 ) { result ->
@@ -493,7 +497,8 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     }
 
     private fun moveOrCopy(move: Boolean, itemHolder: FileItemHolder) {
-        val requestKey = request(RequestPathDialog::class.java)
+        val requestPathDialogArgs = RequestPathDialog.bundle(requireContext())
+        val requestKey = request(RequestPathDialog::class.java, requestPathDialogArgs)
         requestKey.observe(RequestPathDialog.RequestPathResult::class.java) { result ->
             scope.launch {
                 result.path.safeLet {

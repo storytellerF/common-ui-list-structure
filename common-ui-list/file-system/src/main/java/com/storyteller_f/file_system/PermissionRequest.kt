@@ -16,7 +16,7 @@ suspend fun Context.requestPathPermission(uri: Uri): Boolean {
     val path = uri.path!!
     val task = CompletableDeferred<Boolean>()
     when {
-        path.startsWith(FileInstanceFactory.rootUserEmulatedPath) -> {
+        path.startsWith(FileInstanceFactory.userEmulatedFrontPath) -> {
             when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
                     requestManageExternalPermission(task)
