@@ -1,9 +1,6 @@
 package com.storyteller_f.file_system
 
 import androidx.core.net.toUri
-import androidx.test.espresso.Espresso.*
-import androidx.test.espresso.action.ViewActions.*
-import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.runBlocking
@@ -18,12 +15,12 @@ class ExampleInstrumentedTest {
     fun testPrefix() {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         listOf(
-            FileInstanceFactory.currentEmulatedPath to FileInstanceFactory.currentEmulatedPath,
-            "/storage/self/primary" to FileInstanceFactory.currentEmulatedPath,
-            FileInstanceFactory.rootUserEmulatedPath to FileInstanceFactory.rootUserEmulatedPath,
+            FileInstanceFactory.CURRENT_EMULATED_PATH to FileInstanceFactory.CURRENT_EMULATED_PATH,
+            "/storage/self/primary" to FileInstanceFactory.CURRENT_EMULATED_PATH,
+            FileInstanceFactory.ROOT_USER_EMULATED_PATH to FileInstanceFactory.ROOT_USER_EMULATED_PATH,
             "/storage/XX44-XX55/Downloads" to "/storage/XX44-XX55",
             "/storage/XX44-XX55" to "/storage/XX44-XX55",
-            FileInstanceFactory.storagePath to "fake"
+            FileInstanceFactory.STORAGE_PATH to "fake"
         ).forEach {
             val prefix = FileInstanceFactory.getPrefix(appContext, File(it.first).toUri())
             assertEquals(it.second, prefix?.key)

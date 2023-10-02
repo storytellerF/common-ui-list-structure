@@ -30,7 +30,7 @@ class TestRequestPermission {
     @Test
     fun testRequestPermission() {
         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-            val uri = File(FileInstanceFactory.rootUserEmulatedPath).toUri()
+            val uri = File(FileInstanceFactory.ROOT_USER_EMULATED_PATH).toUri()
 
             val appContext = InstrumentationRegistry.getInstrumentation().targetContext
             mActivityRule.scenario.onActivity {

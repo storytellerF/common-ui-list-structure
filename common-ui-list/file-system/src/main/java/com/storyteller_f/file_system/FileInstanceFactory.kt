@@ -90,19 +90,20 @@ sealed class LocalFileSystemPrefix(val key: String) {
 }
 
 object FileInstanceFactory {
-    const val storagePath = "/storage"
-    const val emulatedRootPath = "/storage/emulated"
+    const val STORAGE_PATH = "/storage"
+    const val EMULATED_ROOT_PATH = "/storage/emulated"
 
     @SuppressLint("SdCardPath")
-    private const val userDataFrontPath = "/data/user/"
-    const val userEmulatedFrontPath = "/storage/emulated/"
-    const val rootUserEmulatedPath = "/storage/emulated/0"
-    const val currentEmulatedPath = "/storage/self"
+    private const val USER_DATA_FRONT_PATH = "/data/user/"
+    const val USER_EMULATED_FRONT_PATH = "/storage/emulated/"
+
+    const val ROOT_USER_EMULATED_PATH = "/storage/emulated/0"
+    const val CURRENT_EMULATED_PATH = "/storage/self"
 
     private val publicPath = listOf("/system", "/mnt")
 
     fun getCurrentUserEmulatedPath(context: Context): String {
-        return File(emulatedRootPath, context.getMyId().toString()).absolutePath
+        return File(EMULATED_ROOT_PATH, context.getMyId().toString()).absolutePath
     }
 
     /**
@@ -227,25 +228,25 @@ object FileInstanceFactory {
             publicPath.any { path.startsWith(it) } -> LocalFileSystemPrefix.Public
             path.startsWith(LocalFileSystemPrefix.SdCard.key) -> LocalFileSystemPrefix.SdCard
             path.startsWith(context.appDataDir()) -> LocalFileSystemPrefix.AppData(context.appDataDir())
-            path.startsWith(userEmulatedFrontPath) -> LocalFileSystemPrefix.RootEmulated(
+            path.startsWith(USER_EMULATED_FRONT_PATH) -> LocalFileSystemPrefix.RootEmulated(
                 path.substring(
-                    userEmulatedFrontPath.length
-                ).toLong()
+                    USER_EMULATED_FRONT_PATH.length
+                ).substringAt("/").toLong()
             )
 
-            path == currentEmulatedPath -> LocalFileSystemPrefix.Self
-            path.startsWith(currentEmulatedPath) -> LocalFileSystemPrefix.SelfPrimary
+            path == CURRENT_EMULATED_PATH -> LocalFileSystemPrefix.Self
+            path.startsWith(CURRENT_EMULATED_PATH) -> LocalFileSystemPrefix.SelfPrimary
             path == LocalFileSystemPrefix.EmulatedRoot.key -> LocalFileSystemPrefix.EmulatedRoot
             path == LocalFileSystemPrefix.Storage.key -> LocalFileSystemPrefix.Storage
-            path.startsWith(storagePath) -> LocalFileSystemPrefix.Mounted(extractSdName(path))
+            path.startsWith(STORAGE_PATH) -> LocalFileSystemPrefix.Mounted(extractSdName(path))
             path == LocalFileSystemPrefix.Root.key -> LocalFileSystemPrefix.Root
             path == LocalFileSystemPrefix.Data.key -> LocalFileSystemPrefix.Data
             path.startsWith(LocalFileSystemPrefix.Data2.key) -> LocalFileSystemPrefix.Data2
             path == LocalFileSystemPrefix.DataUser.key -> LocalFileSystemPrefix.DataUser
-            path.startsWith(userDataFrontPath) -> LocalFileSystemPrefix.DataRootUser(
+            path.startsWith(USER_DATA_FRONT_PATH) -> LocalFileSystemPrefix.DataRootUser(
                 path.substring(
-                    userDataFrontPath.length
-                ).toLong()
+                    USER_DATA_FRONT_PATH.length
+                ).substringAt("/").toLong()
             )
 
             path.startsWith(LocalFileSystemPrefix.InstalledApps.key) -> LocalFileSystemPrefix.InstalledApps
@@ -256,7 +257,7 @@ object FileInstanceFactory {
      * /storage/XXXX-XXXX 或者是/storage/XXXX-XXXX/test。最终结果应该是/storage/XXXX-XXXX
      */
     private fun extractSdName(path: String): String {
-        var endIndex = path.indexOf("/", storagePath.length + 1)
+        var endIndex = path.indexOf("/", STORAGE_PATH.length + 1)
         if (endIndex == -1) endIndex = path.length
         return path.substring(0, endIndex)
     }
@@ -364,6 +365,11 @@ object FileInstanceFactory {
             nameStack.add(current)
         }
     }
+}
+
+private fun String.substringAt(s: String): String {
+    val indexOf = indexOf(s)
+    return if (indexOf >= 0) substring(0, indexOf) else this
 }
 
 val Uri.tree: String

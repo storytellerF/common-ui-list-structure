@@ -35,7 +35,7 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
     private val presetDirectories: MutableMap<String, List<String>> = mutableMapOf(
         "/data/user/$myId" to listOf(context.packageName),
         "/data/data" to listOf(context.packageName),
-        FileInstanceFactory.emulatedRootPath to listOf(myId.toString()),
+        FileInstanceFactory.EMULATED_ROOT_PATH to listOf(myId.toString()),
         "/data/user" to listOf(myId.toString()),
     )
 
@@ -74,7 +74,7 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
             DirectoryItemModel(it, child, false, file.lastModified(), symLink.contains(it))
         }?.forEach(directoryItems::add)
 
-        if (path == FileInstanceFactory.storagePath) {
+        if (path == FileInstanceFactory.STORAGE_PATH) {
             storageVolumes().forEach(directoryItems::add)
         }
     }

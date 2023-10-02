@@ -94,7 +94,7 @@ class RequestPathDialog :
         (dialog as? ComponentDialog)?.onBackPressedDispatcher?.addCallback(this) {
             val value = observer.fileInstance
             if (value != null) {
-                if (value.path == "/" || value.path.startsWith(FileInstanceFactory.userEmulatedFrontPath)) {
+                if (value.path == "/" || value.path.startsWith(FileInstanceFactory.USER_EMULATED_FRONT_PATH)) {
                     isEnabled = false
                     @Suppress("DEPRECATION") dialog?.onBackPressed()
                 } else {

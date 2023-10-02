@@ -91,7 +91,7 @@ object FileUtility {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             getStorageVolume(context).map { storageVolume: StorageVolume ->
                 val uuid = storageVolume.uuid
-                File(FileInstanceFactory.storagePath, volumePathName(uuid))
+                File(FileInstanceFactory.STORAGE_PATH, volumePathName(uuid))
             }
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             val externalFilesDirs = context.externalCacheDirs

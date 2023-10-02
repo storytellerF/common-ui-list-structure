@@ -16,7 +16,7 @@ class ExampleUnitTest {
 
     @Test
     fun testSimplePath() {
-        val simplyPath = FileInstanceFactory.simplyPath(FileInstanceFactory.rootUserEmulatedPath)
-        assert(simplyPath == FileInstanceFactory.rootUserEmulatedPath)
+        val simplyPath = FileInstanceFactory.simplyPath(FileInstanceFactory.ROOT_USER_EMULATED_PATH)
+        assert(simplyPath == FileInstanceFactory.ROOT_USER_EMULATED_PATH)
     }
 }

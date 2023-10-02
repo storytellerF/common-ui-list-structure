@@ -22,9 +22,6 @@ interface StringResult {
 }
 
 class OpenFileDialog : SimpleDialogFragment<DialogOpenFileBinding>(DialogOpenFileBinding::inflate) {
-    companion object {
-        const val key = "open file"
-    }
 
     private val dataType by vm({}) {
         GenericValueModel<ContentInfo?>()
