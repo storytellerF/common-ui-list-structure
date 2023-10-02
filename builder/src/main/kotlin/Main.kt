@@ -15,8 +15,8 @@ fun main() {
     val giantExplorerAgpMatcher =
         commonVersionMatcher(extractGradleVersionRegExp, "../examples/GiantExplorer/build.gradle.kts")
     val pingAgpMatcher = commonVersionMatcher(extractGradleVersionRegExp, "../examples/Ping/build.gradle.kts")
-    val yueAgpMatcher = yueAgpMatcher("../giant-explorer/yue/build.gradle")
-    val liAgpMatcher = yueAgpMatcher("../giant-explorer/li/build.gradle")
+    val yueAgpMatcher = pluginAgpMatcher("../giant-explorer/yue/build.gradle")
+    val liAgpMatcher = pluginAgpMatcher("../giant-explorer/li/build.gradle")
 
     val matchers = listOf(
         commonUiListAgpMatcher,
@@ -27,12 +27,12 @@ fun main() {
         liAgpMatcher
     )
     if (matchers.all {
-            it.find()
+            it.first.find()
         }) {
         val versions = matchers.map {
-            it.group(1)
+            it.first.group(1) to it.second
         }
-        if (versions.distinct().size > 1) {
+        if (versions.map { it.first }.distinct().size > 1) {
             System.err.println("agp版本不一致 ${versions.joinToString()}")
             exitProcess(1)
         }
@@ -42,20 +42,20 @@ fun main() {
     }
 }
 
-private fun yueAgpMatcher(filePath: String): Matcher {
+private fun pluginAgpMatcher(filePath: String): Pair<Matcher, String> {
     val readText = File(filePath).readText()
     val compile = Pattern.compile("id 'com.android.application' version '($extractGradleVersionRegExp)' apply false")
     return compile
-        .matcher(readText)
+        .matcher(readText) to filePath
 }
 
-private fun commonVersionMatcher(extractGradleVersionRegExp: String, filePath: String): Matcher {
+private fun commonVersionMatcher(regExp: String, filePath: String): Pair<Matcher, String> {
     val commonUiListGradleText = File(filePath).readText()
-    return Pattern.compile("val androidVersion = \"($extractGradleVersionRegExp)\"").matcher(commonUiListGradleText)
+    return Pattern.compile("val androidVersion = \"($regExp)\"").matcher(commonUiListGradleText) to filePath
 }
 
-private fun versionManagerMatcher(extractGradleVersionRegExp: String): Matcher {
+private fun versionManagerMatcher(regExp: String): Pair<Matcher, String> {
     val versionManagerGradleText = File("../common-ui-list/version-manager/build.gradle.kts").readText()
-    return Pattern.compile("com.android.tools.build:gradle:($extractGradleVersionRegExp)")
-        .matcher(versionManagerGradleText)
+    return Pattern.compile("com.android.tools.build:gradle:($regExp)")
+        .matcher(versionManagerGradleText) to "version-manager"
 }
