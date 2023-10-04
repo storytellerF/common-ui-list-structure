@@ -20,7 +20,7 @@ internal fun generatePropertyV4(name: String, annotation: ExtFuncFlat): String {
     return """
     ${if (annotation.isContextReceiver) "context(Context)" else ""}
     val Int.$name
-    get() = toFloat().dipToInt
+    get() = toFloat().$name
     """.trimIndent()
 }
 

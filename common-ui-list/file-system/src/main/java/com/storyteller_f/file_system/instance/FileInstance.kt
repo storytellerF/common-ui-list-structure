@@ -13,7 +13,7 @@ import java.io.FileOutputStream
 
 // todo getChannel
 // todo file descriptor
-abstract class FileInstance(var uri: Uri) {
+abstract class FileInstance(val uri: Uri) {
 
     open val path: String = uri.path!!
 

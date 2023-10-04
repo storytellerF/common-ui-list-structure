@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="@color/colorFolderRipple"
-    android:shape="rectangle">
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/colorFolderRipple" android:state_selected="true" />
     <solid android:color="@color/colorFolder" />
-</shape>
+</selector>

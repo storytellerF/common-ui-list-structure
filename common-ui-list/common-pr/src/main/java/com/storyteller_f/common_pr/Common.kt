@@ -23,4 +23,4 @@ val Float.dip: Float
 context(Context)
 @ExtFuncFlat(ExtFuncFlatType.V4, isContextReceiver = true)
 val Float.dipToInt: Int
-    get() = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this@dipToInt, resources.displayMetrics).toInt()
+    get() = dip.toInt()

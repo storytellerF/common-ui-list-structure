@@ -8,6 +8,7 @@ import android.content.ContentResolver
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
+import android.graphics.Rect
 import android.net.Uri
 import android.text.TextPaint
 import android.text.TextUtils
@@ -30,8 +31,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.RecyclerView
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ktx.safeLet
+import com.storyteller_f.common_pr.dipToInt
 import com.storyteller_f.common_pr.observe
 import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.common_ui.observeResponse
@@ -99,6 +102,22 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     override fun onBindViewEvent(binding: FragmentFileListBinding) {
         val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>()
 
+        val itemSpacing = requireContext().run {
+            2.dipToInt
+        }
+        binding.content.recyclerView.addItemDecoration(object : RecyclerView.ItemDecoration() {
+            override fun getItemOffsets(
+                outRect: Rect,
+                view: View,
+                parent: RecyclerView,
+                state: RecyclerView.State
+            ) {
+                super.getItemOffsets(outRect, view, parent, state)
+                if (parent.getChildAdapterPosition(view) != 0) {
+                    outRect.top = itemSpacing
+                }
+            }
+        })
         observer.setup(binding.content, adapter, { holder ->
             scope.launch {
                 openFolderInNewPage(holder)
@@ -257,45 +276,50 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     @BindClickEvent(FileItemHolder::class)
     fun toChild(itemHolder: FileItemHolder) {
         val old = observer.fileInstance ?: return
-        if (itemHolder.file.item.isDirectory) {
-            scope.launch {
-                val uri = old.toChild(itemHolder.file.name, FileCreatePolicy.NotCreate)?.uri
-                    ?: return@launch
+        scope.launch {
+            val uri = old.uri.buildUpon().appendPath(itemHolder.file.name).build()
+            if (itemHolder.file.item.isDirectory) {
                 findNavController().navigate(
                     R.id.action_fileListFragment_self,
                     FileListFragmentArgs(
                         uri,
                     ).toBundle()
                 )
-            }
-        } else {
-            val uri = old.uri
-            val requestKey = findNavController().request(
-                R.id.action_fileListFragment_to_openFileDialog,
-                OpenFileDialogArgs(uri).toBundle()
-            )
-            requestKey.observe(OpenFileDialog.OpenFileResult::class.java) { r ->
-                if (uri.scheme != ContentResolver.SCHEME_FILE) return@observe
-                val file = File(itemHolder.file.fullPath)
-                val uriForFile = FileProvider.getUriForFile(
-                    requireContext(),
-                    BuildConfig.FILE_PROVIDER_AUTHORITY,
-                    file
-                )
-                Intent("android.intent.action.VIEW").apply {
-                    addCategory("android.intent.category.DEFAULT")
-                    setDataAndType(uriForFile, r.mimeType)
-                    flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                }.let {
-                    val ellipsizedText = TextUtils.ellipsize(
-                        itemHolder.file.name,
-                        TextPaint(),
-                        100f,
-                        TextUtils.TruncateAt.MIDDLE
-                    )
-                    startActivity(Intent.createChooser(it, "open $ellipsizedText by"))
+            } else {
+                findNavController().request(
+                    R.id.action_fileListFragment_to_openFileDialog,
+                    OpenFileDialogArgs(uri).toBundle()
+                ).observe(OpenFileDialog.OpenFileResult::class.java) { r ->
+                    openFile(uri, itemHolder, r)
                 }
             }
+        }
+    }
+
+    private fun openFile(
+        uri: Uri,
+        itemHolder: FileItemHolder,
+        r: OpenFileDialog.OpenFileResult
+    ) {
+        if (uri.scheme != ContentResolver.SCHEME_FILE) return
+        val file = File(itemHolder.file.fullPath)
+        val uriForFile = FileProvider.getUriForFile(
+            requireContext(),
+            BuildConfig.FILE_PROVIDER_AUTHORITY,
+            file
+        )
+        Intent("android.intent.action.VIEW").apply {
+            addCategory("android.intent.category.DEFAULT")
+            setDataAndType(uriForFile, r.mimeType)
+            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+        }.let {
+            val ellipsizedText = TextUtils.ellipsize(
+                itemHolder.file.name,
+                TextPaint(),
+                100f,
+                TextUtils.TruncateAt.MIDDLE
+            )
+            startActivity(Intent.createChooser(it, "open $ellipsizedText by"))
         }
     }
 
@@ -346,7 +370,8 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
         fullPath: String
     ) {
         val liPlugin = try {
-            javaClass.classLoader?.loadClass("com.storyteller_f.li.plugin.LiPlugin")?.getDeclaredConstructor()
+            javaClass.classLoader?.loadClass("com.storyteller_f.li.plugin.LiPlugin")
+                ?.getDeclaredConstructor()
                 ?.newInstance() as? GiantExplorerShellPlugin
         } catch (e: Exception) {
             null
@@ -416,7 +441,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                 Uri.fromFile(File(it.fullPath))
             }
             val clipData =
-                ClipData.newPlainText(clipDataKey, map.first().toString()).apply {
+                ClipData.newPlainText(CLIP_DATA_KEY, map.first().toString()).apply {
                     if (map.size > 1) map.subList(1, map.size).forEach {
                         addItem(ClipData.Item(it))
                     }
@@ -528,8 +553,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     }
 
     companion object {
-        const val filterHiddenFileKey = "filter-hidden-file"
-        const val clipDataKey = "file explorer"
+        const val CLIP_DATA_KEY = "file explorer"
         private const val TAG = "FileListFragment"
     }
 

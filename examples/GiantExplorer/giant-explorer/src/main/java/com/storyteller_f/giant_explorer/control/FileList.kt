@@ -299,7 +299,7 @@ class FileViewHolder(private val binding: ViewHolderFileBinding) :
 @RequiresApi(Build.VERSION_CODES.N)
 private fun FileSystemItemModel.dragSupport(root: ConstraintLayout) {
     DragStartHelper(root) { view: View, _: DragStartHelper ->
-        val clipData = ClipData.newPlainText(FileListFragment.clipDataKey, uri.toString())
+        val clipData = ClipData.newPlainText(FileListFragment.CLIP_DATA_KEY, uri.toString())
         val flags = View.DRAG_FLAG_GLOBAL or View.DRAG_FLAG_GLOBAL_URI_READ
         view.startDragAndDrop(clipData, View.DragShadowBuilder(view), null, flags)
     }.apply {
@@ -312,7 +312,7 @@ private fun FileSystemItemModel.dragSupport(root: ConstraintLayout) {
                 DragEvent.ACTION_DRAG_STARTED -> {
                     val clipDescription = event.clipDescription
                     clipDescription.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)
-                            && clipDescription.label == FileListFragment.clipDataKey
+                            && clipDescription.label == FileListFragment.CLIP_DATA_KEY
                 }
 
                 DragEvent.ACTION_DROP -> {

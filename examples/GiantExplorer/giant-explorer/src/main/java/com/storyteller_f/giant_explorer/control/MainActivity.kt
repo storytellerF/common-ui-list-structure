@@ -92,7 +92,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
 
     private val binding by viewBinding(ActivityMainBinding::inflate)
     private val filterHiddenFile by svm({}) { it, _ ->
-        StateValueModel(it, FileListFragment.filterHiddenFileKey, false)
+        StateValueModel(it, "filter-hidden-file", false)
     }
 
     private val displayGrid by keyPrefix("display", vm({}) { _ ->
@@ -109,11 +109,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         ActionBarDrawerToggle(this, binding.drawer, 0, 0)
     }
     private val menuProvider by lazy {
-        DocumentProviderMenuProvider(binding.navView.menu, this, { authority, tree ->
-            scope.launch {
-                switchDocumentProviderRoot(authority, tree)
-            }
-        }, ::switchUriRoot)
+        DocumentProviderMenuProvider(binding.navView.menu, this, ::switchDocumentProvider, ::switchUriRoot)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -180,6 +176,10 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         )
         FileSystemUriSaver.instance.saveUri(this, authority, uri, tree)
 
+        switchDocumentProvider(authority, tree)
+    }
+
+    private fun switchDocumentProvider(authority: String, tree: String?) {
         scope.launch {
             switchDocumentProviderRoot(authority, tree)
         }

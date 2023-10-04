@@ -37,4 +37,9 @@
     <string name="remote_access" translatable="false">远程访问</string>
     <string name="item_show_as_linear">linear</string>
     <string name="item_show_as_grid">grid</string>
+    <string name="type_picture">图片</string>
+    <string name="type_video">视频</string>
+    <string name="type_text">文本</string>
+    <string name="type_audio">音乐</string>
+    <string name="type_hex">十六进制</string>
 </resources>

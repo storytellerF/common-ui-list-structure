@@ -14,6 +14,7 @@ import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.file_system.util.FileUtility
 import com.storyteller_f.file_system_ktx.getFileInstance
 import com.storyteller_f.giant_explorer.databinding.DialogOpenFileBinding
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 
@@ -35,7 +36,7 @@ class OpenFileDialog : SimpleDialogFragment<DialogOpenFileBinding>(DialogOpenFil
     override fun onBindViewEvent(binding: DialogOpenFileBinding) {
         val uri = args.uri
         val fileInstance = getFileInstance(requireContext(), uri)
-        binding.fileName.text = uri.toString()
+        binding.fileName.text = uri.path
         binding.fileName.copyTextFeature()
         binding.dataType = dataType
         binding.handler = object : StringResult {
@@ -47,6 +48,7 @@ class OpenFileDialog : SimpleDialogFragment<DialogOpenFileBinding>(DialogOpenFil
         val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(FileUtility.getExtension(uri.path!!))
         binding.mimeType = mimeTypeFromExtension
         scope.launch {
+            delay(100)
             dataType.data.value = ContentInfoUtil().findMatch(fileInstance.getFileInputStream().buffered())
         }
         dataType.data.observe(viewLifecycleOwner) {
