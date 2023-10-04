@@ -23,18 +23,19 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 /**
  * 如果是通过挂载路径 访问/storage/emulated/0，uri 是file:///storage/emulated/0/Downloads，prefix 是/storage/emulated/0，tree 是primary:
  * 如果是访问/storage/XXXX-XXXX，uri 是file:///storage/XXXX-XXXX/Downloads，prefix 是/storage/XXXX-XXXX，tree 是XXXX-XXXX:
  * 如果是通过DocumentProvider 访问前者，uri 是content://authority/primary:/Downloads，prefix 是primary:，tree 是primary:
- * @param prefix 用于从path 中截取root对应的真正的路径。
+ * @param prefix 用于从path 中截取root对应的真正的路径。因为需要通过prefix 获取真正路径，所以此信息需要进行base64 编码。
  * 如果是内存卡就是/storage/XXXX-XXXX。对应的tree 是XXXX-XXXX:。
  * 如果是mounted，就是/storage/emulated/0。包含tree 部分。对应的tree 是primary:
  * 如果是DocumentProvider，就是/ 加上treeId，并且treeId可以是/。内存卡和mounted 也可以通过DocumentProvider 直接访问。
  * @param preferenceKey 一般是authority，用于获取存储在FileSystemUriSaver 中取出rootUri。
- * 如果是DocumentProvider，tree 也是必须的。
- * @param tree 是DocumentProvider 的treeId，用来区分不同DocumentProvider 多个根的情况
+ * @param tree 是DocumentProvider 的treeId，用来区分不同DocumentProvider 多个根的情况。
  */
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class DocumentLocalFileInstance(
@@ -46,23 +47,7 @@ class DocumentLocalFileInstance(
 ) : BaseContextFileInstance(context, uri) {
     private var _instance: DocumentFile? = null
 
-    private suspend fun getInstanceRelinkIfNeed(): DocumentFile? {
-        val temp = _instance
-        if (temp == null) {
-            _instance = (getDocumentFile(NotCreate) as? GetDocumentFile.Success)?.file
-        }
-        return _instance
-    }
-
     private val uriFullPath = uri.path!!
-
-    override val path: String = if (uri.scheme == ContentResolver.SCHEME_FILE) {
-        uriFullPath
-    } else {
-        uri.path!!.substring(
-            tree.length + 1
-        )
-    }
 
     /**
      * 有些document provider 的uri 对应的路径不是完整的path，所以需要从中截取真正的路径
@@ -81,8 +66,22 @@ class DocumentLocalFileInstance(
         }
     }
 
+    override val path: String = if (uri.scheme == ContentResolver.SCHEME_FILE) {
+        uriFullPath
+    } else {
+        pathRelativeRoot
+    }
+
     init {
         assert(uriFullPath.startsWith(prefix))
+    }
+
+    private suspend fun getInstanceRelinkIfNeed(): DocumentFile? {
+        val temp = _instance
+        if (temp == null) {
+            _instance = (getDocumentFile(NotCreate) as? GetDocumentFile.Success)?.file
+        }
+        return _instance
     }
 
     /**
@@ -385,9 +384,10 @@ class DocumentLocalFileInstance(
 
         fun getMountedTree(prefix: String) = prefix.substring(prefix.lastIndexOf("/") + 1) + ":"
 
+        @OptIn(ExperimentalEncodingApi::class)
         fun uriFromAuthority(authority: String, tree: String): Uri {
             return Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT).authority(authority)
-                .path("/$tree")
+                .path("/${Base64.encode(tree.toByteArray())}")
                 .build()
         }
     }

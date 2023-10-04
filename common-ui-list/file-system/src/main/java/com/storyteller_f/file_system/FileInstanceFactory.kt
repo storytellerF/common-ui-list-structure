@@ -14,6 +14,8 @@ import com.storyteller_f.file_system.instance.local.fake.FakeLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.getMyId
 import java.io.File
 import java.util.*
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 sealed class LocalFileSystemPrefix(val key: String) {
 
@@ -120,8 +122,13 @@ object FileInstanceFactory {
 
         return when (scheme) {
             ContentResolver.SCHEME_CONTENT -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                val tree = uri.tree
-                DocumentLocalFileInstance("/$tree", uri.authority!!, tree, context, safeUri)
+                DocumentLocalFileInstance(
+                    "/${uri.rawTree}",
+                    uri.authority!!,
+                    uri.tree,
+                    context,
+                    safeUri
+                )
             } else {
                 TODO("VERSION.SDK_INT < LOLLIPOP")
             }
@@ -372,7 +379,13 @@ private fun String.substringAt(s: String): String {
     return if (indexOf >= 0) substring(0, indexOf) else this
 }
 
+@OptIn(ExperimentalEncodingApi::class)
 val Uri.tree: String
+    get() {
+        return Base64.decode(rawTree.toByteArray()).decodeToString()
+    }
+
+val Uri.rawTree: String
     get() {
         assert(scheme == ContentResolver.SCHEME_CONTENT)
         return pathSegments.first()!!
