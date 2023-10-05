@@ -47,14 +47,15 @@ class WebViewPluginActivity : AppCompatActivity() {
             setupWebView(revolvePluginName.extractedPath)
             val indexFile = File(revolvePluginName.extractedPath, "index.html")
             val toString = Uri.fromFile(indexFile).toString()
-            webView.loadDataWithBaseURL(baseUrl, indexFile.readText(), null, null, null)
+            webView.loadDataWithBaseURL(BASE_URL, indexFile.readText(), null, null, null)
             Log.i(TAG, "onCreate: $toString")
         }
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView(extractedPath: String) {
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
-            WebViewCompat.addWebMessageListener(webView, "test", setOf(baseUrl)) { view, message, sourceOrigin, isMainFrame, replyProxy ->
+            WebViewCompat.addWebMessageListener(webView, "test", setOf(BASE_URL)) { view, message, sourceOrigin, isMainFrame, replyProxy ->
                 Log.d(TAG, "onCreate() called with: view = $view, message = ${message.data}, sourceOrigin = $sourceOrigin, isMainFrame = $isMainFrame, replyProxy = $replyProxy")
                 replyProxy.postMessage("from android")
             }
@@ -71,7 +72,7 @@ class WebViewPluginActivity : AppCompatActivity() {
                 if (request != null) {
                     val url = request.url
                     val path = url.path
-                    if (url.toString().startsWith(baseUrl) && path?.endsWith(".js") == true) {
+                    if (url.toString().startsWith(BASE_URL) && path?.endsWith(".js") == true) {
                         return WebResourceResponse("text/javascript", "utf-8", FileInputStream(File(extractedPath, path)))
                     }
                 }
@@ -121,7 +122,7 @@ class WebViewPluginActivity : AppCompatActivity() {
                         messageChannel?.let {
                             if (WebViewFeature.isFeatureSupported(WebViewFeature.POST_WEB_MESSAGE)) {
                                 val webMessageCompat = WebMessageCompat(result, it)
-                                WebViewCompat.postWebMessage(webView, webMessageCompat, Uri.parse(baseUrl))
+                                WebViewCompat.postWebMessage(webView, webMessageCompat, Uri.parse(BASE_URL))
                             }
                         }
                     }
@@ -134,7 +135,7 @@ class WebViewPluginActivity : AppCompatActivity() {
             @JavascriptInterface
             override fun fullPath(): String {
                 val u = data ?: return ""
-                return FileSystemProviderResolver.resolvePath(u) ?: return ""
+                return FileSystemProviderResolver.resolve(u)?.path.toString()
             }
 
             @JavascriptInterface
@@ -148,7 +149,7 @@ class WebViewPluginActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "WebViewPluginActivity"
-        const val baseUrl = "http://www.example.com"
+        const val BASE_URL = "http://www.example.com"
 
     }
 

@@ -64,6 +64,7 @@ import com.storyteller_f.giant_explorer.dialog.OpenFileDialogArgs
 import com.storyteller_f.giant_explorer.dialog.PropertiesDialogArgs
 import com.storyteller_f.giant_explorer.dialog.RequestPathDialog
 import com.storyteller_f.giant_explorer.dialog.TaskConfirmDialog
+import com.storyteller_f.giant_explorer.model.FileModel
 import com.storyteller_f.giant_explorer.pluginManagerRegister
 import com.storyteller_f.plugin_core.GiantExplorerService
 import com.storyteller_f.plugin_core.GiantExplorerShellPlugin
@@ -290,31 +291,42 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                     R.id.action_fileListFragment_to_openFileDialog,
                     OpenFileDialogArgs(uri).toBundle()
                 ).observe(OpenFileDialog.OpenFileResult::class.java) { r ->
-                    openFile(uri, itemHolder, r)
+                    openUri(uri, r, itemHolder.file)
                 }
             }
         }
     }
 
-    private fun openFile(
+    private fun openUri(
         uri: Uri,
-        itemHolder: FileItemHolder,
-        r: OpenFileDialog.OpenFileResult
+        result: OpenFileDialog.OpenFileResult,
+        fileModel: FileModel
     ) {
-        if (uri.scheme != ContentResolver.SCHEME_FILE) return
-        val file = File(itemHolder.file.fullPath)
-        val uriForFile = FileProvider.getUriForFile(
-            requireContext(),
-            BuildConfig.FILE_PROVIDER_AUTHORITY,
-            file
-        )
+        val sharedUri = if (uri.scheme == ContentResolver.SCHEME_FILE) {
+            val file = File(fileModel.fullPath)
+            FileProvider.getUriForFile(
+                requireContext(),
+                BuildConfig.FILE_PROVIDER_AUTHORITY,
+                file
+            )
+        } else {
+            FileSystemProviderResolver.share(false, uri)
+        }
+        openUri(sharedUri, result.mimeType, fileModel.name)
+    }
+
+    private fun openUri(
+        sharedUri: Uri?,
+        mimeType: String,
+        fileName: String
+    ) {
         Intent("android.intent.action.VIEW").apply {
             addCategory("android.intent.category.DEFAULT")
-            setDataAndType(uriForFile, r.mimeType)
+            setDataAndType(sharedUri, mimeType)
             flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
         }.let {
             val ellipsizedText = TextUtils.ellipsize(
-                itemHolder.file.name,
+                fileName,
                 TextPaint(),
                 100f,
                 TextUtils.TruncateAt.MIDDLE
@@ -348,8 +360,8 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
             val mimeTypeFromExtension =
                 MimeTypeMap.getSingleton().getMimeTypeFromExtension(File(fullPath).extension)
 
-            resolveInstalledPlugins(itemHolder, mimeTypeFromExtension)
-            resolveNoInstalledPlugins(mimeTypeFromExtension, fullPath)
+            resolveInstalledPlugins(itemHolder, mimeTypeFromExtension, uri)
+            resolveNoInstalledPlugins(mimeTypeFromExtension, fullPath, uri)
             resolveModulePlugin(key, fullPath)
 
             setOnMenuItemClickListener { item ->
@@ -452,14 +464,15 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
 
     private fun PopupMenu.resolveNoInstalledPlugins(
         mimeTypeFromExtension: String?,
-        fullPath: String
+        fullPath: String,
+        uri: Uri
     ) {
         pluginManagerRegister.pluginsName().forEach { pluginName: String ->
             val pluginFile = File(pluginName)
             val subMenu =
                 pluginManagerRegister.resolvePluginName(pluginName, requireContext()).meta.subMenu
             menu.loopAdd(listOf(subMenu)).add(pluginName).setOnMenuItemClickListener {
-                startNotInstalledPlugin(pluginFile, mimeTypeFromExtension, fullPath)
+                startNotInstalledPlugin(pluginFile, mimeTypeFromExtension, fullPath, uri)
             }
         }
     }
@@ -467,7 +480,8 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
     private fun startNotInstalledPlugin(
         pluginFile: File,
         mimeTypeFromExtension: String?,
-        fullPath: String
+        fullPath: String,
+        uri: Uri
     ): Boolean {
         if (pluginFile.name.endsWith("apk")) startActivity(
             Intent(
@@ -475,7 +489,7 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                 FragmentPluginActivity::class.java
             ).apply {
                 putExtra("plugin-name", pluginFile.name)
-                plugUri(mimeTypeFromExtension, fullPath)
+                plugUri(mimeTypeFromExtension, fullPath, uri)
             })
         else startActivity(
             Intent(
@@ -483,18 +497,19 @@ class FileListFragment : SimpleFragment<FragmentFileListBinding>(FragmentFileLis
                 WebViewPluginActivity::class.java
             ).apply {
                 putExtra("plugin-name", pluginFile.name)
-                plugUri(mimeTypeFromExtension, fullPath)
+                plugUri(mimeTypeFromExtension, fullPath, uri)
             })
         return true
     }
 
     private fun PopupMenu.resolveInstalledPlugins(
         itemHolder: FileItemHolder,
-        mimeTypeFromExtension: String?
+        mimeTypeFromExtension: String?,
+        uri: Uri
     ) {
         val intent = Intent("com.storyteller_f.action.giant_explorer.PLUGIN")
         intent.addCategory("android.intent.category.DEFAULT")
-        intent.plugUri(mimeTypeFromExtension, itemHolder.file.fullPath)
+        intent.plugUri(mimeTypeFromExtension, itemHolder.file.fullPath, uri)
 
         val activities = requireContext().packageManager.queryIntentActivitiesCompat(
             intent,
@@ -576,8 +591,8 @@ private fun Menu.loopAdd(strings: List<String>): Menu {
     }
 }
 
-private fun Intent.plugUri(mimeType: String?, fullPath: String) {
-    val build = FileSystemProviderResolver.build(false, fullPath)
+private fun Intent.plugUri(mimeType: String?, fullPath: String, uri: Uri) {
+    val build = FileSystemProviderResolver.share(false, uri)
     putExtra("path", fullPath)
     setDataAndType(build, mimeType)
     flags = Intent.FLAG_GRANT_READ_URI_PERMISSION

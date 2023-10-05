@@ -379,11 +379,17 @@ private fun String.substringAt(s: String): String {
     return if (indexOf >= 0) substring(0, indexOf) else this
 }
 
-@OptIn(ExperimentalEncodingApi::class)
 val Uri.tree: String
     get() {
-        return Base64.decode(rawTree.toByteArray()).decodeToString()
+        return rawTree.decodeByBase64()
     }
+
+@OptIn(ExperimentalEncodingApi::class)
+fun String.decodeByBase64() =
+    Base64.decode(toByteArray()).decodeToString()
+
+@OptIn(ExperimentalEncodingApi::class)
+fun String.encodeByBase64() = Base64.encode(toByteArray())
 
 val Uri.rawTree: String
     get() {

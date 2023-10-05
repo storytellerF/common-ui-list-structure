@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 
 interface StringResult {
-    fun onResult(string: String)
+    fun onResult(string: String?)
 }
 
 class OpenFileDialog : SimpleDialogFragment<DialogOpenFileBinding>(DialogOpenFileBinding::inflate) {
@@ -36,20 +36,22 @@ class OpenFileDialog : SimpleDialogFragment<DialogOpenFileBinding>(DialogOpenFil
     override fun onBindViewEvent(binding: DialogOpenFileBinding) {
         val uri = args.uri
         val fileInstance = getFileInstance(requireContext(), uri)
-        binding.fileName.text = uri.path
+        binding.fileName.text = fileInstance.name
         binding.fileName.copyTextFeature()
         binding.dataType = dataType
         binding.handler = object : StringResult {
-            override fun onResult(string: String) {
-                setFragmentResult(OpenFileResult(string))
+            override fun onResult(string: String?) {
+                setFragmentResult(OpenFileResult(string ?: return))
                 dismiss()
             }
         }
-        val mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(FileUtility.getExtension(uri.path!!))
+        val mimeTypeFromExtension = MimeTypeMap.getSingleton()
+            .getMimeTypeFromExtension(FileUtility.getExtension(uri.path!!))
         binding.mimeType = mimeTypeFromExtension
         scope.launch {
             delay(100)
-            dataType.data.value = ContentInfoUtil().findMatch(fileInstance.getFileInputStream().buffered())
+            dataType.data.value =
+                ContentInfoUtil().findMatch(fileInstance.getFileInputStream().buffered())
         }
         dataType.data.observe(viewLifecycleOwner) {
             binding.openByPicture.setBackgroundColor(mixColor(mimeTypeFromExtension, it, "image"))
@@ -62,8 +64,9 @@ class OpenFileDialog : SimpleDialogFragment<DialogOpenFileBinding>(DialogOpenFil
     }
 
     private fun mixColor(mimeTypeFromExtension: String?, contentInfo: ContentInfo?, t: String): Int {
-        val elements = (if (contentInfo?.contentType?.mimeType?.contains(t) == true) 1 else 2) + if (mimeTypeFromExtension?.contains(t) == true) 4 else 8
-        return elements.let {
+        val fromMagicNumber = if (contentInfo?.contentType?.mimeType?.contains(t) == true) 1 else 2
+        val fromName = if (mimeTypeFromExtension?.contains(t) == true) 4 else 8
+        return (fromMagicNumber + fromName).let {
             when (it) {
                 9 -> Color.parseColor("#A25B32")
                 6 -> Color.parseColor("#667DDA")

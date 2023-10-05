@@ -9,31 +9,39 @@ import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.util.Log
 import android.webkit.MimeTypeMap
-import androidx.core.net.toUri
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system_ktx.getFileInstance
 import com.storyteller_f.giant_explorer.control.plugin.FileSystemProviderResolver
 import com.storyteller_f.plugin_core.FileSystemProviderConstant
 import kotlinx.coroutines.runBlocking
-import java.io.File
 
 
 class FileSystemProvider : ContentProvider() {
 
-    override fun onCreate(): Boolean {
-        return true
+    override fun onCreate() = true
+
+    private fun current(uri: Uri): FileInstance? {
+        val c = context ?: return null
+        val path = FileSystemProviderResolver.resolve(uri) ?: return null
+        return getFileInstance(c, path)
     }
 
     override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor? {
-        val path = FileSystemProviderResolver.resolvePath(uri) ?: return null
-        return ParcelFileDescriptor.open(File(path), ParcelFileDescriptor.MODE_READ_ONLY)
+        val fileInstance = current(uri) ?: return null
+        return runBlocking {
+            val fd = fileInstance.getFileInputStream().fd
+            ParcelFileDescriptor.dup(fd)
+        }
     }
 
-    override fun query(uri: Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?): Cursor? {
-        val c = context ?: return null
-        val filePath = FileSystemProviderResolver.resolvePath(uri) ?: return null
-        Log.i(TAG, "query: file path:$filePath $uri")
-        val fileInstance = getFileInstance(c, File(filePath).toUri())
+    override fun query(
+        uri: Uri,
+        projection: Array<out String>?,
+        selection: String?,
+        selectionArgs: Array<out String>?,
+        sortOrder: String?
+    ): Cursor? {
+        val fileInstance = current(uri) ?: return null
         return runBlocking {
             if (fileInstance.isFile()) {
                 MatrixCursor(fileProjection).apply {
@@ -50,20 +58,41 @@ class FileSystemProvider : ContentProvider() {
         val list = runBlocking {
             fileInstance.list()
         }
-        Log.i(TAG, "queryFileInstance: ${fileInstance.path} ${list.directories.size} ${list.files.size}")
+        Log.i(
+            TAG,
+            "queryFileInstance: ${fileInstance.path} ${list.directories.size} ${list.files.size}"
+        )
         val matrixCursor = MatrixCursor(fileProjection)
-        val singleton = MimeTypeMap.getSingleton()
         list.directories.forEach {
-            matrixCursor.addRow(arrayOf(it.name, it.fullPath, 0, DocumentsContract.Document.MIME_TYPE_DIR))
+            matrixCursor.addRow(
+                arrayOf(
+                    it.name,
+                    it.fullPath,
+                    0,
+                    DocumentsContract.Document.MIME_TYPE_DIR
+                )
+            )
         }
         list.files.forEach {
-            matrixCursor.addRow(arrayOf(it.name, it.fullPath, it.size, singleton.getMimeTypeFromExtension(it.extension)))
+            matrixCursor.addRow(
+                arrayOf(
+                    it.name,
+                    it.fullPath,
+                    it.size,
+                    singleton.getMimeTypeFromExtension(it.extension)
+                )
+            )
         }
         return matrixCursor
     }
 
     override fun getType(uri: Uri): String? {
-        return null
+        val current = current(uri) ?: return null
+        return runBlocking {
+            if (current.isDirectory()) DocumentsContract.Document.MIME_TYPE_DIR
+            else
+                singleton.getMimeTypeFromExtension(current.getFile().extension)
+        }
     }
 
     override fun insert(uri: Uri, values: ContentValues?): Uri? {
@@ -75,17 +104,23 @@ class FileSystemProvider : ContentProvider() {
     }
 
 
-    override fun update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?): Int {
+    override fun update(
+        uri: Uri,
+        values: ContentValues?,
+        selection: String?,
+        selectionArgs: Array<out String>?
+    ): Int {
         TODO("Not yet implemented")
     }
 
     companion object {
         private const val TAG = "FileSystemProvider"
+        val singleton: MimeTypeMap = MimeTypeMap.getSingleton()
         private val fileProjection = arrayOf(
-            FileSystemProviderConstant.fileName,
-            FileSystemProviderConstant.filePath,
-            FileSystemProviderConstant.fileSize,
-            FileSystemProviderConstant.fileMimeType
+            DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+            FileSystemProviderConstant.FILE_PATH,
+            DocumentsContract.Document.COLUMN_SIZE,
+            DocumentsContract.Document.COLUMN_MIME_TYPE,
         )
     }
 }

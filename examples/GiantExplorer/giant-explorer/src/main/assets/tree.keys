@@ -1,2 +1,3 @@
 com.android.externalstorage.documents=primary:
 com.storyteller_f.ping.documents=ping
+com.termux.documents=/data/data/com.termux/files/home

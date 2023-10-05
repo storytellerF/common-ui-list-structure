@@ -7,8 +7,8 @@
     <string name="string_add_directory">add directory</string>
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
-    <string name="title_activity_settings">SettingsActivity</string>
-    <string name="title_activity_root_access">RootAccessActivity</string>
+    <string name="title_activity_settings">Settings</string>
+    <string name="title_activity_root_access">Root Access</string>
     <string name="title_activity_background_task_config">BackgroundTaskConfigActivity</string>
 
     <string name="add_background_task_description">add background task</string>
@@ -32,4 +32,15 @@
     <string name="paste">Paste</string>
     <string name="background_task_manage">background task</string>
     <string name="root_intro">Learn how to root device</string>
+    <string name="title_activity_remote_manager">RemoteManager</string>
+    <string name="duration_ms">duration: %1$s ms</string>
+    <string name="remote_access">remote access</string>
+    <string name="item_show_as_linear">linear</string>
+    <string name="item_show_as_grid">grid</string>
+    <string name="type_picture">picture</string>
+    <string name="type_video">video</string>
+    <string name="type_text">plain text</string>
+    <string name="type_audio">music</string>
+    <string name="type_hex">hex binary</string>
+    <string name="type_any">any</string>
 </resources>

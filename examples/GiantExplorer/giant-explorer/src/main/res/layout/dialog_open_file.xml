@@ -29,8 +29,8 @@
         android:layout_height="wrap_content"
         android:minWidth="300dp"
         android:orientation="vertical"
-        android:paddingHorizontal="10dp"
-        android:paddingVertical="28dp">
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="18dp">
 
         <TextView
             android:id="@+id/fileName"
@@ -48,6 +48,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:enabled="@{dataType.data.contentType.mimeType != null}"
             android:onClickListener="@{()->handler.onResult(dataType.data.contentType.mimeType)}"
             android:text="@{dataType.data.contentType.mimeType}"
             android:textAllCaps="false"
@@ -62,6 +63,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:enabled="@{mimeType != null}"
             android:onClickListener="@{()->handler.onResult(mimeType)}"
             android:text="@{mimeType}"
             android:textAllCaps="false"
@@ -75,7 +77,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            app:constraint_referenced_ids="openByPicture,openByVideo,openByText,openByMusic,openByHex"
+            app:constraint_referenced_ids="openByPicture,openByVideo,openByText,openByMusic,openByHex,openByAny"
             app:flow_horizontalGap="5dp"
             app:flow_wrapMode="aligned"
             app:layout_constraintStart_toStartOf="parent"
@@ -115,6 +117,13 @@
             android:layout_height="wrap_content"
             android:onClickListener="@{()->handler.onResult(`application/*`)}"
             android:text="@string/type_hex" />
+
+        <Button
+            android:id="@+id/openByAny"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClickListener="@{()->handler.onResult(`*/*`)}"
+            android:text="@string/type_any" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

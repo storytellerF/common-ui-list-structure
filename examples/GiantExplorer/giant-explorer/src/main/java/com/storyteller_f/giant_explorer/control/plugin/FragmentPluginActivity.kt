@@ -47,18 +47,21 @@ abstract class DefaultPluginManager(val context: Context) : GiantExplorerPluginM
     }
 
     override fun resolveParentUri(uriString: String): String? {
-        val resolvePath = FileSystemProviderResolver.resolvePath(uriString.toUri()) ?: return null
+        val uri = uriString.toUri()
+        val resolvePath = FileSystemProviderResolver.resolve(uri)?.path ?: return null
         val parent = File(resolvePath).parent ?: return null
-        return FileSystemProviderResolver.build(false, parent).toString()
+        return FileSystemProviderResolver.share(false, uri.buildUpon().path(parent).build())
+            .toString()
     }
 
     override fun resolveParentPath(uriString: String): String? {
-        val resolvePath = FileSystemProviderResolver.resolvePath(uriString.toUri()) ?: return null
+        val resolvePath =
+            FileSystemProviderResolver.resolve(uriString.toUri())?.path ?: return null
         return File(resolvePath).parent
     }
 
     override fun resolvePath(uriString: String): String? {
-        return FileSystemProviderResolver.resolvePath(uriString.toUri())
+        return FileSystemProviderResolver.resolve(uriString.toUri())?.path
     }
 
     override suspend fun ensureDir(uriString: String) {
@@ -110,7 +113,7 @@ class FragmentPluginActivity : AppCompatActivity() {
             val name = revolvePlugin.startFragment
             pluginFragments = revolvePlugin.pluginFragments
             val loadClass = dexClassLoader.loadClass(name)
-            val newInstance = loadClass.newInstance()
+            val newInstance = loadClass.getDeclaredConstructor().newInstance()
             if (newInstance is Fragment) {
                 if (newInstance is GiantExplorerPlugin) {
                     newInstance.plugPluginManager(pluginManager)

@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.documentfile.provider.DocumentFile
 import com.storyteller_f.file_system.FileSystemUriSaver
+import com.storyteller_f.file_system.encodeByBase64
 import com.storyteller_f.file_system.instance.BaseContextFileInstance
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileCreatePolicy.*
@@ -23,8 +24,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 /**
  * 如果是通过挂载路径 访问/storage/emulated/0，uri 是file:///storage/emulated/0/Downloads，prefix 是/storage/emulated/0，tree 是primary:
@@ -79,7 +78,15 @@ class DocumentLocalFileInstance(
     private suspend fun getInstanceRelinkIfNeed(): DocumentFile? {
         val temp = _instance
         if (temp == null) {
-            _instance = (getDocumentFile(NotCreate) as? GetDocumentFile.Success)?.file
+            val documentFile = getDocumentFile(NotCreate)
+            _instance = (when (documentFile) {
+                is GetDocumentFile.Success -> documentFile.file
+
+                is GetDocumentFile.Failed -> {
+                    Log.e(TAG, "getInstanceRelinkIfNeed: ", documentFile.throwable)
+                    null
+                }
+            })
         }
         return _instance
     }
@@ -95,9 +102,7 @@ class DocumentLocalFileInstance(
             ?: return GetDocumentFile.Failed(Exception("rootUri is null"))
         val rootFile = DocumentFile.fromTreeUri(context, rootUri)
             ?: return GetDocumentFile.Failed(Exception("fromTreeUri is null"))
-        if (!rootFile.canRead()) {
-            return GetDocumentFile.Failed(Exception("权限过期, 不可读写"))
-        }
+//        if (!rootFile.canRead()) return GetDocumentFile.Failed(Exception("$rootFile 权限过期, 不可读写"))
         if (pathRelativeRoot == "/") return GetDocumentFile.Success(rootFile)
         val nameItemPath = pathRelativeRoot.substring(
             1
@@ -354,6 +359,7 @@ class DocumentLocalFileInstance(
     }
 
     companion object {
+        @Suppress("SpellCheckingInspection")
         private const val TAG = "DocumentLocalFileInstan"
         const val EXTERNAL_STORAGE_DOCUMENTS = "com.android.externalstorage.documents"
         const val EXTERNAL_STORAGE_DOCUMENTS_TREE = "primary:"
@@ -384,10 +390,9 @@ class DocumentLocalFileInstance(
 
         fun getMountedTree(prefix: String) = prefix.substring(prefix.lastIndexOf("/") + 1) + ":"
 
-        @OptIn(ExperimentalEncodingApi::class)
         fun uriFromAuthority(authority: String, tree: String): Uri {
             return Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT).authority(authority)
-                .path("/${Base64.encode(tree.toByteArray())}")
+                .path("/${tree.encodeByBase64()}")
                 .build()
         }
     }

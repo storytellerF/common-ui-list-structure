@@ -12,6 +12,7 @@ data class ShareSpec(
     val share: String
 ) {
     fun toUri(): Uri {
+        // todo 使用路径的第一个作为share
         return Uri.parse("$type://$user:$password@$server:$port:$share")!!
     }
 

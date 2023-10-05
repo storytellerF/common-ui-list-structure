@@ -2,6 +2,7 @@ package com.storyteller_f.yue_plugin
 
 import android.net.Uri
 import android.os.Bundle
+import android.provider.DocumentsContract
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -71,8 +72,8 @@ class YueFragment : Fragment(), GiantExplorerPlugin {
                 val parentUri = manager.resolveParentUri(u.toString())?.toUri() ?: return false
                 requireContext().contentResolver.query(parentUri, null, null, null, null)?.use {
                     while (it.moveToNext()) {
-                        val path = it.getString(it.getColumnIndexOrThrow(FileSystemProviderConstant.filePath))
-                        val mimeType = it.getString(it.getColumnIndexOrThrow(FileSystemProviderConstant.fileMimeType))
+                        val path = it.getString(it.getColumnIndexOrThrow(FileSystemProviderConstant.FILE_PATH))
+                        val mimeType = it.getString(it.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE))
                         Log.i(TAG, "listFiles: $path $mimeType")
                         if (mimeType != null && mimeType.startsWith("image"))
                             list.add(Uri.Builder().scheme(u.scheme).authority(u.authority).path("/info$path").build())

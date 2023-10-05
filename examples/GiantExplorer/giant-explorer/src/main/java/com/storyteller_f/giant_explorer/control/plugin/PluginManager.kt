@@ -3,7 +3,12 @@ package com.storyteller_f.giant_explorer.control.plugin
 import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.annotation.WorkerThread
+import androidx.core.net.toUri
+import com.storyteller_f.file_system.decodeByBase64
+import com.storyteller_f.file_system.encodeByBase64
+import com.storyteller_f.file_system.rawTree
 import com.storyteller_f.giant_explorer.BuildConfig
 import com.storyteller_f.ui_list.core.Model
 import dalvik.system.DexClassLoader
@@ -129,15 +134,42 @@ class PluginManager {
     companion object
 }
 
+/**
+ * path 第一个是通过base64 编码的原始uri 的标识信息。
+ * 如果是CONTENT_FILE，即为file://
+ * 如果是CONTENT，即为content://authority/tree
+ * 如果是REMOTE，即为pf://authority
+ */
 object FileSystemProviderResolver {
-    fun resolvePath(uri: Uri): String? {
+
+    /**
+     * 将外部uri 转换成内部使用的uri
+     */
+    fun resolve(uri: Uri): Uri? {
         if (uri.authority == BuildConfig.FILE_SYSTEM_ENCRYPTED_PROVIDER_AUTHORITY) return null
-        return uri.path
+        val pathSegments = uri.pathSegments
+        val first = pathSegments.first()
+        val front = first.decodeByBase64()
+        val truePath = uri.path!!.substring(first.length + 1)
+        Log.d(TAG, "resolvePath: $front $truePath $first")
+        return (front + truePath).toUri()
     }
 
-    fun build(encrypted: Boolean, path: String): Uri? {
+    fun share(encrypted: Boolean, uri: Uri): Uri? {
         val authority = if (encrypted) BuildConfig.FILE_SYSTEM_ENCRYPTED_PROVIDER_AUTHORITY
         else BuildConfig.FILE_SYSTEM_PROVIDER_AUTHORITY
-        return Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT).authority(authority).path(path).build()
+        val (id, path) = if (uri.scheme == ContentResolver.SCHEME_CONTENT) {
+            val rawTree = uri.rawTree
+            val path = uri.path!!.substring(rawTree.length + 1)
+            "content://${uri.authority}/$rawTree" to path
+        } else {
+            "${uri.scheme}://${uri.authority}" to uri.path!!
+        }
+        val encodeByBase64 = id.encodeByBase64()
+        val newPath = encodeByBase64 + path
+        Log.d(TAG, "build: $newPath $encodeByBase64")
+        return Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT).authority(authority).path(newPath).build()
     }
+
+    private const val TAG = "FileSystemProviderReslv"
 }

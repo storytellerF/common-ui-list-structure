@@ -7,10 +7,11 @@
     <string name="first_fragment_label">插件列表</string>
     <string name="second_fragment_label">插件详情</string>
 
-    <string name="title_activity_settings">SettingsActivity</string>
-    <string name="title_activity_root_access">RootAccessActivity</string>
+    <string name="title_activity_settings">设置</string>
+    <string name="title_activity_root_access">Root Access</string>
     <string name="title_activity_plugin_manage">PluginManageActivity</string>
-    <string name="title_activity_background_task_config">BackgroundTaskConfigActivity</string>
+    <string name="title_activity_background_task_config">配置后台任务</string>
+    <string name="title_activity_remote_manager">远程管理</string>
 
     <string name="add_background_task_description">添加后台任务</string>
     <string name="delete">删除</string>
@@ -32,14 +33,14 @@
     <string name="paste">粘贴</string>
     <string name="background_task_manage">后台任务管理</string>
     <string name="root_intro">了解如何root</string>
-    <string name="title_activity_remote_manager" translatable="false">RemoteManagerActivity</string>
-    <string name="duration_ms" translatable="false">duration: %1$s ms</string>
-    <string name="remote_access" translatable="false">远程访问</string>
-    <string name="item_show_as_linear">linear</string>
-    <string name="item_show_as_grid">grid</string>
+    <string name="duration_ms">时长: %1$s ms</string>
+    <string name="remote_access">远程访问</string>
+    <string name="item_show_as_linear">线性</string>
+    <string name="item_show_as_grid">网格</string>
     <string name="type_picture">图片</string>
     <string name="type_video">视频</string>
     <string name="type_text">文本</string>
     <string name="type_audio">音乐</string>
     <string name="type_hex">十六进制</string>
+    <string name="type_any">任意类型</string>
 </resources>
