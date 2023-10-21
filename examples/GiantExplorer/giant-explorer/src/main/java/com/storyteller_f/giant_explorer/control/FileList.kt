@@ -27,6 +27,7 @@ import androidx.savedstate.SavedStateRegistryOwner
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.common_ktx.context
 import com.storyteller_f.common_ktx.same
+import com.storyteller_f.common_pr.dipToInt
 import com.storyteller_f.common_ui.cycle
 import com.storyteller_f.common_ui.owner
 import com.storyteller_f.common_ui.setVisible
@@ -63,7 +64,6 @@ import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.data.SimpleResponse
 import com.storyteller_f.ui_list.event.findActionReceiverOrNull
 import com.storyteller_f.ui_list.source.SearchProducer
-import com.storyteller_f.ui_list.source.SimpleSearchViewModel
 import com.storyteller_f.ui_list.source.observerInScope
 import com.storyteller_f.ui_list.source.search
 import com.storyteller_f.ui_list.ui.ListWithState
@@ -72,7 +72,7 @@ import com.storyteller_f.ui_list.ui.valueContains
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-class FileListViewModel(stateHandle: SavedStateHandle): ViewModel() {
+class FileListViewModel(stateHandle: SavedStateHandle) : ViewModel() {
     val displayGrid = stateHandle.getLiveData("display", false)
     val filterHiddenFile = stateHandle.getLiveData("filterHiddenFile", false)
 }
@@ -91,8 +91,8 @@ class FileListObserver<T>(
     val selected: List<Pair<DataItemHolder, Int>>?
         get() = session.selected.value
 
-    val fileListViewModel by owner.svm({}, scope) { it, _ ->
-        FileListViewModel(it)
+    val fileListViewModel by owner.svm({}, scope) { handle, _ ->
+        FileListViewModel(handle)
     }
 
     private val session by owner.vm(args) {
@@ -142,16 +142,19 @@ class FileListObserver<T>(
             listWithState.recyclerView.isVisible = false
             adapter.submitData(cycle, PagingData.empty())
             listWithState.recyclerView.layoutManager = when {
-                it -> GridLayoutManager(listWithState.context, 3)
+                it -> {
+                    val spanCount = listWithState.context.run {
+                        resources.displayMetrics.widthPixels / 200.dipToInt
+                    }
+                    GridLayoutManager(listWithState.context, spanCount)
+                }
+
                 else -> LinearLayoutManager(listWithState.context)
             }
         }
         fileList(
             listWithState,
             adapter,
-            data,
-            session,
-            fileListViewModel,
             rightSwipe,
             updatePath
         )
@@ -160,70 +163,68 @@ class FileListObserver<T>(
     fun update(toParent: FileInstance) {
         session.fileInstance.value = toParent
     }
-}
 
-fun LifecycleOwner.fileList(
-    listWithState: ListWithState,
-    adapter: SimpleSourceAdapter<FileItemHolder, FileViewHolder>,
-    viewModel: SimpleSearchViewModel<FileModel, FileExplorerSearch, FileItemHolder>,
-    session: FileExplorerSession,
-    fileListViewModel: FileListViewModel,
-    rightSwipe: (FileItemHolder) -> Unit,
-    updatePath: (String) -> Unit
-) {
-    val owner = if (this is Fragment) viewLifecycleOwner else this
-    context {
-        listWithState.sourceUp(
-            adapter,
-            owner,
-            plugLayoutManager = false,
-            dampingSwipe = { viewHolder, direction ->
-                if (direction == ItemTouchHelper.LEFT)
-                    session.selected.toggle(viewHolder)
-                else rightSwipe(viewHolder.itemHolder as FileItemHolder)
-            },
-            flash = ListWithState.Companion::remote
-        )
-        session.fileInstance.observe(owner) {
-            updatePath(it.path)
-        }
-        session.fileInstance.observe(owner) {
-            val path = it.uri
-            //检查权限
-            owner.lifecycleScope.launch {
-                if (!checkPathPermission(path)) {
-                    if (requestPathPermission(path)) {
-                        adapter.refresh()
+    private fun LifecycleOwner.fileList(
+        listWithState: ListWithState,
+        adapter: SimpleSourceAdapter<FileItemHolder, FileViewHolder>,
+        rightSwipe: (FileItemHolder) -> Unit,
+        updatePath: (String) -> Unit
+    ) {
+        val owner = if (this is Fragment) viewLifecycleOwner else this
+        context {
+            listWithState.sourceUp(
+                adapter,
+                owner,
+                plugLayoutManager = false,
+                dampingSwipe = { viewHolder, direction ->
+                    if (direction == ItemTouchHelper.LEFT)
+                        session.selected.toggle(viewHolder)
+                    else rightSwipe(viewHolder.itemHolder as FileItemHolder)
+                },
+                flash = ListWithState.Companion::remote
+            )
+            session.fileInstance.observe(owner) {
+                updatePath(it.path)
+            }
+            session.fileInstance.observe(owner) {
+                val path = it.uri
+                //检查权限
+                owner.lifecycleScope.launch {
+                    if (!checkPathPermission(path)) {
+                        if (requestPathPermission(path)) {
+                            adapter.refresh()
+                        }
                     }
                 }
             }
-        }
-        combineDao(
-            session.fileInstance,
-            fileListViewModel.filterHiddenFile,
-            activeFilters.same,
-            activeSortChains.same,
-            fileListViewModel.displayGrid
-        ).wait5().distinctUntilChanged().debounce(200)
-            .observe(owner) { (fileInstance, filterHiddenFile, filters, sortChains, d5) ->
-                val display = if (d5) "grid" else ""
+            combineDao(
+                session.fileInstance,
+                fileListViewModel.filterHiddenFile,
+                activeFilters.same,
+                activeSortChains.same,
+                fileListViewModel.displayGrid
+            ).wait5().distinctUntilChanged().debounce(200)
+                .observe(owner) { (fileInstance, filterHiddenFile, filters, sortChains, d5) ->
+                    val display = if (d5) "grid" else ""
 
-                viewModel.observerInScope(
-                    owner,
-                    FileExplorerSearch(
-                        fileInstance,
-                        filterHiddenFile,
-                        filters,
-                        sortChains,
-                        display
-                    )
-                ) { pagingData ->
-                    adapter.submitData(pagingData)
+                    data.observerInScope(
+                        owner,
+                        FileExplorerSearch(
+                            fileInstance,
+                            filterHiddenFile,
+                            filters,
+                            sortChains,
+                            display
+                        )
+                    ) { pagingData ->
+                        adapter.submitData(pagingData)
+                    }
                 }
-            }
 
+        }
     }
 }
+
 
 private val <T> LiveData<List<T>>.same
     get() = distinctUntilChangedBy { sort1, sort2 ->

@@ -137,7 +137,7 @@ private fun <A> A.show(
 ): UUID where A : LifecycleOwner {
     val randomUUID = UUID.randomUUID()
     parameters?.putSerializable("uuid", randomUUID)
-    val dialogFragment = dialog.newInstance().apply {
+    val dialogFragment = dialog.getConstructor().newInstance().apply {
         arguments = parameters
     }
     dialogFragment.show(fm, randomUUID.toString())

@@ -37,17 +37,13 @@ import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui.setOnClick
 import com.storyteller_f.common_ui.supportNavigatorBarImmersive
 import com.storyteller_f.common_vm_ktx.StateValueModel
-import com.storyteller_f.common_vm_ktx.genericValueModel
-import com.storyteller_f.common_vm_ktx.keyPrefix
 import com.storyteller_f.common_vm_ktx.svm
 import com.storyteller_f.common_vm_ktx.toDiffNoNull
-import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.FileSystemUriSaver
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.file_system.rawTree
-import com.storyteller_f.file_system.tree
 import com.storyteller_f.file_system_ktx.getFileInstance
 import com.storyteller_f.file_system_root.RootAccessFileInstance
 import com.storyteller_f.giant_explorer.R
@@ -96,9 +92,9 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         StateValueModel(it, "filter-hidden-file", false)
     }
 
-    private val displayGrid by keyPrefix("display", vm({}) { _ ->
-        genericValueModel(false)
-    })
+    private val fileListViewModel by svm({}) { handle, _ ->
+        FileListViewModel(handle)
+    }
 
     private var currentRequestingAuthority: String? = null
     private var currentRequestingTree: String? = null
@@ -134,11 +130,11 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
 
         }
         binding.drawer.addDrawerListener(drawableToggle)
-        displayGrid.data.distinctUntilChanged().observe(owner) {
+        fileListViewModel.displayGrid.distinctUntilChanged().observe(owner) {
             binding.switchDisplay.isActivated = it
         }
         binding.switchDisplay.setOnClick {
-            displayGrid.data.value = it.isChecked
+            fileListViewModel.displayGrid.value = it.isChecked
         }
         setupNav()
     }
@@ -429,10 +425,10 @@ suspend fun Activity.documentProviderRoot(
     tree: String,
 ): Uri? {
     val savedUris = FileSystemUriSaver.instance.savedUris(this)
-    val uri = DocumentLocalFileInstance.uriFromAuthority(authority, tree)
     return if (!savedUris.contains(authority))
         null
     else try {
+        val uri = DocumentLocalFileInstance.uriFromAuthority(authority, tree)
         if (getFileInstance(this, uri).exists()) uri else null
     } catch (e: Exception) {
         null

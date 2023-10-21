@@ -148,10 +148,10 @@ object FileSystemProviderResolver {
     fun resolve(uri: Uri): Uri? {
         if (uri.authority == BuildConfig.FILE_SYSTEM_ENCRYPTED_PROVIDER_AUTHORITY) return null
         val pathSegments = uri.pathSegments
-        val first = pathSegments.first()
-        val front = first.decodeByBase64()
-        val truePath = uri.path!!.substring(first.length + 1)
-        Log.d(TAG, "resolvePath: $front $truePath $first")
+        val encodedFront = pathSegments.first()
+        val front = encodedFront.decodeByBase64()
+        val truePath = uri.path!!.substring(encodedFront.length + 1)
+        Log.d(TAG, "resolvePath: $front $truePath $encodedFront")
         return (front + truePath).toUri()
     }
 
