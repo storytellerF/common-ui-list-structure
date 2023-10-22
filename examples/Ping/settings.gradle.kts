@@ -1,5 +1,8 @@
+@file:Suppress("UnstableApiUsage")
+
 pluginManagement {
-    includeBuild("../../common-ui-list/version-manager")
+//    includeBuild("../../../common-ui-list/version-manager")
+//    includeBuild("../../../common-ui-list/common-publish")
     repositories {
         google()
         mavenCentral()
@@ -23,33 +26,14 @@ dependencyResolutionManagement {
 rootProject.name = "Ping"
 include(":ping")
 
-val commonUiListModules = listOf(
-    "common-ktx",
-    "common-pr",
-    "common-ui",
-    "common-vm-ktx",
-    "compat-ktx",
-    "composite-compiler",
-    "composite-definition",
-    "config",
-    "ext-func-compiler",
-    "ext-func-definition",
-    "file-system",
-    "file-system-ktx",
-    "file-system-remote",
-    "file-system-root",
-    "multi-core",
-    "slim-ktx",
-    "ui-list",
-    "ui-list-annotation-common",
-    "ui-list-annotation-compiler",
-    "ui-list-annotation-compiler-ksp",
-    "ui-list-annotation-definition",
-    "view-holder-compose"
+val commonUiListModules = listOf<String>(
+
 )
 val commonUiPath = File(rootDir, "../../common-ui-list")
 commonUiListModules.forEach {
     val modulePath = File(commonUiPath, it)
-    include(it)
-    project(":$it").projectDir = modulePath
+    if (modulePath.exists()) {
+        include(it)
+        project(":$it").projectDir = modulePath
+    }
 }

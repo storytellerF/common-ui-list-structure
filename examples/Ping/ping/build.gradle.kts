@@ -8,7 +8,7 @@ plugins {
 //    id("app.cash.licensee")
     id("com.storyteller_f.sml")
     id("com.storyteller_f.version_manager")
-
+    id("kotlin-kapt")
 }
 android {
     defaultConfig {
@@ -22,8 +22,9 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation("com.squareup.okio:okio:3.5.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
-    "implementation"(project(":file-system-ktx"))
+    implModule(":file-system-ktx")
 }
+constraintCommonUIListVersion("cbf40f5ff3")
 baseApp()
 setupGeneric()
 setupDataBinding()

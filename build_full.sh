@@ -1,11 +1,11 @@
 #!/bin/sh
 . ./common.sh
 
-cd builder
-customBuild builder installDist $1
-sh build/install/builder/bin/builder
-checkLastResult agp-version $?
-cd ..
+# cd builder
+# customBuild builder installDist $1
+# sh build/install/builder/bin/builder
+# checkLastResult agp-version $?
+# cd ..
 
 sh build_app.sh $1 $2
 checkLastResult app $?

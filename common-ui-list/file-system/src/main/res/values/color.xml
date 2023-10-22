@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="colorFolderRipple">#97FFEB3B</color>
-    <color name="colorFileRipple">#E9EEF0</color>
-    <color name="colorFolder">@android:color/white</color>
-    <color name="colorFile">@android:color/white</color>
-</resources>

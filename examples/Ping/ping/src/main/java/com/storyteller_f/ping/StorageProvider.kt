@@ -94,7 +94,7 @@ class StorageProvider : DocumentsProvider() {
 
             val root = context.root ?: return
             context?.let {
-                File(root, getPath(documentId,)).listFiles()?.forEach {
+                File(root, getPath(documentId)).listFiles()?.forEach {
                     newRow().apply {
                         fileRow(it, root)
                     }
