@@ -1,12 +1,17 @@
+@file:Suppress("UnstableApiUsage")
+
 val filterFolder: String? by settings
 val baoFolder: String? by settings
 val liFolder: String? by settings
 pluginManagement {
-    includeBuild("../../common-ui-list/version-manager")
+//    includeBuild("../../../common-ui-list/version-manager")
+//    includeBuild("../../../common-ui-list/common-publish")
     repositories {
+        mavenLocal()
         google()
         mavenCentral()
         gradlePluginPortal()
+        maven { setUrl("https://jitpack.io") }
     }
 }
 dependencyResolutionManagement {
@@ -22,35 +27,17 @@ rootProject.name = "GiantExplorer"
 include(":giant-explorer")
 include(":giant-explorer-plugin-core")
 
-val commonUiListModules = listOf(
-    "common-ktx",
-    "common-pr",
-    "common-ui",
-    "common-vm-ktx",
-    "compat-ktx",
-    "composite-compiler",
-    "composite-definition",
-    "config",
-    "ext-func-compiler",
-    "ext-func-definition",
-    "file-system",
-    "file-system-ktx",
-    "file-system-remote",
-    "file-system-root",
-    "multi-core",
-    "slim-ktx",
-    "ui-list",
-    "ui-list-annotation-common",
-    "ui-list-annotation-compiler",
-    "ui-list-annotation-compiler-ksp",
-    "ui-list-annotation-definition",
-    "view-holder-compose"
+val commonUiListModules = listOf<String>(
+
 )
-val commonUiPath = File(rootDir, "../../common-ui-list")
+
+val commonUiPath = File(rootDir, "../../../common-ui-list")
 commonUiListModules.forEach {
     val modulePath = File(commonUiPath, it)
-    include(it)
-    project(":$it").projectDir = modulePath
+    if (modulePath.exists()) {
+        include(it)
+        project(":$it").projectDir = modulePath
+    }
 }
 
 val home: String = System.getProperty("user.home")

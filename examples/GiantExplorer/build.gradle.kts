@@ -1,7 +1,11 @@
 buildscript {
     dependencies {
-        val navVersion = "2.5.3"
+        val navVersion = "2.6.0"
         classpath("androidx.navigation:navigation-safe-args-gradle-plugin:$navVersion")
+        //jitpack 构建
+        classpath("com.github.storytellerF.common-ui-list:version-manager:cbf40f5ff3")
+        //本地构建
+//        classpath("com.storyteller_f:version-manager:0.0.1")
     }
 }
 plugins {

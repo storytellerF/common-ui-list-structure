@@ -2,9 +2,10 @@ buildscript {
     dependencies {
         val smlFolder: String? by project
         val smlVersion = "0.0.2"
-        val navVersion = "2.5.3"
+        val navVersion = "2.6.0"
 
         classpath("androidx.navigation:navigation-safe-args-gradle-plugin:$navVersion")
+        classpath("com.github.storytellerF.common-ui-list:version-manager:cbf40f5ff3")
         when (smlFolder) {
             "remote", null -> classpath("com.github.storytellerF.SML:com.storyteller_f.sml.gradle.plugin:$smlVersion")
             "repository" -> classpath("com.storyteller_f.sml:sml:$smlVersion")

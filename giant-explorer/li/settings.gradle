@@ -1,9 +1,12 @@
 pluginManagement {
-    includeBuild("../../common-ui-list/version-manager")
+    // includeBuild("../../common-ui-list/version-manager")
     repositories {
         gradlePluginPortal()
         google()
         mavenCentral()
+        maven {
+            url "https://jitpack.io"
+        }
     }
 }
 dependencyResolutionManagement {

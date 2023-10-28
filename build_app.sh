@@ -2,7 +2,7 @@
 . ./common.sh
     
 mkdir -p build
-mkdir -p build/common-ui-list
+# mkdir -p build/common-ui-list
 mkdir -p build/giant-explorer
 mkdir -p build/ping
 
@@ -11,7 +11,7 @@ mkdir -p build/ping
 
 if [ "$1" != "cache" ]; then
 
-    cleanCache common-ui-list
+    # cleanCache common-ui-list
     cd examples
     cleanCache GiantExplorer
     cleanCache Ping
@@ -27,7 +27,7 @@ fi
 
 
 #compile common-ui-list
-buildApp common-ui-list app common-ui-list cache
+# buildApp common-ui-list app common-ui-list cache
 
 cd examples
 #compile giant-explorer ping

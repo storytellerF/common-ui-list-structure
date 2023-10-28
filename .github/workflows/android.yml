@@ -32,20 +32,20 @@ jobs:
 
     #签名开始
 
-    #签名app
-    - uses: noriban/sign-android-release@v3
-      name: Sign app APK
-      # ID used to access action output
-      id: sign_app
-      with:
-        releaseDirectory: build/common-ui-list
-        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-        alias: ${{ secrets.ALIAS }}
-        keyStorePassword: ${{ secrets.STORE_PASSWORD }}
-        keyPassword: ${{ secrets.KEY_PASSWORD }}
-      env:
-        # override default build-tools version (29.0.3) -- optional
-        BUILD_TOOLS_VERSION: "33.0.1"
+    # #签名app
+    # - uses: noriban/sign-android-release@v3
+    #   name: Sign app APK
+    #   # ID used to access action output
+    #   id: sign_app
+    #   with:
+    #     releaseDirectory: build/common-ui-list
+    #     signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+    #     alias: ${{ secrets.ALIAS }}
+    #     keyStorePassword: ${{ secrets.STORE_PASSWORD }}
+    #     keyPassword: ${{ secrets.KEY_PASSWORD }}
+    #   env:
+    #     # override default build-tools version (29.0.3) -- optional
+    #     BUILD_TOOLS_VERSION: "33.0.1"
 
     #签名giant explorer
     - uses: noriban/sign-android-release@v3

@@ -20,6 +20,8 @@ plugins {
     id("kotlin-parcelize")
     id("androidx.navigation.safeargs.kotlin")
     id("com.storyteller_f.version_manager")
+    id("kotlin-kapt")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -52,12 +54,10 @@ android {
 }
 
 dependencies {
-    implementation(fileTree("libs"))
-    implementation("androidx.appcompat:appcompat:${Versions.appcompatVersion}")
-    implementation("com.google.android.material:material:${Versions.materialVersion}")
-    implementation("androidx.constraintlayout:constraintlayout:${Versions.constraintLayoutVersion}")
-    implementation("androidx.navigation:navigation-fragment-ktx:2.7.2")
-    implementation("androidx.navigation:navigation-ui-ktx:2.7.2")
+
+    implementation("androidx.constraintlayout:constraintlayout:${Versions.CONSTRAINTLAYOUT}")
+    implementation("androidx.navigation:navigation-fragment-ktx:${Versions.NAVIGATION}")
+    implementation("androidx.navigation:navigation-ui-ktx:${Versions.NAVIGATION}")
     fileSystemDependency()
     networkDependency()
     workerDependency()
@@ -76,12 +76,11 @@ dependencies {
     // Optional: Provides remote file system support
     implementation("com.github.topjohnwu.libsu:nio:${libsuVersion}")
 
-    implementation("com.github.bumptech.glide:glide:4.15.1")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
 
     implementation(project(":giant-explorer-plugin-core"))
     implementation("androidx.webkit:webkit:1.8.0")
-    implementation(project(":compat-ktx"))
-    androidTestImplementation("androidx.room:room-testing:2.5.2")
+    androidTestImplementation("androidx.room:room-testing:2.6.0")
     //filter & sort
     val filterArtifact = listOf("config-core", "sort-core", "filter-core", "filter-ui", "sort-ui")
 
@@ -97,17 +96,17 @@ dependencies {
             implementation("com.github.storytellerF.Shun:$it:1.0.0")
         }
     }
-    implementation(project(":file-system-remote"))
-    implementation(project(":file-system-root"))
     implementation("com.madgag.spongycastle:core:1.58.0.0")
     implementation("com.madgag.spongycastle:prov:1.58.0.0")
 
-    implementation("androidx.window:window:1.2.0-beta01")
+    implementation("androidx.window:window:1.2.0-beta04")
     val liPluginModule = findProject(":li-plugin")
     if (liPluginModule != null) {
         implementation(liPluginModule)
     }
 }
+constraintCommonUIListVersion("cbf40f5ff3")
+fileSystemDependency()
 baseApp()
 setupGeneric()
 setupDataBinding()
