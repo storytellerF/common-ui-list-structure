@@ -28,6 +28,8 @@ bash build_plugins.sh
 
 5. **version-manager**： 使用includeBuild 导入，暴露一个gradle plugin，用于依赖管理和配置管理
 
+[链接在这](https://github.com/storytellerF/common-ui-list)
+
 ## 示例项目
 
 [giant-explorer](examples/GiantExplorer) 文件管理器

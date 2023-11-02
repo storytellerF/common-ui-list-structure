@@ -1,4 +1,5 @@
 import com.storyteller_f.version_manager.*
+val versionManager: String by project
 
 plugins {
     id("com.android.application")
@@ -24,7 +25,7 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implModule(":file-system-ktx")
 }
-constraintCommonUIListVersion("cbf40f5ff3")
+constraintCommonUIListVersion(versionManager)
 baseApp()
 setupGeneric()
 setupDataBinding()

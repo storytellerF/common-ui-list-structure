@@ -94,14 +94,17 @@ class RequestPathDialog :
         (dialog as? ComponentDialog)?.onBackPressedDispatcher?.addCallback(this) {
             val value = observer.fileInstance
             if (value != null) {
-                if (value.path == "/" || value.path.startsWith(FileInstanceFactory.USER_EMULATED_FRONT_PATH)) {
+                val context = requireContext()
+                if (value.path == "/" || value.path.startsWith(FileInstanceFactory.getCurrentUserEmulatedPath(
+                        context
+                    ))) {
                     isEnabled = false
                     @Suppress("DEPRECATION") dialog?.onBackPressed()
                 } else {
                     scope.launch {
                         observer.update(
                             FileInstanceFactory.toParent(
-                                requireContext(),
+                                context,
                                 value
                             )
                         )

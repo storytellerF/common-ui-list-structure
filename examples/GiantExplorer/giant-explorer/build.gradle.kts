@@ -1,5 +1,6 @@
 import com.android.build.api.dsl.ApplicationDefaultConfig
 import com.storyteller_f.version_manager.*
+val versionManager: String by project
 
 class RoomSchemaArgProvider(
     @get:InputDirectory
@@ -61,26 +62,37 @@ dependencies {
     fileSystemDependency()
     networkDependency()
     workerDependency()
-    implementation("androidx.preference:preference-ktx:1.2.1")
+
+    handleSu()
+    handleShun()
+    implementation(project(":giant-explorer-plugin-core"))
+
     implementation("com.j256.simplemagic:simplemagic:1.17")
-    implementation("androidx.browser:browser:1.6.0")
-
-    val libsuVersion = "5.0.3"
-
-    // The core module that provides APIs to a shell
-    implementation("com.github.topjohnwu.libsu:core:${libsuVersion}")
-
-    // Optional: APIs for creating root services. Depends on ":core"
-    implementation("com.github.topjohnwu.libsu:service:${libsuVersion}")
-
-    // Optional: Provides remote file system support
-    implementation("com.github.topjohnwu.libsu:nio:${libsuVersion}")
-
     implementation("com.github.bumptech.glide:glide:4.16.0")
 
-    implementation(project(":giant-explorer-plugin-core"))
+    implementation("androidx.browser:browser:1.6.0")
     implementation("androidx.webkit:webkit:1.8.0")
+    implementation("androidx.preference:preference-ktx:1.2.1")
+    implementation("androidx.window:window:1.2.0-beta04")
+
     androidTestImplementation("androidx.room:room-testing:2.6.0")
+
+    implementation("com.madgag.spongycastle:core:1.58.0.0")
+    implementation("com.madgag.spongycastle:prov:1.58.0.0")
+
+    val liPluginModule = findProject(":li-plugin")
+    if (liPluginModule != null) {
+        implementation(liPluginModule)
+    }
+}
+constraintCommonUIListVersion(versionManager)
+fileSystemDependency()
+baseApp()
+setupGeneric()
+setupDataBinding()
+setupPreviewFeature()
+
+fun DependencyHandlerScope.handleShun() {
     //filter & sort
     val filterArtifact = listOf("config-core", "sort-core", "filter-core", "filter-ui", "sort-ui")
 
@@ -96,21 +108,20 @@ dependencies {
             implementation("com.github.storytellerF.Shun:$it:1.0.0")
         }
     }
-    implementation("com.madgag.spongycastle:core:1.58.0.0")
-    implementation("com.madgag.spongycastle:prov:1.58.0.0")
-
-    implementation("androidx.window:window:1.2.0-beta04")
-    val liPluginModule = findProject(":li-plugin")
-    if (liPluginModule != null) {
-        implementation(liPluginModule)
-    }
 }
-constraintCommonUIListVersion("cbf40f5ff3")
-fileSystemDependency()
-baseApp()
-setupGeneric()
-setupDataBinding()
-setupPreviewFeature()
+
+fun DependencyHandlerScope.handleSu() {
+    val libsuVersion = "5.0.3"
+
+    // The core module that provides APIs to a shell
+    implementation("com.github.topjohnwu.libsu:core:${libsuVersion}")
+
+    // Optional: APIs for creating root services. Depends on ":core"
+    implementation("com.github.topjohnwu.libsu:service:${libsuVersion}")
+
+    // Optional: Provides remote file system support
+    implementation("com.github.topjohnwu.libsu:nio:${libsuVersion}")
+}
 
 fun ApplicationDefaultConfig.registerConfigKey(
     identification: String,

@@ -84,6 +84,5 @@ jobs:
       with:
         name: Signed app bundle
         path: |
-          ${{steps.sign_app.outputs.signedReleaseFile}}
           ${{steps.sign_ping_app.outputs.signedReleaseFile}}
           ${{steps.sign_giant_explorer_app.outputs.signedReleaseFile}}
