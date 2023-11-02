@@ -15,22 +15,28 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 
-class WallpaperInfoFragment : SimpleFragment<FragmentWallpaperInfoBinding>(FragmentWallpaperInfoBinding::inflate) {
+class WallpaperInfoFragment :
+    SimpleFragment<FragmentWallpaperInfoBinding>(FragmentWallpaperInfoBinding::inflate) {
     private val args: WallpaperInfoFragmentArgs by navArgs()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        sharedElementEnterTransition = TransitionInflater.from(requireContext())
+        val transition = TransitionInflater.from(requireContext())
             .inflateTransition(R.transition.shared_image)
-
+        sharedElementEnterTransition = transition
+        sharedElementReturnTransition = transition
     }
 
     override fun onBindViewEvent(binding: FragmentWallpaperInfoBinding) {
-        ViewCompat.setTransitionName(binding.wallpaperCard.wallpaperPreview, "wallpaper-preview")
+        ViewCompat.setTransitionName(binding.wallpaperCard.root, "wallpaper-preview")
+        postponeEnterTransition()
         scope.launch {
-            requireMainDatabase.dao().select(args.uri).flowWithLifecycle(cycle).shareIn(scope, SharingStarted.WhileSubscribed()).collectLatest {
-                binding.wallpaperCard.flash(it)
-                binding.created.text = it.createdTime.toString()
-            }
+            requireMainDatabase.dao().select(args.uri)
+                .flowWithLifecycle(cycle)
+                .shareIn(scope, SharingStarted.WhileSubscribed())
+                .collectLatest {
+                    binding.wallpaperCard.flash(it, this@WallpaperInfoFragment)
+                    binding.created.text = it.createdTime.toString()
+                }
         }
     }
 }

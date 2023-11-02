@@ -15,7 +15,7 @@ buildscript {
 }
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
-    val androidVersion = "8.3.0-alpha11"
+    val androidVersion = "8.3.0-alpha12"
     val kotlinVersion = "1.9.10"
     val kspVersion = "1.9.10-1.0.13"
     id("com.android.application") version androidVersion apply false
