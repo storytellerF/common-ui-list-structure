@@ -34,6 +34,7 @@ android {
     namespace = "com.storyteller_f.giant_explorer"
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 
     defaultConfig {
