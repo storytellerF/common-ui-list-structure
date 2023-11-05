@@ -77,15 +77,18 @@ class WallpaperListFragment :
         }
     }
 
+    private val pagerDataStore by lazy { requireContext().pagerDataStore }
+    private val worldDataStore by lazy { requireContext().worldDataStore }
+
     private val setWallpaper =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             Log.i(TAG, "choose: result ${result.resultCode}")
             if (result.resultCode == Activity.RESULT_OK) {
                 scope.launch {
-                    val first = requireContext().dataStore.data.mapNotNull {
+                    val first = pagerDataStore.data.mapNotNull {
                         it[preview]
                     }.first()
-                    requireContext().dataStore.edit {
+                    pagerDataStore.edit {
                         it[selected] = first
                         it[preview] = ""
                     }
@@ -96,15 +99,28 @@ class WallpaperListFragment :
     @BindLongClickEvent(WallpaperHolder::class)
     fun previewWallpaper(itemHolder: WallpaperHolder) {
         scope.launch {
-            requireContext().dataStore.edit {
-                it[preview] = itemHolder.wallpaper.uri
+            if (itemHolder.wallpaper.thumbnail.isNotEmpty()) {
+                pagerDataStore.edit {
+                    it[preview] = itemHolder.wallpaper.uri
+                }
+                val intent = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
+                intent.putExtra(
+                    WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
+                    ComponentName(requireActivity(), PingPagerService::class.java)
+                )
+                setWallpaper.launch(intent)
+            } else {
+                worldDataStore.edit {
+                    it[preview] = itemHolder.wallpaper.uri
+                }
+                val intent = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
+                intent.putExtra(
+                    WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
+                    ComponentName(requireActivity(), PingWorldService::class.java)
+                )
+                setWallpaper.launch(intent)
             }
-            val intent = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
-            intent.putExtra(
-                WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
-                ComponentName(requireActivity(), PingPagerService::class.java)
-            )
-            setWallpaper.launch(intent)
+
         }
 
     }

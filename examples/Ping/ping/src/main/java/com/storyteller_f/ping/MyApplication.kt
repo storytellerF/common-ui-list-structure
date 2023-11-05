@@ -18,7 +18,8 @@ class MyApplication : Application() {
 
 
 // At the top level of your kotlin file:
-val Context.dataStore by preferencesDataStore(name = "settings")
+val Context.pagerDataStore by preferencesDataStore(name = "pager-settings")
+val Context.worldDataStore by preferencesDataStore(name = "world-settings")
 
 /**
  * 点击一个视频进入预览页时设置。在用户点击应用时，app 还无法立刻把结果保存到selected

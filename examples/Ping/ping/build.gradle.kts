@@ -1,4 +1,10 @@
-import com.storyteller_f.version_manager.*
+import com.storyteller_f.version_manager.baseApp
+import com.storyteller_f.version_manager.constraintCommonUIListVersion
+import com.storyteller_f.version_manager.implModule
+import com.storyteller_f.version_manager.setupDataBinding
+import com.storyteller_f.version_manager.setupGeneric
+import com.storyteller_f.version_manager.setupPreviewFeature
+
 val versionManager: String by project
 
 plugins {
@@ -24,6 +30,7 @@ dependencies {
     implementation("com.squareup.okio:okio:3.5.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implModule(":file-system-ktx")
+    implementation("com.google.android.filament:filament-android:1.45.0")
 }
 constraintCommonUIListVersion(versionManager)
 baseApp()
@@ -38,5 +45,5 @@ setupPreviewFeature()
 //}
 
 sml {
-    
+
 }

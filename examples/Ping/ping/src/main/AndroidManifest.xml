@@ -15,8 +15,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Common_ui_list_structure"
-        tools:replace="theme">
+        android:theme="@style/Theme.Common_ui_list_structure">
         <activity
             android:name=".MainActivity"
             android:configChanges="keyboard|keyboardHidden"
@@ -37,7 +36,18 @@
             </intent-filter>
             <meta-data
                 android:name="android.service.wallpaper"
-                android:resource="@xml/wallpager" />
+                android:resource="@xml/ping_pager" />
+        </service>
+        <service
+            android:name=".PingWorldService"
+            android:exported="true"
+            android:permission="android.permission.BIND_WALLPAPER">
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/ping_world" />
         </service>
         <provider
             android:name=".StorageProvider"

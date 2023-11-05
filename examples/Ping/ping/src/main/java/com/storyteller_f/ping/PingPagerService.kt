@@ -15,6 +15,7 @@ import android.service.wallpaper.WallpaperService
 import android.util.Log
 import android.view.SurfaceHolder
 import androidx.core.content.ContextCompat
+import com.google.android.filament.Filament
 import com.storyteller_f.ping.shader.GLES20WallpaperRenderer
 import com.storyteller_f.ping.shader.GLES30WallpaperRenderer
 import com.storyteller_f.ping.shader.GLWallpaperRenderer
@@ -53,7 +54,7 @@ class PingPagerService : WallpaperService() {
         job.cancel()
     }
 
-    inner class PingEngine(private val inContext: Context) : WallpaperService.Engine() {
+    private inner class PingEngine(private val inContext: Context) : WallpaperService.Engine() {
         private var currentThumbnail: Bitmap? = null
         private val player: MediaPlayer by lazy {
             MediaPlayer().apply {
@@ -74,7 +75,7 @@ class PingPagerService : WallpaperService() {
                 ContextCompat.getSystemService(inContext, ActivityManager::class.java)
                     ?: throw Exception("无法获得activity manager")
             val deviceConfigurationInfo = systemService.deviceConfigurationInfo
-            val glWallpaperRenderer = when {
+            when {
                 deviceConfigurationInfo.reqGlEsVersion >= 0x30000 -> {
                     GLES30WallpaperRenderer(inContext)
                 }
@@ -85,7 +86,6 @@ class PingPagerService : WallpaperService() {
 
                 else -> throw RuntimeException("can not get gl version")
             }
-            glWallpaperRenderer
         }
         private val surfaceView: GLPingSurfaceView by lazy {
             GLPingSurfaceView(inContext).apply {
@@ -103,7 +103,11 @@ class PingPagerService : WallpaperService() {
 
         private fun observeLatestUri() {
             scope.launch {
-                inContext.wallpaperUri().distinctUntilChanged().collectLatest {
+                inContext.pagerDataStore.data.mapNotNull { preferences ->
+                    // No type safety.
+                    preferences[preview].takeIf { it?.isNotEmpty() == true }
+                        ?: preferences[selected]
+                }.distinctUntilChanged().collectLatest {
                     val file = File(it)
                     val thumbnail = File(file.parentFile, "thumbnail.jpg")
                     Log.i(
@@ -138,6 +142,7 @@ class PingPagerService : WallpaperService() {
         override fun onCreate(surfaceHolder: SurfaceHolder?) {
             Log.d(TAG, "onCreate() called with: surfaceHolder = $surfaceHolder")
             super.onCreate(surfaceHolder)
+            player
             surfaceView//init
             observeLatestUri()
         }
@@ -153,9 +158,7 @@ class PingPagerService : WallpaperService() {
             val playing = player.isPlaying
             Log.d(TAG, "onVisibilityChanged() called with: visible = $visible $playing")
             if (visible) {
-                if (!playing) {
-                    player.start()
-                }
+                if (!playing) player.start()
             } else {
                 if (playing) player.pause()
             }
@@ -222,10 +225,10 @@ class PingPagerService : WallpaperService() {
 
     companion object {
         private const val TAG = "PingPagerService"
+
+        init {
+            Filament.init()
+        }
     }
 }
 
-private fun Context.wallpaperUri() = dataStore.data.mapNotNull { preferences ->
-    // No type safety.
-    preferences[preview].takeIf { it?.isNotEmpty() == true } ?: preferences[selected]
-}

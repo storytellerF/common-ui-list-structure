@@ -1,16 +1,31 @@
 package com.storyteller_f.ping.database
 
 import android.content.Context
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Database
+import androidx.room.Delete
+import androidx.room.Entity
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.PrimaryKey
+import androidx.room.Query
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import com.storyteller_f.ext_func_definition.ExtFuncFlat
 import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 import com.storyteller_f.ui_list.core.Model
 import com.storyteller_f.ui_list.database.DefaultTypeConverter
 import kotlinx.coroutines.flow.Flow
-import java.util.*
+import java.util.Date
 
 @Entity(tableName = "wallpaper")
-data class Wallpaper(@PrimaryKey val uri: String, val name: String, val createdTime: Date, val thumbnail: String) : Model {
+data class Wallpaper(
+    @PrimaryKey val uri: String,
+    val name: String,
+    val createdTime: Date,
+    val thumbnail: String
+) : Model {
     override fun commonId() = uri
 }
 
