@@ -38,12 +38,12 @@ import com.storyteller_f.common_vm_ktx.distinctUntilChangedBy
 import com.storyteller_f.common_vm_ktx.svm
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.common_vm_ktx.wait5
-import com.storyteller_f.file_system.checkPathPermission
+import com.storyteller_f.file_system.checkFilePermission
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.model.TorrentFileItemModel
-import com.storyteller_f.file_system.requestPathPermission
+import com.storyteller_f.file_system.requestFilePermission
 import com.storyteller_f.file_system_ktx.fileIcon
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.filter_core.Filter
@@ -190,8 +190,8 @@ class FileListObserver<T>(
                 val path = it.uri
                 //检查权限
                 owner.lifecycleScope.launch {
-                    if (!checkPathPermission(path)) {
-                        if (requestPathPermission(path)) {
+                    if (!checkFilePermission(path)) {
+                        if (requestFilePermission(path)) {
                             adapter.refresh()
                         }
                     }
@@ -410,11 +410,13 @@ private suspend fun fileModelBuilder(
 ): FileModel {
     val length = if (model is FileItemModel) {
         database.mdDao().search(model.uri)?.let {
-            if (it.lastUpdateTime > model.lastModifiedTime) model.md = it.data
+            if (it.lastUpdateTime > model.lastModifiedTime)
+                model.md = it.data
         }
         if (model is TorrentFileItemModel)
             database.torrentDao().search(model.uri)?.let {
-                if (it.lastUpdateTime > model.lastModifiedTime) model.torrentName = it.torrent
+                if (it.lastUpdateTime > model.lastModifiedTime)
+                    model.torrentName = it.torrent
             }
         model.size
     } else {
@@ -426,5 +428,5 @@ private suspend fun fileModelBuilder(
     }
     model.formattedSize = format1024(length)
     model.size = length
-    return FileModel(model.name, model.fullPath, length, model.isHidden, model, model.isSymLink)
+    return FileModel(model, model.name, model.fullPath, length, model.isHidden, model.isSymLink)
 }

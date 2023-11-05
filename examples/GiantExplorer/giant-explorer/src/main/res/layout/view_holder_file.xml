@@ -13,6 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:textColor="?attr/colorOnSurface"
+        android:textSize="15sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/fileIcon"
         app:layout_constraintTop_toTopOf="parent"
@@ -24,7 +25,8 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/fileName"
-        app:layout_constraintTop_toBottomOf="@id/fileName" />
+        app:layout_constraintTop_toBottomOf="@id/fileName"
+        tools:text="1024kb" />
 
     <TextView
         android:id="@+id/fileMD"
@@ -32,7 +34,8 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/fileName"
-        app:layout_constraintTop_toBottomOf="@id/fileSize" />
+        app:layout_constraintTop_toBottomOf="@id/fileSize"
+        tools:text="message digest" />
 
     <TextView
         android:id="@+id/detail"
@@ -40,7 +43,8 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/fileName"
-        app:layout_constraintTop_toBottomOf="@id/fileMD" />
+        app:layout_constraintTop_toBottomOf="@id/fileMD"
+        tools:text="-rwx" />
 
     <TextView
         android:id="@+id/torrentName"
@@ -48,7 +52,8 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/fileName"
-        app:layout_constraintTop_toBottomOf="@id/detail" />
+        app:layout_constraintTop_toBottomOf="@id/detail"
+        tools:text="torrent name" />
 
     <TextView
         android:id="@+id/modifiedTime"
@@ -56,7 +61,8 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/fileName"
-        app:layout_constraintTop_toBottomOf="@id/torrentName" />
+        app:layout_constraintTop_toBottomOf="@id/torrentName"
+        tools:text="11点30分 2023年11月4日" />
 
     <ImageView
         android:id="@+id/fileIcon"
@@ -65,7 +71,8 @@
         android:background="@drawable/default_click"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:srcCompat="@drawable/ic_folder_explorer" />
+        tools:srcCompat="@drawable/ic_folder_explorer"
+        android:contentDescription="@string/file_icon_desc" />
 
     <ImageView
         android:id="@+id/symLink"
@@ -73,5 +80,6 @@
         android:layout_height="wrap_content"
         android:src="@drawable/baseline_link_24"
         app:layout_constraintEnd_toEndOf="@id/fileIcon"
-        app:layout_constraintTop_toTopOf="@id/fileIcon" />
+        app:layout_constraintTop_toTopOf="@id/fileIcon"
+        android:contentDescription="@string/symlink_indicator_desc" />
 </androidx.constraintlayout.widget.ConstraintLayout>

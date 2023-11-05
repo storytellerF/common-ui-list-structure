@@ -11,7 +11,7 @@ import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui.setFragmentResult
 import com.storyteller_f.common_vm_ktx.GenericValueModel
 import com.storyteller_f.common_vm_ktx.vm
-import com.storyteller_f.file_system.util.FileUtility
+import com.storyteller_f.file_system.util.getExtension
 import com.storyteller_f.file_system_ktx.getFileInstance
 import com.storyteller_f.giant_explorer.databinding.DialogOpenFileBinding
 import kotlinx.coroutines.delay
@@ -46,7 +46,7 @@ class OpenFileDialog : SimpleDialogFragment<DialogOpenFileBinding>(DialogOpenFil
             }
         }
         val mimeTypeFromExtension = MimeTypeMap.getSingleton()
-            .getMimeTypeFromExtension(FileUtility.getExtension(uri.path!!))
+            .getMimeTypeFromExtension(getExtension(uri.path!!))
         binding.mimeType = mimeTypeFromExtension
         scope.launch {
             delay(100)

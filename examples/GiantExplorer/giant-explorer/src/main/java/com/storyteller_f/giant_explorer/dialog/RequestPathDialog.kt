@@ -18,8 +18,10 @@ import com.storyteller_f.common_ui.scope
 import com.storyteller_f.common_ui.setFragmentResult
 import com.storyteller_f.common_ui.setOnClick
 import com.storyteller_f.common_vm_ktx.activityScope
-import com.storyteller_f.file_system.FileInstanceFactory
+import com.storyteller_f.file_system.getCurrentUserEmulatedPath
 import com.storyteller_f.file_system.instance.FileCreatePolicy
+import com.storyteller_f.file_system.toChildEfficiently
+import com.storyteller_f.file_system.toParentEfficiently
 import com.storyteller_f.file_system_ktx.getFileInstance
 import com.storyteller_f.file_system_ktx.isDirectory
 import com.storyteller_f.giant_explorer.control.FileItemHolder
@@ -47,13 +49,13 @@ class RequestPathDialog :
     @Parcelize
     class RequestPathResult(val path: String) : Parcelable
 
-    private val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>(requestKey)
+    private val adapter = SimpleSourceAdapter<FileItemHolder, FileViewHolder>(REQUEST_KEY)
 
     companion object {
-        const val requestKey = "request-path"
+        const val REQUEST_KEY = "request-path"
 
         fun bundle(context: Context): Bundle {
-            val path = FileInstanceFactory.getCurrentUserEmulatedPath(context)
+            val path = context.getCurrentUserEmulatedPath()
             return RequestPathDialogArgs(
                 File(
                     path
@@ -92,21 +94,16 @@ class RequestPathDialog :
             }
         }
         (dialog as? ComponentDialog)?.onBackPressedDispatcher?.addCallback(this) {
-            val value = observer.fileInstance
-            if (value != null) {
+            val currentInstance = observer.fileInstance
+            if (currentInstance != null) {
                 val context = requireContext()
-                if (value.path == "/" || value.path.startsWith(FileInstanceFactory.getCurrentUserEmulatedPath(
-                        context
-                    ))) {
+                if (currentInstance.path == "/" || currentInstance.path.startsWith(context.getCurrentUserEmulatedPath())) {
                     isEnabled = false
                     @Suppress("DEPRECATION") dialog?.onBackPressed()
                 } else {
                     scope.launch {
                         observer.update(
-                            FileInstanceFactory.toParent(
-                                context,
-                                value
-                            )
+                            currentInstance.toParentEfficiently(context)
                         )
                     }
                 }
@@ -134,26 +131,19 @@ class RequestPathDialog :
             }.flowWithLifecycle(lifecycle).collectLatest {
                 val uri = observer.fileInstance?.uri?.buildUpon()?.path(it)?.build()
                     ?: return@collectLatest
-                observer.update(
-                    getFileInstance(
-                        requireContext(),
-                        uri,
-
-                        )
-                )
+                observer.update(getFileInstance(requireContext(), uri))
             }
         }
     }
 
-    @BindClickEvent(FileItemHolder::class, viewName = "getRoot()", key = requestKey)
+    @BindClickEvent(FileItemHolder::class, viewName = "getRoot()", key = REQUEST_KEY)
     fun toChild(itemHolder: FileItemHolder) {
         if (itemHolder.file.item.isDirectory) {
             val current = observer.fileInstance ?: return
             scope.launch {
                 observer.update(
-                    FileInstanceFactory.toChild(
+                    current.toChildEfficiently(
                         requireContext(),
-                        current,
                         itemHolder.file.name,
                         FileCreatePolicy.NotCreate
                     )

@@ -39,8 +39,8 @@ import com.storyteller_f.common_ui.supportNavigatorBarImmersive
 import com.storyteller_f.common_vm_ktx.StateValueModel
 import com.storyteller_f.common_vm_ktx.svm
 import com.storyteller_f.common_vm_ktx.toDiffNoNull
-import com.storyteller_f.file_system.FileInstanceFactory
-import com.storyteller_f.file_system.FileSystemUriSaver
+import com.storyteller_f.file_system.FileSystemUriStore
+import com.storyteller_f.file_system.getCurrentUserEmulatedPath
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.file_system.rawTree
@@ -171,7 +171,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         contentResolver.takePersistableUriPermission(
             uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
         )
-        FileSystemUriSaver.instance.saveUri(this, authority, uri, tree)
+        FileSystemUriStore.instance.saveUri(this, authority, uri, tree)
 
         switchDocumentProvider(authority, tree)
     }
@@ -189,7 +189,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
         observePathMan(navController)
         val startDestinationArgs = intent.getBundleExtra("start") ?: FileListFragmentArgs(
             File(
-                FileInstanceFactory.getCurrentUserEmulatedPath(this)
+                getCurrentUserEmulatedPath()
             ).toUri()
         ).toBundle()
         navController.setGraph(R.navigation.nav_main, startDestinationArgs)
@@ -289,7 +289,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
             load(assets.open("tree.keys"))
         }.getProperty(authority)
         val defaultTreeDocumentUri =
-            if (presetTreeKey != null && FileSystemUriSaver.instance.savedUri(
+            if (presetTreeKey != null && FileSystemUriStore.instance.savedUri(
                     this,
                     authority,
                     presetTreeKey
@@ -336,7 +336,7 @@ class MainActivity : CommonActivity(), FileOperateService.FileOperateResultConta
                     if (it.first == FileOperateBinder.state_null) {
                         FileOperationDialog().apply {
                             this.binder = fileOperateBinderLocal
-                        }.show(supportFragmentManager, FileOperationDialog.tag)
+                        }.show(supportFragmentManager, FileOperationDialog.DIALOG_TAG)
                     }
                 }
             }
@@ -424,7 +424,7 @@ suspend fun Activity.documentProviderRoot(
     authority: String,
     tree: String,
 ): Uri? {
-    val savedUris = FileSystemUriSaver.instance.savedUris(this)
+    val savedUris = FileSystemUriStore.instance.savedUris(this)
     return if (!savedUris.contains(authority))
         null
     else try {

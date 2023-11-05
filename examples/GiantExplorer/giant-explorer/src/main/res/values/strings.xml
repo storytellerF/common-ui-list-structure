@@ -43,4 +43,6 @@
     <string name="type_audio">音乐</string>
     <string name="type_hex">十六进制</string>
     <string name="type_any">任意类型</string>
+    <string name="symlink_indicator_desc">indicate this file is symlink</string>
+    <string name="file_icon_desc">file icon</string>
 </resources>

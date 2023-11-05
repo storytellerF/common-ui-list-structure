@@ -5,9 +5,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.core.net.toUri
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
@@ -19,7 +17,7 @@ import com.google.android.material.color.DynamicColors
 import com.storyteller_f.common_ktx.exceptionMessage
 import com.storyteller_f.config_core.EditorKey
 import com.storyteller_f.config_core.editor
-import com.storyteller_f.file_system.checkPathPermission
+import com.storyteller_f.file_system.checkFilePermission
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.FileItemModel
@@ -59,15 +57,12 @@ import java.security.Security
 val pluginManagerRegister = PluginManager()
 
 val defaultFactory = object : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
-        return super.create(modelClass, extras)
-    }
 }
 
 object WorkCategory {
-    const val messageDigest = "message-digest"
-    const val folderSize = "folder-size"
-    const val torrentName = "torrent-name"
+    const val MESSAGE_DIGEST = "message-digest"
+    const val FOLDER_SIZE = "folder-size"
+    const val TORRENT_NAME = "torrent-name"
 }
 
 class App : Application() {
@@ -84,8 +79,8 @@ class App : Application() {
                     entry.key,
                     ExistingWorkPolicy.KEEP,
                     when (entry.key) {
-                        WorkCategory.messageDigest -> OneTimeWorkRequestBuilder<MDWorker>()
-                        WorkCategory.folderSize -> OneTimeWorkRequestBuilder<FolderWorker>()
+                        WorkCategory.MESSAGE_DIGEST -> OneTimeWorkRequestBuilder<MDWorker>()
+                        WorkCategory.FOLDER_SIZE -> OneTimeWorkRequestBuilder<FolderWorker>()
                         else -> OneTimeWorkRequestBuilder<TorrentWorker>()
                     }.setInputData(
                         Data.Builder().putStringArray("folders", entry.value.mapNotNull {
@@ -149,7 +144,7 @@ abstract class BigTimeWorker(
         return withContext(Dispatchers.IO) {
             val results = uriStringArray.asList().map { uriString ->
                 when {
-                    !context.checkPathPermission(uriString.toUri()) -> WorkerResult.Failure(
+                    !context.checkFilePermission(uriString.toUri()) -> WorkerResult.Failure(
                         java.lang.Exception(
                             "don't have permission"
                         )
@@ -329,9 +324,9 @@ class TorrentWorker(context: Context, workerParams: WorkerParameters) :
 }
 
 sealed class WorkerResult {
-    object Success : WorkerResult()
+    data object Success : WorkerResult()
     class Failure(val exception: Exception) : WorkerResult()
-    object Stopped : WorkerResult()
+    data object Stopped : WorkerResult()
     class SizeWorker(val size: Long) : WorkerResult()
 }
 

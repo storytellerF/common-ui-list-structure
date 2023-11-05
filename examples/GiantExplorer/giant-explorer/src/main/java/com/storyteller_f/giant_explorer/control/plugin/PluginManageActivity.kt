@@ -71,7 +71,6 @@ class PluginManageActivity : CommonActivity() {
         val destPluginFile = File(pluginRoot, name).ensureFile() ?: return
         withContext(Dispatchers.IO) {
             ScopeFileCopyOp(
-                this.stoppable(),
                 pluginFile,
                 getFileInstance(this@PluginManageActivity, destPluginFile.toUri()),
                 this@PluginManageActivity

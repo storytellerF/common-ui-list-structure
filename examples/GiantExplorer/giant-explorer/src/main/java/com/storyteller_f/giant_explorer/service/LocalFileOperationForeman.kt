@@ -52,20 +52,20 @@ abstract class FileOperationForeman(
         }
 
 
-    override fun onFileDone(fileInstance: FileInstance?, message: Message?, size: Long, type: Int) {
+    override fun onFileDone(fileInstance: FileInstance?, message: Message?, size: Long) {
         leftFileCount--
         leftSize -= size
         emitCurrentStateMessage()
         emitStateMessage("file done ${fileInstance?.name}")
     }
 
-    override fun onDirectoryDone(fileInstance: FileInstance?, message: Message?, type: Int) {
+    override fun onDirectoryDone(fileInstance: FileInstance?, message: Message?) {
         leftFolderCount--
         emitCurrentStateMessage()
         emitStateMessage("directory done ${fileInstance?.name}")
     }
 
-    override fun onError(message: Message?, type: Int) {
+    override fun onError(message: Message?) {
         fileOperationForemanProgressListener?.onDetail(
             message?.name + message?.get(),
             Log.ERROR,
@@ -114,15 +114,14 @@ class CopyForemanImpl(
             emitStateMessage("处理${fileInstance.path}")
             val operationResult =
                 when {
-                    !isMove -> ScopeFileCopyOp(this, fileInstance, target, context).bind(this)
+                    !isMove -> ScopeFileCopyOp(fileInstance, target, context).bind(this)
                     fileInstance.javaClass == target.javaClass -> ScopeFileMoveOpInShell(
-                        this,
                         fileInstance,
                         target,
                         context
                     ).bind(this)
 
-                    else -> ScopeFileMoveOp(this, fileInstance, target, context)
+                    else -> ScopeFileMoveOp(fileInstance, target, context)
                 }.call()
             !operationResult//如果失败了，提前结束
         }
@@ -165,7 +164,6 @@ class DeleteForemanImpl(
         val isSuccess = !detectorTasks.any {//如果有一个失败了，就提前退出
             emitStateMessage("处理${it.fullPath}")
             !FileDeleteOp(
-                this,
                 getFileInstance(context, File(it.fullPath).toUri()),
                 context
             ).apply {

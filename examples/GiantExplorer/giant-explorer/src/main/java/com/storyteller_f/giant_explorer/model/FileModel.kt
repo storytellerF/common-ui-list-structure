@@ -4,6 +4,7 @@ import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.ui_list.core.Model
 
 data class FileModel(
+    val item: FileSystemItemModel,
     val name: String,
     val fullPath: String,
     /**
@@ -11,7 +12,6 @@ data class FileModel(
      */
     val size: Long,
     val isHidden: Boolean,
-    val item: FileSystemItemModel,
     val isSymLink: Boolean,
 ) : Model {
     override fun commonId() = fullPath

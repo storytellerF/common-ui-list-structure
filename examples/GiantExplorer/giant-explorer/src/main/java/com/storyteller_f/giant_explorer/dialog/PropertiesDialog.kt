@@ -38,7 +38,14 @@ class PropertiesDialog : SimpleDialogFragment<DialogFilePropertiesBinding>(Dialo
         scope.launch {
             val length = if (fileInstance.isFile()) fileInstance.getFileLength()
             else 0
-            binding.model = FileModel(fileInstance.name, fileInstance.path, length, fileInstance.isHidden(), fileInstance.getFileSystemItem(), fileInstance.isSymbolicLink())
+            binding.model = FileModel(
+                fileInstance.getFileSystemItem(),
+                fileInstance.name,
+                fileInstance.path,
+                length,
+                fileInstance.isHidden(),
+                fileInstance.isSymbolicLink()
+            )
             binding.videoInfo.setVisible(fileInstance.getFile().extension == "mp4" && fileInstance.isFile()) {
                 val trimIndent = videoInfo(fileInstance)
                 binding.videoInfo.text = trimIndent

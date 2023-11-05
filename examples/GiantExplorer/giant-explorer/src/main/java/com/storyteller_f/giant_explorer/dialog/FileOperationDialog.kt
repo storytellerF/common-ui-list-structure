@@ -17,7 +17,7 @@ import com.storyteller_f.common_vm_ktx.debounce
 import com.storyteller_f.common_vm_ktx.keyPrefix
 import com.storyteller_f.common_vm_ktx.to
 import com.storyteller_f.common_vm_ktx.vm
-import com.storyteller_f.file_system.operate.DefaultForemanProgressListener
+import com.storyteller_f.file_system.operate.DefaultForemanProgressAdapter
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.databinding.DialogFileOperationBinding
 import com.storyteller_f.giant_explorer.service.FileOperateBinder
@@ -75,7 +75,7 @@ class FileOperationDialog :
 
     private fun bindListener(key: String, binding: DialogFileOperationBinding) {
         val orPut = binder.fileOperationProgressListener.getOrPut(key) { mutableListOf() }
-        orPut.add(object : DefaultForemanProgressListener() {
+        orPut.add(object : DefaultForemanProgressAdapter() {
             override fun onProgress(progress: Int, key: String) =
                 progressVM.data.postValue(progress)
 
@@ -94,7 +94,7 @@ class FileOperationDialog :
 
         })
         val callbackFlow = callbackFlow {
-            val defaultProgressListener = object : DefaultForemanProgressListener() {
+            val defaultProgressListener = object : DefaultForemanProgressAdapter() {
                 override fun onDetail(detail: String?, level: Int, key: String) {
                     trySend(detail ?: "null")
                 }
@@ -164,7 +164,7 @@ class FileOperationDialog :
 
     companion object {
         private const val TAG = "FileOperationDialog"
-        const val tag = "file-operation"
+        const val DIALOG_TAG = "file-operation"
     }
 
     interface Handler {

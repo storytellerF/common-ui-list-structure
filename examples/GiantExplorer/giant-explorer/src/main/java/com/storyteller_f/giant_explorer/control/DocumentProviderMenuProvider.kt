@@ -7,7 +7,7 @@ import android.view.SubMenu
 import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleOwner
 import com.storyteller_f.common_ui.scope
-import com.storyteller_f.file_system.FileSystemUriSaver
+import com.storyteller_f.file_system.FileSystemUriStore
 import com.storyteller_f.file_system_remote.RemoteAccessType
 import com.storyteller_f.giant_explorer.R
 import com.storyteller_f.giant_explorer.database.requireDatabase
@@ -41,7 +41,7 @@ class DocumentProviderMenuProvider(
     ) {
         val provider = Intent("android.content.action.DOCUMENTS_PROVIDER")
         val info = packageManager.queryIntentContentProvidersCompat(provider, 0)
-        val savedUris = FileSystemUriSaver.instance.savedUris(activity)
+        val savedUris = FileSystemUriStore.instance.savedUris(activity)
         info.forEach { resolveInfo ->
             val authority = resolveInfo.providerInfo.authority
             val menuItem = menu.addSubMenu(resolveInfo.loadLabel(packageManager).toString())
