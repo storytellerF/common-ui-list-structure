@@ -34,6 +34,9 @@ internal class GLES20WallpaperRenderer(context: Context) : GLWallpaperRenderer(c
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
     }
 
+    override val version: Int
+        get() = 2
+
     override fun buildProgram() = linkProgramGLES20(
         compileShaderResourceGLES20(
             context, GLES20.GL_VERTEX_SHADER, R.raw.vertex_20

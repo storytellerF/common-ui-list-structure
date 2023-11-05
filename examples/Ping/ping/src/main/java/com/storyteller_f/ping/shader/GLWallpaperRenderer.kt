@@ -63,6 +63,8 @@ abstract class GLWallpaperRenderer(protected val context: Context) : GLSurfaceVi
     protected var updatedFrame: Long = 0
     protected var renderedFrame: Long = 0
 
+    abstract val version: Int
+
     init {
         // Those replaced glGenBuffers() and glBufferData().
         val vertexArray = floatArrayOf( // x, y

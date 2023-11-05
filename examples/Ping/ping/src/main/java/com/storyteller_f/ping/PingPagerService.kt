@@ -21,7 +21,8 @@ import com.storyteller_f.ping.shader.GLWallpaperRenderer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -54,109 +55,109 @@ class PingPagerService : WallpaperService() {
 
     inner class PingEngine(private val inContext: Context) : WallpaperService.Engine() {
         private var currentThumbnail: Bitmap? = null
-        private val player: MediaPlayer = MediaPlayer().apply {
-            isLooping = true
-            setOnVideoSizeChangedListener { _, width, height ->
-                Log.i(TAG, "onVideoSizeChangedListener: width $width height $height")
-                renderCached?.setVideoSizeAndRotation(width, height, 0)
+        private val player: MediaPlayer by lazy {
+            MediaPlayer().apply {
+                isLooping = true
+                setOnVideoSizeChangedListener { _, width, height ->
+                    Log.i(TAG, "onVideoSizeChangedListener: width $width height $height")
+                    renderer.setVideoSizeAndRotation(width, height, 0)
+                }
+                setOnPreparedListener {
+                    Log.i(TAG, "OnPreparedListener")
+                    renderer.setSourcePlayer(it)
+                    it.start()
+                }
             }
         }
-        private var renderCached: GLWallpaperRenderer? = null
-        private val surfaceView: GLPingSurfaceView = GLPingSurfaceView(inContext)
+        private val renderer: GLWallpaperRenderer by lazy {
+            val systemService =
+                ContextCompat.getSystemService(inContext, ActivityManager::class.java)
+                    ?: throw Exception("无法获得activity manager")
+            val deviceConfigurationInfo = systemService.deviceConfigurationInfo
+            val glWallpaperRenderer = when {
+                deviceConfigurationInfo.reqGlEsVersion >= 0x30000 -> {
+                    GLES30WallpaperRenderer(inContext)
+                }
+
+                deviceConfigurationInfo.reqGlEsVersion >= 0x20000 -> {
+                    GLES20WallpaperRenderer(inContext)
+                }
+
+                else -> throw RuntimeException("can not get gl version")
+            }
+            glWallpaperRenderer
+        }
+        private val surfaceView: GLPingSurfaceView by lazy {
+            GLPingSurfaceView(inContext).apply {
+                setEGLContextClientVersion(renderer.version)
+                preserveEGLContextOnPause = true
+                setRenderer(renderer)
+                renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
+            }
+        }
 
         inner class GLPingSurfaceView(context: Context) : GLSurfaceView(context) {
             override fun getHolder(): SurfaceHolder = surfaceHolder
             fun destroy() = super.onDetachedFromWindow()
         }
 
+        private fun observeLatestUri() {
+            scope.launch {
+                inContext.wallpaperUri().distinctUntilChanged().collectLatest {
+                    val file = File(it)
+                    val thumbnail = File(file.parentFile, "thumbnail.jpg")
+                    Log.i(
+                        TAG,
+                        "wallpaper $it thumb${thumbnail.absolutePath} ${thumbnail.exists()}"
+                    )
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                        currentThumbnail = withContext(Dispatchers.IO) {
+                            BitmapFactory.decodeFile(thumbnail.absolutePath)
+                        }
+                        notifyColorsChanged()
+                    }
+                    player.run {
+                        stop()
+                        setDataSource(inContext, Uri.fromFile(file))
+                        prepareAsync()
+                    }
+                }
+            }
+        }
+
         override fun onCommand(
-            action: String?,
-            x: Int,
-            y: Int,
-            z: Int,
-            extras: Bundle?,
-            resultRequested: Boolean
+            action: String?, x: Int, y: Int, z: Int, extras: Bundle?, resultRequested: Boolean
         ): Bundle? {
             Log.d(
                 TAG,
                 "onCommand() called with: action = $action, x = $x, y = $y, z = $z, extras = $extras, resultRequested = $resultRequested"
             )
-            if (action == "android.wallpaper.reapply") play()
             return null
-        }
-
-        private fun play() {
-            scope.launch {
-                val wallpaper = inContext.wallpaperUri() ?: return@launch
-                val file = File(wallpaper)
-                val thumbnail = File(file.parentFile, "thumbnail.jpg")
-                Log.i(
-                    TAG,
-                    "wallpaper $wallpaper thumb${thumbnail.absolutePath} ${thumbnail.exists()}"
-                )
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-                    currentThumbnail = withContext(Dispatchers.IO) {
-                        BitmapFactory.decodeFile(thumbnail.absolutePath)
-                    }
-                    notifyColorsChanged()
-                }
-                player.setDataSource(inContext, Uri.fromFile(file))
-                player.prepareAsync()
-                player.setOnPreparedListener {
-                    Log.i(TAG, "OnPreparedListener")
-                    renderCached?.setSourcePlayer(it)
-                    it.start()
-                }
-            }
         }
 
         override fun onCreate(surfaceHolder: SurfaceHolder?) {
             Log.d(TAG, "onCreate() called with: surfaceHolder = $surfaceHolder")
             super.onCreate(surfaceHolder)
-
-            val systemService =
-                ContextCompat.getSystemService(inContext, ActivityManager::class.java)
-                    ?: throw Exception("无法获得activity manager")
-            val deviceConfigurationInfo = systemService.deviceConfigurationInfo
-            val (ver, glWallpaperRenderer) = when {
-                deviceConfigurationInfo.reqGlEsVersion >= 0x30000 -> {
-                    3 to GLES30WallpaperRenderer(inContext)
-                }
-
-                deviceConfigurationInfo.reqGlEsVersion >= 0x20000 -> {
-                    2 to GLES20WallpaperRenderer(inContext)
-                }
-
-                else -> throw RuntimeException("can not get gl version")
-            }
-            Log.i(TAG, "onCreate: version: $ver")
-            renderCached = glWallpaperRenderer
-            surfaceView.run {
-                setEGLContextClientVersion(ver)
-                preserveEGLContextOnPause = true
-                setRenderer(glWallpaperRenderer)
-                renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
-            }
-
-            play()
+            surfaceView//init
+            observeLatestUri()
         }
 
         override fun onDestroy() {
             Log.d(TAG, "onDestroy() called")
-            player.release()
-            renderCached = null
-            surfaceView.destroy()
             super.onDestroy()
+            player.release()
+            surfaceView.destroy()
         }
 
         override fun onVisibilityChanged(visible: Boolean) {
-            Log.d(TAG, "onVisibilityChanged() called with: visible = $visible ${player.isPlaying}")
+            val playing = player.isPlaying
+            Log.d(TAG, "onVisibilityChanged() called with: visible = $visible $playing")
             if (visible) {
-                if (!player.isPlaying) {
+                if (!playing) {
                     player.start()
                 }
             } else {
-                if (player.isPlaying) player.pause()
+                if (playing) player.pause()
             }
             super.onVisibilityChanged(visible)
         }
@@ -174,28 +175,20 @@ class PingPagerService : WallpaperService() {
                 "onOffsetsChanged() called with: xOffset = $xOffset, yOffset = $yOffset, xOffsetStep = $xOffsetStep, yOffsetStep = $yOffsetStep, xPixelOffset = $xPixelOffset, yPixelOffset = $yPixelOffset"
             )
             super.onOffsetsChanged(
-                xOffset,
-                yOffset,
-                xOffsetStep,
-                yOffsetStep,
-                xPixelOffset,
-                yPixelOffset
+                xOffset, yOffset, xOffsetStep, yOffsetStep, xPixelOffset, yPixelOffset
             )
-            renderCached?.setOffset(xOffset, yOffset)
+            renderer.setOffset(xOffset, yOffset)
         }
 
         override fun onSurfaceChanged(
-            holder: SurfaceHolder?,
-            format: Int,
-            width: Int,
-            height: Int
+            holder: SurfaceHolder?, format: Int, width: Int, height: Int
         ) {
             Log.d(
                 TAG,
                 "onSurfaceChanged() called with: holder = $holder, format = $format, width = $width, height = $height"
             )
             super.onSurfaceChanged(holder, format, width, height)
-            renderCached?.setScreenSize(width, height)
+            renderer.setScreenSize(width, height)
         }
 
         override fun onSurfaceRedrawNeeded(holder: SurfaceHolder?) {
@@ -208,7 +201,7 @@ class PingPagerService : WallpaperService() {
             super.onSurfaceCreated(holder)
             val width = holder?.surfaceFrame?.width() ?: return
             val height = holder.surfaceFrame.height()
-            renderCached?.setScreenSize(width, height)
+            renderer.setScreenSize(width, height)
         }
 
         override fun onSurfaceDestroyed(holder: SurfaceHolder?) {
@@ -216,16 +209,15 @@ class PingPagerService : WallpaperService() {
             super.onSurfaceDestroyed(holder)
         }
 
-        override fun onComputeColors() =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-                currentThumbnail?.let {
-                    WallpaperColors.fromBitmap(it).apply {
-                        Log.i(TAG, "onComputeColors: ${this.primaryColor}")
-                    }
+        override fun onComputeColors() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            currentThumbnail?.let {
+                WallpaperColors.fromBitmap(it).apply {
+                    Log.i(TAG, "onComputeColors: ${this.primaryColor}")
                 }
-            } else {
-                null
             }
+        } else {
+            null
+        }
     }
 
     companion object {
@@ -233,10 +225,7 @@ class PingPagerService : WallpaperService() {
     }
 }
 
-private suspend fun Context.wallpaperUri(): String? {
-    val exampleCounterFlow = dataStore.data.mapNotNull { preferences ->
-        // No type safety.
-        preferences[preview].takeIf { it?.isNotEmpty() == true } ?: preferences[selected]
-    }
-    return exampleCounterFlow.first().takeIf { it.isNotEmpty() }
+private fun Context.wallpaperUri() = dataStore.data.mapNotNull { preferences ->
+    // No type safety.
+    preferences[preview].takeIf { it?.isNotEmpty() == true } ?: preferences[selected]
 }
