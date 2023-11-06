@@ -1,19 +1,10 @@
 package com.storyteller_f.ping
 
 import android.animation.ValueAnimator
-import android.app.ActivityManager
-import android.app.WallpaperColors
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.PixelFormat
-import android.media.MediaPlayer
-import android.net.Uri
-import android.opengl.GLSurfaceView
-import android.os.Build
-import android.os.Bundle
 import android.service.wallpaper.WallpaperService
 import android.util.Log
 import android.view.Choreographer
@@ -31,17 +22,9 @@ import com.google.android.filament.Viewport
 import com.google.android.filament.android.DisplayHelper
 import com.google.android.filament.android.FilamentHelper
 import com.google.android.filament.android.UiHelper
-import com.storyteller_f.ping.shader.GLES20WallpaperRenderer
-import com.storyteller_f.ping.shader.GLES30WallpaperRenderer
-import com.storyteller_f.ping.shader.GLWallpaperRenderer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.File
 import kotlin.coroutines.CoroutineContext
 
 class PingWorldService : WallpaperService() {
