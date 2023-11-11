@@ -63,7 +63,7 @@ class PingPagerService : WallpaperService() {
             MediaPlayer().apply {
                 isLooping = true
                 setOnVideoSizeChangedListener { player, width, height ->
-                    renderer.setVideoMatrix(VideoMatrix(width, height, 0), player)
+                    renderer.binding.setVideoMatrix(VideoMatrix(width, height, 0), player)
                 }
                 setOnPreparedListener {
                     Log.i(TAG, "OnPreparedListener")
@@ -185,7 +185,7 @@ class PingPagerService : WallpaperService() {
             super.onOffsetsChanged(
                 xOffset, yOffset, xOffsetStep, yOffsetStep, xPixelOffset, yPixelOffset
             )
-            renderer.setOffset(Offset(xOffset, yOffset))
+            renderer.binding.setOffset(Offset(xOffset, yOffset))
         }
 
         override fun onSurfaceChanged(
@@ -196,7 +196,7 @@ class PingPagerService : WallpaperService() {
                 "onSurfaceChanged() called with: holder = $holder, format = $format, width = $width, height = $height"
             )
             super.onSurfaceChanged(holder, format, width, height)
-            renderer.setScreenSize(Size(width, height))
+            renderer.binding.setScreenSize(Size(width, height))
         }
 
         override fun onSurfaceRedrawNeeded(holder: SurfaceHolder?) {
@@ -209,7 +209,7 @@ class PingPagerService : WallpaperService() {
             super.onSurfaceCreated(holder)
             val width = holder?.surfaceFrame?.width() ?: return
             val height = holder.surfaceFrame.height()
-            renderer.setScreenSize(Size(width, height))
+            renderer.binding.setScreenSize(Size(width, height))
         }
 
         override fun onSurfaceDestroyed(holder: SurfaceHolder?) {
