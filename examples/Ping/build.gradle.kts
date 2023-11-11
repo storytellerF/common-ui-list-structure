@@ -3,7 +3,7 @@ buildscript {
         val smlFolder: String? by project
         val versionManager: String by project
         val smlVersion = "0.0.2"
-        val navVersion = "2.7.4"
+        val navVersion = "2.7.5"
 
         classpath("androidx.navigation:navigation-safe-args-gradle-plugin:$navVersion")
         classpath("com.github.storytellerF.common-ui-list:version-manager:$versionManager")
