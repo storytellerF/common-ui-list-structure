@@ -22,20 +22,11 @@ import android.net.Uri
 import android.opengl.GLES20
 import kotlin.math.roundToInt
 
-/**
- * createVideoThumbnailFromUri
- * @param context Activity context or application context.
- * @param uri Video uri.
- * @return Bitmap thumbnail
- *
- * Hacked from ThumbnailUtils.createVideoThumbnail()'s code.
- */
-fun createVideoThumbnailFromUri(
-    context: Context, uri: Uri
-): Bitmap? {
+fun Context.firstFrame(uri: Uri): Bitmap? {
     val retriever = MediaMetadataRetriever()
-    val bitmap = try {
-        retriever.setDataSource(context, uri)
+
+    return try {
+        retriever.setDataSource(this, uri)
         retriever.getFrameAtTime(-1)
     } catch (e: RuntimeException) {
         e.printStackTrace()
@@ -47,7 +38,21 @@ fun createVideoThumbnailFromUri(
             // Ignore failures while cleaning up.
             e.printStackTrace()
         }
-    } ?: return null
+    }
+}
+
+/**
+ * createVideoThumbnailFromUri
+ * @param context Activity context or application context.
+ * @param uri Video uri.
+ * @return Bitmap thumbnail
+ *
+ * Hacked from ThumbnailUtils.createVideoThumbnail()'s code.
+ */
+fun createVideoThumbnailFromUri(
+    context: Context, uri: Uri
+): Bitmap? {
+    val bitmap = context.firstFrame(uri) ?: return null
     // Scale down the bitmap if it's too large.
     val width = bitmap.width
     val height = bitmap.height

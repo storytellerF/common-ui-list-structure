@@ -20,143 +20,217 @@ import android.graphics.SurfaceTexture
 import android.media.MediaPlayer
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
+import android.opengl.GLES30
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import android.util.Log
+import android.util.Size
 import android.view.Surface
-import com.google.android.exoplayer2.ExoPlayer
+import androidx.annotation.RawRes
+import com.storyteller_f.ping.compileShaderResourceGLES20
+import com.storyteller_f.ping.linkProgramGLES20
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
+import javax.microedition.khronos.opengles.GL10
 import kotlin.math.abs
 
-interface GLWallpaperRender {
-    fun setSourcePlayer(player: MediaPlayer)
-    fun setSourcePlayer(exoPlayer: ExoPlayer)
-    fun setScreenSize(width: Int, height: Int)
-    fun setVideoSizeAndRotation(width: Int, height: Int, rotation: Int)
-    fun setOffset(xOffset: Float, yOffset: Float)
+data class VideoMatrix(val width: Int, val height: Int, val rotation: Int) {
+    private val horizontalFlip: Boolean
+        get() = rotation % 180 != 0
+
+    val realHeight = if (horizontalFlip) width else height
+    val realWidth = if (horizontalFlip) height else width
 }
 
-abstract class GLWallpaperRenderer(protected val context: Context) : GLSurfaceView.Renderer, GLWallpaperRender {
-    private var screenWidth = 0
-    private var screenHeight = 0
-    private var videoWidth = 0
-    private var videoHeight = 0
-    private var videoRotation = 0
-    private var xOffset = 0f
-    private var yOffset = 0f
-    private var maxXOffset = 0f
-    private var maxYOffset = 0f
-    private val vertices: FloatBuffer
-    private val texCoordinationBuffer: FloatBuffer
-    private val indices: IntBuffer
-    private val textures: IntArray
-    protected val buffers: IntArray
-    private val mvp: FloatArray
-    protected var program = 0
-    private var mvpLocation = 0
-    protected var surfaceTexture: SurfaceTexture? = null
+data class Offset(val xOffset: Float = 0f, val yOffset: Float = 0f) {
+    fun coerceIn(maxOffset: Offset): Offset {
+        val xOffsetTemp = xOffset.coerceIn(-maxOffset.xOffset..maxOffset.xOffset)
+        val yOffsetTemp = yOffset.coerceIn(-maxOffset.yOffset..maxOffset.yOffset)
+        return Offset(xOffsetTemp, yOffsetTemp)
+    }
+}
+
+abstract class GLWallpaperRenderer(
+    protected val context: Context,
+    @RawRes val vertexRes: Int,
+    @RawRes val fragmentRes: Int,
+    val version: Int
+) : GLSurfaceView.Renderer {
+    private var screenSize: Size? = null
+    private var videoMatrix: VideoMatrix? = null
+    private var offset: Offset = Offset()
+
+    private var maxOffset: Offset? = null
+
+    private val mvpMatrix = floatArrayOf(
+        1.0f, 0.0f, 0.0f, 0.0f,//
+        0.0f, 1.0f, 0.0f, 0.0f,//
+        0.0f, 0.0f, 1.0f, 0.0f,//
+        0.0f, 0.0f, 0.0f, 1.0f//
+    )
+
+    private val vertices: FloatBuffer = run {
+        // Those replaced glGenBuffers() and glBufferData().
+        val vertexArray = floatArrayOf(
+            -1.0f, -1.0f, // bottom left
+            -1.0f, 1.0f,  // top left
+            1.0f, -1.0f,  // bottom right
+            1.0f, 1.0f    // top right
+        )
+        ByteBuffer.allocateDirect(
+            vertexArray.size * BYTES_PER_FLOAT
+        ).run {
+            order(ByteOrder.nativeOrder()).asFloatBuffer().apply {
+                put(vertexArray).position(0)
+            }
+        }
+    }
+    private val texCoordinationBuffer: FloatBuffer = run {
+        val texCoordinationArray = floatArrayOf(
+            0.0f, 1.0f,  // bottom left
+            0.0f, 0.0f,  // top left
+            1.0f, 1.0f,  // bottom right
+            1.0f, 0.0f   // top right
+        )
+        ByteBuffer.allocateDirect(
+            texCoordinationArray.size * BYTES_PER_FLOAT
+        ).run {
+            order(ByteOrder.nativeOrder()).asFloatBuffer().apply {
+                put(texCoordinationArray).position(0)
+            }
+        }
+    }
+
+    /**
+     * 用于EBO
+     */
+    private val indicesBuffer: IntBuffer = run {
+        val indexArray = intArrayOf(0, 1, 2, 3, 2, 1)
+        ByteBuffer.allocateDirect(
+            indexArray.size * BYTES_PER_INT
+        ).run {
+            order(ByteOrder.nativeOrder()).asIntBuffer().apply {
+                put(indexArray).position(0)
+            }
+        }
+    }
+
+    /**
+     * 设置外部纹理。
+     */
+    private val textures: IntArray by lazy {
+        IntArray(1).apply {
+            //生成之后会存储到数组中
+            GLES20.glGenTextures(size, this, 0)
+            GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, this[0])
+            GLES20.glTexParameteri(
+                GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR
+            )
+            GLES20.glTexParameteri(
+                GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR
+            )
+            GLES20.glTexParameteri(
+                GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE
+            )
+            GLES20.glTexParameteri(
+                GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE
+            )
+        }
+    }
+    protected val buffers: IntArray by lazy {
+        IntArray(3).apply {
+            //获取指定的缓冲区
+            GLES20.glGenBuffers(size, this, 0)
+            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, this[0])
+            GLES20.glBufferData(
+                GLES20.GL_ARRAY_BUFFER,
+                vertices.capacity() * BYTES_PER_FLOAT,
+                vertices,
+                GLES20.GL_STATIC_DRAW
+            )
+            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
+
+            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, this[1])
+            GLES20.glBufferData(
+                GLES20.GL_ARRAY_BUFFER,
+                texCoordinationBuffer.capacity() * BYTES_PER_FLOAT,
+                texCoordinationBuffer,
+                GLES20.GL_STATIC_DRAW
+            )
+            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
+
+            //绑定EBO
+            GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, this[2])
+            GLES20.glBufferData(
+                GLES20.GL_ELEMENT_ARRAY_BUFFER,
+                indicesBuffer.capacity() * BYTES_PER_INT,
+                indicesBuffer,
+                GLES20.GL_STATIC_DRAW
+            )
+            GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0)
+        }
+    }
+
+    protected val program by lazy {
+        linkProgramGLES20(
+            compileShaderResourceGLES20(
+                context, GLES30.GL_VERTEX_SHADER, vertexRes
+            ), compileShaderResourceGLES20(
+                context, GLES30.GL_FRAGMENT_SHADER, fragmentRes
+            )
+        )
+    }
+    private val mvpLocation by lazy { GLES20.glGetUniformLocation(program, "mvp") }
+
+    private var surfaceTexture: SurfaceTexture? = null
 
     // Fix bug like https://stackoverflow.com/questions/14185661/surfacetexture-onframeavailablelistener-stops-being-called
-    protected var updatedFrame: Long = 0
-    protected var renderedFrame: Long = 0
+    private var updatedFrame: Long = 0
+    private var renderedFrame: Long = 0
 
-    abstract val version: Int
-
-    init {
-        // Those replaced glGenBuffers() and glBufferData().
-        val vertexArray = floatArrayOf( // x, y
-            // bottom left
-            -1.0f, -1.0f,  // top left
-            -1.0f, 1.0f,  // bottom right
-            1.0f, -1.0f,  // top right
-            1.0f, 1.0f
-        )
-        vertices = ByteBuffer.allocateDirect(
-            vertexArray.size * BYTES_PER_FLOAT
-        ).order(ByteOrder.nativeOrder()).asFloatBuffer()
-        vertices.put(vertexArray).position(0)
-        val texCoordinationArray = floatArrayOf( // u, v
-            // bottom left
-            0.0f, 1.0f,  // top left
-            0.0f, 0.0f,  // bottom right
-            1.0f, 1.0f,  // top right
-            1.0f, 0.0f
-        )
-        texCoordinationBuffer = ByteBuffer.allocateDirect(
-            texCoordinationArray.size * BYTES_PER_FLOAT
-        ).order(ByteOrder.nativeOrder()).asFloatBuffer()
-        texCoordinationBuffer.put(texCoordinationArray).position(0)
-        val indexArray = intArrayOf(0, 1, 2, 3, 2, 1)
-        indices = ByteBuffer.allocateDirect(
-            indexArray.size * BYTES_PER_INT
-        ).order(ByteOrder.nativeOrder()).asIntBuffer()
-        indices.put(indexArray).position(0)
-        buffers = IntArray(3)
-        textures = IntArray(1)
-        mvp = floatArrayOf(
-            1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f
-        )
-    }
-
-    override fun setScreenSize(width: Int, height: Int) {
-        Log.d(TAG, "setScreenSize() called with: width = $width, height = $height")
-        if (screenWidth != width || screenHeight != height) {
-            screenWidth = width
-            screenHeight = height
-            Log.i(TAG, "setScreenSize: success")
-            updateOffset()
+    fun setScreenSize(size: Size) {
+        Log.d(TAG, "setScreenSize() called with: size = $size")
+        val oldSize = this.screenSize
+        if (oldSize != size) {
+            this.screenSize = size
+            updateMaxOffset()
             updateMatrix()
         }
     }
 
-    override fun setVideoSizeAndRotation(width: Int, height: Int, rotation: Int) {
-        Log.d(TAG, "setVideoSizeAndRotation() called with: width = $width, height = $height, rotation = $rotation")
+    fun setVideoMatrix(videoMatrix: VideoMatrix, player: MediaPlayer) {
+        Log.d(TAG, "setVideoMatrix() called with: matrix = $videoMatrix")
         // MediaMetadataRetriever always give us raw width and height and won't rotate them.
         // So we rotate them by ourselves.
-        val (widthTemp, heightTemp) = if (rotation % 180 != 0) {
-            height to width
-        } else width to height
-        if (videoWidth != widthTemp || videoHeight != heightTemp || videoRotation != rotation) {
-            videoWidth = widthTemp
-            videoHeight = heightTemp
-            videoRotation = rotation
-            updateOffset()
+        val oldVideoMatrix = this.videoMatrix
+        if (oldVideoMatrix != videoMatrix) {
+            this.videoMatrix = videoMatrix
+            Log.i(TAG, "setVideoMatrix: new matrix $videoMatrix")
+            updateMaxOffset()
+            updateMatrix()
+            setSourcePlayer(player)
+        }
+    }
+
+    fun setOffset(offset: Offset) {
+        Log.d(TAG, "setOffset() called with: offset = $offset $maxOffset")
+        val maxOffset1 = maxOffset ?: return
+        val oldXOffset = this.offset
+        val rectified = Offset((offset.xOffset * maxOffset1.xOffset).let {
+            if (it < 0.001) 0f else it
+        }, (offset.yOffset * maxOffset1.yOffset).let {
+            if (it < 0.001) 0f else it
+        })
+        if (rectified != oldXOffset) {
+            this.offset = rectified
+            Log.i(TAG, "setOffset: new offset $rectified")
             updateMatrix()
         }
     }
 
-    private fun updateOffset() {
-        val screenWidthExpected = videoWidth.toFloat() * screenHeight / videoHeight
-        val fl = 1.0f - screenWidth.toFloat() / screenWidthExpected
-        maxXOffset = abs(fl) / 2
-        val screenHeightExpected = videoHeight.toFloat() * screenWidth / videoWidth
-        val fl1 = 1.0f - screenHeight.toFloat() / screenHeightExpected
-        maxYOffset = abs(fl1) / 2
-        Log.i(TAG, "setVideoSizeAndRotation: $fl $fl1")
-    }
-
-    override fun setOffset(xOffset: Float, yOffset: Float) {
-        if (maxXOffset.equals(Float.NaN) || maxYOffset.equals(Float.NaN)) return
-        val xOffsetTemp = xOffset.coerceIn(-maxXOffset..maxXOffset)
-        val yOffsetTemp = yOffset.coerceIn(-maxYOffset..maxYOffset)
-        if (this.xOffset != xOffsetTemp || this.yOffset != yOffsetTemp) {
-            this.xOffset = xOffsetTemp
-            this.yOffset = yOffsetTemp
-            updateMatrix()
-        }
-    }
-
-    override fun setSourcePlayer(exoPlayer: ExoPlayer) {
-        // Re-create SurfaceTexture when getting a new player.
-        // Because maybe a new video is loaded.
-        createSurfaceTexture()
-        exoPlayer.setVideoSurface(Surface(surfaceTexture))
-    }
-
-    override fun setSourcePlayer(player: MediaPlayer) {
+    private fun setSourcePlayer(player: MediaPlayer) {
         createSurfaceTexture()
         player.setSurface(Surface(surfaceTexture))
     }
@@ -166,100 +240,129 @@ abstract class GLWallpaperRenderer(protected val context: Context) : GLSurfaceVi
         updatedFrame = 0
         renderedFrame = 0
         surfaceTexture = SurfaceTexture(textures[0]).apply {
-            setDefaultBufferSize(videoWidth, videoHeight)
+            val videoMatrix1 = videoMatrix!!
+            setDefaultBufferSize(videoMatrix1.realWidth, videoMatrix1.realWidth)
             setOnFrameAvailableListener { ++updatedFrame }
         }
     }
 
-    private fun updateMatrix() {
-        // Players are buggy and unclear, so we do crop by ourselves.
-        // Start with an identify matrix.
-        for (i in 0..15) {
-            mvp[i] = 0.0f
+    override fun onSurfaceChanged(gl10: GL10, width: Int, height: Int) =
+        GLES20.glViewport(0, 0, width, height)
+
+    override fun onDrawFrame(gl: GL10?) {
+        if (updatingMatrix) return
+        val texture = surfaceTexture ?: return
+        if (renderedFrame < updatedFrame) {
+            texture.updateTexImage()
+            ++renderedFrame
         }
-        mvp[15] = 1.0f
-        mvp[10] = mvp[15]
-        mvp[5] = mvp[10]
-        mvp[0] = mvp[5]
-        // OpenGL model matrix: scaling, rotating, translating.
-        val videoRatio = videoWidth.toFloat() / videoHeight
-        val screenRatio = screenWidth.toFloat() / screenHeight
-        if (videoRatio >= screenRatio) {
-            Log.d(TAG, "updateMatrix: x crop")
-            // Treat video and screen width as 1, and compare width to scale.
-            val newVideoWidth = screenWidth.toFloat() * videoHeight / screenHeight
-            val widthRatio = videoWidth / newVideoWidth
-            Matrix.scaleM(mvp, 0, widthRatio, 1f, 1f)
-            // Some video recorder save video frames in direction differs from recoring,
-            // and add a rotation metadata. Need to detect and rotate them.
-            if (videoRotation % 360 != 0) {
-                Matrix.rotateM(mvp, 0, -videoRotation.toFloat(), 0f, 0f, 1f)
-            }
-            Matrix.translateM(mvp, 0, xOffset, 0f, 0f)
-        } else {
-            Log.d(TAG, "updateMatrix: y crop")
-            // Treat video and screen height as 1, and compare height to scale.
-            val newVideoHeight = screenHeight.toFloat() * videoWidth / screenWidth
-            val heightRatio = videoHeight / newVideoHeight
-            Matrix.scaleM(mvp, 0, 1f, heightRatio, 1f)
-            // Some video recorder save video frames in direction differs from recoring,
-            // and add a rotation metadata. Need to detect and rotate them.
-            if (videoRotation % 360 != 0) {
-                Matrix.rotateM(mvp, 0, -videoRotation.toFloat(), 0f, 0f, 1f)
-            }
-            Matrix.translateM(mvp, 0, 0f, yOffset, 0f)
-        }
-        // This is a 2D center crop, so we only need model matrix, no view and projection.
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
+        GLES20.glUseProgram(program)
+        GLES20.glUniformMatrix4fv(mvpLocation, 1, false, mvpMatrix, 0)
+
+        drawImage()
     }
 
-    abstract fun buildProgram(): Int
-
-    protected fun surfacePreProcess() {
-        // No depth test for 2D video.
+    fun initGl() {
         GLES20.glDisable(GLES20.GL_DEPTH_TEST)
         GLES20.glDepthMask(false)
         GLES20.glDisable(GLES20.GL_CULL_FACE)
         GLES20.glDisable(GLES20.GL_BLEND)
-        GLES20.glGenTextures(textures.size, textures, 0)
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, textures[0])
-        GLES20.glTexParameteri(
-            GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR
-        )
-        GLES20.glTexParameteri(
-            GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR
-        )
-        GLES20.glTexParameteri(
-            GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE
-        )
-        GLES20.glTexParameteri(
-            GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE
-        )
-        program = buildProgram()
-        mvpLocation = GLES20.glGetUniformLocation(program, "mvp")
-        // Locations are NOT set in shader sources.
-
-        GLES20.glGenBuffers(buffers.size, buffers, 0)
-        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[0])
-        GLES20.glBufferData(
-            GLES20.GL_ARRAY_BUFFER, vertices.capacity() * BYTES_PER_FLOAT, vertices, GLES20.GL_STATIC_DRAW
-        )
-        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
-        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[1])
-        GLES20.glBufferData(
-            GLES20.GL_ARRAY_BUFFER, texCoordinationBuffer.capacity() * BYTES_PER_FLOAT, texCoordinationBuffer, GLES20.GL_STATIC_DRAW
-        )
-        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
-        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, buffers[2])
-        GLES20.glBufferData(
-            GLES20.GL_ELEMENT_ARRAY_BUFFER, indices.capacity() * BYTES_PER_INT, indices, GLES20.GL_STATIC_DRAW
-        )
-        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0)
+        mvpLocation
+        textures
     }
 
-    fun drawFramePrepare() {
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
-        GLES20.glUseProgram(program)
-        GLES20.glUniformMatrix4fv(mvpLocation, 1, false, mvp, 0)
+    abstract fun drawImage()
+
+    private fun updateMaxOffset() {
+        Log.d(TAG, "updateMaxOffset() called $videoMatrix $screenSize ${Thread.currentThread()}")
+        val matrix = videoMatrix ?: return
+        val size = screenSize ?: return
+        val videoMoreWidth = getVideoMoreWidth(matrix, size)
+        maxOffset = if (videoMoreWidth) {
+            val screenWidthExpected = matrix.realWidth.toFloat() * size.height / matrix.realHeight
+            val widthOffset = 1.0f - size.width.toFloat() / screenWidthExpected
+            Offset(abs(widthOffset) / 2)
+        } else {
+            val screenHeightExpected = matrix.realHeight.toFloat() * size.width / matrix.realWidth
+            val heightOffset = 1.0f - size.height.toFloat() / screenHeightExpected
+            Offset(yOffset = abs(heightOffset) / 2)
+        }
+
+        Log.i(TAG, "updateMaxOffset: $maxOffset")
+    }
+
+    private var updatingMatrix: Boolean = false
+    private fun updateMatrix() {
+        Log.d(
+            TAG,
+            "updateMatrix() called $videoMatrix $screenSize $offset ${Thread.currentThread()}"
+        )
+        val matrix = videoMatrix ?: return
+        val size = screenSize ?: return
+        if (updatingMatrix) return
+        updatingMatrix = true
+        val offset1 = offset
+        val videoMoreWidth = getVideoMoreWidth(matrix, size)
+        val videoRotation = matrix.rotation
+        // Players are buggy and unclear, so we do crop by ourselves.
+        // Start with an identify matrix.
+        for (i in 0..15) mvpMatrix[i] = 0.0f
+        mvpMatrix[15] = 1.0f
+        mvpMatrix[10] = mvpMatrix[15]
+        mvpMatrix[5] = mvpMatrix[10]
+        mvpMatrix[0] = mvpMatrix[5]
+        // OpenGL model matrix: scaling, rotating, translating.
+        if (videoMoreWidth) {
+            Log.d(TAG, "updateMatrix: crop x")
+            // Treat video and screen width as 1, and compare width to scale.
+            val widthRatio = matrix.realWidth / getFitVideoWidth(size, matrix)
+            Matrix.scaleM(mvpMatrix, 0, widthRatio, 1f, 1f)
+            // Some video recorder save video frames in direction differs from recoring,
+            // and add a rotation metadata. Need to detect and rotate them.
+            if (videoRotation % 360 != 0) {
+                Matrix.rotateM(mvpMatrix, 0, -videoRotation.toFloat(), 0f, 0f, 1f)
+            }
+            Matrix.translateM(mvpMatrix, 0, offset1.xOffset, 0f, 0f)
+        } else {
+            Log.d(TAG, "updateMatrix: crop y")
+            // Treat video and screen height as 1, and compare height to scale.
+            val heightRatio = matrix.realHeight / getFitVideoHeight(size, matrix)
+            Matrix.scaleM(mvpMatrix, 0, 1f, heightRatio, 1f)
+            // Some video recorder save video frames in direction differs from recoring,
+            // and add a rotation metadata. Need to detect and rotate them.
+            if (videoRotation % 360 != 0) {
+                Matrix.rotateM(mvpMatrix, 0, -videoRotation.toFloat(), 0f, 0f, 1f)
+            }
+            Matrix.translateM(mvpMatrix, 0, 0f, offset1.yOffset, 0f)
+        }
+        updatingMatrix = false
+    }
+
+    /**
+     * 视频比屏幕更宽一些，所以根据屏幕尺寸和视频高度重新确定视频宽度。
+     */
+    private fun getFitVideoWidth(size: Size, matrix: VideoMatrix) =
+        size.width.toFloat() * matrix.realHeight / size.height
+
+    /**
+     * 视频比屏幕更高一些，所以根据屏幕尺寸和视频宽度重新确定通过视频高度。
+     */
+    private fun getFitVideoHeight(size: Size, matrix: VideoMatrix) =
+        size.height.toFloat() * matrix.realWidth / size.width
+
+    /**
+     * @return 如果为true，视频比屏幕更加宽。完全覆盖屏幕之后左右两边会有空余，这部分空余用于
+     * 桌面滚动。反之亦然。
+     */
+    private fun getVideoMoreWidth(videoMatrix1: VideoMatrix, size: Size): Boolean {
+        val videoRatio1 = videoMatrix1.let {
+            it.realWidth.toFloat() / it.realHeight
+        }
+        val screenRatio1 = size.let {
+            it.width.toFloat() / it.height
+        }
+        return videoRatio1 >= screenRatio1
     }
 
     companion object {
@@ -267,4 +370,21 @@ abstract class GLWallpaperRenderer(protected val context: Context) : GLSurfaceVi
         const val BYTES_PER_FLOAT = 4
         const val BYTES_PER_INT = 4
     }
+}
+
+/**
+ * 不会关闭对应的数组对象
+ */
+fun bindData(dataIndex: Int, targetIndex: Int) {
+    //激活
+    GLES20.glBindBuffer(GLES30.GL_ARRAY_BUFFER, dataIndex)
+    GLES20.glEnableVertexAttribArray(targetIndex)
+    GLES20.glVertexAttribPointer(
+        targetIndex,
+        2,//组成一个顶点的数据个数
+        GLES20.GL_FLOAT,//数据类型
+        false,//是否需要gpu 归一化
+        2 * GLWallpaperRenderer.BYTES_PER_FLOAT,//组成一个顶点所占用的数据长度
+        0
+    )
 }

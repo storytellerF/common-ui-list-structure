@@ -25,7 +25,6 @@ android {
 }
 
 dependencies {
-    implementation("com.google.android.exoplayer:exoplayer-core:2.19.1")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation("com.squareup.okio:okio:3.5.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")

@@ -13,12 +13,15 @@ import android.os.Build
 import android.os.Bundle
 import android.service.wallpaper.WallpaperService
 import android.util.Log
+import android.util.Size
 import android.view.SurfaceHolder
 import androidx.core.content.ContextCompat
 import com.google.android.filament.Filament
 import com.storyteller_f.ping.shader.GLES20WallpaperRenderer
 import com.storyteller_f.ping.shader.GLES30WallpaperRenderer
 import com.storyteller_f.ping.shader.GLWallpaperRenderer
+import com.storyteller_f.ping.shader.Offset
+import com.storyteller_f.ping.shader.VideoMatrix
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -59,13 +62,11 @@ class PingPagerService : WallpaperService() {
         private val player: MediaPlayer by lazy {
             MediaPlayer().apply {
                 isLooping = true
-                setOnVideoSizeChangedListener { _, width, height ->
-                    Log.i(TAG, "onVideoSizeChangedListener: width $width height $height")
-                    renderer.setVideoSizeAndRotation(width, height, 0)
+                setOnVideoSizeChangedListener { player, width, height ->
+                    renderer.setVideoMatrix(VideoMatrix(width, height, 0), player)
                 }
                 setOnPreparedListener {
                     Log.i(TAG, "OnPreparedListener")
-                    renderer.setSourcePlayer(it)
                     it.start()
                 }
             }
@@ -165,6 +166,10 @@ class PingPagerService : WallpaperService() {
             super.onVisibilityChanged(visible)
         }
 
+        /**
+         * OffsetStep 是page 索引变化。
+         * PixelOffset 是像素变化。
+         */
         override fun onOffsetsChanged(
             xOffset: Float,
             yOffset: Float,
@@ -180,7 +185,7 @@ class PingPagerService : WallpaperService() {
             super.onOffsetsChanged(
                 xOffset, yOffset, xOffsetStep, yOffsetStep, xPixelOffset, yPixelOffset
             )
-            renderer.setOffset(xOffset, yOffset)
+            renderer.setOffset(Offset(xOffset, yOffset))
         }
 
         override fun onSurfaceChanged(
@@ -191,7 +196,7 @@ class PingPagerService : WallpaperService() {
                 "onSurfaceChanged() called with: holder = $holder, format = $format, width = $width, height = $height"
             )
             super.onSurfaceChanged(holder, format, width, height)
-            renderer.setScreenSize(width, height)
+            renderer.setScreenSize(Size(width, height))
         }
 
         override fun onSurfaceRedrawNeeded(holder: SurfaceHolder?) {
@@ -204,7 +209,7 @@ class PingPagerService : WallpaperService() {
             super.onSurfaceCreated(holder)
             val width = holder?.surfaceFrame?.width() ?: return
             val height = holder.surfaceFrame.height()
-            renderer.setScreenSize(width, height)
+            renderer.setScreenSize(Size(width, height))
         }
 
         override fun onSurfaceDestroyed(holder: SurfaceHolder?) {
