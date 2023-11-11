@@ -58,19 +58,17 @@ class PingPagerService : WallpaperService() {
 
     private inner class PingEngine(private val inContext: Context) : WallpaperService.Engine() {
         private var currentThumbnail: Bitmap? = null
-        private val player: MediaPlayer by lazy {
-            MediaPlayer().apply {
-                isLooping = true
-                setOnVideoSizeChangedListener { player, width, height ->
-                    renderer.binding.setVideoMatrix(VideoMatrix(width, height, 0), player)
-                }
-                setOnPreparedListener {
-                    Log.i(TAG, "OnPreparedListener")
-                    it.start()
-                }
+        private val player: MediaPlayer = MediaPlayer().apply {
+            isLooping = true
+            setOnVideoSizeChangedListener { player, width, height ->
+                renderer.binding.setVideoMatrix(VideoMatrix(width, height, 0), player)
+            }
+            setOnPreparedListener {
+                Log.i(TAG, "OnPreparedListener")
+                it.start()
             }
         }
-        private val renderer: GLWallpaperRenderer by lazy {
+        private val renderer: GLWallpaperRenderer = run {
             val systemService =
                 ContextCompat.getSystemService(inContext, ActivityManager::class.java)
                     ?: throw Exception("无法获得activity manager")
@@ -87,12 +85,12 @@ class PingPagerService : WallpaperService() {
                 else -> throw RuntimeException("can not get gl version")
             }
         }
+
         private val surfaceView: GLPingSurfaceView by lazy {
             GLPingSurfaceView(inContext).apply {
                 setEGLContextClientVersion(renderer.version)
                 preserveEGLContextOnPause = true
                 setRenderer(renderer)
-                renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
             }
         }
 
@@ -141,8 +139,7 @@ class PingPagerService : WallpaperService() {
         override fun onCreate(surfaceHolder: SurfaceHolder?) {
             Log.d(TAG, "onCreate() called with: surfaceHolder = $surfaceHolder")
             super.onCreate(surfaceHolder)
-            player
-            surfaceView//init
+            surfaceView
             observeLatestUri()
         }
 

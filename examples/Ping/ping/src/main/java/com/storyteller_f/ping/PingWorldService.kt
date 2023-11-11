@@ -81,6 +81,23 @@ class PingWorldService : WallpaperService() {
 
     private inner class FilamentWallpaperEngine(val inContext: Context) : Engine() {
         private var currentThumbnail: Bitmap? = null
+        var cameraFocalLength = 28f
+            set(value) {
+                field = value
+                updateCameraProjection()
+            }
+
+        var cameraNear = kNearPlane
+            set(value) {
+                field = value
+                updateCameraProjection()
+            }
+
+        var cameraFar = kFarPlane
+            set(value) {
+                field = value
+                updateCameraProjection()
+            }
 
         // UiHelper is provided by Filament to manage SurfaceHolder
         private val uiHelper by lazy {
@@ -92,14 +109,10 @@ class PingWorldService : WallpaperService() {
         }
 
         // DisplayHelper is provided by Filament to manage the display
-        private val displayHelper by lazy {
-            DisplayHelper(inContext)
-        }
+        private val displayHelper = DisplayHelper(inContext)
 
         // Choreographer is used to schedule new frames
-        private val choreographer by lazy {
-            Choreographer.getInstance()
-        }
+        private val choreographer = Choreographer.getInstance()
 
         // Engine creates and destroys Filament resources
         // Each engine must be accessed from a single thread of your choosing
@@ -107,46 +120,40 @@ class PingWorldService : WallpaperService() {
         private val engine = com.google.android.filament.Engine.create()
 
         // A renderer instance is tied to a single surface (SurfaceView, TextureView, etc.)
-        private val renderer by lazy {
-            engine.createRenderer()
-        }
+        private val renderer = engine.createRenderer()
 
         // A scene holds all the render-able, lights, etc. to be drawn
-        private val scene1 by lazy {
-            engine.createScene().apply {
-                skybox = Skybox.Builder().build(engine)
-                val (r, g, b) = Colors.cct(6_500.0f)
-                LightManager.Builder(LightManager.Type.DIRECTIONAL)
-                    .color(r, g, b)
-                    .intensity(100_000.0f)
-                    .direction(0.0f, -1.0f, 0.0f)
-                    .castShadows(true)
-                    .build(engine, light)
+        private val scene1 = engine.createScene().apply {
+            @Entity
+            val light = EntityManager.get().create()
+            skybox = Skybox.Builder().build(engine)
+            val (r, g, b) = Colors.cct(6_500.0f)
+            LightManager.Builder(LightManager.Type.DIRECTIONAL)
+                .color(r, g, b)
+                .intensity(100_000.0f)
+                .direction(0.0f, -1.0f, 0.0f)
+                .castShadows(true)
+                .build(engine, light)
 
-                addEntity(light)
-            }
+            addEntity(light)
         }
 
         // Should be pretty obvious :)
-        private val camera1 by lazy {
-            engine.createCamera(engine.entityManager.create()).apply {
-                // Set the exposure on the camera, this exposure follows the sunny f/16 rule
-                setExposure(16.0f, 1.0f / 125.0f, 100.0f)
-            }
+        private val camera1 = engine.createCamera(engine.entityManager.create()).apply {
+            // Set the exposure on the camera, this exposure follows the sunny f/16 rule
+            setExposure(16.0f, 1.0f / 125.0f, 100.0f)
         }
 
         // A view defines a viewport, a scene and a camera for rendering
-        private val view by lazy {
-            engine.createView().apply {
-                // NOTE: Try to disable post-processing (tone-mapping, etc.) to see the difference
-                // view.isPostProcessingEnabled = false
+        private val view = engine.createView().apply {
+            // NOTE: Try to disable post-processing (tone-mapping, etc.) to see the difference
+            // view.isPostProcessingEnabled = false
 
-                // Tell the view which camera we want to use
-                this.camera = camera1
+            // Tell the view which camera we want to use
+            this.camera = camera1
 
-                // Tell the view which scene we want to render
-                this.scene = scene1
-            }
+            // Tell the view which scene we want to render
+            this.scene = scene1
         }
 
         private val cameraManipulator: Manipulator by lazy {
@@ -162,29 +169,28 @@ class PingWorldService : WallpaperService() {
                 .build(Manipulator.Mode.ORBIT)
         }
 
+        private val gestureDetector: GestureDetector by lazy {
+            GestureDetector(view, cameraManipulator)
+        }
+
         var animator: Animator? = null
             private set
 
         var asset: FilamentAsset? = null
             private set
-        
-        @Entity
-        val light = EntityManager.get().create()
+
+
         private val materialProvider: MaterialProvider = UbershaderProvider(engine)
-        private val assetLoader: AssetLoader by lazy {
-            AssetLoader(
-                engine,
-                materialProvider,
-                EntityManager.get()
-            )
-        }
-        private val resourceLoader: ResourceLoader by lazy { ResourceLoader(engine, true) }
+        private val assetLoader: AssetLoader = AssetLoader(
+            engine,
+            materialProvider,
+            EntityManager.get()
+        )
+        private val resourceLoader: ResourceLoader = ResourceLoader(engine, true)
         private val eyePos = DoubleArray(3)
         private val target = DoubleArray(3)
         private val upward = DoubleArray(3)
-        private val gestureDetector: GestureDetector by lazy {
-            GestureDetector(view, cameraManipulator)
-        }
+
 
         // A swap chain is Filament's representation of a surface
         private var swapChain: SwapChain? = null
@@ -193,27 +199,28 @@ class PingWorldService : WallpaperService() {
         private val frameScheduler = FrameCallback()
 
         // We'll use this ValueAnimator to smoothly cycle the background between hues.
-        private val animator1 by lazy {
-            ValueAnimator.ofFloat(0.0f, 360.0f).apply {
-                interpolator = LinearInterpolator()
-                duration = 10000
-                repeatMode = ValueAnimator.RESTART
-                repeatCount = ValueAnimator.INFINITE
-                addUpdateListener { a ->
-                    val hue = a.animatedValue as Float
-                    val color = Color.HSVToColor(floatArrayOf(hue, 1.0f, 1.0f))
-                    scene1.skybox?.setColor(
-                        floatArrayOf(
-                            Color.red(color) / 255.0f,
-                            Color.green(color) / 255.0f,
-                            Color.blue(color) / 255.0f,
-                            1.0f
-                        )
+        private val animator1 = ValueAnimator.ofFloat(0.0f, 360.0f).apply {
+            interpolator = LinearInterpolator()
+            duration = 10000
+            repeatMode = ValueAnimator.RESTART
+            repeatCount = ValueAnimator.INFINITE
+            addUpdateListener { a ->
+                val hue = a.animatedValue as Float
+                val color = Color.HSVToColor(floatArrayOf(hue, 1.0f, 1.0f))
+                scene1.skybox?.setColor(
+                    floatArrayOf(
+                        Color.red(color) / 255.0f,
+                        Color.green(color) / 255.0f,
+                        Color.blue(color) / 255.0f,
+                        1.0f
                     )
-                }
-                start()
+                )
             }
+            start()
         }
+
+        private val readyRenderables = IntArray(128) // add up to 128 entities at a time
+        val display = ContextCompat.getDisplayOrDefault(inContext)
 
         private fun observeLatestUri() {
             scope.launch {
@@ -285,14 +292,7 @@ class PingWorldService : WallpaperService() {
             surfaceHolder.setSizeFromLayout()
             surfaceHolder.setFormat(PixelFormat.RGBA_8888)
 
-            //init
-            renderer
-            view
-            displayHelper
-            choreographer
             uiHelper
-            //启动动画
-            animator1
             observeLatestUri()
         }
 
@@ -383,8 +383,6 @@ class PingWorldService : WallpaperService() {
             }
         }
 
-        private val readyRenderables = IntArray(128) // add up to 128 entities at a time
-
         private fun populateScene(asset: FilamentAsset) {
             val rcm = engine.renderableManager
             var count = 0
@@ -399,7 +397,6 @@ class PingWorldService : WallpaperService() {
             scene1.addEntities(asset.lightEntities)
         }
 
-        val display by lazy { ContextCompat.getDisplayOrDefault(inContext) }
 
         inner class SurfaceCallback : UiHelper.RendererCallback {
             override fun onNativeWindowChanged(surface: Surface) {
@@ -418,31 +415,13 @@ class PingWorldService : WallpaperService() {
             }
 
             override fun onResized(width: Int, height: Int) {
+                Log.d(TAG, "onResized() called with: width = $width, height = $height")
                 view.viewport = Viewport(0, 0, width, height)
                 cameraManipulator.setViewport(width, height)
                 updateCameraProjection()
                 FilamentHelper.synchronizePendingFrames(engine)
             }
         }
-
-
-        var cameraFocalLength = 28f
-            set(value) {
-                field = value
-                updateCameraProjection()
-            }
-
-        var cameraNear = kNearPlane
-            set(value) {
-                field = value
-                updateCameraProjection()
-            }
-
-        var cameraFar = kFarPlane
-            set(value) {
-                field = value
-                updateCameraProjection()
-            }
 
         private fun updateCameraProjection() {
             val width = view.viewport.width
@@ -455,6 +434,7 @@ class PingWorldService : WallpaperService() {
         }
 
         override fun onSurfaceCreated(holder: SurfaceHolder?) {
+            Log.d(TAG, "onSurfaceCreated() called with: holder = $holder")
             super.onSurfaceCreated(holder)
             gestureDetector
         }
