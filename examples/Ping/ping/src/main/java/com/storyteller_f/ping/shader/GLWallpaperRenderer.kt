@@ -18,7 +18,6 @@ package com.storyteller_f.ping.shader
 import android.content.Context
 import android.graphics.SurfaceTexture
 import android.media.MediaPlayer
-import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import android.opengl.GLES30
 import android.opengl.GLSurfaceView
@@ -29,10 +28,6 @@ import android.view.Surface
 import androidx.annotation.RawRes
 import com.storyteller_f.ping.compileShaderResourceGLES20
 import com.storyteller_f.ping.linkProgramGLES20
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.nio.FloatBuffer
-import java.nio.IntBuffer
 import javax.microedition.khronos.opengles.GL10
 import kotlin.math.abs
 
@@ -45,11 +40,6 @@ data class VideoMatrix(val width: Int, val height: Int, val rotation: Int) {
 }
 
 data class Offset(val xOffset: Float = 0f, val yOffset: Float = 0f) {
-    fun coerceIn(maxOffset: Offset): Offset {
-        val xOffsetTemp = xOffset.coerceIn(-maxOffset.xOffset..maxOffset.xOffset)
-        val yOffsetTemp = yOffset.coerceIn(-maxOffset.yOffset..maxOffset.yOffset)
-        return Offset(xOffsetTemp, yOffsetTemp)
-    }
 }
 
 abstract class GLWallpaperRenderer(
@@ -71,106 +61,12 @@ abstract class GLWallpaperRenderer(
         0.0f, 0.0f, 0.0f, 1.0f//
     )
 
-    private val vertices: FloatBuffer = run {
-        // Those replaced glGenBuffers() and glBufferData().
-        val vertexArray = floatArrayOf(
-            -1.0f, -1.0f, // bottom left
-            -1.0f, 1.0f,  // top left
-            1.0f, -1.0f,  // bottom right
-            1.0f, 1.0f    // top right
-        )
-        ByteBuffer.allocateDirect(
-            vertexArray.size * BYTES_PER_FLOAT
-        ).run {
-            order(ByteOrder.nativeOrder()).asFloatBuffer().apply {
-                put(vertexArray).position(0)
-            }
-        }
-    }
-    private val texCoordinationBuffer: FloatBuffer = run {
-        val texCoordinationArray = floatArrayOf(
-            0.0f, 1.0f,  // bottom left
-            0.0f, 0.0f,  // top left
-            1.0f, 1.0f,  // bottom right
-            1.0f, 0.0f   // top right
-        )
-        ByteBuffer.allocateDirect(
-            texCoordinationArray.size * BYTES_PER_FLOAT
-        ).run {
-            order(ByteOrder.nativeOrder()).asFloatBuffer().apply {
-                put(texCoordinationArray).position(0)
-            }
-        }
+    protected val buffers by lazy {
+        GLBuffer()
     }
 
-    /**
-     * 用于EBO
-     */
-    private val indicesBuffer: IntBuffer = run {
-        val indexArray = intArrayOf(0, 1, 2, 3, 2, 1)
-        ByteBuffer.allocateDirect(
-            indexArray.size * BYTES_PER_INT
-        ).run {
-            order(ByteOrder.nativeOrder()).asIntBuffer().apply {
-                put(indexArray).position(0)
-            }
-        }
-    }
-
-    /**
-     * 设置外部纹理。
-     */
-    private val textures: IntArray by lazy {
-        IntArray(1).apply {
-            //生成之后会存储到数组中
-            GLES20.glGenTextures(size, this, 0)
-            GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, this[0])
-            GLES20.glTexParameteri(
-                GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR
-            )
-            GLES20.glTexParameteri(
-                GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR
-            )
-            GLES20.glTexParameteri(
-                GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE
-            )
-            GLES20.glTexParameteri(
-                GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE
-            )
-        }
-    }
-    protected val buffers: IntArray by lazy {
-        IntArray(3).apply {
-            //获取指定的缓冲区
-            GLES20.glGenBuffers(size, this, 0)
-            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, this[0])
-            GLES20.glBufferData(
-                GLES20.GL_ARRAY_BUFFER,
-                vertices.capacity() * BYTES_PER_FLOAT,
-                vertices,
-                GLES20.GL_STATIC_DRAW
-            )
-            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
-
-            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, this[1])
-            GLES20.glBufferData(
-                GLES20.GL_ARRAY_BUFFER,
-                texCoordinationBuffer.capacity() * BYTES_PER_FLOAT,
-                texCoordinationBuffer,
-                GLES20.GL_STATIC_DRAW
-            )
-            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
-
-            //绑定EBO
-            GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, this[2])
-            GLES20.glBufferData(
-                GLES20.GL_ELEMENT_ARRAY_BUFFER,
-                indicesBuffer.capacity() * BYTES_PER_INT,
-                indicesBuffer,
-                GLES20.GL_STATIC_DRAW
-            )
-            GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0)
-        }
+    private val textures by lazy {
+        OESTexture()
     }
 
     protected val program by lazy {
@@ -239,15 +135,25 @@ abstract class GLWallpaperRenderer(
         surfaceTexture?.release()
         updatedFrame = 0
         renderedFrame = 0
-        surfaceTexture = SurfaceTexture(textures[0]).apply {
+        surfaceTexture = textures.build().apply {
             val videoMatrix1 = videoMatrix!!
             setDefaultBufferSize(videoMatrix1.realWidth, videoMatrix1.realWidth)
             setOnFrameAvailableListener { ++updatedFrame }
         }
     }
 
-    override fun onSurfaceChanged(gl10: GL10, width: Int, height: Int) =
+    fun initGl() {
+        GLES20.glDisable(GLES20.GL_DEPTH_TEST)
+        GLES20.glDepthMask(false)
+        GLES20.glDisable(GLES20.GL_CULL_FACE)
+        GLES20.glDisable(GLES20.GL_BLEND)
+        mvpLocation
+        textures
+    }
+    //生命周期函数
+    override fun onSurfaceChanged(gl10: GL10, width: Int, height: Int) {
         GLES20.glViewport(0, 0, width, height)
+    }
 
     override fun onDrawFrame(gl: GL10?) {
         if (updatingMatrix) return
@@ -263,16 +169,8 @@ abstract class GLWallpaperRenderer(
         drawImage()
     }
 
-    fun initGl() {
-        GLES20.glDisable(GLES20.GL_DEPTH_TEST)
-        GLES20.glDepthMask(false)
-        GLES20.glDisable(GLES20.GL_CULL_FACE)
-        GLES20.glDisable(GLES20.GL_BLEND)
-        mvpLocation
-        textures
-    }
-
     abstract fun drawImage()
+    //生命周期函数
 
     private fun updateMaxOffset() {
         Log.d(TAG, "updateMaxOffset() called $videoMatrix $screenSize ${Thread.currentThread()}")

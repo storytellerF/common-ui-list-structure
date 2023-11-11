@@ -16,11 +16,8 @@
 package com.storyteller_f.ping.shader
 
 import android.content.Context
-import android.opengl.GLES20
 import android.opengl.GLES30
 import com.storyteller_f.ping.R
-import com.storyteller_f.ping.compileShaderResourceGLES20
-import com.storyteller_f.ping.linkProgramGLES20
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
@@ -33,6 +30,7 @@ internal class GLES30WallpaperRenderer(context: Context) :
     override fun onSurfaceCreated(gl10: GL10, eglConfig: EGLConfig) {
         initGl()
 
+        //VAO 顶点数组对象
         GLES30.glGenVertexArrays(vertexArrays.size, vertexArrays, 0)
         GLES30.glBindVertexArray(vertexArrays[0])
         GLES30.glBindBuffer(GLES30.GL_ELEMENT_ARRAY_BUFFER, buffers[2])

@@ -44,7 +44,6 @@ internal class GLES20WallpaperRenderer(context: Context) :
     }
 
     override fun drawImage() {
-        // No vertex array in OpenGL ES 2.
         bindData(buffers[0], positionLocation)
         bindData(buffers[1], texCoordinationLocation)
 
