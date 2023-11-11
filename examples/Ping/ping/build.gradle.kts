@@ -30,6 +30,8 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implModule(":file-system-ktx")
     implementation("com.google.android.filament:filament-android:1.45.0")
+    implementation("com.google.android.filament:filament-utils-android:1.45.0")
+    implementation("com.google.android.filament:gltfio-android:1.45.0")
 }
 constraintCommonUIListVersion(versionManager)
 baseApp()

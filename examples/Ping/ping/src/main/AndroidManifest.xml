@@ -58,6 +58,16 @@
                 <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
             </intent-filter>
         </provider>
+<!--        <provider-->
+<!--            android:name="androidx.startup.InitializationProvider"-->
+<!--            android:authorities="${applicationId}.bao-startup"-->
+<!--            android:exported="false"-->
+<!--            tools:node="merge"-->
+<!--            tools:replace="android:authorities">-->
+<!--            <meta-data-->
+<!--                android:name="com.storyteller_f.bao.startup.BaoStartup"-->
+<!--                tools:node="remove" />-->
+<!--        </provider>-->
     </application>
 
 </manifest>

@@ -2,6 +2,7 @@ package com.storyteller_f.ping
 
 import android.app.Application
 import android.content.Context
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.android.material.color.DynamicColors
@@ -27,3 +28,7 @@ val Context.worldDataStore by preferencesDataStore(name = "world-settings")
  */
 val preview = stringPreferencesKey("preview")
 val selected = stringPreferencesKey("selected")
+
+fun Preferences.selectedWallPaper() =
+    (this[preview].takeIf { it?.isNotEmpty() == true }
+        ?: this[selected])

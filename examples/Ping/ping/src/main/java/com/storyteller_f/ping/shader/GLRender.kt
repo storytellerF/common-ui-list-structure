@@ -6,7 +6,6 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.opengl.GLES20
 import android.opengl.GLES30
-import kotlin.math.roundToInt
 
 const val BYTES_PER_FLOAT = 4
 const val BYTES_PER_INT = 4

@@ -16,7 +16,6 @@ import android.util.Log
 import android.util.Size
 import android.view.SurfaceHolder
 import androidx.core.content.ContextCompat
-import com.google.android.filament.Filament
 import com.storyteller_f.ping.shader.GLES20WallpaperRenderer
 import com.storyteller_f.ping.shader.GLES30WallpaperRenderer
 import com.storyteller_f.ping.shader.GLWallpaperRenderer
@@ -106,8 +105,7 @@ class PingPagerService : WallpaperService() {
             scope.launch {
                 inContext.pagerDataStore.data.mapNotNull { preferences ->
                     // No type safety.
-                    preferences[preview].takeIf { it?.isNotEmpty() == true }
-                        ?: preferences[selected]
+                    preferences.selectedWallPaper()
                 }.distinctUntilChanged().collectLatest {
                     val file = File(it)
                     val thumbnail = File(file.parentFile, "thumbnail.jpg")
@@ -230,10 +228,6 @@ class PingPagerService : WallpaperService() {
 
     companion object {
         private const val TAG = "PingPagerService"
-
-        init {
-            Filament.init()
-        }
     }
 }
 

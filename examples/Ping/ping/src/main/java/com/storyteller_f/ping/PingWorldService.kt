@@ -3,18 +3,21 @@ package com.storyteller_f.ping
 import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.service.wallpaper.WallpaperService
 import android.util.Log
 import android.view.Choreographer
+import android.view.MotionEvent
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.animation.LinearInterpolator
 import androidx.core.content.ContextCompat
-import com.google.android.filament.Camera
+import com.google.android.filament.Colors
+import com.google.android.filament.Entity
 import com.google.android.filament.EntityManager
-import com.google.android.filament.Filament
+import com.google.android.filament.LightManager
 import com.google.android.filament.Renderer
 import com.google.android.filament.Skybox
 import com.google.android.filament.SwapChain
@@ -22,10 +25,35 @@ import com.google.android.filament.Viewport
 import com.google.android.filament.android.DisplayHelper
 import com.google.android.filament.android.FilamentHelper
 import com.google.android.filament.android.UiHelper
+import com.google.android.filament.gltfio.Animator
+import com.google.android.filament.gltfio.AssetLoader
+import com.google.android.filament.gltfio.FilamentAsset
+import com.google.android.filament.gltfio.MaterialProvider
+import com.google.android.filament.gltfio.ResourceLoader
+import com.google.android.filament.gltfio.UbershaderProvider
+import com.google.android.filament.utils.Float3
+import com.google.android.filament.utils.Manipulator
+import com.google.android.filament.utils.Utils
+import com.google.android.filament.utils.max
+import com.google.android.filament.utils.scale
+import com.google.android.filament.utils.translation
+import com.google.android.filament.utils.transpose
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileInputStream
+import java.nio.Buffer
+import java.nio.ByteBuffer
 import kotlin.coroutines.CoroutineContext
+
+private const val kNearPlane = 0.05f     // 5 cm
+private const val kFarPlane = 1000.0f    // 1 km
 
 class PingWorldService : WallpaperService() {
     val job = Job()
@@ -52,6 +80,7 @@ class PingWorldService : WallpaperService() {
     }
 
     private inner class FilamentWallpaperEngine(val inContext: Context) : Engine() {
+        private var currentThumbnail: Bitmap? = null
 
         // UiHelper is provided by Filament to manage SurfaceHolder
         private val uiHelper by lazy {
@@ -75,9 +104,7 @@ class PingWorldService : WallpaperService() {
         // Engine creates and destroys Filament resources
         // Each engine must be accessed from a single thread of your choosing
         // Resources cannot be shared across engines
-        private val engine by lazy {
-            com.google.android.filament.Engine.create()
-        }
+        private val engine = com.google.android.filament.Engine.create()
 
         // A renderer instance is tied to a single surface (SurfaceView, TextureView, etc.)
         private val renderer by lazy {
@@ -88,6 +115,15 @@ class PingWorldService : WallpaperService() {
         private val scene1 by lazy {
             engine.createScene().apply {
                 skybox = Skybox.Builder().build(engine)
+                val (r, g, b) = Colors.cct(6_500.0f)
+                LightManager.Builder(LightManager.Type.DIRECTIONAL)
+                    .color(r, g, b)
+                    .intensity(100_000.0f)
+                    .direction(0.0f, -1.0f, 0.0f)
+                    .castShadows(true)
+                    .build(engine, light)
+
+                addEntity(light)
             }
         }
 
@@ -113,6 +149,43 @@ class PingWorldService : WallpaperService() {
             }
         }
 
+        private val cameraManipulator: Manipulator by lazy {
+            val width = view.viewport.width
+            val height = view.viewport.height
+            Manipulator.Builder()
+                .targetPosition(
+                    kDefaultObjectPosition.x,
+                    kDefaultObjectPosition.y,
+                    kDefaultObjectPosition.z
+                )
+                .viewport(width, height)
+                .build(Manipulator.Mode.ORBIT)
+        }
+
+        var animator: Animator? = null
+            private set
+
+        var asset: FilamentAsset? = null
+            private set
+        
+        @Entity
+        val light = EntityManager.get().create()
+        private val materialProvider: MaterialProvider = UbershaderProvider(engine)
+        private val assetLoader: AssetLoader by lazy {
+            AssetLoader(
+                engine,
+                materialProvider,
+                EntityManager.get()
+            )
+        }
+        private val resourceLoader: ResourceLoader by lazy { ResourceLoader(engine, true) }
+        private val eyePos = DoubleArray(3)
+        private val target = DoubleArray(3)
+        private val upward = DoubleArray(3)
+        private val gestureDetector: GestureDetector by lazy {
+            GestureDetector(view, cameraManipulator)
+        }
+
         // A swap chain is Filament's representation of a surface
         private var swapChain: SwapChain? = null
 
@@ -120,7 +193,7 @@ class PingWorldService : WallpaperService() {
         private val frameScheduler = FrameCallback()
 
         // We'll use this ValueAnimator to smoothly cycle the background between hues.
-        private val animator by lazy {
+        private val animator1 by lazy {
             ValueAnimator.ofFloat(0.0f, 360.0f).apply {
                 interpolator = LinearInterpolator()
                 duration = 10000
@@ -142,6 +215,71 @@ class PingWorldService : WallpaperService() {
             }
         }
 
+        private fun observeLatestUri() {
+            scope.launch {
+                inContext.worldDataStore.data.mapNotNull { preferences ->
+                    // No type safety.
+                    preferences.selectedWallPaper()
+                }.distinctUntilChanged().collectLatest { modelFile: String ->
+                    val wrap = withContext(Dispatchers.IO) {
+                        ByteBuffer.wrap(
+                            FileInputStream(modelFile).buffered()
+                                .readBytes()
+                        )
+                    }
+                    loadModelGltf(wrap) {
+                        ByteBuffer.wrap(
+                            FileInputStream(File(File(modelFile).parentFile, it)).buffered()
+                                .readBytes()
+                        )
+                    }
+                    transformToUnitCube()
+                }
+            }
+        }
+
+        fun transformToUnitCube(centerPoint: Float3 = kDefaultObjectPosition) {
+            asset?.let { asset ->
+                val tm = engine.transformManager
+                var center = asset.boundingBox.center.let { v -> Float3(v[0], v[1], v[2]) }
+                val halfExtent = asset.boundingBox.halfExtent.let { v -> Float3(v[0], v[1], v[2]) }
+                val maxExtent = 2.0f * max(halfExtent)
+                val scaleFactor = 2.0f / maxExtent
+                center -= centerPoint / scaleFactor
+                val transform = scale(Float3(scaleFactor)) * translation(-center)
+                tm.setTransform(tm.getInstance(asset.root), transpose(transform).toFloatArray())
+            }
+        }
+
+        fun destroyModel() {
+            resourceLoader.asyncCancelLoad()
+            resourceLoader.evictResourceData()
+            asset?.let { asset ->
+                scene1.removeEntities(asset.entities)
+                assetLoader.destroyAsset(asset)
+                this.asset = null
+                animator = null
+            }
+        }
+
+        suspend fun loadModelGltf(buffer: Buffer, callback: suspend (String) -> Buffer?) {
+            destroyModel()
+            asset = assetLoader.createAsset(buffer)
+            asset?.let { asset ->
+                for (uri in asset.resourceUris) {
+                    val resourceBuffer = callback(uri)
+                    if (resourceBuffer == null) {
+                        this.asset = null
+                        return
+                    }
+                    resourceLoader.addResourceData(uri, resourceBuffer)
+                }
+                resourceLoader.asyncBeginLoad(asset)
+                animator = asset.instance.animator
+                asset.releaseSourceData()
+            }
+        }
+
         override fun onCreate(surfaceHolder: SurfaceHolder) {
             super.onCreate(surfaceHolder)
             surfaceHolder.setSizeFromLayout()
@@ -154,26 +292,32 @@ class PingWorldService : WallpaperService() {
             choreographer
             uiHelper
             //启动动画
-            animator
+            animator1
+            observeLatestUri()
         }
 
         override fun onVisibilityChanged(visible: Boolean) {
             super.onVisibilityChanged(visible)
             if (visible) {
                 choreographer.postFrameCallback(frameScheduler)
-                animator.start()
+                animator1.start()
             } else {
                 choreographer.removeFrameCallback(frameScheduler)
-                animator.cancel()
+                animator1.cancel()
             }
         }
 
         override fun onDestroy() {
             super.onDestroy()
+            destroyModel()
+            assetLoader.destroy()
+            materialProvider.destroyMaterials()
+            materialProvider.destroy()
+            resourceLoader.destroy()
 
             // Stop the animation and any pending frame
             choreographer.removeFrameCallback(frameScheduler)
-            animator.cancel()
+            animator1.cancel()
 
             // Always detach the surface before destroying the engine
             uiHelper.detach()
@@ -210,6 +354,21 @@ class PingWorldService : WallpaperService() {
 
                 // This check guarantees that we have a swap chain
                 if (uiHelper.isReadyToRender) {
+
+                    // Allow the resource loader to finalize textures that have become ready.
+                    resourceLoader.asyncUpdateLoad()
+
+                    // Add renderable entities to the scene as they become ready.
+                    asset?.let { populateScene(it) }
+
+                    // Extract the camera basis from the helper and push it to the Filament camera.
+                    cameraManipulator.getLookAt(eyePos, target, upward)
+                    camera1.lookAt(
+                        eyePos[0], eyePos[1], eyePos[2],
+                        target[0], target[1], target[2],
+                        upward[0], upward[1], upward[2]
+                    )
+
                     renderer.drawFrame(frameTimeNanos)
                 }
             }
@@ -222,6 +381,22 @@ class PingWorldService : WallpaperService() {
                     endFrame()
                 }
             }
+        }
+
+        private val readyRenderables = IntArray(128) // add up to 128 entities at a time
+
+        private fun populateScene(asset: FilamentAsset) {
+            val rcm = engine.renderableManager
+            var count = 0
+            val popRenderables = { count = asset.popRenderables(readyRenderables); count != 0 }
+            while (popRenderables()) {
+                for (i in 0 until count) {
+                    val ri = rcm.getInstance(readyRenderables[i])
+                    rcm.setScreenSpaceContactShadows(ri, true)
+                }
+                scene1.addEntities(readyRenderables.take(count).toIntArray())
+            }
+            scene1.addEntities(asset.lightEntities)
         }
 
         val display by lazy { ContextCompat.getDisplayOrDefault(inContext) }
@@ -243,21 +418,60 @@ class PingWorldService : WallpaperService() {
             }
 
             override fun onResized(width: Int, height: Int) {
-                val aspect = width.toDouble() / height.toDouble()
-                camera1.setProjection(45.0, aspect, 0.1, 20.0, Camera.Fov.VERTICAL)
-
                 view.viewport = Viewport(0, 0, width, height)
-
+                cameraManipulator.setViewport(width, height)
+                updateCameraProjection()
                 FilamentHelper.synchronizePendingFrames(engine)
             }
         }
+
+
+        var cameraFocalLength = 28f
+            set(value) {
+                field = value
+                updateCameraProjection()
+            }
+
+        var cameraNear = kNearPlane
+            set(value) {
+                field = value
+                updateCameraProjection()
+            }
+
+        var cameraFar = kFarPlane
+            set(value) {
+                field = value
+                updateCameraProjection()
+            }
+
+        private fun updateCameraProjection() {
+            val width = view.viewport.width
+            val height = view.viewport.height
+            val aspect = width.toDouble() / height.toDouble()
+            camera1.setLensProjection(
+                cameraFocalLength.toDouble(), aspect,
+                cameraNear.toDouble(), cameraFar.toDouble()
+            )
+        }
+
+        override fun onSurfaceCreated(holder: SurfaceHolder?) {
+            super.onSurfaceCreated(holder)
+            gestureDetector
+        }
+
+        override fun onTouchEvent(event: MotionEvent?) {
+            super.onTouchEvent(event)
+            gestureDetector.onTouchEvent(event ?: return)
+        }
     }
+
 
     companion object {
         private const val TAG = "PingPagerService"
+        private val kDefaultObjectPosition = Float3(0.0f, 0.0f, -4.0f)
 
         init {
-            Filament.init()
+            Utils.init()
         }
     }
 }
