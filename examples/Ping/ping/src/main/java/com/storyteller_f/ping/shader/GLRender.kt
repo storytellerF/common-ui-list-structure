@@ -1,26 +1,15 @@
-/*
- * Copyright 2019 Alynx Zhou
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package com.storyteller_f.ping
+package com.storyteller_f.ping.shader
 
 import android.content.Context
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.opengl.GLES20
+import android.opengl.GLES30
 import kotlin.math.roundToInt
+
+const val BYTES_PER_FLOAT = 4
+const val BYTES_PER_INT = 4
 
 fun Context.firstFrame(uri: Uri): Bitmap? {
     val retriever = MediaMetadataRetriever()
@@ -39,30 +28,6 @@ fun Context.firstFrame(uri: Uri): Bitmap? {
             e.printStackTrace()
         }
     }
-}
-
-/**
- * createVideoThumbnailFromUri
- * @param context Activity context or application context.
- * @param uri Video uri.
- * @return Bitmap thumbnail
- *
- * Hacked from ThumbnailUtils.createVideoThumbnail()'s code.
- */
-fun createVideoThumbnailFromUri(
-    context: Context, uri: Uri
-): Bitmap? {
-    val bitmap = context.firstFrame(uri) ?: return null
-    // Scale down the bitmap if it's too large.
-    val width = bitmap.width
-    val height = bitmap.height
-    val max = width.coerceAtLeast(height)
-    return if (max > 512) {
-        val scale = 512f / max
-        val w = (scale * width).roundToInt()
-        val h = (scale * height).roundToInt()
-        Bitmap.createScaledBitmap(bitmap, w, h, true)
-    } else bitmap
 }
 
 @Throws(RuntimeException::class)
@@ -107,4 +72,21 @@ fun linkProgramGLES20(
         throw RuntimeException(log)
     }
     return program
+}
+
+/**
+ * 不会关闭对应的数组对象
+ */
+fun bindData(dataIndex: Int, targetIndex: Int) {
+    //激活
+    GLES20.glBindBuffer(GLES30.GL_ARRAY_BUFFER, dataIndex)
+    GLES20.glEnableVertexAttribArray(targetIndex)
+    GLES20.glVertexAttribPointer(
+        targetIndex,
+        2,//组成一个顶点的数据个数
+        GLES20.GL_FLOAT,//数据类型
+        false,//是否需要gpu 归一化
+        2 * BYTES_PER_FLOAT,//组成一个顶点所占用的数据长度
+        0
+    )
 }

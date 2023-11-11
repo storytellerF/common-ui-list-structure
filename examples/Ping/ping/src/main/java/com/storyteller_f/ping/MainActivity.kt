@@ -1,5 +1,6 @@
 package com.storyteller_f.ping
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
@@ -20,6 +21,7 @@ import com.storyteller_f.file_system_ktx.ensureFile
 import com.storyteller_f.ping.database.Wallpaper
 import com.storyteller_f.ping.database.requireMainDatabase
 import com.storyteller_f.ping.databinding.ActivityMainBinding
+import com.storyteller_f.ping.shader.firstFrame
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -29,6 +31,7 @@ import okio.source
 import java.io.File
 import java.io.FileOutputStream
 import java.util.Calendar
+import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
 
@@ -136,4 +139,28 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
+}
+
+/**
+ * createVideoThumbnailFromUri
+ * @param context Activity context or application context.
+ * @param uri Video uri.
+ * @return Bitmap thumbnail
+ *
+ * Hacked from ThumbnailUtils.createVideoThumbnail()'s code.
+ */
+fun createVideoThumbnailFromUri(
+    context: Context, uri: Uri
+): Bitmap? {
+    val bitmap = context.firstFrame(uri) ?: return null
+    // Scale down the bitmap if it's too large.
+    val width = bitmap.width
+    val height = bitmap.height
+    val max = width.coerceAtLeast(height)
+    return if (max > 512) {
+        val scale = 512f / max
+        val w = (scale * width).roundToInt()
+        val h = (scale * height).roundToInt()
+        Bitmap.createScaledBitmap(bitmap, w, h, true)
+    } else bitmap
 }

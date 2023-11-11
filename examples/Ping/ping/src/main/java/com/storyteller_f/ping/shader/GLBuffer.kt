@@ -17,7 +17,7 @@ open class GLBuffer {
             1.0f, 1.0f    // top right
         )
         ByteBuffer.allocateDirect(
-            vertexArray.size * GLWallpaperRenderer.BYTES_PER_FLOAT
+            vertexArray.size * BYTES_PER_FLOAT
         ).run {
             order(ByteOrder.nativeOrder()).asFloatBuffer().apply {
                 put(vertexArray).position(0)
@@ -32,7 +32,7 @@ open class GLBuffer {
             1.0f, 0.0f   // top right
         )
         ByteBuffer.allocateDirect(
-            texCoordinationArray.size * GLWallpaperRenderer.BYTES_PER_FLOAT
+            texCoordinationArray.size * BYTES_PER_FLOAT
         ).run {
             order(ByteOrder.nativeOrder()).asFloatBuffer().apply {
                 put(texCoordinationArray).position(0)
@@ -46,7 +46,7 @@ open class GLBuffer {
     private val indicesBuffer: IntBuffer = run {
         val indexArray = intArrayOf(0, 1, 2, 3, 2, 1)
         ByteBuffer.allocateDirect(
-            indexArray.size * GLWallpaperRenderer.BYTES_PER_INT
+            indexArray.size * BYTES_PER_INT
         ).run {
             order(ByteOrder.nativeOrder()).asIntBuffer().apply {
                 put(indexArray).position(0)
@@ -61,7 +61,7 @@ open class GLBuffer {
             GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, this[0])
             GLES20.glBufferData(
                 GLES20.GL_ARRAY_BUFFER,
-                vertices.capacity() * GLWallpaperRenderer.BYTES_PER_FLOAT,
+                vertices.capacity() * BYTES_PER_FLOAT,
                 vertices,
                 GLES20.GL_STATIC_DRAW
             )
@@ -70,7 +70,7 @@ open class GLBuffer {
             GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, this[1])
             GLES20.glBufferData(
                 GLES20.GL_ARRAY_BUFFER,
-                texCoordinationBuffer.capacity() * GLWallpaperRenderer.BYTES_PER_FLOAT,
+                texCoordinationBuffer.capacity() * BYTES_PER_FLOAT,
                 texCoordinationBuffer,
                 GLES20.GL_STATIC_DRAW
             )
@@ -80,7 +80,7 @@ open class GLBuffer {
             GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, this[2])
             GLES20.glBufferData(
                 GLES20.GL_ELEMENT_ARRAY_BUFFER,
-                indicesBuffer.capacity() * GLWallpaperRenderer.BYTES_PER_INT,
+                indicesBuffer.capacity() * BYTES_PER_INT,
                 indicesBuffer,
                 GLES20.GL_STATIC_DRAW
             )

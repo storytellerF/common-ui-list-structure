@@ -20,20 +20,7 @@ import android.opengl.GLES20
 import android.opengl.GLES30
 import android.opengl.GLSurfaceView
 import androidx.annotation.RawRes
-import com.storyteller_f.ping.compileShaderResourceGLES20
-import com.storyteller_f.ping.linkProgramGLES20
 import javax.microedition.khronos.opengles.GL10
-
-data class VideoMatrix(val width: Int, val height: Int, val rotation: Int) {
-    private val horizontalFlip: Boolean
-        get() = rotation % 180 != 0
-
-    val realHeight = if (horizontalFlip) width else height
-    val realWidth = if (horizontalFlip) height else width
-}
-
-data class Offset(val xOffset: Float = 0f, val yOffset: Float = 0f) {
-}
 
 abstract class GLWallpaperRenderer(
     protected val context: Context,
@@ -95,26 +82,4 @@ abstract class GLWallpaperRenderer(
 
     abstract fun drawImage()
     //生命周期函数
-
-    companion object {
-        const val BYTES_PER_FLOAT = 4
-        const val BYTES_PER_INT = 4
-    }
-}
-
-/**
- * 不会关闭对应的数组对象
- */
-fun bindData(dataIndex: Int, targetIndex: Int) {
-    //激活
-    GLES20.glBindBuffer(GLES30.GL_ARRAY_BUFFER, dataIndex)
-    GLES20.glEnableVertexAttribArray(targetIndex)
-    GLES20.glVertexAttribPointer(
-        targetIndex,
-        2,//组成一个顶点的数据个数
-        GLES20.GL_FLOAT,//数据类型
-        false,//是否需要gpu 归一化
-        2 * GLWallpaperRenderer.BYTES_PER_FLOAT,//组成一个顶点所占用的数据长度
-        0
-    )
 }
