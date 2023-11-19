@@ -1,8 +1,5 @@
 # 一个Android 软件架构
 
-[![Android CI](https://github.com/storytellerF/common-ui-list-structure/actions/workflows/android.yml/badge.svg)](https://github.com/storytellerF/common-ui-list-structure/actions/workflows/android.yml)
-[![Android Plugin CI](https://github.com/storytellerF/common-ui-list-structure/actions/workflows/android-plugins.yml/badge.svg)](https://github.com/storytellerF/common-ui-list-structure/actions/workflows/android-plugins.yml)
-
 整合了Jetpack Paging，View Model，Navigation，Compose
 
 ## Build
@@ -32,9 +29,9 @@ bash build_plugins.sh
 
 ## 示例项目
 
-[giant-explorer](examples/GiantExplorer) 文件管理器
+[giant-explorer](https://github.com/storytellerF/GiantExplorer) 文件管理器
 
-[ping](examples/Ping) 动态壁纸
+[ping](https://github.com/storytellerF/Ping) 动态壁纸
 
 ## 代码规范
 
