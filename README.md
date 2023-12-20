@@ -2,17 +2,6 @@
 
 整合了Jetpack Paging，View Model，Navigation，Compose
 
-## Build
-
-```shell
-# 编译全部
-bash build_full.sh
-# 仅编译app
-bash build_app.sh
-# 仅编译插件
-bash build_plugins.sh
-```
-
 ## 特殊模块
 
 1. **file-system**：封装android 文件系统。
