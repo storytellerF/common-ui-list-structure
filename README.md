@@ -4,23 +4,25 @@
 
 ## 特殊模块
 
-1. **file-system**：封装android 文件系统。
+1. **file-system**：[封装android 文件系统](https://github.com/storytellerF/common-ui-list/tree/main/file-system)
 
-2. **ui-list**： 封装**Jetpack Paging**， **PagingAdapter**
+2. **ui-list**： [封装**Jetpack Paging**， **PagingAdapter**](https://github.com/storytellerF/common-ui-list/tree/main/ui-list)
 
-3. **ext-func**：自动为Context 的扩展函数生成View，Fragment 的同名扩展函数。
+3. **ext-func**：[自动为Context 的扩展函数生成View，Fragment 的同名扩展函数](https://github.com/storytellerF/common-ui-list/tree/main/ext-func-compiler)
 
-4. **SML**：[自动生成color，drawable的xml 文件](https://github.com/storytellerF/SML)
+4. **SML**：[自动生成color、drawable、dimen的xml 文件](https://github.com/storytellerF/SML)
 
-5. **version-manager**： 使用includeBuild 导入，暴露一个gradle plugin，用于依赖管理和配置管理
+5. **version-manager**： [使用includeBuild 导入，暴露一个gradle plugin，用于依赖管理和配置管理](https://github.com/storytellerF/common-ui-list/tree/main/version-manager)
 
-[链接在这](https://github.com/storytellerF/common-ui-list)
+6. **Bao**：[兜底异常](https://github.com/storytellerF/Bao)
+
+7. **Yong**：[使用lint 检查未经捕获的异常](https://github.com/storytellerF/Yong)
 
 ## 示例项目
 
-[giant-explorer](https://github.com/storytellerF/GiantExplorer) 文件管理器
+[giant-explorer](https://github.com/storytellerF/GiantExplorer) 文件管理器 [![Android CI](https://github.com/storytellerF/GiantExplorer/actions/workflows/android.yml/badge.svg)](https://github.com/storytellerF/GiantExplorer/actions/workflows/android.yml)
 
-[ping](https://github.com/storytellerF/Ping) 动态壁纸
+[ping](https://github.com/storytellerF/Ping) 动态壁纸 [![Android CI](https://github.com/storytellerF/Ping/actions/workflows/android.yml/badge.svg)](https://github.com/storytellerF/Ping/actions/workflows/android.yml)
 
 ## 代码规范
 
