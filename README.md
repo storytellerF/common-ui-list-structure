@@ -27,17 +27,18 @@
 ## 代码规范
 
 1. 禁止使用DataBinding 进行数据绑定和逻辑代码，特别是bindingAdapter。XML 本身就有很高的冗余，在XML 中写“代码”只会增加维护成本。
-2. DataItemHolder 应该继承自添加了`ItemHolder` 注解的接口。未来会通过ksp 严格限制。
+2. DataItemHolder 应该继承自添加了`ItemHolder` 注解的接口。
 3. 基于状态,而不是事件
 
     如何数据来源是事件，可以使用*LiveData*, *Flow* 转成状态。状态可以持久化，而事件不可以。
 
 4. 单一来源
 
-    如果确实存在多个来源，可以利用*印章类*，*Optional&lt;T>*， *Flow* 将不同来源的数据汇集成一个对象。
+    如果确实存在多个来源，可以利用*印章类*，*Optional&lt;T>*， *Flow* 等将不同来源的数据汇集成一个对象。
 
 5. 函数 > 类
 
     代码实现优先选择函数，基本上就是“**优先组合，而不是继承**”的另一种描述。
+6. 更加通用==更加复杂==更难维护
 
 更多信息访问[wiki](https://github.com/storytellerF/common-ui-list-structure/wiki)
