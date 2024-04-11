@@ -4,7 +4,7 @@
 
 ## 特殊模块
 
-1. **file-system**：[封装android 文件系统](https://github.com/storytellerF/common-ui-list/tree/main/file-system)
+1. **file-system**：[封装android 文件系统](https://github.com/storytellerF/AFS)
 
 2. **ui-list**： [封装**Jetpack Paging**， **PagingAdapter**](https://github.com/storytellerF/common-ui-list/tree/main/ui-list)
 
@@ -39,6 +39,9 @@
 5. 函数 > 类
 
     代码实现优先选择函数，基本上就是“**优先组合，而不是继承**”的另一种描述。
+
+    使用函数构造一个实例也会比手动实例化更有优势。
+
 6. 更加通用==更加复杂==更难维护
 
 更多信息访问[wiki](https://github.com/storytellerF/common-ui-list-structure/wiki)
