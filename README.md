@@ -10,13 +10,11 @@
 
 3. **ext-func**：[自动为Context 的扩展函数生成View，Fragment 的同名扩展函数](https://github.com/storytellerF/common-ui-list/tree/main/ext-func-compiler)
 
-4. **SML**：[自动生成color、drawable、dimen的xml 文件](https://github.com/storytellerF/SML)
+4. **version-manager**： [使用includeBuild 导入，暴露一个gradle plugin，用于依赖管理和配置管理](https://github.com/storytellerF/common-ui-list/tree/main/version-manager)
 
-5. **version-manager**： [使用includeBuild 导入，暴露一个gradle plugin，用于依赖管理和配置管理](https://github.com/storytellerF/common-ui-list/tree/main/version-manager)
+5. **Bao**：[兜底异常](https://github.com/storytellerF/Bao)
 
-6. **Bao**：[兜底异常](https://github.com/storytellerF/Bao)
-
-7. **Yong**：[使用lint 检查未经捕获的异常](https://github.com/storytellerF/Yong)
+6. **Yong**：[使用lint 检查未经捕获的异常](https://github.com/storytellerF/Yong)
 
 ## 示例项目
 
@@ -43,5 +41,7 @@
     使用函数构造一个实例也会比手动实例化更有优势。
 
 6. 更加通用==更加复杂==更难维护
+
+    简单+简单 > 复杂
 
 更多信息访问[wiki](https://github.com/storytellerF/common-ui-list-structure/wiki)
